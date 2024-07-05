@@ -2,7 +2,7 @@
 --[[	Catsy's utilities: text and names
 -- =======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
-	Source: https://www.moddb.com/members/catspawmods/addons
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
 	https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
 -- ===================================================================--]]
 script_version 				= "1.1"
