@@ -1,4 +1,4 @@
-# Anomaly-Addon-Archive
+# Catspaw's Anomaly Addon Archive
 This is a version archive and general code repository for any Stalker: Anomaly mods made by Catspaw. 
 
 # Terms of use
