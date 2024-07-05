@@ -1,0 +1,258 @@
+-- ======================================================================
+--[[    Catsy's Utilities: Inputs and binds
+-- ======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/members/catspawmods/addons
+    https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
+-- ===================================================================--]]
+script_version              = "1.0"
+release_date                = 20240628
+--[[======================================================================
+    REQUIRES: utils_catspaw_common.script
+
+    The main purpose of this script is to unify and simplify the setting 
+    and use of keybinds, rather than having to set up a new handlers and
+    callbacks for each of my addons. However, nothing in this is specific
+    to any of my addons, and anyone can make use of it.
+
+    Feel free to crib code from this or include a copy of it in your own 
+    addon, but in the interest of avoiding any possibility of conflicts:
+
+            PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+    Seriously. Just copy the code into yours if you want to mess with it.
+-- ===================================================================--]]
+if utils_catspaw_common then end
+assert(utils_catspaw_common,
+    "\n! ERROR: utils_catspaw_inputs requires utils_catspaw_common, which does not exist!\n"
+)
+-- ======================================================================
+local gts 		    = game.translate_string
+local DIK_name 	    = ui_mcm and ui_mcm.dispaly_key or (function() return "" end)-- typo is in the mcm script
+local to_bool       = utils_catspaw_common.to_bool
+local mwheel_enable = utils_catspaw_common.exe_mwheel_support()
+local mwheel_binds  = false
+local dl            = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+local vl            = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+debuglogs           = true
+verbose             = true
+logprefix           = "[CatsyInput] "
+local mwheel_fakeid = -2
+-- ======================================================================
+-- 		INPUT BINDINGS
+-- ======================================================================
+
+local mod_keys = {
+    [DIK_keys.DIK_LSHIFT]   = { pressed = false, code = 1 },
+    [DIK_keys.DIK_LCONTROL] = { pressed = false, code = 2 },
+    [DIK_keys.DIK_LMENU]    = { pressed = false, code = 3 },
+}
+local mod_key_codes = {
+    [1] = DIK_keys.DIK_LSHIFT,
+    [2] = DIK_keys.DIK_LCONTROL,
+    [3] = DIK_keys.DIK_LMENU,
+}
+
+local binds = {
+    ["example_bind"] = {
+        enabled = false, 			-- Can be bool or functor
+        hold    = false,			-- Can be bool or functor
+        wheel   = false,            -- If true, traps mouse scroll (up = DIK -1, dn = DIK -2)
+        key    	= DIK_keys.DIK_T,	-- DIK code for pressed key
+        mod 	= 0, 				-- Code for held modifier key (1-3 or 0 for none)
+        name    = "st_name_string", -- Localization string for the action name, optional
+        action  = function(key, cfg)-- Functor executed when bind is activated 
+        				local bind_name = gts(cfg.name)
+        				local keys_name = get_bind_text(key, cfg.mod)
+        				printf("- Bind %s test: %s pressed", bind_name, keys_name)
+                  end,
+    },
+
+    -- Add your own using the functions below
+}
+
+function valid_bind(kb)
+    -- Various invalid values a bind might have
+    return (kb ~= nil) and (kb ~= "") and (kb ~= "<!!!>") and (kb ~= -1)
+end
+
+function get_bind_text(kb, km)
+    -- Plain text for the key+mod names, e.g. "Space" or "Alt+Tab"
+    local is_kb = valid_bind(kb)
+    local is_km = km and km > 0
+    local mt    = (is_kb and is_km) and "+" or ""
+    local kbt, kmt
+    if (is_kb or is_km) then
+        kbt     = is_kb and DIK_name(kb)
+        if is_km then
+            if km and km < 29 then
+                km  = ((km == 1) and 42) or ((km == 2) and 29) or ((km == 3) and 56)
+            end
+        end
+        kmt     = is_km and DIK_name(km)
+    else
+        kmt     = "[UNBOUND]"
+        kbt     = ""
+    end
+    return string.format("%s%s%s", kmt or "", mt, kbt or "")
+end
+
+function get_bind_list()
+    local t = {}
+    for k,_ in pairs(binds) do t[k] = binds[k] end
+    return t
+end
+
+local function is_same_setting_default(a, b, def)
+    return (a or def or 0) == (b or def or 0)
+end
+
+function same_bind_exists(id, key, mod, hold)
+    local is_same = is_same_setting_default
+    for k,v in pairs(binds) do
+        if is_same(key, v.key) and is_same(mod, v.mod) and is_same(hold, v.hold) then
+            return true    
+        end
+    end
+end
+
+function force_set_bind(b_id, cfg)
+	-- Direct table set, no safeguards!
+	-- Will overwrite or null out existing binds
+	if not b_id then return end
+	binds[b_id] = cfg
+    if not cfg then
+        dl("Nulling out input bind record for %s", b_id)
+        return
+    end
+    binds[b_id].key = cfg.key and tonumber(cfg.key)
+    binds[b_id].mod = cfg.mod and tonumber(cfg.mod)
+    local _ = debuglogs and dl("Setting bind for %s: %s (%sabled) - name %s | hold %s",
+        get_bind_text(cfg.key, cfg.mod),
+        b_id,
+        to_bool(cfg.enabled) and "en" or "dis",
+        gts(cfg.name),
+        cfg.hold
+    )
+    return true
+end
+
+function add_bind(b_id, cfg)
+	if binds[b_id] or not (b_id and cfg) then return end
+	return force_set_bind(b_id, cfg)
+end
+
+function set_bind(b_id, cfg)
+	-- Will overwrite existing binds
+	if not (b_id and cfg) then return end
+	return force_set_bind(b_id, cfg)
+end
+
+function del_bind(b_id)
+	-- Exactly what it sounds like
+	return force_set_bind(b_id, nil)
+end
+
+function check_for_mwheel_binds()
+    mwheel_binds = false
+    for k,v in pairs(binds) do
+        if v.wheel then
+            mwheel_binds = true
+        end
+    end
+    local st = "R"
+    if mwheel_enable and mwheel_binds then
+        RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
+    else
+        st = "Unr"
+        UnregisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
+    end
+    dl("mwheel_enable %s | mwheel_binds %s | %segistering mousewheel callback", mwheel_enable, mwheel_binds, st)
+end
+
+function set_bind_mwheel_up(b_id, cfg)
+    set_bind(b_id, cfg)
+    binds[b_id].key     = 0 + mwheel_fakeid
+    binds[b_id].wheel   = true
+    check_for_mwheel_binds()
+end
+
+function set_bind_mwheel_dn(b_id, cfg)
+    set_bind(b_id, cfg)
+    binds[b_id].key     = 1 + mwheel_fakeid
+    binds[b_id].wheel   = true
+    check_for_mwheel_binds()
+end
+
+function mod_key_pressed(key)
+    if ui_mcm then
+        return ui_mcm.get_mod_key(key or 0)
+    else
+        return mod_keys and mod_keys[key or 0] and mod_keys[key or 0].pressed
+    end
+end
+
+function any_mod_key_held()
+    return 
+        mod_keys[DIK_keys.DIK_LSHIFT].pressed or
+        mod_keys[DIK_keys.DIK_LCONTROL].pressed or
+        mod_keys[DIK_keys.DIK_LMENU].pressed
+end
+
+function on_key_press(key)
+    if mod_keys[key] then mod_keys[key].pressed = true return true end
+    --local keyname = verbose and DIK_name(key) or ""
+    --vl("on_key_press(%s) : %s\nModifiers held: Shift %s | Ctrl %s | Alt %s", key, keyname, mod_key_pressed(1), mod_key_pressed(2), mod_key_pressed(3))
+    for k,v in pairs(binds) do
+        if v and to_bool(v.enabled) then
+
+            local bindtxt = verbose and get_bind_text(v.key, v.mod) or ""
+            --vl("** Checking bind %s (bind %s | mod %s | hold %s)", k, bindtxt, v.key, v.mod, v.hold)
+            if (key == v.key) and mod_key_pressed(v.mod) then
+                vl("on_key_press(%s): bind %s matched %s with bind %s and mod %s", key, k, bindtxt, v.key, mod)
+                v.action(k, v)
+                return true
+            end
+        end
+    end
+    --vl("on_key_press: no matching bind for %s", keyname)
+end
+
+function on_key_release(key)
+    if mod_keys[key] then mod_keys[key].pressed = false end
+    --local keyname = verbose and DIK_name(key) or ""
+    --vl("on_key_release(%s) : %s\nModifiers held: Shift %s | Ctrl %s | Alt %s", key, keyname, mod_key_pressed(1), mod_key_pressed(2), mod_key_pressed(3))
+    for k,v in pairs(binds) do
+        if v and to_bool(v.enabled) and to_bool(v.hold) then
+            local bindtxt = verbose and get_bind_text(v.key,v.mod) or ""
+            --vl("** Checking bind %s: %s (bind %s | mod %s | hold %s)", k, bindtxt, v.key, v.mod, v.hold)
+            if (key == v.key) and mod_key_pressed(v.mod) then
+                vl("on_key_release(%s): bind %s matched %s with bind %s and mod %s", key, k, bindtxt, v.key, mod)
+                v.action(k, v)
+                return true
+            end
+        end
+    end
+end
+
+function on_mouse_wheel(scroll_dir, flags)
+    if not (mwheel_enable and mwheel_binds and scroll_dir) then return end
+    for k,v in pairs(binds) do
+        if v and to_bool(v.enabled) and to_bool(v.wheel) then
+            local bindtxt = verbose and get_bind_text(v.key,v.mod) or ""
+            if (scroll_dir + mwheel_fakeid == v.key) and mod_key_pressed(v.mod) then
+                vl("on_mouse_wheel(%s): bind %s matched %s", scroll_dir, k, bindtxt, mod)
+                v.action(k, v)
+                return true
+            end
+        end
+    end
+end
+
+function on_option_change()
+    check_for_mwheel_binds()
+end
+
+function on_game_start()
+    RegisterScriptCallback("on_option_change", on_option_change)
+end

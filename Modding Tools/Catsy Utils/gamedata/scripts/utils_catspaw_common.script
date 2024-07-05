@@ -1,0 +1,258 @@
+-- ======================================================================
+--[[	Catsy's commonly-used functions
+-- ======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/members/catspawmods/addons
+	https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
+-- ===================================================================--]]
+script_version 				= "1.0"
+release_date            	= 20240630
+--[[======================================================================
+	There are a bunch of functions that I use across my addons, and over
+	time they've added up to a fair bit of duplicated code that I have to
+	update in multiple places anytime they get revised.
+
+	This is an attempt at centralizing them, and unifying some functions
+	that I'd like to be more consistent across my addons (like color and
+	text tokenization).
+
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+-- ===================================================================--]]
+-- 		SHORTCUTS
+-- ======================================================================
+local gts 				= game.translate_string
+local floor 			= math.floor
+local abs 				= math.abs
+local rand 				= math.random
+local get_game_time 	= game.get_game_time
+local get_start_time	= level.get_start_time
+local who_is_npc 		= dialogs.who_is_npc
+
+-- ===================================================================--]]
+-- 		COMPATIBILITY
+-- ======================================================================
+-- Feature flags for demonized modded binaries
+local mwheel_exe_ver    = 20230701 -- Mouse wheel scripting support added as of this version
+local rclick_exe_ver    = 20230922 -- Right-click map support added as of this version
+local cmcolor_exe_ver	= 20240523 -- Context menu color support added as of this version
+
+-- GAMMA is missing the MODDED_EXES_VERSION variable despite being based on demonized binaries
+local game_version  	= gts("ui_st_game_version")
+local gamma_modpack 	= game_version:find("G.A.M.M.A.") and true or false
+using_modded_exes 		= gamma_modpack or MODDED_EXES_VERSION and true or false
+
+-- Public functions to query feature support
+function exe_mwheel_support() return gamma_modpack or (MODDED_EXES_VERSION and MODDED_EXES_VERSION >= mwheel_exe_ver) end
+function exe_rclick_support() return gamma_modpack or (MODDED_EXES_VERSION and MODDED_EXES_VERSION >= rclick_exe_ver) end
+function exe_cmcolor_support() return gamma_modpack or (MODDED_EXES_VERSION and MODDED_EXES_VERSION >= cmcolor_exe_ver) end
+
+-- ======================================================================
+-- 		LOGGING
+-- ======================================================================
+-- I use variations on these logging functions in pretty much all of my 
+-- addons. 
+-- ======================================================================
+function dlog(caller, logtext, ...)
+	-- Debug logging, printed to log only if debuglogs is true
+	if not logtext then return end
+	caller = caller or utils_catspaw_common
+	if logtext and caller.debuglogs then
+        printf((caller.logprefix or logprefix) .. logtext, ...)
+	end
+end
+
+function vlog(caller, logtext, ...)
+	-- Verbose logging, printed to log only if debuglogs and verbose are both true
+	if not logtext then return end
+	caller = caller or this
+	if logtext and caller.debuglogs and caller.verbose then
+        printf((caller.logprefix or logprefix) .. (caller.vprefix or vprefix) .. logtext, ...)
+	end
+end
+
+function plog(raw_prefix, caller, logtext, ...)
+	-- Debug logging with a custom prefix, intended for use with log color codes
+	-- rarely needed but sometimes useful
+	if not (caller and logtext) then return end
+	if logtext and caller.debuglogs then
+        printf((raw_prefix or "") .. logtext, ...)
+	end
+end
+-- ======================================================================
+-- To use them in yours, copy the following four lines to your script,
+-- changing "logprefix" to something different that identifies your 
+-- addon and choosing whatever values you wish for the others:
+debuglogs 		= false
+verbose 		= false
+logprefix 		= "[CatsyUtils] "
+vprefix 		= "[V] " -- gets added to verbose log entries, optional
+-- ======================================================================
+-- Then define shortcuts in your script like so, except with your 
+-- script name instead of nil:
+local dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+-- The syntax of dl and vl, as defined above, is identical to printf.
+-- But the output will show or not based on the debuglogs and verbose
+-- variables in the calling script, respectively, and will be prefixed 
+-- automatically with text that identifies the addon doing the logging.
+
+-- The following functions control debug logging for this utility script
+-- and any that call the above functions without passing a caller.
+
+-- In practice, please always pass your script as caller if you make any
+-- external use of the logging functions, so that anyone reading the log 
+-- knows which adddon is responsible for the text.
+function set_debug_logging(debug_en, verbose_en)
+	if (debug_en ~= nil) then debuglogs = debug_en end
+	if (verbose_en ~= nil) then verbose = verbose_en end
+end
+
+function enable_all_logging() set_debug_logging(true, true) end
+function disable_all_logging() set_debug_logging(false, false) end
+
+-- ======================================================================
+-- 	GENERAL UTILITY
+-- ======================================================================
+easing = {
+	-- Easing functions for progression along a curve
+	InSine 	= (function(x) return 1 - math.cos((x * math.pi) / 2) end),
+	OutSine = (function(x) return math.sin((x * math.pi) / 2) end),
+	InQuint = (function(x) if not x then return end return x * x * x * x * x end),
+	OutQuint = (function(x) if not x then return end return 1 - math.pow(1 - x, 5) end),
+}
+
+function exec(str,...)
+	-- Executes a script.functor name stored in a string
+	local res = nil
+    if str then
+		str = str_explode(str,"%.")
+		if str[1] and str[2] and _G[ str[1] ] and _G[ str[1] ][ str[2] ] then
+			res = _G[ str[1] ][ str[2] ](...)
+		else
+			dl("Could not exec function %s", str)
+		end
+	end
+	return res
+end
+
+function get_time_elapsed()
+	-- Total game seconds elapsed since character's life in the Zone began
+	-- persistent across saves/sessions, unlike time_global
+	return floor(get_game_time():diffSec(get_start_time()))
+end
+
+function strbool(s)
+	-- Returns boolean value whether it was stored as a string or bool
+	return ((s == "true") or (s == true)) and true or false
+end
+
+function to_bool(b)
+	if (b == nil) or (type(b) == "boolean") then
+		return b
+	elseif type(b) == "function" then
+		return b()
+	elseif type(b) == "string" then
+		return strbool(b)
+	elseif type(b) == "number" then
+		return (b ~= 0)
+	end
+end
+
+function round100(num)
+	-- nice round numbers to 100s
+	if num == 0 then return 0 end
+	return floor(num * 0.01) * 100
+end
+
+function round10(num)
+	-- nice round numbers to 10s
+	if num == 0 then return 0 end
+	return floor(num * 0.1) * 10
+end
+
+function dec2(num)
+	if num == 0 then return 0 end
+	return math.floor(num * 100) / 100
+end
+
+function greater_of(n1, n2)
+	if not (n1 and n2) then return end
+	n1 = tonumber(n1) or 0
+	n2 = tonumber(n2) or 0
+	return (n1 > n2) and n1 or n2
+end
+
+function roll(chance)
+	-- chance is 0 to 1, does a coin flip if no chance passed
+	local r = math.random()
+	return r <= (chance or 0.5), r
+	-- first return value is the boolean result, second value is the actual roll
+end
+
+function get_next_avail_index(t, first, last, step)
+	if not (t and (type(t) == "table")) then return end
+	if is_empty(t) then return 0 end
+	for i = first or 1, last or 65535, step or 1 do
+		if not t[i] then return i end
+	end
+end
+
+function get_next_tg_interval(interval, variance, stamp)
+	-- For throttling looping functions to not act on every tick
+	-- Randomizes the next check by 5% of the interval to avoid stacking updates
+	interval 	= tonumber(interval) or 1000
+	variance 	= tonumber(variance) or (interval * 0.05)
+	stamp 		= tonumber(stamp) or time_global()
+	return stamp + interval + rand(variance) - (variance * 0.5)
+end
+
+function level_name_for_gvid(gvid)
+    local gg = game_graph()
+    local gv = gg:vertex(gvid)
+    return alife():level_name(gv:level_id())
+end
+
+function dotip(tiptext, dur, src, beep, icon, snd)
+    vl("Tip call received: dur %s | src \"%s\" | beep %s\n\"%s\"",dur,src,beep,tiptext)
+    if tiptext == nil then return end
+    db.actor:give_game_news(src, tiptext, icon, 0, dur or 5000)
+
+    if beep then
+        xr_sound.set_sound_play(AC_ID, snd or "pda_tips")
+    end
+end
+
+function get_mcm_or_default_val(path, default)
+	local val 	= ui_mcm and ui_mcm.get(path)
+	if val ~= nil then return val end
+	return default
+end
+
+-- ======================================================================
+-- 		OBJECTS
+-- ======================================================================
+function safeid(obj, def_actor)
+	-- Returns object ID whether it is game or server object
+	-- defaults to actor ID instead of nil if no valid obj passed and def_actor is true
+	if not obj then return def_actor and AC_ID or nil end
+	return (type(obj.id) == "function") and obj:id() or obj.id
+end
+
+function is_living_thing(obj)
+    return IsStalker(obj) or IsMonster(obj)
+end
+
+function who_npc(a, b)
+	-- like who_is_npc, but won't break if only a is passed
+	return a and b and who_is_npc(a, b) or a
+end
+
+function get_comm(a, b)
+	-- get community either from single object or from NPC side of conversation call
+	return get_object_community(who_npc(a, b))
+end

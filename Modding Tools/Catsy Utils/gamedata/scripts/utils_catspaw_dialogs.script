@@ -1,0 +1,141 @@
+-- ======================================================================
+--[[	Catsy's utilities: dialog lines
+-- ======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/members/catspawmods/addons
+	https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
+-- ===================================================================--]]
+script_version 				= "1.0"
+release_date            	= 20240630
+--[[======================================================================
+	There are a bunch of functions that I use across my addons, and over
+	time they've added up to a fair bit of duplicated code that I also 
+	have to update in multiple places anytime they get improved/fixed.
+
+	This is an attempt at centralizing them, and unifying some functions
+	that I'd like to be more consistent across my addons (like color and
+	text tokenization).
+
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+-- ===================================================================--]]
+
+
+local gts 			= game.translate_string
+string_prefix		= "st_"
+default_tokens		= {}
+current_npc 		= nil
+local line_cache 	= {}
+
+if utils_catspaw_common then end -- forces the script's namespace to load first
+if utils_catspaw_text then end -- forces the script's namespace to load first
+assert(utils_catspaw_common,
+    "\n! ERROR: utils_catspaw_dialogs requires utils_catspaw_common, which does not exist!\n"
+)
+assert(utils_catspaw_text,
+    "\n! ERROR: utils_catspaw_dialogs requires utils_catspaw_text, which does not exist!\n"
+)
+local dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+local who_npc 		= utils_catspaw_common.who_npc
+
+pronouns = {-- 	nominative 		objective 		possessive 		predicate
+	["m"] 	= { ["nom"] = "he",	["obj"] = "him",["pos"] = "his",["prd"] = "his"},
+	["f"] 	= { ["nom"] = "she",["obj"] = "her",["pos"] = "her",["prd"] = "hers"}
+}
+
+function reset_defaults()
+	string_prefix 	= "st_nemesis_dia_"
+	default_tokens	= utils_catspaw_text.default_tokens or {}
+end
+
+function set_defaults(t)
+	if not t then reset_defaults() return end
+	string_prefix 	= t.string_prefix or string_prefix
+	default_tokens	= t.default_tokens or utils_catspaw_text.default_tokens or {}
+end
+
+function reset_dialogue_cache(a, b)
+	if current_npc then line_cache[current_npc] = nil end
+	local npc = who_npc(a, b)
+	local id = npc and npc:id()
+	if id then
+		line_cache[id] = nil
+		current_npc = id
+	end
+end
+
+function get_gender_tokens(g)
+	g = g or dialog_gender or "m"
+	local p = pronouns[g]
+	local t = {
+		["pnom"] = p["nom"], -- nominative
+		["pobj"] = p["obj"], -- objective
+		["ppos"] = p["pos"], -- possessive
+		["pprd"] = p["prd"], -- posessive predicate
+	}
+	return t
+end
+
+local last_line = nil
+
+function get_random_line(line, max, min, args)
+	--printf("get_random_line: %s, %s, %s, args: %s",line,max,min,args ~= nil)
+	local no_cache 	= args and args.no_cache
+	if not args.no_cache then
+		if current_npc and not line_cache[current_npc] then
+			line_cache[current_npc] = {}
+		end
+	end
+	local cache 	= current_npc and line_cache[current_npc] or {}
+	local pre_res 	= args and args.pre_res 	-- for prepending stat results
+	local pre_lit 	= args and args.pre_lit 	-- literal string to prefix, or
+	local pre_loc 	= args and args.pre_loc 	-- loc string to prefix and translate, or
+	local pre_str 	= args and args.pre_str 	-- entry from approach_prefix_strs table
+	local no_loc 	= args and args.no_loc
+	local no_parse 	= args and args.no_parse
+	local debug 	= args and args.debug
+	local tokens 	= args and args.tokens
+	local result
+	vl("no_cache: %s | line: %s | current_npc: %s", no_cache, line, current_npc)
+
+	if no_cache or not cache[line] then
+		min 		= min or 1
+		max 		= max or 1
+		local ind	= tostring(math.floor(math.random(min, max))) or "1"
+		result		= string_prefix .. (line or "") .. "_" .. ind
+
+		if not noloc then
+			result	= gts(result)
+		end
+		
+		if pre_lit then
+			result 	= pre_lit .. result
+		elseif pre_str or pre_loc then
+			pre_loc	= pre_loc or (pre_str and approach_prefix_strs[pre_str])
+			result	= gts(pre_loc) .. " " .. result
+		end
+		if pre_res then
+			result = pre_res .."\n".. result
+		end
+
+		result 		= no_parse and result or utils_catspaw_text.parse_color_tokens(result, tokens or default_tokens)
+
+		vl("utils_catspaw_text.get_random_line generated:\n$ %s", result)
+		cache[line] = result
+	else
+		result 		= cache[line]
+		vl("utils_catspaw_text.get_random_line called for cached line:\n$ %s", result)
+	end
+
+	return result or ""
+end
+
+local function get_line(line, max, min, args)
+	if not args then args = {} end
+	return get_random_line(line, max, min, args)
+end
