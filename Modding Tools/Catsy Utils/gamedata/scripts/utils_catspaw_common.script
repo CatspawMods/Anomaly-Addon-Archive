@@ -1,13 +1,13 @@
 -- ======================================================================
 --[[	Catsy's commonly-used functions
--- ======================================================================
+-- ===================================================================--]]
+script_name 	= "utils_catspaw_common"
+script_version 	= "1.2"
+release_date    = 20240706
+--[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
-	https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
--- ===================================================================--]]
-script_version 				= "1.0"
-release_date            	= 20240630
---[[======================================================================
+
 	There are a bunch of functions that I use across my addons, and over
 	time they've added up to a fair bit of duplicated code that I have to
 	update in multiple places anytime they get revised.
@@ -23,34 +23,12 @@ release_date            	= 20240630
 
 	Seriously. Just copy the code into yours if you want to mess with it.
 -- ===================================================================--]]
--- 		SHORTCUTS
+-- 		SHORTCUTS AND STRINGS
 -- ======================================================================
 local gts 				= game.translate_string
 local floor 			= math.floor
 local abs 				= math.abs
 local rand 				= math.random
-local get_game_time 	= game.get_game_time
-local get_start_time	= level.get_start_time
-local who_is_npc 		= dialogs.who_is_npc
-
--- ===================================================================--]]
--- 		COMPATIBILITY
--- ======================================================================
--- Feature flags for demonized modded binaries
-local mwheel_exe_ver    = 20230701 -- Mouse wheel scripting support added as of this version
-local rclick_exe_ver    = 20230922 -- Right-click map support added as of this version
-local cmcolor_exe_ver	= 20240523 -- Context menu color support added as of this version
-
--- GAMMA is missing the MODDED_EXES_VERSION variable despite being based on demonized binaries
-local game_version  	= gts("ui_st_game_version")
-local gamma_modpack 	= game_version:find("G.A.M.M.A.") and true or false
-using_modded_exes 		= gamma_modpack or MODDED_EXES_VERSION and true or false
-
--- Public functions to query feature support
-function exe_mwheel_support() return gamma_modpack or (MODDED_EXES_VERSION and MODDED_EXES_VERSION >= mwheel_exe_ver) end
-function exe_rclick_support() return gamma_modpack or (MODDED_EXES_VERSION and MODDED_EXES_VERSION >= rclick_exe_ver) end
-function exe_cmcolor_support() return gamma_modpack or (MODDED_EXES_VERSION and MODDED_EXES_VERSION >= cmcolor_exe_ver) end
-
 -- ======================================================================
 -- 		LOGGING
 -- ======================================================================
@@ -69,7 +47,7 @@ end
 function vlog(caller, logtext, ...)
 	-- Verbose logging, printed to log only if debuglogs and verbose are both true
 	if not logtext then return end
-	caller = caller or this
+	caller = caller or utils_catspaw_common
 	if logtext and caller.debuglogs and caller.verbose then
         printf((caller.logprefix or logprefix) .. (caller.vprefix or vprefix) .. logtext, ...)
 	end
@@ -78,7 +56,8 @@ end
 function plog(raw_prefix, caller, logtext, ...)
 	-- Debug logging with a custom prefix, intended for use with log color codes
 	-- rarely needed but sometimes useful
-	if not (caller and logtext) then return end
+	if not logtext then return end
+	caller = caller or utils_catspaw_common
 	if logtext and caller.debuglogs then
         printf((raw_prefix or "") .. logtext, ...)
 	end
@@ -86,7 +65,7 @@ end
 -- ======================================================================
 -- To use them in yours, copy the following four lines to your script,
 -- changing "logprefix" to something different that identifies your 
--- addon and choosing whatever values you wish for the others:
+-- addon (or blank) and choosing any values you wish for the others:
 debuglogs 		= false
 verbose 		= false
 logprefix 		= "[CatsyUtils] "
@@ -106,7 +85,8 @@ local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) e
 
 -- In practice, please always pass your script as caller if you make any
 -- external use of the logging functions, so that anyone reading the log 
--- knows which adddon is responsible for the text.
+-- knows which addon is responsible for the text.
+
 function set_debug_logging(debug_en, verbose_en)
 	if (debug_en ~= nil) then debuglogs = debug_en end
 	if (verbose_en ~= nil) then verbose = verbose_en end
@@ -115,17 +95,50 @@ end
 function enable_all_logging() set_debug_logging(true, true) end
 function disable_all_logging() set_debug_logging(false, false) end
 
+logdiv = "~ ------------------------------------------------------------------------\n"
+
+-- ===================================================================--]]
+-- 		ENGINE FEATURE COMPATIBILITY
+-- ======================================================================
+-- Feature flags for demonized modded binaries
+engine_features = {
+	mwheel 		= { ver = 20230701, gamma = true, name = "Mouse wheel scripting"},
+	rclick 		= { ver = 20230922, gamma = true, name = "Right-click on PDA map"},
+	getstrtbl 	= { ver = 20240507, gamma = false, name = "Func get_string_table"},
+	-- GAMMA is based on recent binaries, but doesn't yet support get_string_table()
+	cmcolor 	= { ver = 20240523, gamma = true, name = "Context menu colors"},
+	-- Enabling color in context menus can have undesirable side effects across the entire game
+}
+
+local game_version  = gts("ui_st_game_version")
+using_gamma_modpack = game_version:find("G.A.M.M.A.") and true or false
+-- GAMMA is based on demonized binaries, but missing the MODDED_EXES_VERSION variable
+using_modded_exes 	= using_gamma_modpack or MODDED_EXES_VERSION and true or false
+
+local function setup_engine_features()
+
+	for k,v in pairs(engine_features) do
+		v.enabled 	= (v.gamma and using_gamma_modpack) or (MODDED_EXES_VERSION and MODDED_EXES_VERSION >= v.ver)
+		local func 	= "exe_" .. k .. "_support"
+		v.func 		= function() return v.enabled end
+		utils_catspaw_common[func] = v.func
+	end		
+
+	if not using_modded_exes then
+		printf("! Modded exes not in use! No extra features available.")
+	return end
+
+	printf(logdiv .. "@ Modded exes feature support (GAMMA: %s)", using_gamma_modpack)
+	for k,v in pairs(engine_features) do
+		printf("%s %s (added %s): %s", v.enabled and "-" or "!", v.name, v.ver, v.func())
+	end
+	printf(logdiv)
+end
+setup_engine_features()
+
 -- ======================================================================
 -- 	GENERAL UTILITY
 -- ======================================================================
-easing = {
-	-- Easing functions for progression along a curve
-	InSine 	= (function(x) return 1 - math.cos((x * math.pi) / 2) end),
-	OutSine = (function(x) return math.sin((x * math.pi) / 2) end),
-	InQuint = (function(x) if not x then return end return x * x * x * x * x end),
-	OutQuint = (function(x) if not x then return end return 1 - math.pow(1 - x, 5) end),
-}
-
 function exec(str,...)
 	-- Executes a script.functor name stored in a string
 	local res = nil
@@ -143,7 +156,7 @@ end
 function get_time_elapsed()
 	-- Total game seconds elapsed since character's life in the Zone began
 	-- persistent across saves/sessions, unlike time_global
-	return floor(get_game_time():diffSec(get_start_time()))
+	return floor(game.get_game_time():diffSec(level.get_start_time()))
 end
 
 function strbool(s)
@@ -186,6 +199,23 @@ function greater_of(n1, n2)
 	n2 = tonumber(n2) or 0
 	return (n1 > n2) and n1 or n2
 end
+
+function lerp(a, b, f)
+	-- linear interpolation
+    if a and b and f then
+        return a + f * (b - a)
+    else
+        return a or b or 0
+    end
+end
+
+easing = {
+	-- Easing functions for progression along a curve
+	InSine 	= (function(x) return 1 - math.cos((x * math.pi) / 2) end),
+	OutSine = (function(x) return math.sin((x * math.pi) / 2) end),
+	InQuint = (function(x) if not x then return end return x * x * x * x * x end),
+	OutQuint = (function(x) if not x then return end return 1 - math.pow(1 - x, 5) end),
+}
 
 function roll(chance)
 	-- chance is 0 to 1, does a coin flip if no chance passed
@@ -249,7 +279,7 @@ end
 
 function who_npc(a, b)
 	-- like who_is_npc, but won't break if only a is passed
-	return a and b and who_is_npc(a, b) or a
+	return a and b and dialogs.who_is_npc(a, b) or a
 end
 
 function get_comm(a, b)
