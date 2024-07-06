@@ -1,0 +1,5 @@
+*.script linguist-language=Lua
+fomod/* linguist-vendored
+(^|/)gamedata/configs/* linguist-vendored
+(^|/)gamedata/sounds/* linguist-vendored
+(^|/)gamedata/textures/* linguist-vendored
