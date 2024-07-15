@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.2"
-release_date    = 20240706
+script_version 	= "1.41"
+release_date    = 20240715
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -139,18 +139,32 @@ setup_engine_features()
 -- ======================================================================
 -- 	GENERAL UTILITY
 -- ======================================================================
-function exec(str,...)
-	-- Executes a script.functor name stored in a string
+function valid_id(id)
+	return id and (id > 0) and (id < 65535)
+end
+
+function var_from_str_path(str)
+	-- Retrieves a variable value whose script.varname path is stored in a string
 	local res = nil
     if str then
 		str = str_explode(str,"%.")
 		if str[1] and str[2] and _G[ str[1] ] and _G[ str[1] ][ str[2] ] then
-			res = _G[ str[1] ][ str[2] ](...)
+			res = _G[ str[1] ][ str[2] ]
 		else
-			dl("Could not exec function %s", str)
+			dl("No content found for %s", str)
 		end
 	end
 	return res
+end
+
+function exec(str, ...)
+	-- Executes a script.functor name stored in a string
+	local res = var_from_str_path(str)
+	if res then
+		return res(...)
+	else
+		dl("Could not exec function %s", str)
+	end
 end
 
 function get_time_elapsed()
@@ -273,6 +287,10 @@ function safeid(obj, def_actor)
 	return (type(obj.id) == "function") and obj:id() or obj.id
 end
 
+function actor_loaded()
+	return (db.actor ~= nil)
+end
+
 function is_living_thing(obj)
     return IsStalker(obj) or IsMonster(obj)
 end
@@ -285,4 +303,15 @@ end
 function get_comm(a, b)
 	-- get community either from single object or from NPC side of conversation call
 	return get_object_community(who_npc(a, b))
+end
+
+function set_stash_hint(id, name)
+	if not id then return end
+	name = name or ""
+	se_save_var(id, nil, "stash_hint_text", name)
+end
+
+function get_stash_hint(id)
+	if not id then return end
+	return se_load_var(id, nil, "stash_hint_text")
 end
