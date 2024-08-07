@@ -1,0 +1,128 @@
+-- Monkeypatch of xr_meet by Catspaw based on Vintar0's Modular Miscellaneous Tweaks addon 
+-- Converted to monkeypatch for compatibility and flexibility, adds new callback
+-- to allow control/override of features and vanilla eval by other addons
+
+use_override	= true 	-- Aborts all vanilla usability evaluation, enabling talk
+						-- with all uninjured, non-zombied NPCs by default
+						-- If hardcoded to off in the script, killswitches all addon
+						-- functionality and skips any monkeypatching of xr_meet
+use_callback	= true	-- Sends custom npc_on_eval_usability callback for use by other addons
+debuglogs 		= false -- Enable debug logging when talk eval is aborted by callback
+flags 			= {}
+
+if use_override and AddScriptCallback then
+	-- Register in on_game_start like any other callback, has no effect unless used
+	AddScriptCallback("npc_on_eval_usability")
+end
+
+if use_override then
+	printf("xr_meet.process_npc_usability monkeypatched by zzz_xr_meet_talk_to_anyone.script")
+	function xr_meet.process_npc_usability(npc)
+		if not npc then return end
+
+		flags = {
+			ret_value 	= true,	-- Set false via callback to abort further eval
+			comm 		= character_community(npc),
+			wounded 	= IsWounded(npc),
+			override 	= use_override,
+		}
+		if use_callback and AddScriptCallback then
+			SendScriptCallback("npc_on_eval_usability", npc, flags)
+		end
+		if not (flags and flags.ret_value) then
+			if debuglogs then printf("xr_meet.process_npc_usability for %s (%s) aborted by npc_on_eval_usability callback", npc:name(), npc:id()) end
+			return
+		end
+
+		if (flags and flags.comm == "zombied") then 
+			npc:disable_talk()
+			return 
+		end
+		
+		if (flags and flags.wounded) then
+			local st = db.storage[npc:id()]
+			if (npc:relation(db.actor) >= game_object.enemy and st and st.victim_surrender ~= AC_ID) then
+				npc:disable_talk()
+			else
+				local wounded = db.storage[npc:id()].wounded
+				if wounded.enable_talk then
+					npc:enable_talk()
+				else
+					npc:disable_talk()
+				end
+			end
+			return
+		end
+
+		if flags.override then
+			-- Override all further vanilla evals, enable talk for all NPCs by default
+			npc:enable_talk()
+			return
+		end
+		-- VANILLA USABILITY EVAL BEHAVIOR AFTER THIS POINT
+
+		-- Special case for Doc to force him to talk
+		if (npc:section() == "mar_smart_terrain_doc_doctor") then
+			npc:enable_talk()
+			return
+		end
+
+		local meet = db.storage[npc:id()].meet
+		if not (meet) then
+			return
+		end
+
+		local use = meet.meet_manager.use
+		
+		if (use == "true") then
+			if xr_corpse_detection.is_under_corpse_detection(npc) or xr_help_wounded.is_under_help_wounded(npc) then
+				npc:disable_talk()
+			else
+				npc:enable_talk()
+			end
+			return
+		end
+
+		-- check if a task giver then force allow talk
+		local id = npc:id()
+		local task_info = task_manager.get_task_manager().task_info
+		for k,v in pairs(task_info) do
+			if (v.task_giver_id and v.task_giver_id == id) then
+				npc:enable_talk()
+				return
+				
+			-- check if it's the delivery dude
+			elseif tasks_delivery.is_delivery_task(k) then
+				local var = load_var(db.actor, k)
+				if var and var.target_id and (var.target_id == id) then
+					npc:enable_talk()
+					return
+				end
+			end 
+		end
+		
+		if (use == "false") then	
+			npc:disable_talk()
+			if npc:is_talking() then
+				npc:stop_talk()
+			end
+		end
+	end
+end
+
+function on_option_change()
+	if ui_mcm then
+		local function get_mcm_bool_if_exists(opt, def)
+			local v = ui_mcm.get("catsy_common/" .. opt)
+			if v == nil then return def end
+			return ((v == "true") or (v == true)) and true or false
+		end
+		use_override 	= get_mcm_bool_if_exists("xr_meet_talk_eval_override", use_override)
+		use_callback 	= get_mcm_bool_if_exists("xr_meet_send_eval_callback", use_callback)
+		debuglogs 		= get_mcm_bool_if_exists("xr_meet_talk_eval_debuglogs", debuglogs)
+	end
+end
+
+function on_game_start()
+	RegisterScriptCallback("on_option_change",on_option_change)
+end
