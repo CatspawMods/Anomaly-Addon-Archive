@@ -1,6 +1,7 @@
 -- Monkeypatch of xr_meet by Catspaw based on Vintar0's Modular Miscellaneous Tweaks addon 
 -- Converted to monkeypatch for compatibility and flexibility, adds new callback
 -- to allow control/override of features and vanilla eval by other addons
+-- Source: https://github.com/CatspawMods/Anomaly-Addon-Archive/tree/main/Modding%20Tools
 
 use_override	= true 	-- Aborts all vanilla usability evaluation, enabling talk
 						-- with all uninjured, non-zombied NPCs by default
