@@ -2,10 +2,10 @@
 Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 
 # Key MCM feature flags
-`milpda\milpdagen\tracking_mode` - When to show markers for dead bodies on the map \ 
-`milpda\milpdagen\monster_tracking_mode` - When to show markers for dead mutants on the map \ 
-`milpda\milpdagen\victim_text_mode` - When to show hint text identifying the body \ 
-`milpda\milpdagen\killer_text_mode` - When to show hint text identifying the killer \ 
+`milpda\milpdagen\tracking_mode` - When to show markers for dead bodies on the map  
+`milpda\milpdagen\monster_tracking_mode` - When to show markers for dead mutants on the map  
+`milpda\milpdagen\victim_text_mode` - When to show hint text identifying the body  
+`milpda\milpdagen\killer_text_mode` - When to show hint text identifying the killer  
 
 **The default for all of the above is `2` (actor and squad) but this can be adjusted for preference:**
 * `0` = do not show
