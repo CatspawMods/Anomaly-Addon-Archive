@@ -2,23 +2,23 @@
 Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 
 # Key MCM feature flags
-* `milpda\milpdagen\tracking_mode` - When to show markers for dead bodies on the map
-* `milpda\milpdagen\monster_tracking_mode` - When to show markers for dead mutants on the map
-* `milpda\milpdagen\victim_text_mode` - When to show hint text identifying the body
-* `milpda\milpdagen\killer_text_mode` - When to show hint text identifying the killer
+`milpda\milpdagen\tracking_mode` - When to show markers for dead bodies on the map \ 
+`milpda\milpdagen\monster_tracking_mode` - When to show markers for dead mutants on the map \ 
+`milpda\milpdagen\victim_text_mode` - When to show hint text identifying the body \ 
+`milpda\milpdagen\killer_text_mode` - When to show hint text identifying the killer \ 
 
-*The default for all of the above is `2` (actor and squad) but this can be adjusted for preference:*
+**The default for all of the above is `2` (actor and squad) but this can be adjusted for preference:**
 * `0` = do not show
 * `1` = show only for actor
 * `2` = show for actor squad also
 * `3` = show all
 
-*There is a faction blacklist, which lets you always hide certain factions regardless of unlocks or PDA features, e.g:*
+**There is a faction blacklist, which lets you always hide certain factions regardless of unlocks or PDA features, e.g:**
 * `milpda\facblacklist\monolith = true`
 * `milpda\facblacklist\greh = true`
 * `milpda\facblacklist\isg = true`
 
-*There are also flags that let you separately override the default behaviors of each PDA model:*
+**There are also flags that let you separately override the default behaviors of each PDA model:**
 * `milpda\cfg_device_pda_1``
 * `milpda\cfg_device_pda_2`
 * `milpda\cfg_device_pda_3`
