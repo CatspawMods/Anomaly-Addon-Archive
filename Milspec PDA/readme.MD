@@ -1,7 +1,7 @@
 # **Milspec PDA and Kill Tracker**  
 Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 
-# Key MCM feature flags  
+## Key MCM feature flags  
 `milpda\milpdagen\tracking_mode` - When to show markers for dead bodies on the map  
 `milpda\milpdagen\monster_tracking_mode` - When to show markers for dead mutants on the map  
 `milpda\milpdagen\victim_text_mode` - When to show hint text identifying the body  
