@@ -13,11 +13,13 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly
 `2` = show for actor squad also  
 `3` = show all  
 
-**There is a faction blacklist, which lets you always hide certain factions regardless of unlocks or PDA features, e.g:**  
+## Faction Blacklist
+**The faction blacklist lets you always hide certain factions regardless of unlocks or PDA features, e.g:**  
 `milpda\facblacklist\monolith = true`  
 `milpda\facblacklist\greh = true`  
 `milpda\facblacklist\isg = true`  
 
+## Overrides
 **There are also flags that let you separately override the default behaviors of each PDA model:**  
 `milpda\cfg_device_pda_1``  
 `milpda\cfg_device_pda_2`  
@@ -33,7 +35,8 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly
 `obey_bl` - Whether it obeys the faction blacklist, bool  
 `progmult` - Multiplier related to the progression feature, float  
 
-**Finally, speaking of which, there is the progressive mode, which creates a new gameplay loop where the player must loot PDAs from a given faction in order to accumulate enough data to unlock access to see them on the map. I love playing with this and highly recommend it.**
+## Progressive Mode
+**Progressive mode creates a new gameplay loop where the player must loot PDAs from a given faction in order to accumulate enough data to unlock access to see them on the map. I love playing with this and highly recommend it.**
 `milpda\progressive\enabled = true` - Whether faction mapspot visbiility must be progressively unlocked, if this is false, everything below is irrelevant and ignored  
 
 `milpda\progressive\gain_mode = 1` - When the actor gains unlock progression from a PDA  
@@ -48,4 +51,5 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly
 `milpda\progressive\access_time = 7` - Duration of access gained  
 `milpda\progressive\access_unit = d` - Unit of time for above (s, m, h, d)  
 
+**There are also many, many other settings related to the unlock thresholds.**
 **This list is not exhaustive, just some of the most important. See `catsy_milpda_mcm.script` for a full list of feature flags.**
