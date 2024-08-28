@@ -21,7 +21,7 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly
 
 ## Overrides
 **There are also flags that let you separately override the default behaviors of each PDA model:**  
-`milpda\cfg_device_pda_1``  
+`milpda\cfg_device_pda_1`  
 `milpda\cfg_device_pda_2`  
 `milpda\cfg_device_pda_3`  
 `milpda\cfg_device_pda_milspec`  
