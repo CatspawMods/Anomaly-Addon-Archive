@@ -34,8 +34,7 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly
 `progmult` - Multiplier related to the progression feature, float  
 
 **Finally, speaking of which, there is the progressive mode, which creates a new gameplay loop where the player must loot PDAs from a given faction in order to accumulate enough data to unlock access to see them on the map. I love playing with this and highly recommend it.**
-`milpda\progressive\enabled = true`
-	Whether faction mapspot visbiility must be progressively unlocked - if this is false, everything below can be ignored  
+`milpda\progressive\enabled = true` - Whether faction mapspot visbiility must be progressively unlocked, if this is false, everything below is irrelevant and ignored  
 
 `milpda\progressive\gain_mode = 1` - When the actor gains unlock progression from a PDA  
 `0` = on first pickup  
