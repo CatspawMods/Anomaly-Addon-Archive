@@ -8,10 +8,10 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly
 `milpda\milpdagen\killer_text_mode` - When to show hint text identifying the killer  
 
 **The default for all of the above is `2` (actor and squad) but this can be adjusted for preference:**  
-* `0` = do not show
-* `1` = show only for actor
-* `2` = show for actor squad also
-* `3` = show all
+`0` = do not show  
+`1` = show only for actor  
+`2` = show for actor squad also  
+`3` = show all  
 
 **There is a faction blacklist, which lets you always hide certain factions regardless of unlocks or PDA features, e.g:**  
 `milpda\facblacklist\monolith = true`  
@@ -38,9 +38,9 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly
 	Whether faction mapspot visbiility must be progressively unlocked - if this is false, everything below can be ignored  
 
 `milpda\progressive\gain_mode = 1` - When the actor gains unlock progression from a PDA  
-* `0` = on first pickup
-* `1` = when first read
-* `2` = when scrapped (ignores decryption by sacrificing the PDA)
+`0` = on first pickup  
+`1` = when first read  
+`2` = when scrapped (ignores decryption by sacrificing the PDA)  
 
 `milpda\progressive\must_decrypt = true`  - Whether a locked PDA must first be decrypted in order to gain progress  
 `milpda\progressive\access_resets = true` - Factions will realize their codes are compromised and revoke access after a time  
