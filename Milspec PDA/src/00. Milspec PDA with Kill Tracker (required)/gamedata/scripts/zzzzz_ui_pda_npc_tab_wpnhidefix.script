@@ -1,0 +1,45 @@
+-- ======================================================================
+--[[  Fix for NPC PDAs disappearing or breaking when viewed
+  Included as part of Milspec PDA by Catspaw, but has no dependency and
+  can be used as a stand-alone fix.
+
+  Credits: demonized for invaluable help with my LUA derp
+
+  This bug occurs when attempting to view an NPC PDA while a weapon is 
+  out, but only if the (engine-based) legacy 2D PDA is being used. 
+  The fix forces the actor to stow their weapon, and makes the PDA 
+  wait until the weapon stow animation is completed before displaying.
+-- ====================================================================]]
+
+printf("[MPDA][zzzzz_ui_pda_npc_tab_wpnhidefix.script] monkeypatch override of ui_pda_npc_tab.use_view()")
+
+function ui_pda_npc_tab.use_view(obj)
+    
+    local p = obj:parent()
+    if not (p and p:id() == AC_ID) then
+        return
+    end
+    
+    hide_hud_inventory()
+    
+    if (get_console_cmd(1,"g_3d_pda")) then
+        db.actor:make_item_active(obj)
+        ActorMenu.get_pda_menu():SetActiveSubdialog("eptNPC")
+    else
+        if db.actor:active_item() then
+            db.actor:activate_slot(0)
+        end
+        db.actor:move_to_slot(obj, 14)
+        local tg = time_global()
+        CreateTimeEvent(0, "delay_2d_pda_draw", 0.25, function(start_time)
+            if not db.actor:active_item() then
+                ActorMenu.get_pda_menu():ShowDialog(true) 
+                ActorMenu.get_pda_menu():SetActiveSubdialog("eptNPC") 
+                return true
+            elseif time_global() > (start_time + 2000) then
+                actor_menu.set_msg(1,game.translate_string("st_view_npc_pda_cancel"),5)
+                return true
+            end
+        end,tg)
+    end
+end

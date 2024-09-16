@@ -1,0 +1,279 @@
+-- ======================================================================
+--[[	Milspec PDA
+-- ======================================================================
+ 	MCM initialization script
+ 	Author: Catspaw (CatspawMods @ ModDB)
+ 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+-- ===================================================================--]]
+local unsquish_ratio
+local rel_version 	= "Milspec PDA not installed!"
+local psk   		= utils_data.parse_string_keys
+local gts 			= game.translate_string
+
+if item_milpda then
+	local ver 		= item_milpda.script_version
+	local rel 		= tostring(item_milpda.release_date)
+	if ver and rel then
+		rel_version = "v" .. ver .. " (rel " .. rel .. ")"
+	end
+end
+
+local color_tokens = {
+	["clr_def"] = "%" .. "%c[default]",
+    ["clr_lbl"] = "%" .. "%c[255,0,200,220]",
+    ["clr_gld"] = "%" .. "%c[255,255,215,0]",
+    ["clr_mil"] = "%" .. "%c[255,130,180,130]",
+    ["clr_tgr"] = "%" .. "%c[128,90,90,90]",
+    ["clr_wht"] = "%" .. "%c[255,220,220,220]",
+    ["clr_red"] = "%" .. "%c[255,255,0,0]",
+    ["clr_grn"] = "%" .. "%c[255,0,255,0]",
+}
+
+function on_mcm_load()
+	unsquish_ratio = (device().height / device().width) / (768 / 1024)
+
+	op = { id = "milpda", gr={
+			{ id = "milpdagen", sh=true, gr={
+					{id = "menuslide_main", type= "slide", link= "ui_options_slider_milpda", size= {512,50}, spacing= 20,
+						ui_hook_functor = {catsy_milpda_mcm.init_mcm_header_element},
+					},
+					{id = "header_main", type = "desc", text = "ui_mcm_milpda_header_main_plaintext",
+						ui_hook_functor = {catsy_milpda_mcm.init_mcm_header_element},
+					},
+					{id = "tracking_mode", type = "list", val = 2, def = 3,
+							content= {
+									{0,"milpda_trkmode_off"},
+									{1,"milpda_trkmode_you"},
+									{2,"milpda_trkmode_cmp"},
+									{3,"milpda_trkmode_all"},
+								}
+						},
+					{id = "victim_text_mode", type = "list", val = 2, def = 2,
+							content= {
+									{0,"milpda_trkmode_off"},
+									{1,"milpda_trkmode_you"},
+									{2,"milpda_trkmode_cmp"},
+									{3,"milpda_trkmode_all"},
+								}
+						},
+					{id = "killer_text_mode", type = "list", val = 2, def = 2,
+							content= {
+									{0,"milpda_trkmode_off"},
+									{1,"milpda_trkmode_you"},
+									{2,"milpda_trkmode_cmp"},
+									{3,"milpda_trkmode_all"},
+								}
+						},
+					{id = "monster_tracking_mode", type = "list", val = 2, def = 3,
+							content= {
+									{0,"milpda_trkmode_off"},
+									{1,"milpda_trkmode_you"},
+									{2,"milpda_trkmode_cmp"},
+									{3,"milpda_trkmode_all"},
+								}
+						},						
+					--{id = "show_monsters", type = "check", val = 1, def = true},
+					{id = "bodyicon", type = "list", val = 0, def = "whtx", 
+							content= {
+									{"upaw","milpda_upaw"},
+									{"deadbody_location_whtx","milpda_whtx"},
+									{"deadbody_location_skul","milpda_skul"},
+									{"deadbody_location_sdot","milpda_sdot"},
+									{"deadbody_location_mdot","milpda_mdot"},
+									{"deadbody_location_ldot","milpda_ldot"},
+								}
+						},
+					{id = "bodyicon_other", type = "list", val = 0, def = "sdot", 
+							content= {
+									{"upaw","milpda_upaw"},
+									{"deadbody_location_whtx","milpda_whtx"},
+									{"deadbody_location_skul","milpda_skul"},
+									{"deadbody_location_sdot","milpda_sdot"},
+									{"deadbody_location_mdot","milpda_mdot"},
+									{"deadbody_location_ldot","milpda_ldot"},
+								}
+						},
+					{id = "autoclear", type = "check", val = 1, def = true},
+					{id = "squadmate_mapspots", type = "check", val = 1, def = false},
+					{id = "debuglogs", type = "check", val = 1, def = false},
+					{id = "verbose", type = "check", val = 1, def = false},
+					{id = "wipe_all", type = "check", val = 1, def = false},
+					{id = "uninstall", type = "check", val = 1, def = false},
+					{id = "getpaw", type = "desc", text = "ui_mcm_milpda_milpdagen_getpaw"},
+				},
+			},
+			{ id = "progressive", sh=true, gr={
+					{id = "menuslide_prog", type= "slide", link= "ui_options_slider_progressive", size= {512,50}, spacing= 20},
+					{id = "header_prog", type = "desc", text = "ui_mcm_milpda_header_prog_plaintext",
+						ui_hook_functor = {catsy_milpda_mcm.init_mcm_header_element},
+					},
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "gain_mode", type = "list", val = 2, def = 2,
+							content= {
+									--{0,"milpda_trkmode_off"},
+									{1,"milpda_gain_on_pickup"},
+									{2,"milpda_gain_on_read"},
+									{4,"milpda_gain_on_scrap"},
+								}
+						},
+					{id = "must_decrypt", type = "check", val = 1, def = true},
+					{id = "access_resets", type = "check", val = 1, def = true},
+
+					{id = "only_enemy_unlock", type = "check", val = 1, def = false},
+					{id = "only_enemy_resets", type = "check", val = 1, def = true},
+					{id = "access_time", type = "track", val = 2, min = 1, max = 60, step = 1, def = 7},
+					{id = "access_unit", type = "list", val = 0, def = "d", 
+							content= {
+									{"s","timeunit_seconds"},
+									{"m","timeunit_minutes"},
+									{"h","timeunit_hours"},
+									{"d","timeunit_days"},
+								}
+						},
+					{id = "noblacklist", type = "check", val = 1, def = true},
+					{id = "progcomm", type = "desc", clr = {255,255,255,255}, text = "ui_mcm_prog_comm_descr"},
+					{id = "army", type = "input", val = 2, min = 1, max = 10000, def = 14},
+					{id = "bandit", type = "input", val = 2, min = 1, max = 10000, def = 6},
+					{id = "csky", type = "input", val = 2, min = 1, max = 10000, def = 10},
+					{id = "dolg", type = "input", val = 2, min = 1, max = 10000, def = 13},
+					{id = "ecolog", type = "input", val = 2, min = 1, max = 10000, def = 12},
+					{id = "freedom", type = "input", val = 2, min = 1, max = 10000, def = 11},
+					{id = "killer", type = "input", val = 2, min = 1, max = 10000, def = 14},
+					{id = "stalker", type = "input", val = 2, min = 1, max = 10000, def = 9},
+					{id = "renegade", type = "input", val = 2, min = 1, max = 10000, def = 5},
+					{id = "monolith", type = "input", val = 2, min = 1, max = 10000, def = 15},
+					{id = "greh", type = "input", val = 2, min = 1, max = 10000, def = 13},
+					{id = "isg", type = "input", val = 2, min = 1, max = 10000, def = 16},
+					{id = "divider", type = "line"},
+					{id = "progranks", type = "desc", clr = {255,255,255,255}, text = "ui_mcm_prog_rank_descr"},					
+					{id = "novice", type = "input", min = 1, max = 10000, val = 2, def = 1},
+					{id = "trainee", type = "input", min = 1, max = 10000, val = 2, def = 2},
+					{id = "experienced", type = "input", min = 1, max = 10000, val = 2, def = 3},
+					{id = "professional", type = "input", min = 1, max = 10000, val = 2, def = 4},
+					{id = "veteran", type = "input", min = 1, max = 10000, val = 2, def = 5},
+					{id = "expert", type = "input", min = 1, max = 10000, val = 2, def = 6},
+					{id = "master", type = "input", min = 1, max = 10000, val = 2, def = 8},
+					{id = "legend", type = "input", min = 1, max = 10000, val = 2, def = 10},
+				},
+			},
+			{ id = "facblacklist", sh=true, gr={
+					{id = "menuslide_bl", type= "slide", link= "ui_options_slider_blacklist", size= {512,50}, spacing= 20},
+					{id = "header_bl", type = "desc", text = "ui_mcm_milpda_header_bl_plaintext",
+						ui_hook_functor = {catsy_milpda_mcm.init_mcm_header_element},
+					},
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "army", type = "check", val = 1, def = false},
+					{id = "bandit", type = "check", val = 1, def = false},
+					{id = "csky", type = "check", val = 1, def = false},
+					{id = "dolg", type = "check", val = 1, def = false},
+					{id = "ecolog", type = "check", val = 1, def = false},
+					{id = "freedom", type = "check", val = 1, def = false},
+					{id = "killer", type = "check", val = 1, def = false},
+					{id = "stalker", type = "check", val = 1, def = false},
+					{id = "renegade", type = "check", val = 1, def = false},
+					{id = "zombied", type = "check", val = 1, def = false},
+					{id = "monolith", type = "check", val = 1, def = true},
+					{id = "greh", type = "check", val = 1, def = true},
+					{id = "isg", type = "check", val = 1, def = true},
+				},
+			},
+			{ id = "cfg_device_pda_1", sh=true, gr={
+					{id = "menuslide_pda", type= "slide", link= "ui_options_slider_cfg_pda_1", size= {512,50}, spacing= 20},
+					{id = "header_pda", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_milpda_header_pda_plaintext"},
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "show_f", type = "check", val = 1, def = false, hint = "milpda_show_f"},
+					{id = "show_n", type = "check", val = 1, def = false, hint = "milpda_show_n"},
+					{id = "show_e", type = "check", val = 1, def = false, hint = "milpda_show_e"},
+					{id = "show_k", type = "check", val = 1, def = false, hint = "milpda_show_k"},
+					{id = "obeybl", type = "check", val = 1, def = true, hint = "milpda_obeybl"},
+					{id = "progmult", type = "track", val = 2, min = 0, max = 2, step = 0.01, def = 0, hint = "milpda_progmult"},
+				},
+			},
+			{ id = "cfg_device_pda_2", sh=true, gr={
+					{id = "menuslide_pda", type= "slide", link= "ui_options_slider_cfg_pda_2", size= {512,50}, spacing= 20},
+					{id = "header_pda", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_milpda_header_pda_plaintext"},
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "show_f", type = "check", val = 1, def = true, hint = "milpda_show_f"},
+					{id = "show_n", type = "check", val = 1, def = false, hint = "milpda_show_n"},
+					{id = "show_e", type = "check", val = 1, def = false, hint = "milpda_show_e"},
+					{id = "show_k", type = "check", val = 1, def = true, hint = "milpda_show_k"},
+					{id = "obeybl", type = "check", val = 1, def = true, hint = "milpda_obeybl"},
+					{id = "progmult", type = "track", val = 2, min = 0, max = 2, step = 0.01, def = 0.1, hint = "milpda_progmult"},
+				},
+			},
+			{ id = "cfg_device_pda_3", sh=true, gr={
+					{id = "menuslide_pda", type= "slide", link= "ui_options_slider_cfg_pda_3", size= {512,50}, spacing= 20},
+					{id = "header_pda", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_milpda_header_pda_plaintext"},
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "show_f", type = "check", val = 1, def = true, hint = "milpda_show_f"},
+					{id = "show_n", type = "check", val = 1, def = true, hint = "milpda_show_n"},
+					{id = "show_e", type = "check", val = 1, def = false, hint = "milpda_show_e"},
+					{id = "show_k", type = "check", val = 1, def = true, hint = "milpda_show_k"},
+					{id = "obeybl", type = "check", val = 1, def = true, hint = "milpda_obeybl"},
+					{id = "progmult", type = "track", val = 2, min = 0, max = 2, step = 0.01, def = 0.5, hint = "milpda_progmult"},
+				},
+			},
+			{ id = "cfg_device_pda_milspec", sh=true, gr={
+					{id = "menuslide_pda", type= "slide", link= "ui_options_slider_cfg_pda_milspec", size= {512,50}, spacing= 20},
+					{id = "header_pda", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_milpda_header_pda_plaintext"},
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "show_f", type = "check", val = 1, def = true, hint = "milpda_show_f"},
+					{id = "show_n", type = "check", val = 1, def = true, hint = "milpda_show_n"},
+					{id = "show_e", type = "check", val = 1, def = true, hint = "milpda_show_e"},
+					{id = "show_k", type = "check", val = 1, def = true, hint = "milpda_show_k"},
+					{id = "obeybl", type = "check", val = 1, def = true, hint = "milpda_obeybl"},
+					{id = "progmult", type = "track", val = 2, min = 0, max = 2, step = 0.01, def = 1, hint = "milpda_progmult"},
+				},
+			},
+		}
+	}
+	return op
+end
+
+function init_mcm_header_element(anchor, handlers, opts, flags)
+	local opt_id 	= opts and opts.id
+	local xml 		= CScriptXmlInit()
+	xml:ParseFile("milpda_ui_elements.xml")
+	if (opt_id == "menuslide_main") then
+		local tbox1	= xml:InitTextWnd("box", anchor)
+		tbox1:SetWndSize(vector2():set(480 * unsquish_ratio, 20))
+		tbox1:SetText(psk("$clr_tgr"..rel_version, color_tokens))
+		tbox1:SetWndPos(vector2():set(8, 72))
+		tbox1:SetFont(GetFontMedium())
+	elseif handlers.desc and opt_id:find("header_") then
+		handlers.desc:SetText("")
+		local head 	= xml:InitStatic("box",anchor)
+		local tbg1	= xml:InitStatic("box",anchor)
+		local tbox1	= xml:InitTextWnd("box",tbg1)
+		local tbox2	= xml:InitTextWnd("box",tbg1)
+		tbg1:InitTexture("ui_mcm_catsy_messagebox_transbg_675x150")
+
+		local function setup_mpda_header(menu, anc_y, box_h, t1_h, t1_y, t2_h, t2_y)
+			if not menu then return end
+			local locst	= "ui_mcm_milpda_" .. menu .. "_complex"
+			anchor:SetWndPos(vector2():set(0, anc_y))
+
+			tbg1:SetWndSize(vector2():set(675 * unsquish_ratio, box_h))
+			tbg1:SetWndPos(vector2():set(10, -5))
+
+			local text 	= psk(gts(locst .. "1"), color_tokens)
+			tbox1:SetWndSize(vector2():set(650 * unsquish_ratio, t1_h))
+			tbox1:SetText(text)
+			tbox1:SetWndPos(vector2():set(10, t1_y))
+
+			text 		= psk(gts(locst .. "2"), color_tokens)
+			tbox2:SetWndSize(vector2():set(630 * unsquish_ratio, t2_h))
+			tbox2:SetText(text)
+			tbox2:SetWndPos(vector2():set(10, t2_y))
+		end
+
+		if (opt_id == "header_main") then
+			setup_mpda_header(opt_id, 12, 	150, 125,	12, 50, 105)
+		elseif (opt_id == "header_prog") then
+			setup_mpda_header(opt_id, 1, 	130, 125,	7,	60, 62)
+		elseif (opt_id == "header_bl") then
+			setup_mpda_header(opt_id, 2, 	110, 50,	10, 60, 55)
+		end
+
+	end
+end

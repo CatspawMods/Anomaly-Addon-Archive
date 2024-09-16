@@ -1,0 +1,201 @@
+-- ======================================================================
+--[[	Milspec PDA
+-- ======================================================================
+ 	Author: Catspaw (CatspawMods @ ModDB)
+-- ======================================================================
+	Monkeypatch for the vanilla logic that determines which mapspots to 
+	show based on what PDA the player has.
+
+	In vanilla, the function in sim_squad_warfare.script itself overrides
+	the one in sim_squad_scripted.script. This script overrides both for
+	increased compatibility with other addons that change either script.
+-- ====================================================================]]
+
+show_squadmate_mapspots = false
+-- If true, all individual squad members will be marked with mapspots
+-- This can be configured in MCM
+
+printf("[MPDA] sim_squad_scripted.sim_squad_scripted.show() - monkeypatch override by zzz_sim_squad_scripted_milpda.script (Milspec PDA)")
+function sim_squad_scripted.sim_squad_scripted.show(self)
+
+	if self.show_disabled then
+		self:hide()
+		return
+	end
+
+    if (level.map_has_object_spot(self:commander_id(), "ui_pda2_special_location")~=0) or
+	(level.map_has_object_spot(self:commander_id(), "ui_pda2_trader_location")~=0) or
+	(level.map_has_object_spot(self:commander_id(), "ui_pda2_mechanic_location")~=0) or
+	(level.map_has_object_spot(self:commander_id(), "ui_pda2_scout_location")~=0) or
+	(level.map_has_object_spot(self:commander_id(), "ui_pda2_quest_npc_location")~=0) or
+	(level.map_has_object_spot(self:commander_id(), "ui_pda2_barman_location")~=0) or
+	(level.map_has_object_spot(self:commander_id(), "ui_pda2_medic_location")~=0) then
+		self.show_disabled = true
+		return
+	end
+
+	if (self.registered_with_warfare) then --_G.WARFARE
+		local faction = self:get_squad_community()	
+		local enemy = game_relations.is_factions_enemies(warfare.actor_faction, faction)
+		local friend = warfare.actor_faction == faction or game_relations.is_factions_friends(warfare.actor_faction, faction)
+
+		if (warfare_options.options.fog_of_war) then
+			local fog_of_war_distance = warfare_options.options.fog_of_war_distance
+			fog_of_war_distance = tonumber(fog_of_war_distance)
+			
+			local levelID = self.m_game_vertex_id and game_graph():vertex(self.m_game_vertex_id):level_id()
+			local visible = false
+			
+			if (levelID == get_player_level_id()) then
+				local dist = warfare.distance_to_xz_sqr(self.position, alife():actor().position)
+
+				if (dist < fog_of_war_distance*fog_of_war_distance) then
+					visible = true
+				end
+			end
+			
+			if not (visible) then
+				if (sim_offline_combat.squads_by_level[levelID]) then
+					for squadID,_ in pairs(sim_offline_combat.squads_by_level[levelID]) do
+						local squad = squadID and alife_object(squadID)
+
+						if (squad and squad:clsid() == clsid.online_offline_group_s) then
+							if (squad:get_squad_community() == warfare.actor_faction) then
+								if (warfare.distance_to_xz_sqr(squad.position, self.position) < fog_of_war_distance*fog_of_war_distance) then
+									visible = true
+									break
+								end
+							end
+						end
+					end
+				end
+			end
+
+			local info = nil
+
+			if (self:get_squad_community() == warfare.actor_faction or game_relations.is_factions_friends(self:get_squad_community(), warfare.actor_faction)) then
+				info = sim_squad_warfare.get_warfare_info(self)
+			else
+				info = sim_squad_warfare.get_enemy_info(self)
+
+				if (game_relations.is_factions_enemies(self:get_squad_community(), warfare.actor_faction) and warfare_options.options.hide_unfriendly_squads) then
+					visible = false
+				end
+			end
+
+			if (visible) then
+				if not (self.warfare_spot) then
+					self.warfare_spot = sim_squad_warfare.squad_icons[faction]
+					level.map_add_object_spot(self.id, self.warfare_spot, info)
+				else
+					level.map_change_spot_hint(self.id, self.warfare_spot, info)
+				end
+			else
+				if (self.warfare_spot) then
+					level.map_remove_object_spot(self.id, self.warfare_spot)
+					self.warfare_spot = nil
+				end
+			end
+		else
+			local info = nil
+
+			if (self:get_squad_community() == warfare.actor_faction or game_relations.is_factions_friends(self:get_squad_community(), warfare.actor_faction)) then
+				info = sim_squad_warfare.get_warfare_info(self)
+			else
+				info = sim_squad_warfare.get_enemy_info(self)
+			end
+
+			if not (self.warfare_spot) then
+				local spot = sim_squad_warfare.squad_icons[faction]
+				
+				if (spot) then
+					if (friend or not warfare_options.options.hide_unfriendly_squads) then
+						level.map_add_object_spot(self.id, spot, info)
+						self.warfare_spot = spot
+					end
+				end
+			else
+				if not (friend or not warfare_options.options.hide_unfriendly_squads) then
+					level.map_remove_object_spot(self.id, self.warfare_spot)
+					self.warfare_spot = nil
+				else
+					level.map_change_spot_hint(self.id, self.warfare_spot, info)
+				end
+			end
+		end
+	else
+		local sim = alife()
+		local se_actor = sim:actor()
+		local comm = self:get_squad_community()
+		local smspot = "squadmate_" .. (comm or "stalker") .. "_spot"
+		local spot = ""
+		local reset_required = (show_squadmate_mapspots and not self.squadmate_mapspots) or
+								(self.squadmate_mapspots and not show_squadmate_mapspots)
+
+		local function add_squad_mapspot(icon, hint)
+			if not db.actor then return end
+			--printf("Adding mapspot %s for squad %s (%s)", icon, self:name(), self.id)
+			hint = game.translate_string(comm)
+			level.map_add_object_spot(self.id, icon, hint)
+			if show_squadmate_mapspots then
+				for k in self:squad_members() do
+					local se_obj = k and k.id and alife_object(k.id)
+					if (k.id ~= self:commander_id()) and se_obj and se_obj.online then
+						--printf("* * Adding squadmate mapspot %s for %s (%s)", smspot, se_obj:character_name(), k.id)
+						level.map_add_object_spot(k.id, smspot, hint)
+					end
+				end
+				self.squadmate_mapspots = true
+			end
+		end
+
+
+		local function rem_squad_mapspot(icon)
+			if not db.actor then return end
+			--printf("Removing mapspot %s for squad %s (%s)", icon, self:name(), self.id)
+			level.map_remove_object_spot(self.id, icon)
+			if show_squadmate_mapspots or reset_required then
+				for k in self:squad_members() do
+					--printf("* * Removing squadmate mapspot %s for %s", smspot, k.id)
+					level.map_remove_object_spot(k.id, smspot)
+				end
+				self.squadmate_mapspots = false
+			end
+		end
+
+		-- 1. Debug mode + Debug HUD enabled
+		if (DEV_DEBUG and dbg_map_hud) then
+			spot = sim_squad_warfare.squad_icons[self.player_id] or "warfare_mutant_spot"
+		
+		-- 2. Improved PDAs
+		elseif db.actor then
+			local pda = db.actor:item_in_slot(8)
+			if pda and simulation_objects.is_on_the_same_level(se_actor,self) and (not is_squad_monster[self.player_id]) then
+				--printf("Checking visibility for %s | show_squadmate_mapspots: %s", self:name(), show_squadmate_mapspots)
+				if item_milpda.pda_type_can_see_mapspot(self.player_id) then
+					spot = sim_squad_warfare.squad_icons[self.player_id]
+				end
+			end
+		end
+		
+		if (spot ~= "") then
+			if (spot == self.spot_section) and not reset_required then
+				level.map_change_spot_hint(self.id, self.spot_section, self:get_squad_props())
+				return
+			end
+			
+			if (self.spot_section == nil) then
+				add_squad_mapspot(spot, self:get_squad_props())
+			else
+				rem_squad_mapspot(self.spot_section)
+				add_squad_mapspot(spot, self:get_squad_props())
+			end
+			
+			self.spot_section = spot
+			
+		elseif (self.spot_section ~= nil) then
+			rem_squad_mapspot(self.spot_section)
+			self.spot_section = nil
+		end
+	end
+end

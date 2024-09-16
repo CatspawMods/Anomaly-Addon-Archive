@@ -1,0 +1,28 @@
+-- ======================================================================
+--[[	Milspec PDA
+-- ======================================================================
+ 	Author: Catspaw (CatspawMods @ ModDB)
+-- ======================================================================
+	Monkeypatch that lets Milspec PDA know when an NPC PDA has been 
+	viewed so that the player can gain faction progress if Progressive 
+	Mode is enabled.
+
+	It then passes on the arguments unaltered to the original function.
+	This should have zero impact on anyone else's functionality.
+
+	This monkeypatch must load after any that override the same function,
+	such as my weapon hide fix. It will not work otherwise, and strange 
+	issues are likely to occur.
+-- ====================================================================]]
+if utils_catspaw_common then end
+local dl = function(logtext, ...) utils_catspaw_common.dlog(item_milpda, logtext, ...) end
+
+printf("[MPDA][zzzzzz_ui_pda_npc_tab_mpdaprogressive.script] clean monkeypatch of ui_pda_npc_tab.use_view()")
+local npc_tab_use_view = ui_pda_npc_tab.use_view -- save copy of original function
+function ui_pda_npc_tab.use_view(obj)
+	if obj then
+		dl("monkeypatch of ui_pda_npc_tab.use_view called for obj %s",obj and obj:name())
+		item_milpda.view_pda(obj) -- first have MPDA check for progress
+		npc_tab_use_view(obj)		-- then pass on the call to the original function
+	end
+end

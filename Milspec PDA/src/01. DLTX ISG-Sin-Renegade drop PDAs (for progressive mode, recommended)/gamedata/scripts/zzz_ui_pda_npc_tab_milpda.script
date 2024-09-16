@@ -1,0 +1,48 @@
+-- ======================================================================
+--[[	Milspec PDA
+-- ======================================================================
+	Overrides for the faction lists used in ui_pda_npc_tab.script.
+
+	This file requires modded binaries that support unlocalization, 
+	which includes GAMMA and Screen Space Shaders, among others.
+
+	This change allows the progressive unlock feature to work for PDAs 
+	looted from Renegade, Sin, and ISG members. It will not break 
+	anything if it is missing or the unlocalize feature is unavailable.
+
+	This is intentionally kept separate from the override in the bugfix
+	zzzzz_ui_npc_pda_tab_wpnhidefix.script. 
+-- ====================================================================]]
+
+ui_pda_npc_tab.faction_encyption = {
+	["army"] = 30 ,
+	["bandit"] = 0 ,
+	["csky"] = 20 ,
+	["dolg"] = 40 ,
+	["ecolog"] = 30 ,
+	["freedom"] = 20 ,
+	["killer"] = 40 ,
+	["stalker"] = 10 ,
+	["monolith"] = 50 ,
+	-- factions below this are commented out in vanilla
+	["renegade"] = 10 ,
+	["greh"] = 30 ,
+	["isg"] = 50,
+}
+ui_pda_npc_tab.faction_lookup = {
+	"army" ,
+	"bandit" ,
+	"csky" ,
+	"dolg" ,
+	"ecolog" ,
+	"freedom" ,
+	"killer" ,
+	"stalker" ,
+	"monolith" ,
+	-- factions below this are commented out in vanilla
+	"renegade" ,
+	"greh" ,
+	"isg",
+}
+
+printf("ui_pda_npc_tab: clean monkeypatch of faction lookup and encryption tables by zzz_ui_pda_npc_tab_milpda.script")

@@ -1,0 +1,661 @@
+<!--
+    Milspec PDA
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+    Version: 1.10
+    Updated: 20230329
+    Contents: Localized RUS string definitions
+-->
+<string_table>
+    <string id="st_pda_mil_name">
+        <text>Milspec PDA</text>
+    </string>
+    <string id="st_pda_mil_descr">
+        <text>Электронное устройство карманного размера, предназначенное для выполнения основных и наиболее жизненно важных функций компьютера. КПК необходим для ежедневного обмена информацией. Он поставляется с предустановленным модулем GPS для предоставления пользователю информации о геолокации и времени.\n\n Эта сложная модель была разработана неизвестной организацией для использования военными под прикрытием или оперативниками НПО и включает в себя криптографический модуль, позволяющий пользователю проникать во многие защищенные частные сети Зоны, раскрывая секретные данные, а также отображает приблизительное расположение вражеских отрядов, действующих в этом районе..\n \n
+        %c[ui_gray_3]ХАРАКТЕРИСТИКИ:\n
+        %c[d_blue] • %c[ui_gray_2] технологическое изделие\n
+        %c[d_blue] • %c[ui_gray_2] высокое потребление электроэнергии\n
+        %c[d_purple] • %c[ui_gray_2] показывает местоположение всех близлежащих отрядов\n
+        </text>
+    </string>
+    <string id="ui_mcm_menu_milpda">
+        <text>Milspec PDA</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall">
+        <text>Удалить Milspec PDA</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall_desc">
+        <text>При установке этого флажка будут удалены все копии Milspec PDA в инвентаре игрока.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_enabled">
+        <text>Включите пользовательский черный список для фракций, перечисленных ниже</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_army">
+        <text>Не показывать военных</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_bandit">
+        <text>Не показывать бандитов</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_csky">
+        <text>Не показывать членов группировки «Чистое небо»</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_dolg">
+        <text>Не показывать членов группировки «Долг»</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_ecolog">
+        <text>Не показывать экологов / ученых</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_freedom">
+        <text>Не показывать членов группировки «Свобода»</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_killer">
+        <text>Не показывать наемников</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_monolith">
+        <text>Не показывать членов группировки «Монолит»</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_zombied">
+        <text>Не показывать зомбированных</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_greh">
+        <text>Не показывать членов группировки «Грех»</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_isg">
+        <text>Не показывать членов группировки «ИИГ»</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_renegade">
+        <text>Не показывать членов группировки «Ренегаты»</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_stalker">
+        <text>Не показывать одиночек</text>
+    </string>
+    <string id="ui_mcm_menu_milpdagen">
+        <text>Настройки</text>
+    </string>
+    <string id="ui_mcm_menu_facblacklist">
+        <text>"Черный список"</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_1">
+        <text>PDA опт: 1.0</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_2">
+        <text>PDA опт: 2.0</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_3">
+        <text>PDA опт: 3.1</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_milspec">
+        <text>PDA опт: Milspec</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_kiltrak">
+        <text>Включить KilTrak (tm)</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_kiltrak_desc">
+        <text>Включите поддержку аддона Ishmael's Kill Tracker для отслеживания убийств.</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_getkiltrak">
+        <text>Скачайте аддон Ishmael's Kill Tracker здесь: \n\nhttps://www.moddb.com/mods/stalker-anomaly/addons/kiltrak</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_1_enabled">
+        <text>Настройка видимости точек на карте для PDA 1.0.</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_2_enabled">
+        <text>Настройка видимости точек на карте для PDA 2.0.</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_3_enabled">
+        <text>Настройка видимости точек на карте для PDA 3.1.</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_milspec_enabled">
+        <text>Настройка видимости точек на карте для Milspec PDA</text>
+    </string>
+
+    <string id="ui_mcm_milpda_show_f">
+        <text>Показывать на карте метки дружественных сталкеров</text>
+    </string>
+    <string id="ui_mcm_milpda_show_n">
+        <text>Показывать на карте метки нейтральных сталкеров</text>
+    </string>
+    <string id="ui_mcm_milpda_show_e">
+        <text>Показывать на карте метки врагов</text>
+    </string>
+    <string id="ui_mcm_milpda_show_k">
+        <text>Показывать на карте метки трупов</text>
+    </string>
+    <string id="ui_mcm_milpda_obeybl">
+        <text>Используйте черный список фракций</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_debuglogs">
+        <text>Включить ведение журнала отладки</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_debuglogs_desc">
+        <text>Если этот параметр включен, скрипт отправит в консоль спам с данными того, что он делает. Обычно это должно быть выключено. Но если вы сообщаете мне о проблеме, мне, вероятно, потребуется, чтобы вы воспроизвели проблему с включенной подробной отладочной регистрацией.</text>
+    </string>
+<!-- Added in 1.4 -->
+    <string id="st_kiltrak_bodyof">
+        <text>Тела  убитых</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_bodyicon">
+        <text>Типы иконок для тел на миникарте</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_whtx">
+        <text>Белый X</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_skul">
+        <text>Большой череп</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_sdot">
+        <text>Маленькая синяя точка</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_mdot">
+        <text>Средняя синяя точка</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_ldot">
+        <text>Большая синяя точка</text>
+    </string>
+<!-- Added in 1.5 -->
+    <string id="st_kiltrak_unidbody">
+        <text>Неопознанное тело</text>
+    </string>
+    <string id="st_milpda_delete_marker">
+        <text>Удалить маркер убитого</text>
+    </string>
+<!-- Added in 1.6 -->
+    <string id="st_kiltrak_killedby">
+        <text>Убитый</text>
+    </string>
+<!-- Added in 1.7 -->
+    <string id="ui_mcm_milpda_milpdagen_autoclear">
+        <text>Автоматическая очистка маркеров тел при их лутании</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_autoclear_desc">
+        <text>Когда функция включена, "Kill Tracker" автоматически удаляет маркеры тел, когда вы лутаете или иным образом взаимодействуете с ними. Отключение этого параметра приведет к тому, что маркеры тела останутся на карте до тех пор, пока вы не очистите их вручную или тело не исчезнет.</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_tracking_mode">
+        <text>Режим "Kill Tracker"</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_tracking_mode_desc">
+        <text>Устанавливает режим работы для "Kill Tracker".\nOff: "Kill Tracker" отключен \nPlayer: "Kill Tracker" будет отображать только ваши убийства \nPlayer Squad: "Kill Tracker" также будет отображать убийства компаньонов \nAll: Мертвые тела будут показаны независимо от того, кто или что их убило. Убийства, совершенные не игроком или его командой, всегда будут отображаться синими точками.</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_all">
+        <text>Все</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_you">
+        <text>Главный герой (ГГ)</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_cmp">
+        <text>Команда ГГ</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_off">
+        <text>Отключено</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_getpaw">
+        <text>Скачать "Personal Adjustable Waypoint" можно здесь:\n\nhttps://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma</text>
+    </string>
+
+<!-- Added in 1.7.4 -->
+
+    <string id="ui_mcm_milpda_milpdagen_bodyicon_other">
+        <text>Стиль иконок для убийств, совершенных другими</text>
+    </string>
+
+    <string id="ui_mcm_lst_milpda_upaw">
+        <text>Используйте иконку PAW</text>
+    </string>
+
+    <string id="st_kiltrak_deadbody">
+        <text>Тело умершего</text>
+    </string>
+
+    <string id="st_milpda_thezone">
+        <text>Зона</text>
+    </string>
+
+<!-- Added in 1.7.5 -->
+
+
+    <string id ="ui_mcm_milpda_milpdagen_wipe_all">
+        <text>Стирание всех данных о маркерах тела</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_milpdagen_wipe_all_desc">
+        <text>Удаляет все маркеры тел с карты и стирает базу данных "Kill Tracker". Это нельзя отменить.</text>
+    </string>
+
+<!-- Added in 1.8 -->
+    <string id="ui_mcm_menu_progressive">
+        <text>Прогресс</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_enabled">
+        <text>Прогресс видимости отряда (рекомендуется)</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_enabled_desc">
+        <text>Если эта функция включена, игрок должен разблокировать доступ к карте для каждой группировки отдельно, добывая КПК с их трупов и получая доступ к их сети. По умолчанию КПК, добытые у сталкеров более высокого ранга, дают больший прогресс в разблокировке доступа.\n\nПо-прежнему необходим поддерживаемый КПК, способный отображать дружественные, нейтральные или враждебные карты (в зависимости от ситуации).</text>
+    </string>
+
+    <string id="ui_mcm_prog_comm_descr">
+        <text>В этом меню можно настроить количество данных PDA, которые необходимо собрать, чтобы разблокировать видимость карты отряда для каждой фракции, а также прогресс, получаемый за разграбление PDA NPC каждого ранга.</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_army">
+        <text>Военные</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_bandit">
+        <text>Бандиты</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_csky">
+        <text>"Чистое небо"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_dolg">
+        <text>Долг</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_ecolog">
+        <text>Экологи (ученые)</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_freedom">
+        <text>"Свобода"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_killer">
+        <text>Наемники</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_monolith">
+        <text>"Монолит"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_greh">
+        <text>"Грех"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_isg">
+        <text>"ИИГ"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_renegade">
+        <text>Ренегаты</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_stalker">
+        <text>Одиночки</text>
+    </string>
+
+    <string id="ui_mcm_prog_rank_descr">
+        <text>Прогресс начисляется в зависимости от ранга сталкера, бросившего КПК:</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_novice">
+        <text>Новичок</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_trainee">
+        <text>Стажер</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_experienced">
+        <text>Опытный</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_professional">
+        <text>Профессионал</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_veteran">
+        <text>Ветеран</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_expert">
+        <text>Эксперт</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_master">
+        <text>Мастер</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_legend">
+        <text>Легенда</text>
+    </string>
+
+    <string id="st_mapspot_access_prog">
+        <text>С помощью данных, содержащихся в КПК этого %s сталкера, вы добились прогресса в получении доступа к %s GPS-данных. Общий прогресс: %.2f%% (%s/%s)</text>
+    </string>
+
+    <string id="st_mapspot_access_unlock">
+        <text>Данные на КПК этого сталкера %s дали вам возможность проникнуть в сеть его группировки. Теперь у вас есть доступ к данным GPS, позволяющим видеть местоположение отряда %s при использовании любого поддерживаемого КПК.</text>
+    </string>
+
+<!-- Added in 1.8.1 -->
+
+    <string id="st_mapspot_access_lost">
+        <text>Фракция %s, видимо, сменила коды доступа к сети, поскольку вы потеряли возможность видеть их отряды на карте. Вам придется найти новые КПК %s, чтобы восстановить доступ к их GPS-данным.</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_resets">
+        <text>Доступ к сети носит временный характер</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_resets_desc">
+        <text>Если эта функция включена, то взлом сети другой фракции носит временный характер - через некоторое время она обнаружит вторжение и сменит коды доступа, что заставит вас снова получить доступ тем же способом. Это лучше всего сочетается с низкими значениями разблокировки, создавая постоянный цикл игры.</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_resets">
+        <text>Только вражеские фракции обнуляют ваш доступ</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_resets_desc">
+        <text>Если эта функция включена, то нейтральные фракции не будут выкидывать вас из своей сети после получения доступа, но вражеские фракции будут это делать.\n\nЕсли эта функция отключена, то все фракции, не принадлежащие игроку, со временем также будут лишены доступа.</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_time">
+        <text>Продолжительность полученного доступа в сеть</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_unit">
+        <text>Единица времени, используемая для определения продолжительности доступа</text>
+    </string>
+
+    <string id="ui_mcm_lst_timeunit_day">
+        <text>день</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_days">
+        <text>дни</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_hour">
+        <text>час</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_hours">
+        <text>часы</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_minute">
+        <text>минута</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_minutes">
+        <text>минуты</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_second">
+        <text>секунда</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_seconds">
+        <text>секунды</text>
+    </string>
+
+<!-- Добавлено в версии 1.9.5 -->
+
+    <string id ="ui_mcm_milpda_milpdagen_show_monsters">
+        <text>Также показывать трупы монстров на карте</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_milpdagen_show_monsters_desc">
+        <text>Если эта функция включена, Kill Tracker также будет отображать трупы монстров на карте.</text>
+    </string>
+
+
+<!-- Added in 1.10 -->
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_unlock">
+        <text>Только вражеские фракции требуют разблокировки</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_unlock_desc">
+        <text>Если эта опция включена, то дружественные и нейтральные фракции исключаются из прогрессии и подчиняются настройкам видимости экипированного КПК без необходимости предварительной разблокировки.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_autotag">
+        <text>Включить Автотег отслеживание целей (требуется PAW)</text>
+    </string>
+
+    <string id="ui_mcm_milpda_autotag_desc">
+        <text>Если это устройство включено, то игрок может использовать функцию Автотег из PAW, которая автоматически помечает цели под перекрестием интеллектуальным пином после их идентификации.</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_gain_mode">
+        <text>Прогрессия начисляется за разграбленные КПК:</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_gain_mode_desc">
+        <text>\n
+        При взятии: игрок получает прогрессию, просто разграбив новый КПК в первый раз. Если он зашифрован, его необходимо сначала расшифровать. После этого игрок получит прогресс, когда в следующий раз возьмет его в руки или извлечет из любого контейнера.\n
+        --------------------------------------------------\n
+        При прочтении: игрок получает прогресс только после прочтения нового КПК. Если он заблокирован, его необходимо сначала разблокировать/расшифровать.\n
+        --------------------------------------------------\n
+        При разборке: игрок должен разобрать КПК, чтобы получить от него прогресс. Этот режим не требует расшифровки КПК.
+        </text>
+    </string>
+
+    <string id ="ui_mcm_lst_milpda_gain_on_pickup">
+        <text>При взятии</text>
+    </string>
+
+    <string id ="ui_mcm_lst_milpda_gain_on_read">
+        <text>При прочтении</text>
+    </string>
+
+    <string id ="ui_mcm_lst_milpda_gain_on_scrap">
+        <text>При демонтаже</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_verbose">
+        <text>Журналы отладки являются подробными</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_verbose_desc">
+        <text>Если эта функция включена, отладочный журнал скрипта будет выводить в консоль еще более подробную информацию обо всем, что он делает. Это не имеет никакого эффекта, если отладочная журнализация не включена, но, пожалуйста, включите ее, если вы сообщаете о проблеме.</text>
+    </string>    
+
+    <string id="ui_mcm_milpda_progressive_must_decrypt">
+        <text>Чтобы получить прогресс, необходимо расшифровать КПК</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_must_decrypt_desc">
+        <text>Если эта функция включена, игрок не сможет получать прогресс с зашифрованных КПК, будь то грабеж или чтение. Сначала устройство необходимо расшифровать.</text>
+    </string>
+
+<!-- Added in 1.11 -->
+
+    <string id="ui_mcm_milpda_progmult">
+        <text>Множитель к полученному прогрессу</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progmult_desc">
+        <text>Все данные о прогрессии, полученные игроком при использовании этого КПК, будут умножены на это число. При установке нуля получение прогрессии для данного типа КПК будет фактически отключено.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_victim_text_mode">
+        <text>Определение жертвы по всплывающей подсказке на карте</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_victim_text_mode_desc">
+        <text>Если включить эту функцию, личность трупа будет отображаться во всплывающей подсказке на карте.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_killer_text_mode">
+        <text>Идентификация убийцы по всплывающей подсказке на карте</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_killer_text_mode_desc">
+        <text>Если включить эту функцию, личность убийцы трупа будет показана во всплывающей подсказке на карте.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_noblacklist">
+        <text>Фракции из черного списка не могут быть разблокированы</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_noblacklist_desc">
+        <text>Если включена и эта настройка, и черный список фракций, фракции, попавшие в черный список, не могут получать данные или прогрессировать вообще.</text>
+    </string>
+
+    <string id="st_mapspot_access_unlock_nopda">
+        <text>Данные с КПК этого сталкера %s дали вам прорыв, необходимый для проникновения в сеть их фракции. Однако ваш текущий КПК не позволяет отображать местоположение отряда %s, поэтому вам нужно сделать апгрейд, чтобы увидеть их на карте.</text>
+    </string>
+
+<!-- Added in 1.12 -->
+
+    <string id ="ui_mcm_milpda_milpdagen_monster_tracking_mode">
+        <text>Режим слежения для убийства мутантов</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_milpdagen_monster_tracking_mode_desc">
+        <text>Устанавливает, какие убийства мутантов будут отображаться на карте.\n
+            --------------------------------------------------\n
+            Отключено: Kill Tracker отключен для мутантов.\n
+            Главный герой: \nВ Kill Tracker будут отображаться только ваши убийства мутантов\n
+            Команда: \nОтслеживание убийств также будет отображать убийства мутантов товарищей\n
+            Все: Мертвые мутанты будут показаны независимо от того, кто или что их убило
+        </text>
+    </string>
+
+
+    <string id="ui_mcm_milpda_header_main_plaintext">
+        <text>\n
+                 • Позволяет настраивать точки карты, поддерживаемые каждым уровнем КПК\n
+                 • Добавляет Milspec PDA, новое устройство, которое можно только создать, причем с большим трудом\n
+                 • Включает в себя Kill Tracker: отслеживание тела с поддержкой значков на карте PAW\n
+                 • Система продвижения позволяет игроку открывать доступ к локациям отряда, грабя КПК сталкеров\n
+                 • Черный список позволяет запретить определенным фракциям появляться на любом КПК\n
+                 Все функции являются опциональными и настраиваются по вашему вкусу здесь, в MCM.\n
+                 \n
+                Более подробная информация на странице модификации на Moddb:\n
+                https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+        </text>
+    </string>
+ 
+    <string id="ui_mcm_milpda_header_main_complex1">
+        <text>\n$clr_def
+                $clr_def • $clr_whtПозволяет $clr_gldнастраивать точки карты$clr_wht, поддерживаемые каждым уровнем КПК\n
+                $clr_def • $clr_whtДобавляет $clr_milMilspec PDA$clr_wht: $clr_gldновое устройство, которое можно только создать$clr_wht, причем с большим трудом\n
+                $clr_def • $clr_whtВключает в себя $clr_milKill Tracker$clr_wht: $clr_gldотслеживание тела$clr_wht с поддержкой значков на карте PAW\n
+                $clr_def • $clr_milСистема продвижения$clr_wht позволяет игроку$clr_gld открывать доступ к локациям отряда, грабя КПК сталкеров\n
+                $clr_def • $clr_milЧерный список$clr_wht позволяет $clr_gldзапретить определенным фракциям появляться на любом КПК$clr_wht\n
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_main_complex2">
+        <text>$clr_def
+            Все функции являются опциональными и настраиваются здесь, в MCM. Более подробная информация на странице модификации на Moddb:\n
+            $clr_lblhttps://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_prog_plaintext">
+        <text>\nОбычно игра решает, сможете ли вы увидеть отряд на карте, исходя из того, является ли фракция нейтральной, союзной или вражеской. С продвинутым КПК вы всегда сможете увидеть любую фракцию, которую он поддерживает.\n
+        --------------------------------------------------\n
+        Это мощное преимущество, особенно против врагов. Прогрессивный режим заставляет вас зарабатывать это преимущество, грабя КПК у убитых сталкеров и используя их для проникновения в сеть группировки, чтобы получить доступ к GPS-данным их отряда. Настройки можно изменить ниже.\n
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_prog_complex1">
+        <text>$clr_defОбычно игра решает, сможете ли вы увидеть отряд на карте, исходя из того, является ли фракция  $clr_gldнейтральной$clr_def, $clr_grnсоюзной$clr_def или $clr_redвражеской$clr_def. С продвинутым КПК вы всегда сможете увидеть любую фракцию, которую он поддерживает.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_prog_complex2">
+        <text>$clr_defЭто мощное преимущество, особенно против врагов. $clr_milПрогрессивный режим $clr_defзаставляет вас зарабатывать это преимущество, $clr_gldграбя КПК у убитых сталкеров$clr_def, и используя их для $clr_gldпроникновения в сеть группировки$clr_def чтобы $clr_gldполучить доступ к GPS-данным их отряда$clr_def. Настройки можно изменить ниже.
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_bl_plaintext">
+        <text>Возможно, вы считаете, что никто не должен видеть ISG или Монолит на карте. Может быть, вы выполняете особое задание или играете роль изгнанного сталкера.\n
+        Какой бы ни была причина, Черный список не позволит вам увидеть определенные фракции на карте. Он также может помешать вам получить данные о фракции, занесенной в черный список, в прогрессивном режиме.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_bl_complex1">
+        <text>$clr_defВозможно, вы считаете, что никто не должен видеть ISG или Монолит на карте. Может быть, вы выполняете особое задание или играете роль изгнанного сталкера.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_bl_complex2">
+          Он также может помешать вам получить данные о фракции, занесенной в черный список, в прогрессивном режиме.
+        <text>$clr_defКакой бы ни была причина, $clr_milЧерный список$clr_def $clr_gldне позволит вам увидеть определенные фракции на карте.$clr_def Он также может $clr_gldпомешать вам получить данные о фракции, занесенной в черный список, в $clr_milпрогрессивном режиме$clr_def.
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_pda_plaintext">
+        <text>Вы можете настроить функции, поддерживаемые этим устройством, с помощью приведенных ниже настроек. Эти настройки вступят в силу, только если вы включите верхнюю опцию.</text>
+    </string>
+
+
+<!-- Added in 1.13 -->
+
+    <string id="ui_mcm_milpda_milpdagen_squadmate_mapspots">
+        <text>Показать точки на карте для всех членов отряда</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_squadmate_mapspots_desc">
+        <text>Обычно Anomaly отмечает на карте только местоположение лидера отряда. Когда эта настройка включена, все члены отряда также будут отображаться, но с немного другой иконкой. Это может показаться знакомым игрокам предыдущих игр.</text>
+    </string>
+
+    <string id="encyclopedia_addons">
+        <text>Аддоны</text>
+    </string>
+
+    <string id="encyclopedia_addons_milspec_pda">
+        <text>Milspec PDA</text>
+    </string>
+
+    <string id="encyclopedia_addons_milspec_pda_text">
+        <text>
+            \n%c[ui_gray_1]Аддон %c[255,130,180,130]Milspec PDA%c[ui_gray_1] имеет несколько связанных между собой целей: \n 
+            %c[ui_gray_1] - %c[pda_white]Позволяет детально %c[pda_yellow]настраивать места на карте отряда и корпуса%c[pda_white]поддерживаемые каждым уровнем PDA\n
+            %c[ui_gray_1] - %c[pda_white]Добавляет %c[255,130,180,130]Milspec PDA%c[pda_white]: устройство %c[pda_yellow]4-го уровня, которое не продается и не выбрасывается%c[pda_white], и которое трудно изготовить\n
+            %c[ui_gray_1] - %c[pda_white]Включает %c[255,130,180,130]Kill Tracker%c[pda_white]: %c[pda_yellow]настраиваемое отслеживание трупов%c[pda_white] с поддержкой иконок PAW\n
+            %c[ui_gray_1] - %c[255,130,180,130]Черный список%c[pda_white] позволит вам %c[pda_yellow]заблокировать фракцию от появления на любом PDA%c[pda_white]\n \n
+            %c[ui_gray_1] - %c[pda_white]мощный %c[255,130,180,130]прогрессивный режим%c[pda_white] позволяет игроку %c[pda_yellow]заработать доступ к просмотру других фракций на карте\n
+            
+            \n%c[ui_gray_1]Каждая функция может быть настроена по вашему вкусу в меню MCM. %c[pda_white]Если вам не нравится, как что-то работает, сначала загляните в MCM! Возможно, там есть соответствующая настройка.\n
+
+            \n%c[pda_white]От %c[pda_yellow]MCM > Milspec PDA%c[pda_white]:\n
+            %c[pda_yellow]Настройки%c[pda_white]: Общие настройки для Kill Tracker, UI и всего аддона.\n
+            %c[pda_yellow]Черный список%c[pda_white]: Выберите, какие фракции никогда не будут отображаться на PDA.\n
+            %c[pda_yellow]Progression%c[pda_white]: Настройки для дополнительного режима прогрессии.\n
+            %c[pda_yellow]PDA опт: 1.0%c[pda_white]: Настройка того, какие точки карты могут быть видны стартовому PDA 1.0.\n 
+            %c[pda_yellow]PDA опт: 2.0%c[pda_white]: То же самое, но для версии 2.0 PDA.\n 
+            %c[pda_yellow]PDA опт: 3.1%c[pda_white]: То же самое, но для версии 3.1 PDA.\n
+            %c[pda_yellow]PDA опт: Milspec%c[pda_white]: То же самое, но для Milspec PDA.\n \n
+
+            %c[pda_red]Все еще испытываете трудности? Прокрутите страницу вниз, чтобы получить информацию об устранении неполадок.\n
+
+            \n%c[pda_green]ADVANCED KILL TRACKER\n
+            %c[ui_gray_1]
+            %c[pda_yellow]Kill Tracker%c[ui_gray_1] по умолчанию поддерживается всеми PDA, кроме оригинального PDA 1.0. Внутри аддон всегда отслеживает все тела на карте в любое время - но то, что вы видите, зависит от ваших предпочтений.\n \n
+
+            По умолчанию Kill Tracker %c[pda_yellow]отображает на карте маркеры всех убийств, совершенных вами или вашими товарищами по отряду%c[ui_gray_1]. Это касается и преследователей, и мутантов. Однако вы не увидите отметки на теле для убийств, совершенных не вами и не вашей командой.\n \n
+
+            Если вы предпочитаете видеть все убийства или карту, этот и многие другие аспекты Kill Tracker - как и все остальное -%c[pda_yellow]полностью настраиваются в MCM%c[ui_gray_1].\n 
+
+            \n%c[pda_green]ПРИОБРЕТЕНИЕ НОВОГО TIER 4 PDA\n
+            %c[ui_gray_1]
+            КПК %c[pda_yellow]Milspec PDA%c[ui_gray_1] имеет более высокие требования к мощности, чем КПК 3.1, но обладает уникальной способностью %c[pda_yellow]видеть расположение вражеских отрядов%c[ui_gray_1] на карте.\n \n
+
+            Очевидно, что это очень мощная способность, поэтому рекомендуется сбалансировать ее с %c[pda_yellow]Прогрессивным режимом%c[ui_gray_1] аддона, который более подробно описан ниже.\n \n
+
+            Новый КПК нельзя нигде купить, и ни один сталкер никогда не подбросит его. По умолчанию вы должны изготовить его, используя %c[pda_yellow]Expert Tools%c[ui_gray_1].
+
+            Это требует, чтобы вы нашли и прочитали нужный том %c[pda_yellow]Руководства по технике%c[ui_gray_1], а также требует определенных %c[pda_yellow]редких компонентов%c[ui_gray_1].\n \n
+
+            Вы можете изменить эти требования в скрипте или конфигурационных файлах, если вы в этом разбираетесь. Если же нет, и вам не в тягость зарабатывать КПК Milspec тяжелым путем, всегда есть отладочная консоль. Я не осуждаю.\n 
+
+            \n%c[pda_green]ПРОГРЕССИВНЫЙ РЕЖИМ\n
+            %c[ui_gray_1]Когда вы включите в Milspec PDA %c[pda_yellow]Прогрессивный режим%c[ui_gray_1], простая покупка или создание более продвинутого КПК не позволит вам автоматически увидеть все фракции, как это было бы обычно. Вместо этого вы должны заработать этот доступ - временный или постоянный - грабя КПК у мертвых сталкеров.\n \n
+
+            Если %c[pda_yellow]разграбить достаточное количество КПК фракции%c[ui_gray_1], вы получите данные, которые позволят вам проникнуть в беспроводную сеть фракции - что даст вам возможность %c[pda_yellow]видеть их отряды на карте%c[ui_gray_1]. Большинство фракций со временем поймут, что произошло, и %c[pda_yellow]изменят свои коды доступа%c[ui_gray_1] - так что пользуйтесь этим, пока можете.\n \n
+
+            Прогрессивный режим %c[pda_yellow]очень мощный и настраивается по вашему вкусу%c[ui_gray_1]. Считаете, что разблокировать доступ слишком просто или слишком сложно? Настройте требования по своему усмотрению. Выберите, должны ли нейтральные фракции также быть разблокированы, будут ли фракции вообще отзывать ваш доступ - и если да, то как долго.\n \n
+
+            Продолжительность разблокировки может составлять недели, если хотите, или даже несколько секунд или минут - при низком пороге разблокировки короткие периоды превращают каждое выпадение КПК в мощный, но временный бафф. Или, если вам нравится долгий гриндинг для получения долгосрочного преимущества, это тоже подойдет.\n \n
+
+            %c[pda_yellow]Это ваша игра. Играйте так, как вам нравится.\n 
+
+
+            \n%c[pda_green]ЧЕРНЫЙ СПИСОК ФАКТИЙ\n
+            %c[ui_gray_1]Конечно, логично, что вы можете проникнуть в сети Duty или Freedom. И хорошая инфозащита Бандитов - это когда их сетевой пароль - это что-то иное, чем последовательные числа или вариации на тему blyat. Но как насчет Monolith? Или ISG?\n \n
+
+            Если вы считаете, что некоторые фракции не должны появляться на карте, не волнуйтесь - %c[pda_yellow]Faction Blacklist%c[ui_gray_1] поможет вам. Просто отметьте, какие фракции не должны появляться на карте, и они не появятся.\n 
+            
+            \n%c[ui_gray_1]--------------------------------------------------------------------------------\n \n
+            %c[pda_red]ПОИСК И УСТРАНЕНИЕ НЕИСПРАВНОСТЕЙ\n \n
+
+            %c[pda_white]Если вы видите эту запись в энциклопедии, значит, ваши двоичные файлы поддерживают DLTX. %c[ui_gray_1]Хорошая работа: наличие модифицированных exe-файлов - это половина успеха. Наличие обновленных файлов аддонов и установленных нужных опций - большая часть остального.\n
+
+            %c[pda_red]Прежде чем сообщать о проблеме:%c[pda_yellow] Если ваша копия Milspec PDA была предустановлена как часть модпака%c[ui_gray_1], возможно, что это старая версия, что не все функции были установлены или что некоторые настройки MCM по умолчанию были изменены. Это особенно верно, если у вас есть все рецепты ремесел, но вы все еще не можете создать КПК Т4, или если что-то, связанное с прогрессией, работает неправильно.
+            %c[ui_gray_1]
+            В этом случае может потребоваться переустановить %c[pda_yellow]этот аддон из FOMOD%c[pda_white] и убедиться, что были выбраны правильные параметры установки для того, что вы пытаетесь сделать.\n 
+
+            \n%c[pda_red]ВАЖНО: Чтобы сообщить об ошибке, вы должны сделать следующее:\n \n
+            %c[pda_white]1. перейдите в %c[pda_yellow]MCM > Milspec PDA > Настройки\n
+            %c[pda_white]2. активируйте %c[pda_yellow]Включить ведение журнала отладки%c[pda_white] и %c[pda_yellow]Журналы отладки являются подробными\n
+            %c[pda_white]3. Выйдите из игры и запустите ее заново\n
+            %c[pda_white]4. воспроизведите проблему как можно проще\n
+            %c[pda_white]5. возьмите лог игры из %c[pda_yellow] (папка аномалии)\appdata\logs%c[pda_white] и положите его куда-нибудь в интернет\n \n
+            
+            %c[ui_gray_1]Если вы этого не сделаете, маловероятно, что ваш журнал будет содержать нужную мне информацию.\n
+
+            \n]Я не получаю уведомлений о комментариях на moddb, поэтому, как правило, вы получите самый быстрый ответ в GAMMA Discord, в канале обсуждения Milspec PDA. Незапрашиваемые сообщения DM будут игнорироваться.\n
+        </text>
+    </string>
+
+</string_table>

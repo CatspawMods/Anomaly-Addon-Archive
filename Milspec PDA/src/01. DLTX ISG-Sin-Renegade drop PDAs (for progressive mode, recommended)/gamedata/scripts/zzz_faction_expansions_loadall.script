@@ -1,0 +1,98 @@
+-- ======================================================================
+--[[	Faction Expansion loads all faction data
+-- ======================================================================
+ 	Author: Catspaw (CatspawMods @ ModDB)
+ 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive/tree/main/Modding%20Tools
+
+	This file was likely included with one of my addons. By itself, all 
+	it does is ensure that the extra faction data gets loaded for UNISG, 
+	Sin, and Renegades. This data is already in the vanilla game, but 
+	normally gets skipped. Addons such as Milspec PDA make use of it.
+
+	No vanilla game script iterates through this table, and these changes
+	should have no effect on anything that doesn't try to do so.
+-- ====================================================================]]
+local dl 	= function() end
+if utils_catspaw_common then
+	dl 		= function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+	-- Debug logging, not used if utils_catspaw_common isn't installed
+end
+
+function faction_expansions.on_game_start()
+	printf("~ [zzz_faction_expansions_loadall.script] monkeypatch override of faction_expansions.on_game_start\n" ..
+			"= | Including UNISG, Sin, and Renegades when loading data for faction_expansions.factions")
+	local ini_fact = ini_file("plugins\\faction_profile.ltx")
+	
+	-- Collect faction profiles - but without commenting out isg, renegade, greh
+	-- The only difference here from vanilla is that we load all factions
+	local factions_list = {
+		["stalker"] 	= true,
+		["dolg"] 		= true,
+		["freedom"] 	= true,
+		["csky"] 		= true,
+		["ecolog"] 		= true,
+		["killer"] 		= true,
+		["army"] 		= true,
+		["bandit"] 		= true,
+		["monolith"] 	= true,
+		["isg"] 		= true,
+		["renegade"] 	= true,
+		["greh"] 		= true,
+	}
+
+	for k,v in pairs(factions_list) do
+		dl("Loading faction expansion data for %s", k)
+		faction_expansions.faction[k] = {}
+		faction_expansions.faction[k]["type"] = ini_fact:r_string_ex(k,"type") or "group"
+		local color = parse_list(ini_fact,k,"color")
+		faction_expansions.faction[k]["color"] = strformat("%c[%s,%s,%s,%s]",color[1],color[2],color[3],color[4])
+		faction_expansions.faction[k]["territory"] = ini_fact:r_string_ex(k,"territory")
+		
+		faction_expansions.faction[k]["level_presence"] = parse_list(ini_fact,k,"level_presence",true)
+		faction_expansions.faction[k]["pda_topic"] = {}
+		local pda_topics = parse_list(ini_fact,k,"pda_topic")
+		for i=1,#pda_topics do
+			for k1,v1 in string.gmatch(pda_topics[i], "([%w_%-%s%.]+)=([%w_%-%s%.]+)") do
+				faction_expansions.faction[k]["pda_topic"][k1] = tonumber(v1)
+			end
+		end
+		faction_expansions.faction[k]["pda_topic_mission"] = parse_list(ini_fact,k,"pda_topic_mission")
+		faction_expansions.faction[k]["weapon"] = ini_fact:r_string_ex(k,"weapon")
+		
+		faction_expansions.faction[k]["leader"] = ini_fact:r_string_ex(k,"leader") or "unknown leader"
+		faction_expansions.faction[k]["trader"] = ini_fact:r_string_ex(k,"trader") or "unknown trader"
+		faction_expansions.faction[k]["mechanic"] = ini_fact:r_string_ex(k,"mechanic") or "unknown mechanic"
+		faction_expansions.faction[k]["medic"] = ini_fact:r_string_ex(k,"medic") or "unknown medic"
+		faction_expansions.faction[k]["barman"] = ini_fact:r_string_ex(k,"barman") or "unknown barman"
+		faction_expansions.faction[k]["guide"] = ini_fact:r_string_ex(k,"guide") or "unknown guide"
+		
+		faction_expansions.faction[k]["leader_name"] = ini_fact:r_string_ex(k,"leader_name") or "unknown leader"
+		faction_expansions.faction[k]["trader_name"] = ini_fact:r_string_ex(k,"trader_name") or "unknown trader"
+		faction_expansions.faction[k]["mechanic_name"] = ini_fact:r_string_ex(k,"mechanic_name") or "unknown mechanic"
+		faction_expansions.faction[k]["medic_name"] = ini_fact:r_string_ex(k,"medic_name") or "unknown medic"
+		faction_expansions.faction[k]["barman_name"] = ini_fact:r_string_ex(k,"barman_name") or "unknown barman"
+		faction_expansions.faction[k]["guide_name"] = ini_fact:r_string_ex(k,"guide_name") or "unknown guide"
+		for f,d in pairs (faction_expansions.faction[k]) do
+			dl("%s = %s", f, d)
+		end
+	end
+	
+	local n = 0
+	
+	n = ini_fact:line_count("news_levels")
+	for i=0,n-1 do
+		local result, id, value	= ini_fact:r_line_ex("news_levels",i,"","")
+		if faction_expansions.level[id] == nil then
+			faction_expansions.level[id] = true
+		end
+	end
+	
+	n = ini_fact:line_count("mutant_tier")
+	for i=0,n-1 do
+		local result, id, value	= ini_fact:r_line_ex("mutant_tier",i,"","")
+		if faction_expansions.mutant[id] == nil then
+			faction_expansions.mutant[id] = {}
+			faction_expansions.mutant[id]["tier"] = tonumber(value)
+		end
+	end
+end

@@ -1,0 +1,404 @@
+<!--
+    Milspec PDA
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+    Version: 1.9.2
+    Updated: 20230819
+    Contents: Localized UKR string definitions
+
+    Very outdated, but included because some support is better than none.
+-->
+<string_table>
+    <string id="st_pda_mil_name">
+        <text>Прошитий ПДА</text>
+    </string>
+    <string id="st_pda_mil_descr">
+        <text>Кишеньковий електронний пристрій, призначений для виконання основних і найважливіших функцій комп’ютера. КПК необхідний для щоденного обміну інформацією. Він постачається з попередньо встановленим модулем GPS, який надає користувачеві інформацію про геолокацію та час.\n \nЦю складну модель розроблено невідомою організацією для використання таємними військовими або операторами неурядових організацій, і містить криптографічний модуль, який дозволяє користувачеві проникати в багато захищених приватних мереж Зони, розкриваючи приблизне розташування ворожих загонів, що діють у цьому районі.\n \n
+        %c[ui_gray_3]ХАРАКТЕРИСТИКИ:\n
+        %c[d_blue] • %c[ui_gray_2] технологічний пристрій\n
+        %c[d_blue] • %c[ui_gray_2] високе споживання енергії\n
+        %c[d_purple] • %c[ui_gray_2] показує розташування всіх загонів на мапі(ворожі теж)\n
+        </text>
+    </string>
+    <string id="ui_mcm_menu_milpda">
+        <text>Прошитий ПДА</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall">
+        <text>Видалити Прошитий ПДА</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall_desc">
+        <text>Якщо встановити цей прапорець, усі копії Прошитого ПДА будуть видалені в інвентарі гравця.</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_add_recipe">
+        <text>Додати рецепт крафту</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_add_recipe_desc">
+        <text>Якщо ввімкнено, буде додано рецепт виготовлення для Прошитого ПДА. Можливо, вам доведеться зберегти та перезавантажити гру, щоб це почало діяти.</text>
+    </string>
+    
+      <string id="ui_mcm_milpda_facblacklist_enabled">
+        <text>Увімкніть користувацький чорний список для фракцій, перелічених нижче</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_army">
+        <text>Не показувати військових</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_bandit">
+        <text>Не показувати бандитів</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_csky">
+        <text>Не показувати членів угруповання "Чисте небо"</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_dolg">
+        <text>Не показувати членів угруповання "Обов'язок"</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_ecolog">
+        <text>Не показувати вчених</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_freedom">
+        <text>Не показувати членів угруповання "Воля"</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_killer">
+        <text>Не показувати найманців</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_monolith">
+        <text>Не показувати членів угруповання "Моноліт"</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_zombied">
+        <text>Не показувати зомбованих</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_greh">
+        <text>Не показувати членів угруповання "Гріх"</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_isg">
+        <text>Не показувати членів угруповання "ІДГ"</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_renegade">
+        <text>Не показувати членів угруповання "Ренегати"</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_stalker">
+        <text>Не показувати одинаків</text>
+    </string>
+    <string id="ui_mcm_menu_milpdagen">
+        <text>Налаштування</text>
+    </string>
+    <string id="ui_mcm_menu_facblacklist">
+        <text>"Чорний список"</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_1">
+        <text>PDA 1.0</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_2">
+        <text>PDA 2.0</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_3">
+        <text>PDA 3.1</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_milspec">
+        <text>Milspec PDA</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_kiltrak">
+        <text>Увімкнути KilTrak (tm)</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_kiltrak_desc">
+        <text>Увімкніть підтримку аддона Ishmael's Kill Tracker для відстеження вбивств.</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_getkiltrak">
+        <text>Завантажити аддон Ishmael's Kill Tracker тут: \n\nhttps://www.moddb.com/mods/stalker-anomaly/addons/kiltrak</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_1_enabled">
+        <text>Налаштування видимості точок на карті для PDA 1.0.</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_2_enabled">
+        <text>Налаштування видимості точок на карті для PDA 2.0.</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_3_enabled">
+        <text>Налаштування видимості точок на карті для PDA 3.1.</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_milspec_enabled">
+        <text>Налаштування видимості точок на карті для Milspec PDA</text>
+    </string>
+
+    <string id="ui_mcm_milpda_show_f">
+        <text>Показувати на карті мітки дружніх сталкерів</text>
+    </string>
+    <string id="ui_mcm_milpda_show_n">
+        <text>Показувати на карті мітки нейтральних сталкерів</text>
+    </string>
+    <string id="ui_mcm_milpda_show_e">
+        <text>Показувати на карті мітки ворогів</text>
+    </string>
+    <string id="ui_mcm_milpda_show_k">
+        <text>Показувати на карті мітки трупів</text>
+    </string>
+    <string id="ui_mcm_milpda_obeybl">
+        <text>Використовуйте чорний список фракцій</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_debuglogs">
+        <text>Увімкнути ведення журналу налагодження</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_debuglogs_desc">
+        <text>Якщо цей параметр увімкнено, скрипт надішле в консоль спам із даними того, що він робить. Зазвичай це має бути вимкнено.</text>
+    </string>
+<!-- Додано в 1.4 -->
+    <string id="st_kiltrak_bodyof">
+        <text>Тіла вбитих</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_bodyicon">
+        <text>Типи іконок для тіл на мінікарті</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_whtx">
+        <text>Білий X</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_skul">
+        <text>Великий череп</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_sdot">
+        <text>Маленька синя крапка</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_mdot">
+        <text>Середня синя крапка</text>
+    </string>
+    
+      <string id="ui_mcm_lst_milpda_ldot">
+        <text>Велика синя крапка</text>
+    </string>
+<!-- Додано в 1.5 -->
+    <string id="st_kiltrak_unidbody">
+        <text>Неопізнане тіло</text>
+    </string>
+    <string id="st_milpda_delete_marker">
+        <text>Видалити маркер убитого</text>
+    </string>
+    <string id="ui_milpda_milpda_milpdagen_track_companions">
+        <text>Також відстежуйте вбивства ваших компаньйонів</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_track_companions_desc">
+        <text>Якщо цю функцію ввімкнено, Kill Tracker також покаже вбивства ваших товаришів по загону - навіть вбивства, які сталися до того, як ви ввімкнули це налаштування, якщо на той час було встановлено КПК Milspec.</text>
+    </string>  
+<!-- Додано в 1.6 -->
+    <string id="st_kiltrak_killedby">
+        <text>Убитий</text>
+    </string>
+<!-- Додано в 1.7 -->
+    <string id="ui_mcm_milpda_milpdagen_autoclear">
+        <text>Автоматичне очищення маркерів тіл при їхньому лутанні</text>
+    </string>
+    <string id="ui_milpda_milpda_milpdagen_autoclear_desc">
+        <text>Коли функцію ввімкнено, "Kill Tracker" автоматично видаляє маркери тіл, коли ви лутаєте або іншим чином взаємодієте з ними. Вимкнення цього параметра призведе до того, що маркери тіла залишаться на карті доти, доки ви не очистите їх вручну або тіло не зникне.</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_tracking_mode">
+        <text>Режим "Kill Tracker"</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_tracking_mode_desc">
+        <text>Встановлює режим роботи для "Kill Tracker".\nOff: "Kill Tracker" вимкнено \nPlayer: "Kill Tracker" відображатиме лише ваші вбивства \nPlayer Squad: "Kill Tracker" також відображатиме вбивства компаньйонів \nAll: Мертві тіла буде показано незалежно від того, хто або що їх убило. Вбивства, скоєні не гравцем або його командою, завжди відображатимуться синіми крапками.</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_all">
+        <text>Все</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_you">
+        <text>Головний герой (ГГ)</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_cmp">
+        <text>Команда ГГ</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_off">
+        <text>Відключено</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_getpaw">
+        <text>Завантажити "Personal Adjustable Waypoint" можна тут:\n\nhttps://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma</text>
+    </string>
+    
+    <!-- Додано в 1.7.4 -->
+
+    <string id="ui_mcm_milpda_milpdagen_bodyicon_other">
+        <text>Стиль іконок для вбивств, скоєних іншими</text>
+    </string>
+
+    <string id="ui_mcm_lst_milpda_upaw">
+        <text>Використовуйте іконку PAW</text>
+    </string>
+
+    <string id="st_kiltrak_deadbody">
+        <text>Тіло померлого</text>
+    </string>
+
+    <string id="st_milpda_thezone">
+        <text>Зона</text>
+    </string>
+    
+    
+    <!-- Додано в 1.7.5 -->
+
+
+    <string id ="ui_mcm_milpda_milpdagen_wipe_all">
+        <text>Стирання всіх даних про маркери тіла</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_milpdagen_wipe_all_desc">
+        <text>Видаляє всі маркери тіл з карти та стирає базу даних "Kill Tracker". Це не можна скасувати.</text>
+    </string>
+
+<!-- Додано в 1.8 -->
+    <string id="ui_mcm_menu_progressive">
+        <text>Прогрес</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_enabled">
+        <text>Прогрес видимості загону (рекомендується)</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_enabled_desc">
+        <text>Якщо ця функція ввімкнена, гравець повинен розблокувати доступ до карти для кожного угруповання окремо, добуваючи КПК з їхніх трупів і отримуючи доступ до їхньої мережі. За замовчуванням КПК, здобуті у сталкерів вищого рангу, дають більший прогрес у розблокуванні доступу. як і раніше, необхідний підтримуваний КПК, здатний відображати дружні, нейтральні або ворожі карти (залежно від ситуації).</text>
+    </string>
+
+    <string id="ui_mcm_prog_comm_descr">
+        <text>У цьому меню можна налаштувати кількість даних PDA, які необхідно зібрати, щоб розблокувати видимість карти загону для кожної фракції, а також прогрес, одержуваний за розграбування PDA NPC кожного рангу.</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_army">
+        <text>Військові</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_bandit">
+        <text>Бандити</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_csky">
+        <text>"Чисте небо"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_dolg">
+        <text>Обов'язок</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_ecolog">
+        <text>Вчені</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_freedom">
+        <text>"Воля"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_killer">
+        <text>Найманці</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_monolith">
+        <text>"Моноліт"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_greh">
+        <text>"Гріх"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_isg">
+        <text>"ІДГ"</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_renegade">
+        <text>Ренегати</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_stalker">
+        <text>Одинаки</text>
+    </string>
+
+    <string id="ui_mcm_prog_rank_descr">
+        <text>Прогрес нараховується залежно від рангу сталкера, який кинув КПК:</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_novice">
+        <text>Новачок</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_trainee">
+        <text>Стажер</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_experienced">
+        <text>Досвідчений</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_professional">
+        <text>Професіонал</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_veteran">
+        <text>Ветеран</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_expert">
+        <text>Експерт</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_master">
+        <text>Майстер</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_legend">
+        <text>Легенда</text>
+    </string>
+    
+     <string id="st_mapspot_access_prog">
+        <text>За допомогою даних, що містяться в КПК цього %s сталкера, ви домоглися прогресу в отриманні доступу до %s GPS-даних. Загальний прогрес: %.2f%% (%s/%s)</text>
+    </string>
+
+    <string id="st_mapspot_access_unlock">
+        <text>Дані на КПК цього %s сталкера дало вам можливість прорватися в мережу їхньої фракції. Тепер у вас є доступ до даних GPS, які дозволяють вам бачити %s місця розташування загонів при використанні будь-якого підтримуваного КПК.</text>
+    </string>
+    
+    
+    <!-- Added in 1.8.1 -->
+
+    <string id="st_mapspot_access_lost">
+        <text>Фракція %s, мабуть, змінила свої коди доступу до мережі, тому що ви втратили можливість бачити їхні загони на карті. Вам доведеться знайти нові КПК %s, щоб відновити доступ до їхніх GPS-даних.</text>
+    </string>
+
+   <string id="ui_mcm_milpda_progressive_access_resets">
+    <text>Доступ до мережі тимчасовий</text>
+</string>
+
+<string id="ui_mcm_milpda_progressive_access_resets_desc">
+    <text>Якщо цю функцію увімкнено, злом мережі іншої фракції в такий спосіб є тимчасовим - через деякий час вони виявлять втручання і змінять свої коди доступу, змусивши вас знову отримати доступ у той самий спосіб. Це найкраще поєднується з низькими значеннями розблокування, створюючи звичайний ігровий цикл.</text>
+</string>
+
+<string id="ui_mcm_milpda_progressive_only_enemy">
+    <text>Скидання доступу тільки від ворожих фракцій</text>
+</string>
+
+<string id="ui_mcm_milpda_progressive_only_enemy_desc">
+    <text>Якщо цю опцію увімкнено, нейтральні фракції не виганятимуть вас зі своєї мережі після того, як ви отримали доступ, але ворожі фракції все одно це робитимуть.\n\nЯкщо цю опцію вимкнено, всі фракції, які не є власною фракцією гравця, також зрештою відкличуть доступ.</text>
+</string>
+
+<string id="ui_mcm_milpda_progessive_access_mode">
+    <text>Часовий масштаб для тривалості доступу</text>
+</string>
+
+<string id="ui_mcm_milpda_progessive_access_mode_desc">
+    <text>Гра у 6 разів швидше реального часу.</text>
+</string>
+
+<string id="ui_mcm_lst_resetmode_gametime">
+    <text>Час гри</text>
+</string>
+
+<string id="ui_mcm_lst_resetmode_realtime">
+    <text>Реальний час</text>
+</string>
+
+<string id="ui_mcm_milpda_progressive_access_time">
+    <text>Тривалість отриманого доступу до мережі</text>
+</string>
+
+<string id="ui_mcm_milpda_progressive_access_unit">
+    <text>Одиниця часу для тривалості доступу</text>
+</string>
+
+<string id="ui_mcm_lst_timeunit_day">
+    <text>день</text>
+</string>
+<string id="ui_mcm_lst_timeunit_days">
+    <text>дні</text>
+</string>
+<string id="ui_mcm_lst_timeunit_hour">
+    <text>година</text>
+</string>
+<string id="ui_mcm_lst_timeunit_hours">
+    <text>години</text>
+</string>
+<string id="ui_mcm_lst_timeunit_minute">
+    <text>хвилина</text>
+</string>
+<string id="ui_mcm_lst_timeunit_minutes">
+    <text>хвилини</text>
+</string>
+<string id="ui_mcm_lst_timeunit_second">
+    <text>секунда</text>
+</string>
+<string id="ui_mcm_lst_timeunit_seconds">
+    <text>секунди</text>
+</string>
+
+    
+</string_table>

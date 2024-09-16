@@ -1,0 +1,25 @@
+<!--
+**  Milspec PDA
+**  Author: Catspaw (CatspawMods @ ModDB)
+**  Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+	Contents: Texture definitions. You probably shouldn't 
+	mess with this unless you know what you're doing.
+-->
+<w>
+	<file name ="ui\ui_icons_milpda">
+		<texture id = "ui_icons_item_milpda" x="0" y="0" width="50" height="50" />
+		<texture id="ui_options_slider_progressive" x="0" y="162" width="512" height="50" />
+		<texture id="ui_options_slider_blacklist" x="0" y="212" width="512" height="50" />
+		<texture id="ui_options_slider_cfg_pda_1" x="0" y="262" width="512" height="50" />
+		<texture id="ui_options_slider_cfg_pda_2" x="0" y="312" width="512" height="50" />
+		<texture id="ui_options_slider_cfg_pda_3" x="0" y="362" width="512" height="50" />
+		<texture id="ui_options_slider_cfg_pda_milspec" x="0" y="412" width="512" height="50" />
+		<texture id="ui_options_slider_milpda" x="0" y="462" width="512" height="50" />
+		<texture id="encyclopedia_addons_milspec_pda_image" x="0" y="462" width="512" height="50" />
+		<texture id="ui_mapspot_skull_small" x="472" y="1" width="9" height="10" />
+		<texture id="ui_mapspot_skull_large" x="482" y="1" width="11" height="12" />
+		<texture id="ui_AlphaLion_XCorpseMarker-small" x="494" y="1" width="7" height="7" />
+		<texture id="ui_AlphaLion_XCorpseMarker-large" x="502" y="1" width="9" height="9" />
+		<texture id ="ui_mcm_catsy_messagebox_transbg_675x150" x="349" y="756" width="675" height="150" />			
+	</file>
+</w>

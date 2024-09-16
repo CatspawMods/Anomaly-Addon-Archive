@@ -1,0 +1,91 @@
+<!-- ======================================================================
+	Milspec PDA
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+	Version: 1.11
+	Updated: 20240404
+
+	You do NOT need to install this file if (and only if):
+	1. You do not want to display enemy mapspots, AND
+	2. You are not going to enable the Kill Tracker feature; OR
+	3. You are using modded exes, in which case DO NOT USE THIS FILE
+
+	If (1 and 2) OR (3) are true, you can safely ignore this file.
+
+	See below for merge/conflict instructions. You need to do THREE things.
+	======================================================================
+	Step 1: add the following line to the first line of your file.
+	====================================================================-->
+#include "ui\map_spots_milpda.xml"
+<!-- ======================================================================
+	This is required by the Kill Tracker feature.
+	
+	If you are never going to enable Kill Tracker, you don't need to do 
+	this, just keep in mind that the script WILL crash if you try to enable Kill Tracker without it.
+
+	Scroll down for Step 2.
+	====================================================================-->
+
+	<enemy_location hint="enemy" no_offline="1">
+		<mini_map  spot="enemy_mini_spot"/>
+	</enemy_location>
+
+	<neutral_location hint="neutral">
+		<mini_map  spot="neutral_mini_spot"/>
+	</neutral_location>
+
+	<friend_location hint="friend">
+		<mini_map  spot="friend_mini_spot"/>
+	</friend_location>
+
+	<deadbody_location hint="deadbody">
+		<mini_map  spot="deadbody_mini_spot"/>
+	</deadbody_location>
+
+
+	<enemy_mini_spot width="7" height="7" stretch="1" alignment="c" >
+<!-- ======================================================================
+	Step 2: find the first "enemy_mini_spot" in your file, and replace that line with the one above.
+
+	Alternatively, edit your own file to make sure that enemy_mini_spot's width and height are both set to "7". Nothing will crash if this isn't done, but enemy mapspots will never appear. If that's what you want, you can ignore this step.
+
+	Scroll down.
+	====================================================================-->
+
+		<texture r="255" g="0" b="0">ui_mmap_common_actor</texture>
+	</enemy_mini_spot>
+
+	<neutral_mini_spot width="7" height="7" stretch="1" alignment="c">
+		<texture r="255" g="200" b="0">ui_mmap_common_actor</texture>
+	</neutral_mini_spot>
+
+	<friend_mini_spot width="7" height="7" stretch="1" alignment="c">
+		<texture r="50" g="255" b="0">ui_mmap_common_actor</texture>
+	</friend_mini_spot>
+
+	<deadbody_mini_spot width="0" height="0" stretch="1" alignment="c">
+<!-- ======================================================================
+	Finally: find the first "deadbody_mini_spot" in your file, and replace that line with the one above.
+
+	Alternatively, edit your own file to make sure that deadbody_mini_spot's 
+	width and height are both set to "0". Nothing will crash if this isn't done, but you may see duplicate dead body mapspots if you enable Kill Tracker.
+	====================================================================-->
+
+		<texture r="168" g="168" b="168">ui_mmap_common_actor</texture>
+	</deadbody_mini_spot>
+<!-- ======================================================================
+	But seriously: if you have to use this file, it means you are not using
+	modded exes, which you really should be doing. If you aren't running a 
+	modpack like GAMMA or EFP, you can get the basic modded exes from here:
+
+	https://github.com/themrdemonized/STALKER-Anomaly-modded-exes
+
+	Or you can install Screen Space Shaders, which includes all the same
+	improvements:
+
+	https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders
+
+	Just do yourself and every modder a favor, and stop using the basic
+	vanilla binaries that don't support DLTX and other improvements.
+	====================================================================-->	
+	

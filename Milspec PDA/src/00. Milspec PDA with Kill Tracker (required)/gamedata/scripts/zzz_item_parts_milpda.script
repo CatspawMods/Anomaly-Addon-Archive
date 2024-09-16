@@ -1,0 +1,25 @@
+-- ======================================================================
+--[[	Milspec PDA
+-- ======================================================================
+ 	Author: Catspaw (CatspawMods @ ModDB)
+-- ======================================================================
+	Monkeypatch that lets Milspec PDA know when an NPC PDA has been 
+	disassembled so that the player can gain faction progress if 
+	Progressive Mode is enabled.
+
+	It then passes on the arguments unaltered to the original function.
+	This should have zero impact on anyone else's functionality.
+-- ====================================================================]]
+
+if item_milpda and item_milpda.scrap_pda then
+	printf("<MPDA> item_parts.disassembly_item - clean monkeypatch by zzz_item_parts_milpda.script")
+
+	local disassemble_item = item_parts.disassembly_item
+
+	function item_parts.disassembly_item(obj, obj_d)
+		if item_milpda.progressive_vis then
+			item_milpda.scrap_pda(obj)
+		end
+		disassemble_item(obj,obj_d)
+	end
+end

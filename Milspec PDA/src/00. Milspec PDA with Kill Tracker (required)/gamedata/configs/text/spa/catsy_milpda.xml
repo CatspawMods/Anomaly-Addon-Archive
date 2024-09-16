@@ -1,0 +1,85 @@
+<!--
+**  Milspec PDA
+**  Author: Catspaw (CatspawMods @ ModDB)
+**  Source: https://www.moddb.com/members/catspawmods/addons
+**  Version: 1.6
+**  Updated: 20230512
+    Contents: Localized SPA string definitions
+
+    Very outdated, but included because some support is better than none.
+-->
+<string_table>
+    <string id="st_pda_mil_name">
+        <text>PDA Milspec</text>
+    </string>
+    <string id="st_pda_mil_descr">
+        <text>Un dispositivo electrónico de bolsillo destinado a abarcar las funciones básicas y más vitales de una computadora. El PDA es esencial para el intercambio diario de información. 
+              Viene con un módulo GPS preinstalado para proporcionar geolocalización e información de tiempo al usuario.\n \n
+              Este modelo sofisticado fue diseñado por una entidad desconocida para que lo usen militares encubiertos u operadores de ONG, 
+              e incluye un módulo criptográfico que permite al usuario infiltrarse en muchos de las redes privadas seguras de la Zona, revelando la ubicación aproximada de los escuadrones enemigos que operan en el área.\n \n
+        %c[ui_gray_3]PROPIEDADES:\n
+        %c[d_blue] • %c[ui_gray_2] Artículo tecnológico.\n
+        %c[d_blue] • %c[ui_gray_2] Alto consumo de energía eléctrica.\n
+        %c[d_purple] • %c[ui_gray_2] Muestra la ubicación de todos los escuadrones cercanos.\n
+        </text>
+    </string>
+
+    <string id="ui_mcm_menu_milpda">
+        <text>PDA Milspec</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall">
+        <text>Desinstalar Milspec PDA</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall_desc">
+        <text>Al marcar esto, se eliminarán todas las copias de Milspec PDA en el inventario del jugador.</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_add_recipe">
+        <text>Añadir receta de elaboración</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_add_recipe_desc">
+        <text>Si está habilitado, se agregará una receta de elaboración para Milspec PDA. Es posible que debas guardar y volver a cargar tu juego para que esto surta efecto.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_enabled">
+        <text>Enable custom blacklist for the factions below</text>
+    </string>
+
+    <string id="ui_mcm_milpda_facblacklist_army">
+        <text>No mostrar acosadores militares.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_bandit">
+        <text>No mostrar acosadores Bandios.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_csky">
+        <text>No mostrar acosadores Clear Sky.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_dolg">
+        <text>No mostrar acosadores Deber.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_ecolog">
+        <text>No mostrar acosadores Ecologistas.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_freedom">
+        <text>No mostrar acosadores Libertad.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_killer">
+        <text>No mostrar acosadores Mercenarios.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_monolith">
+        <text>No mostrar acosadores Monolith.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_zombied">
+        <text>No mostrar acosadores Zombified.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_greh">
+        <text>No mostrar acosadores Pecado.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_isg">
+        <text>No mostrar acosadores UNISG.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_renegade">
+        <text>No mostrar acosadores Renegade.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_stalker">
+        <text>No mostrar acosadores Solitarios.</text>
+    </string>
+</string_table>

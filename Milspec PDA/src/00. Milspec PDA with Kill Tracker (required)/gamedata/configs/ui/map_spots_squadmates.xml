@@ -1,0 +1,169 @@
+<!-- ======================================================================
+	Milspec PDA include file
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+===========================================================================
+	Mapspot icon definitions for individual squad members
+	Based on the Warfare mapspots
+===========================================================================
+	To manually merge this, you must add the following line to your own 
+	copy of map_spots_relations.xml:
+	
+	#include "ui\map_spots_squadmates.xml"
+
+	But seriously, just use a real mod organizer like MO2.
+========================================================================-->
+
+	<squadmate_stalker_spot>
+		<level_map spot="squadmate_stalker_tex"/>
+		<mini_map spot="squadmate_stalker_spot_mini"/>
+	</squadmate_stalker_spot>
+	<squadmate_stalker_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="255" g="255" b="128">ui_pda2_common_actor</texture>
+	</squadmate_stalker_tex>				
+	<squadmate_stalker_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="255" g="255" b="64">ui_mmap_common_actor</texture>
+	</squadmate_stalker_spot_mini>
+	
+	<squadmate_dolg_spot>
+		<level_map spot="squadmate_dolg_tex"/>
+		<mini_map spot="squadmate_dolg_spot_mini"/>
+	</squadmate_dolg_spot>
+	<squadmate_dolg_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="192" g="32" b="32">ui_pda2_common_actor</texture>
+	</squadmate_dolg_tex>				
+	<squadmate_dolg_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="192" g="32" b="32">ui_mmap_common_actor</texture>
+	</squadmate_dolg_spot_mini>
+	
+	<squadmate_freedom_spot>
+		<level_map spot="squadmate_freedom_tex"/>
+		<mini_map spot="squadmate_freedom_spot_mini"/>
+	</squadmate_freedom_spot>
+	<squadmate_freedom_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="32" g="192" b="128">ui_pda2_common_actor</texture>
+	</squadmate_freedom_tex>				
+	<squadmate_freedom_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="32" g="255" b="128">ui_mmap_common_actor</texture>
+	</squadmate_freedom_spot_mini>
+	
+	<squadmate_killer_spot>
+		<level_map spot="squadmate_killer_tex"/>
+		<mini_map spot="squadmate_killer_spot_mini"/>
+	</squadmate_killer_spot>
+	<squadmate_killer_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="64" g="128" b="192">ui_pda2_common_actor</texture>
+	</squadmate_killer_tex>				
+	<squadmate_killer_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="64" g="128" b="192">ui_mmap_common_actor</texture>
+	</squadmate_killer_spot_mini>
+	
+	<squadmate_csky_spot>
+		<level_map spot="squadmate_csky_tex"/>
+		<mini_map spot="squadmate_csky_spot_mini"/>
+	</squadmate_csky_spot>
+	<squadmate_csky_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="144" g="244" b="255">ui_pda2_common_actor</texture>
+	</squadmate_csky_tex>				
+	<squadmate_csky_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="144" g="244" b="255">ui_mmap_common_actor</texture>
+	</squadmate_csky_spot_mini>
+	
+	<squadmate_monolith_spot>
+		<level_map spot="squadmate_monolith_tex"/>
+		<mini_map spot="squadmate_monolith_spot_mini"/>
+	</squadmate_monolith_spot>
+	<squadmate_monolith_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="160" g="92" b="160">ui_pda2_common_actor</texture>
+	</squadmate_monolith_tex>				
+	<squadmate_monolith_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="160" g="92" b="160">ui_mmap_common_actor</texture>
+	</squadmate_monolith_spot_mini>
+	
+	<squadmate_army_spot>
+		<level_map spot="squadmate_army_tex"/>
+		<mini_map spot="squadmate_army_spot_mini"/>
+	</squadmate_army_spot>
+	<squadmate_army_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="144" g="192" b="144">ui_pda2_common_actor</texture>
+	</squadmate_army_tex>
+	<squadmate_army_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="144" g="192" b="144">ui_mmap_common_actor</texture>
+	</squadmate_army_spot_mini>
+	
+	<squadmate_ecolog_spot>
+		<level_map spot="squadmate_ecolog_tex"/>
+		<mini_map spot="squadmate_ecolog_spot_mini"/>
+	</squadmate_ecolog_spot>
+	<squadmate_ecolog_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="255" g="128" b="0">ui_pda2_common_actor</texture>
+	</squadmate_ecolog_tex>				
+	<squadmate_ecolog_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="255" g="128" b="0">ui_mmap_common_actor</texture>
+	</squadmate_ecolog_spot_mini>
+	
+	<squadmate_bandit_spot>
+		<level_map spot="squadmate_bandit_tex"/>
+		<mini_map spot="squadmate_bandit_spot_mini"/>
+	</squadmate_bandit_spot>
+	<squadmate_bandit_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="112" g="66" b="20">ui_pda2_common_actor</texture>
+	</squadmate_bandit_tex>				
+	<squadmate_bandit_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="112" g="66" b="20">ui_mmap_common_actor</texture>
+	</squadmate_bandit_spot_mini>
+	
+	<squadmate_zombied_spot>
+		<level_map spot="squadmate_zombied_tex"/>
+		<mini_map spot="squadmate_zombied_spot_mini"/>
+	</squadmate_zombied_spot>
+	<squadmate_zombied_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="32" g="32" b="32">ui_pda2_common_actor</texture>
+	</squadmate_zombied_tex>				
+	<squadmate_zombied_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="32" g="32" b="32">ui_mmap_common_actor</texture>
+	</squadmate_zombied_spot_mini>
+	
+	<squadmate_mutant_spot>
+		<level_map spot="squadmate_mutant_tex"/>
+		<mini_map spot="squadmate_mutant_spot_mini"/>
+	</squadmate_mutant_spot>
+	<squadmate_mutant_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="192" g="192" b="192">ui_pda2_common_actor</texture>
+	</squadmate_mutant_tex>				
+	<squadmate_mutant_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="192" g="192" b="192">ui_mmap_common_actor</texture>
+	</squadmate_mutant_spot_mini>
+	
+	<squadmate_greh_spot>
+		<level_map spot="squadmate_greh_tex"/>
+		<mini_map spot="squadmate_greh_spot_mini"/>
+	</squadmate_greh_spot>
+	<squadmate_greh_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="200" g="92" b="140">ui_pda2_common_actor</texture>
+	</squadmate_greh_tex>				
+	<squadmate_greh_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="200" g="92" b="140">ui_mmap_common_actor</texture>
+	</squadmate_greh_spot_mini>
+	
+	<squadmate_renegade_spot>
+		<level_map spot="squadmate_renegade_tex"/>
+		<mini_map spot="squadmate_renegade_spot_mini"/>
+	</squadmate_renegade_spot>
+	<squadmate_renegade_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="170" g="255" b="100">ui_pda2_common_actor</texture>
+	</squadmate_renegade_tex>				
+	<squadmate_renegade_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="170" g="255" b="100">ui_mmap_common_actor</texture>
+	</squadmate_renegade_spot_mini>
+	
+	<squadmate_isg_spot>
+		<level_map spot="squadmate_isg_tex"/>
+		<mini_map spot="squadmate_isg_spot_mini"/>
+	</squadmate_isg_spot>
+	<squadmate_isg_tex width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="192" g="110" b="100">ui_pda2_common_actor</texture>
+	</squadmate_isg_tex>				
+	<squadmate_isg_spot_mini x="0" y="0" width="9" height="9" alignment="c" stretch="1" location_level="10" scale_min="3.0" scale_max="5.1" scale="0">
+		<texture r="192" g="110" b="100">ui_mmap_common_actor</texture>
+	</squadmate_isg_spot_mini>

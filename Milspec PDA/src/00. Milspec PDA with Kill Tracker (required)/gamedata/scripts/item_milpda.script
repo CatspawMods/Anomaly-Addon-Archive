@@ -1,0 +1,857 @@
+-- ======================================================================
+--[[	Milspec PDA
+-- ======================================================================
+ 	Author: Catspaw (CatspawMods @ ModDB)
+ 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+-- ======================================================================
+	You may alter any part of this mod and do whatever you like with it, 
+	just give credit where appropriate.
+
+	Credits: 
+		* artifax for the workshop monkeypatch script
+		* Ishmaeel and RavenAscendant for Kill Tracker and Body Dots
+		https://www.moddb.com/mods/stalker-anomaly/addons/kiltrak
+		https://www.moddb.com/mods/stalker-anomaly/addons/bodydotsminimap-white-dots-but-blue
+		* AlphaLion (GAMMA Discord) for the "White X" style body markers
+		* demonized for help with the NPC PDA weapon hide fix
+-- ==================================================================--]]
+script_name 			= "item_milpda"
+script_version        	= "1.13"
+release_date            = 20240912
+-- ======================================================================
+--[[	To uninstall without MCM, first:
+		1. Pick up any Milspec PDAs and save your game
+		2. Quit out and set the following line to true:				 --]]
+local uninstall 		= false
+--		3. Then re-launch the game, load, and save your game again
+-- 
+--	It is then safe to uninstall Milspec PDA.
+-- 	Please use MCM and MO2, though. I can't help with issues otherwise.
+-- ======================================================================
+debuglogs				= false		-- Debug logging for troubleshooting issues - this should always be "false" in the release version
+verbose 				= false 	-- Noisier verbose logging - no effect if debuglogs is false
+logprefix 				= "[MPDA] "
+printf("%sMilspec PDA v%s (rel %s) began initialization at tg %s", logprefix, script_version, release_date, time_global())
+assert(utils_catspaw_common,
+    "\n! ERROR: Milspec PDA requires utils_catspaw_common, which does not exist!\n"
+)
+local dl 				= function(logtext, ...) utils_catspaw_common.dlog(item_milpda, logtext, ...) end
+local vl 				= function(logtext, ...) utils_catspaw_common.vlog(item_milpda, logtext, ...) end
+local dotip 			= function(tiptext, dur, src, beep, icon, snd) utils_catspaw_common.dotip(tiptext, dur, src or "", beep, icon, snd or "pda_tips") end
+local safeid 			= utils_catspaw_common.safeid
+local round100 			= utils_catspaw_common.round100
+local get_time_elapsed	= utils_catspaw_common.get_time_elapsed
+local using_modded_exes	= utils_catspaw_common.using_modded_exes
+local get_mcm 			= utils_catspaw_common.get_mcm_or_default_val
+local gts               = game.translate_string
+-- ======================================================================
+local next_tick             = 0
+local recipe_added			= false 	-- Flag to prevent dupe recipes from being added
+local last_looted_comm 		= nil
+local last_squad_update 	= 0
+local decrypt_to_progress	= false 	-- An NPC PDA must be decrypted to gain progress
+no_blacklist_prog			= true 		-- Cannot gain progressive data for blacklisted factions
+progressive_vis 			= false
+update_interval       		= 873 		-- Weird number to avoid perf hit from stacking 1000ms updates with other addons
+access_resets 				= false
+only_enemy_resets			= true
+only_enemy_unlock			= false
+show_squadmate_mapspots 	= false
+progress_gain_mode 			= 1
+access_time 				= 7
+access_unit 				= "d"
+timer_mult = {
+	["s"]					= 1,
+	["m"]					= 60,
+	["h"]					= 60 * 60,
+	["d"] 					= 60 * 60 * 24,
+}
+reset_time_coef 			= timer_mult[access_unit]
+tracking_mode               = 1
+local kiltrak_enabled       = (tracking_mode > 0)
+local tracking_companions   = (tracking_mode > 1)
+local tracking_all          = (tracking_mode > 2)
+first_update				= false
+pda_inv_item	 			= "device_pda_milspec" -- Don't change this
+
+-- ======================================================================
+-- This allows you to granularly customize each PDA's display behavior
+-- or extend compatibility for PDAs added by other mods.
+-- These settings will be overridden by MCM, if it is installed.
+-- ======================================================================
+found_npc_pda               = {}
+
+
+
+-- Idea: network infiltration levels, so unlock isn't all or nothing
+-- higher infiltration level lets you see higher-ranked squads
+-- gives a reason to not hoard PDAs once their faction is unlocked -- use to gain for better access
+-- does network access revoke one infiltration level, or reset all? probably leave as an option
+
+
+
+
+pda_defs = {
+	["device_pda_1"] = { -- Defaults:
+		obeybl				= true,		-- Obeys faction blacklist
+		show_e				= false, 	-- Show enemies?
+		show_n 				= false, 	-- Show neutral?
+		show_f 				= false, 	-- Show friendly?
+		show_k 				= false, 	-- Show kills? (For KilTrak integration)
+		progmult 			= 0.0, 		-- Progression gain multiplier
+	},
+	["device_pda_2"] = {
+		obeybl				= true,
+		show_e				= false,
+		show_n 				= false,
+		show_f 				= true,
+		show_k 				= true,
+		progmult 			= 0.1, 		-- Progression gain multiplier
+	},
+	["device_pda_3"] = {
+		obeybl				= true,
+		show_e				= false,
+		show_n 				= true,
+		show_f 				= true,
+		show_k 				= true,
+		progmult 			= 0.5, 		-- Progression gain multiplier
+	},
+	["device_pda_milspec"] = {
+		obeybl				= true,
+		show_e				= true,
+		show_n 				= true,
+		show_f 				= true,
+		show_k 				= true,
+		progmult 			= 1, 		-- Progression gain multiplier
+	},
+--	["device_pda_added_by_your_mod"] = {
+--		obeybl				= true,
+--		show_e				= false,
+--		show_n 				= false,
+--		show_f 				= false,
+--		show_k 				= false,
+--		progmult 			= 1,
+--	},
+}
+
+ranks_by_name = {
+    ["novice"]              = 1,
+    ["trainee"]             = 2,
+    ["experienced"]         = 3,
+    ["professional"]        = 4,
+    ["veteran"]             = 5,
+    ["expert"]              = 6,
+    ["master"]              = 8,
+    ["legend"]              = 10,
+}
+
+
+-- ======================================================================
+-- Any faction set to true in faction_blacklist will be ignored by any 
+-- PDA, but only if
+local use_faction_blacklist = false
+-- is also set to true. These defaults will be overridden by MCM, if 
+-- it is installed.
+-- ======================================================================
+
+local faction_data = {
+	["army"] = {
+		req 				= 14,
+		blacklist 			= false,
+		progress 			= 0,
+		security_coef 		= 1.3, -- not yet implemented
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["bandit"] = {
+		req 	 			= 6,
+		blacklist 			= false,
+		security_coef 		= 0.8,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["csky"] = {
+		req 	 			= 10,
+		blacklist 			= false,
+		security_coef 		= 1,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["dolg"] = {
+		req 				= 13,
+		blacklist 			= false,
+		security_coef 		= 1.1,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["ecolog"] = {
+		req 				= 12,
+		blacklist 			= false,
+		security_coef 		= 1,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+		unlocked 			= nil,
+	},
+	["freedom"] = {
+		req 				= 11,
+		blacklist 			= false,
+		security_coef 		= 1,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["killer"] = {
+		req 				= 14,
+		blacklist 			= false,
+		security_coef 		= 1.3,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["stalker"] = {
+		req 				= 9,
+		blacklist 			= false,
+		security_coef 		= 0.9,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["renegade"] = {
+		req 				= 5,
+		blacklist 			= false,
+		security_coef 		= 0.9,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["zombied"] = {
+		req 				= 60000,
+		blacklist 			= false,
+		security_coef 		= 1,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["monolith"] = {
+		req 				= 15,
+		blacklist 			= true,
+		security_coef 		= 2,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["greh"] = {
+		req 				= 13,
+		blacklist 			= true,
+		security_coef 		= 1.1,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	},
+	["isg"] = {
+		req 				= 16,
+		blacklist 			= true,
+		security_coef 		= 2,
+		progress 			= 0,
+		reset 				= nil,
+		unlocked 			= nil,
+	}
+}
+fd = faction_data
+
+-- ======================================================================
+-- Definitions for thenon-DLTX (i.e. vanilla binaries) crafting recipe
+-- Valid IDs for parts are found in configs\items\settings\parts.ltx
+-- ======================================================================
+pda_craft_string = {
+	[pda_inv_item] = {
+			index 	= 1, -- Workshop tab
+			tier 	= "3", -- Expert tools
+			recipe 	= "recipe_expert_0", -- No recipe unlock requirement
+			mats	= {
+				[1] = {mat="prt_i_transistors",ct="20"},-- def: 20x transistors
+				[2] = {mat="prt_i_capacitors",ct="25"},	-- def: 25x capacitors
+				[3] = {mat="prt_o_ballistic_8",ct="2"},	-- def: 2x Kevlar K119 plates w/ carbon-fibre inserts
+				[4] = {mat="device_pda_3",ct="1"},		-- def: PDA 3.1
+			-- Up to four ingredients allowed
+			}
+		}
+	}
+
+-- ======================================================================
+
+function validated_faction(comm)
+	-- Sanitizes community value, catches nil and certain special cases
+	if (comm and fd and fd[comm]) then
+		--vl("validated_faction called for valid faction %s, returning",comm)
+		return comm
+	elseif (not comm) then
+		vl("%s comm passed for validated_faction, returning \"missing\"", comm)
+		return "missing"
+	elseif (comm == "greh_npc") then
+		--vl("validated_faction(%s) called, returning \"greh\"",comm)
+		return "greh"
+	elseif (comm == "army_npc") then
+		--vl("validated_faction(%s) called, returning \"army\"",comm)
+		return "army"
+	elseif ((comm == "missing") or (comm == "unknown")) then
+		-- Catch if we've passed a bad faction through this function twice
+		-- This should rarely happen, so it's the last check
+		return comm
+	else
+		--vl("validated_faction(%s) called, returning \"unknown\"",comm)
+		return "unknown"
+	end
+end
+
+local function started()
+    return first_update and ish_kill_tracker and ish_kill_tracker.first_update
+end
+
+function version(scriptver)
+    local ver = str_explode(scriptver or script_version,".")
+    return {maj=ver[1],min=ver[2] or 0,pat=ver[3] or 0}
+end
+
+
+function equipped_pda()
+	local dev = db.actor:item_in_slot(8)
+	local sec = dev and dev:section()
+	return sec
+end
+
+
+local function known_pda(sec)
+	sec = sec or equipped_pda()
+	if sec and pda_defs[sec] then return true end
+	vl("Custom PDA type %s not found in pda_defs, add to that table to enable support",sec)
+	return false
+end
+
+function is_blacklisted(comm,sec)
+	sec 		= sec or equipped_pda()
+	if not sec then return true end
+	local pda 	= pda_defs[sec]
+	local fdc 	= fd and fd[comm]
+	if not fdc then return true end
+	if known_pda(sec) then
+		return use_faction_blacklist and fdc and fdc.blacklist and pda.obeybl
+	else
+		return use_faction_blacklist and fdc and fdc.blacklist
+	end
+end
+
+
+function shows_kills(sec)
+	if known_pda(sec) then return pda_defs[sec].show_k end
+end
+
+function get_pda_feature_setting(feature,sec)
+	sec = sec or equipped_pda()
+	if known_pda(sec) then return pda_defs[sec][feature] end
+end
+
+function actor_can_see_killspots()
+	if not (db.actor and kiltrak_enabled) then return false end
+	local dev = db.actor:item_in_slot(8)
+	if not dev then return false end
+	local pda = pda_defs[dev:section()]
+	if known_pda(dev:section()) then
+		return pda.show_k or false
+	end
+	return false
+end
+
+function has_faction_network_data(comm)
+	comm = validated_faction(comm)
+	if not (comm and fd[comm]) then
+		dl("WARNING: has_faction_network_data(%s): \"%s\" not found in faction_data",comm,comm)
+	return false end
+	local facdata = fd[comm].progress or 0
+	local datareq = fd[comm].req or 100
+	return facdata >= datareq
+end
+
+function is_actor_enemy(comm)
+	return game_relations.is_factions_enemies(get_actor_true_community(),validated_faction(comm))
+end
+
+function pda_type_could_see_mapspot(pda,comm,is_ally,is_enemy)
+	--printf(logprefix.."pda_type_could_see_mapspot called")
+	if not pda then return false end
+	is_ally 		= is_ally or (comm == get_actor_true_community())
+	is_enemy 		= is_enemy or is_actor_enemy(comm)
+	local could_see = false
+		-- Defaults:
+		-- PDA 1 no mapspots are shown
+	if 	(pda.show_f and is_ally) or
+		-- PDA 2 sees allies
+		(pda.show_n and not is_enemy) or
+		-- PDA 3.1 also sees neutrals
+		pda.show_e then
+		-- Milspec PDA also sees enemies
+		could_see = true
+	end
+	return could_see
+end
+
+function pda_type_can_see_mapspot(target_comm)
+	-- Check for valid device in slot
+	local dev 		= db.actor:item_in_slot(8)
+	local sec 		= dev and dev:section()
+	if not sec then return false end
+	local pda 		= pda_defs[sec]
+	if not pda then return false end
+	-- Sanitize faction to ensure no nil values
+	local comm 		= validated_faction(target_comm)
+	if not (comm and fd[comm]) then return false end
+
+	-- If player has faction blacklist enabled, don't show blacklisted factions
+	if is_blacklisted(comm) then
+		--vl("Faction %s is blacklisted",comm)
+	return false end
+
+	local is_ally 	= (comm == get_actor_true_community())
+	local is_enemy 	= is_actor_enemy(comm)
+	if not pda_type_could_see_mapspot(pda,comm,is_ally,is_enemy) then
+		--vl("Faction %s not visible to player with %s",comm,sec)
+	return false end
+
+	if is_ally or (not progressive_vis) or (only_enemy_unlock and not is_enemy) then
+		--vl("Faction %s could be visible to player | is_ally %s - is_enemy %s | progressive_vis %s | only_enemy_unlock %s",comm,is_ally,is_enemy,progressive_vis,only_enemy_unlock)
+	return true end
+
+	local has_data = has_faction_network_data(comm)
+	
+	vl("Faction %s has_data: %s | comm %s | fd[comm].req %s",comm,has_data,fd[comm].req)	
+	return has_data
+end
+
+
+function get_reset_time(comm,silent)
+	comm = validated_faction(comm)
+	if not comm and fd and fd[comm] then return 0 end
+	local now = get_time_elapsed()
+	local nowc = time_continual()
+	local adjtime = access_time * reset_time_coef
+	local newreset = now + adjtime
+	if not silent then
+		dl("Getting reset time for %s: %s (now %s | now (continual) %s | access_time %s | reset_time_coef %s | adjtime %s)",comm,newreset,now,nowc,access_time,reset_time_coef,adjtime)
+	end
+	return newreset
+end
+
+function is_time_to_reset(comm)
+	comm = validated_faction(comm)
+	if comm and comm == get_actor_true_community() then return false end
+	local now = get_time_elapsed()
+	local nowc = time_continual()
+	local ttr = fd and fd[comm] and fd[comm].reset or 0
+	--vl("PDA access state for %s: reset %s | now %s | now (continual) %s | reset timely %s",comm,ttr,now,nowc,now > ttr)
+	return now > ttr
+end
+
+function notify_visibility(comm,onoff)
+	if not progressive_vis then return end
+	dl("Notifying player of access change for %s (%s)",comm,onoff)
+	local facname = gts(comm)
+	local tiptxt = string.format(gts("st_mapspot_access_lost"),facname,facname)
+	if onoff then
+	    local is_enemy  	= is_actor_enemy(comm)
+		local show_n 		= get_pda_feature_setting("show_n")
+		local show_e 		= get_pda_feature_setting("show_e")
+	    local can_see 		= (show_e and is_enemy) or (show_n and not is_enemy)
+		tiptxt 				= can_see and gts("st_mapspot_access_unlock") or gts("st_mapspot_access_unlock_nopda")
+	    tiptxt 				= string.format(tiptxt,facname,facname)
+	end
+    dotip(tiptxt,5000,nil,true,"ui_icon_news_trx_common")
+end
+
+local function extend_reset_time(comm,val)
+	comm = validated_faction(comm)
+	fd[comm].reset = fd[comm].reset + (val or 1000)
+	vl("extend_reset_time(%s,%s)",comm,val or 1000)
+end
+
+local function faction_resets_access(comm, acomm)
+	return (((comm ~= acomm) and not only_enemy_resets) or (only_enemy_resets and is_actor_enemy(comm)))
+end
+
+function update_squad_visibility()
+	local elapsed_since_last = get_time_elapsed() - last_squad_update
+	last_squad_update = get_time_elapsed()
+	if not progressive_vis then return end
+	local acomm = get_actor_true_community()
+	for k,v in pairs(faction_data) do
+		local comm = k
+		local fdc = fd[k]
+		local reset_is_timely = is_time_to_reset(comm)
+		if access_resets then
+			if comm == acomm then
+				-- Roll timer if this is still the player's true faction
+				fdc.reset = get_reset_time(comm,true)
+			elseif game_fast_travel.trip_in_progress then
+				extend_reset_time(comm,elapsed_since_last)	
+			else
+				--vl("Checking faction data for %s | unlocked %s | reset timely %s",comm,fdc.unlocked,reset_is_timely)
+				if reset_is_timely and fdc.unlocked and faction_resets_access() then
+					fdc.reset = nil
+					fdc.unlocked = nil
+					fdc.unlocked_c = nil
+					fdc.progress = 0
+					vl("Actor's faction is %s, resetting access for %s",acomm,comm)
+					notify_visibility(comm,false)
+				end
+			end
+		end
+	end
+end
+
+local function inject_power()
+	-- Injects power consumption values into item_device.script at runtime
+	-- so that we don't have to edit/replace items\settings\devices.ltx
+	if using_modded_exes then return end
+	-- Completely unnecessary (and skipped) if you're using modded exes, as everyone should be.
+	dl("DLTX unavailable, manually injecting workshop and power consumption defs for %s", pda_inv_item)
+	local ini_milpda = ini_file("items\\items\\items_milpda.ltx")
+	local sec = pda_inv_item
+	local mpc = ini_milpda:r_string_ex(sec,"power_consumption")
+	local idc = item_device.dev_consumption
+	local idct = item_device.dev_consumption_tot
+	local idca = item_device.dev_consumption_act
+	item_device.dev_critical[sec] = 0.05
+
+	idc[sec] = {}
+	local t = str_explode(mpc,",")
+	for j=1,#t do
+		local cons = tonumber(t[j]) or 0
+		if (t[j] == "p") or (cons > 0) then
+			idc[sec][j] = cons
+			idct[sec] = idct[sec] and (idct[sec] + cons) or cons
+		end
+	end
+	
+	idca[sec] = {}
+	local value_e = ini_milpda:r_string_ex("power_consumption_event",sec)
+	if value_e then
+		t = str_explode(value_e,",")
+		for j=1,#t do
+			local cons = tonumber(t[j]) or 0
+			if cons > 0 then
+				idca[sec][j] = cons
+				idct[sec] = idct[sec] and (idct[sec] + cons) or cons
+			end
+		end
+	end
+end
+
+
+function check_new_recipe(enabled, item, customstring)
+	if using_modded_exes then return end
+	dl("enabled %s | item %s",enabled,item)
+	if enabled and item and workshop_autoinject and not recipe_added then
+		local recipe_string = customstring or "1,recipe_basic_0,prt_i_scrap,1"
+		local cs = pda_craft_string[item] or nil
+		if cs and not customstring then
+			local rs = ""
+			for k,v in pairs(cs.mats) do
+				if k then
+					local bm = cs.mats[k]
+					local mat = bm.mat or ""
+					local ct = bm.ct or ""
+					rs = rs..","..mat..","..ct
+				end
+			end
+			recipe_string = cs.tier..","..cs.recipe..rs
+			dl("Trying to inject new recipe for %s in workshop tab %s: %s",item,index,recipe_string)
+			workshop_autoinject.add_new_recipe(cs.index,item,recipe_string)
+		end
+		recipe_added = true
+	end
+end
+
+
+function uninstall_cleanup()
+	if uninstall then
+		uninstall = false
+		ui_mcm.set("milpda/uninstall",false)
+		if ish_kill_tracker then ish_kill_tracker.clean_slate() end
+
+		local function delete_item(obj)
+			dl("Uninstall: deleting %s",pda_inv_item)
+			local se_obj = alife_object(obj:id())
+			local id = se_obj.id or nil
+			local name = se_obj:name() or nil
+			alife_release_id(id)
+		end
+
+		local function search(temp , item)
+			if item:section() == pda_inv_item then
+				delete_item(item)
+			end
+		end
+		if db.actor then
+			db.actor:iterate_inventory(search,nil)
+		end
+	end
+end
+
+
+function load_mcm()
+	if ui_mcm then
+		-- If you have MCM, it will override the hardcoded settings
+		uninstall 					= get_mcm("milpda/milpdagen/uninstall")
+		if uninstall then return end
+		debuglogs					= get_mcm("milpda/milpdagen/debuglogs", debuglogs)
+		verbose 					= get_mcm("milpda/milpdagen/verbose", verbose)
+		kiltrak_enabled	    		= get_mcm("milpda/milpdagen/kiltrak", kiltrak_enabled)
+		tracking_mode 	    		= tonumber(get_mcm("milpda/milpdagen/tracking_mode", tracking_mode or 0))
+		if tracking_mode ~= nil then
+			kiltrak_enabled       	= (tracking_mode > 0)
+			tracking_companions   	= (tracking_mode > 1)
+			tracking_all          	= (tracking_mode > 2)
+		end
+		show_squadmate_mapspots 	= get_mcm("milpda/milpdagen/squadmate_mapspots", show_squadmate_mapspots)
+		if zzz_sim_squad_scripted_milpda then
+			zzz_sim_squad_scripted_milpda.show_squadmate_mapspots = show_squadmate_mapspots
+		end
+		dl("Kill tracking_mode: %s | show_squadmate_mapspots %s", tracking_mode, show_squadmate_mapspots)
+		use_faction_blacklist		= get_mcm("milpda/facblacklist/enabled", use_faction_blacklist)
+		if use_faction_blacklist then
+			for k,v in pairs(fd) do
+				local fdc = fd and fd[k]
+				local b = ui_mcm.get("milpda/facblacklist/"..k)
+				-- dl("faction_blacklist[%s] = %s",k,b)
+				fdc.blacklist = b
+			end
+		end
+		for k,v in pairs(faction_data) do
+			if (k ~= "zombied") then 
+				fd[k].req = tonumber(get_mcm("milpda/progressive/"..k, fd[k].req or 1))
+				vl("Loaded MCM value for milpda/progressive/%s: %s",k,fd[k].req)
+            else
+                dl("Invalid MCM setting %s for milpda/progressive/%s, defaulting",v,k)
+			end
+		end
+        for k,v in pairs(ranks_by_name) do
+            ranks_by_name[k] = tonumber(get_mcm("milpda/progressive/"..k, ranks_by_name[k] or 1))
+            vl("Loaded MCM value for milpda/progressive/%s: %s",k,ranks_by_name[k])
+        end	
+		for p,_ in pairs(pda_defs) do
+			local en 		= ui_mcm.get("milpda/cfg_"..p.."/enabled")
+			if en then
+				local pda 	= pda_defs[p]
+				pda.obeybl 	= get_mcm("milpda/cfg_"..p.."/obeybl", pda.obeybl)
+				pda.show_f 	= get_mcm("milpda/cfg_"..p.."/show_f", pda.show_f)
+				pda.show_n 	= get_mcm("milpda/cfg_"..p.."/show_n", pda.show_n)
+				pda.show_e 	= get_mcm("milpda/cfg_"..p.."/show_e", pda.show_e)
+				pda.show_k 	= get_mcm("milpda/cfg_"..p.."/show_k", pda.show_k)
+				pda.progmult= tonumber(get_mcm("milpda/cfg_"..p.."/progmult", pda.progmult))
+				vl("Loading PDA defs for %s: f %s | n %s | e %s | k %s | pmult %s", p, pda.show_f, pda.show_n, pda.show_e, pda.show_k, pda.progmult)
+			end
+		end
+		progressive_vis 	= get_mcm("milpda/progressive/enabled", progressive_vis)
+		decrypt_to_progress = get_mcm("milpda/progressive/must_decrypt", decrypt_to_progress)
+		access_resets 		= get_mcm("milpda/progressive/access_resets", access_resets)
+		progress_gain_mode	= get_mcm("milpda/progressive/gain_mode", progress_gain_mode)
+		access_time  		= get_mcm("milpda/progressive/access_time", access_time)
+		access_unit  		= get_mcm("milpda/progressive/access_unit", access_unit)
+		only_enemy_unlock	= get_mcm("milpda/progressive/only_enemy_unlock", only_enemy_unlock)
+		only_enemy_resets	= get_mcm("milpda/progressive/only_enemy_resets", only_enemy_resets)
+		no_blacklist_prog 	= get_mcm("milpda/progressive/noblacklist", no_blacklist_prog)
+		reset_time_coef 	= (timer_mult[access_unit] or 1) * (access_mode or 1)
+		if (not reset_time_coef) or (reset_time_coef < 1) then reset_time_coef = 1 end
+		vl("reset_time_coef %s | access_unit %s | access_mode %s | timer_mult %s", reset_time_coef, access_unit, access_mode, timer_mult[access_unit])
+
+	end
+end
+
+
+function check_for_pda_progress(obj,method)
+    if not (obj and progressive_vis) then return end
+	local name 	= obj:name()
+	vl("check_for_pda_progress called for %s",name)
+    local sec 	= obj:section()
+    local id 	= safeid(obj)
+
+    if not item_device.device_npc_pda[sec] then
+    	found_npc_pda[id] = nil -- to avoid bloating the list with recycled ids
+    return end
+
+    local pdai 	= se_load_var(id,nil,"info")
+    if not pdai then
+    	dl("PDA has no metadata, skipping")
+    	-- Probably a PDA spawned through debug console
+    return end
+
+    if method ~= "scrap" then
+	    if decrypt_to_progress and (pdai.state == "encrypted") then
+	    	vl("PDA %s is encrypted, no data gained",name)
+	    	 -- do not allow progress gain from encrypted PDAs
+	    return end
+    end
+
+    if found_npc_pda[id] then
+        vl("Actor already knows a PDA with ID %s",id)
+        return
+    else
+        vl("PDA with ID %s is new to actor",id)
+        found_npc_pda[id] = true
+    end
+
+    local comm 	= pdai and pdai.contact and pdai.contact.comm
+    local rank 	= pdai and pdai.contact and pdai.contact.rank
+        if not comm and rank then
+    	dl("PDA %s has invalid metadata, skipping",id)
+    return end
+--st_mapspot_access_unlock_nopda
+    comm 			= validated_faction(comm)
+    local blisted 	= is_blacklisted(comm)
+    local blocked  	= no_blacklist_prog and blisted
+    local valid = fd[comm] and true or false
+
+    if blocked or not valid then
+    	local reason = blisted and "blacklisted" or "invalid"
+    	dl("PDA %s is from %s faction %s, skipping",id,reason,comm)
+    return end
+
+    if fd[comm] and fd[comm].unlocked then
+    	vl("PDA access for %s is already unlocked, skipping",comm)
+    return end
+
+	last_looted_comm 	= comm
+    local rankval 		= ranks_by_name[rank] or 1
+    local progmult 		= get_pda_feature_setting("progmult",sec) or 1
+    local gain 			= rankval * progmult
+    if gain <= 0 then return end
+
+    local fnd 			= fd and fd[comm] and fd[comm].progress or 0
+    local fdr 			= fd and fd[comm] and fd[comm].req or 100
+
+    fd[comm].progress 	= fnd + gain
+    local fnp 			= fd[comm].progress
+
+    if (fnp >= fdr) then
+    	vl("PDA %s's data for %s (%s) exceeds req (%s), unlocking access",id,comm,fnp,fdr)
+		local now 			= get_time_elapsed()
+		local nowc 			= time_continual()
+		fd[comm].unlocked 	= now
+		fd[comm].unlocked_c = nowc
+		if access_resets then
+			fd[comm].reset 	= get_reset_time(comm)
+			dl("Access unlocked for %s at %s (devtime %s), setting new reset time: %s",comm,fd[comm].unlocked,fd[comm].unlocked_c,fd[comm].reset)
+		end
+		notify_visibility(comm,true)
+    else
+	    local progress 		= (fnp/fdr)*100
+	    local factxt 		= gts(comm)
+		local tiptxt 		= gts("st_mapspot_access_prog")
+		tiptxt 				= string.format(tiptxt,factxt,factxt,progress,fnp,fdr)
+		dl("Actor gained %s mapspot unlock progress (total %.2f%% | %s/%s) from new %s PDA %s",gain,progress,fnp,fdr,comm,id)
+		dotip(tiptxt,5000,nil,true,"ui_icon_news_trx_common")
+	end
+end
+
+function scrap_pda(obj)
+	if not (obj and progressive_vis and (progress_gain_mode > 2)) then return end
+    local sec = obj:section()
+    if not item_device.device_npc_pda[sec] then return end
+    vl("Actor scrapped an NPC PDA")
+    check_for_pda_progress(obj,"scrap")
+end
+
+function view_pda(obj)
+	if not (obj and progressive_vis and (progress_gain_mode == 2)) then return end
+	check_for_pda_progress(obj,"read")
+end
+
+function actor_on_item_take(obj)
+    if not (obj and progressive_vis and (progress_gain_mode < 2)) then return end
+    local sec = obj:section()
+    if not item_device.device_npc_pda[sec] then return end
+    vl("Actor looted an NPC PDA")
+    check_for_pda_progress(obj,"take")
+end
+
+
+function on_option_change()
+	load_mcm()
+	if uninstall then
+		dl("Removing all copies of the Milspec PDA from player's inventory")
+		uninstall_cleanup()
+		return
+	end
+	check_new_recipe(true,pda_inv_item)
+end
+
+
+local function metronome()
+	-- for debug purposes, never enable except for testing
+	dl("Time: continual %s | global %s | game %s",time_continual(),time_global(),get_time_elapsed())
+end
+
+local function tick()
+	if not progressive_vis then return end
+    local now = time_global()
+    if now < next_tick then return end
+    next_tick = now + update_interval
+    --if verbose then metronome() end
+    update_squad_visibility()
+end
+
+function actor_on_first_update()
+	load_mcm()
+	first_update = true
+    if found_npc_pda and not is_empty(found_npc_pda) then
+   	   	dl("Validating stored PDA discovery data")
+	    for id,state in pairs(found_npc_pda) do
+	        local obj = get_object_by_id(id)
+	        local sec = obj and obj:section()
+	        local name = obj and obj:name()
+	        local valid = (sec and item_device.device_npc_pda[sec])
+	        dl("PDA %s (%s) with section %s is valid: %s",name,id,sec,valid)
+	        if not valid then
+	        	dl("Clearing record for PDA %s (%s)| section %s",name,id,sec)
+	        	found_npc_pda[id] = nil
+	        end
+		end
+	else
+		dl("No NPC PDA discovery data to load")
+	end
+end
+
+
+function load_state(data)
+    if not data.milpda then return end
+    local mpda = data.milpda
+    if mpda.faction_data then
+    	dl("Found saved MPDA faction data")
+    	fd = mpda.faction_data
+    end
+end
+
+function save_state(data)
+    dl("[MPDA] save_state: Saving data")
+    local mpda = data.milpda
+    if not mpda then mpda = {} end
+    mpda.found_npc_pda = found_npc_pda
+    mpda.faction_data = fd
+    if ish_kill_tracker then ish_kill_tracker.save_state(data) end
+end
+
+
+function on_game_start()
+	RegisterScriptCallback("on_option_change",on_option_change)
+	RegisterScriptCallback("actor_on_first_update",actor_on_first_update)
+	RegisterScriptCallback("actor_on_update", tick)
+    RegisterScriptCallback("actor_on_item_take",actor_on_item_take)
+    RegisterScriptCallback("load_state",load_state)
+    RegisterScriptCallback("save_state",save_state)
+	inject_power()
+	on_option_change()
+end
+

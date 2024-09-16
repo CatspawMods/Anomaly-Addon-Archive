@@ -1,0 +1,671 @@
+-- ======================================================================
+--[[    Milspec PDA / Kill Tracker merge
+-- ======================================================================
+    Author: Catspaw
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+-- ==================================================================--]]
+script_version          = "1.13"
+release_date            = 20240912
+--[[=====================================================================
+    Credits:
+    Kill Tracker by Ishmaeel. Go download the excellent original mod here:
+    https://www.moddb.com/mods/stalker-anomaly/addons/kiltrak
+
+    My mod unavoidably replaces their script, but their clever text 
+    descriptions are st_praise_chefskiss. It's great if you don't need 
+    extra features like custom icons or right-clicking on mapspots.
+
+    Both addons based on the Body Dots Minimap addon by RavenAscendant
+    https://www.moddb.com/mods/stalker-anomaly/addons/bodydotsminimap-white-dots-but-blue
+ 
+    If using MO2, load Milspec PDA after Kill Tracker.
+    
+    If installing manually, just overwrite Kill Tracker's files with mine.
+-- ===================================================================--]]
+debuglogs               = false     -- Debug logging for troubleshooting issues - this should always be "false" in the release version
+verbose                 = false     -- Noisier verbose logging - no effect if debuglogs is false
+logprefix               = "[MPDA:KT] "
+assert(utils_catspaw_common,
+    "\n! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_common, which does not exist!\n"
+)
+local dl                = function(logtext, ...) utils_catspaw_common.dlog(ish_kill_tracker, logtext, ...) end
+local vl                = function(logtext, ...) utils_catspaw_common.vlog(ish_kill_tracker, logtext, ...) end
+local valid_id          = utils_catspaw_common.valid_id
+local safeid            = utils_catspaw_common.safeid
+local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
+local get_next_interval = utils_catspaw_common.get_next_tg_interval
+local get_mcm           = utils_catspaw_common.get_mcm_or_default_val
+local gts               = game.translate_string
+local game_time_now     = game.get_game_time
+local level_start       = level.get_start_time
+local can_see_killspots = item_milpda.actor_can_see_killspots
+local pda_shows_kills   = item_milpda.shows_kills
+
+local mode_bi, mode_bio
+styles = {
+    whtx = "deadbody_location_whtx",
+    skul = "deadbody_location_skul",
+    sdot = "deadbody_location_sdot",
+    mdot = "deadbody_location_mdot",
+    ldot = "deadbody_location_ldot",
+}
+default_style                   = styles.whtx
+default_style_actor             = styles.whtx
+default_style_other             = styles.sdot
+default_style_force             = nil
+clear_on_loot                   = true
+use_paw_icon                    = false
+--[[    If default_style_force is not nil, Kill Tracker will always 
+    use its string value as-is, so that you can hardcode it to something 
+    else if you don't have MCM. You can set it to any valid mapspot ID, 
+    but the styles built into MPDA are:
+
+    "deadbody_location_whtx"
+        White "X" mark with high-visibility black outline
+    "deadbody_location_skul"
+        Large white skull (also very visible)
+    "deadbody_location_sdot"
+        Small blue dot (default GAMMA/KilTrak style)
+    "deadbody_location_mdot"
+        Slightly larger blue dot
+    "deadbody_location_ldot"
+        Largest blue dot (about the same size as the X)
+
+    You can use Personal Adjustable Waypoint to vastly expand the library 
+    of icons available for body spots.
+
+    If you set this to something invalid, your game will crash
+    and it will suck.
+--]]
+
+local last_set
+local next_tick                 = 0
+local tick_interval             = 863 -- weird number to avoid stacking updates with other addons
+local body_ttl                  = 3600 -- seconds before a body's marker expires
+local first_update              = false
+local killspots_visible         = false
+local pda_data_notify           = true
+tracking_mode                   = 3
+local kiltrak_enabled           = (tracking_mode > 0)
+local tracking_companions       = (tracking_mode > 1)
+local tracking_all              = (tracking_mode > 2)
+local tooltip_killer_mode       = 2
+local show_killer_text          = (tooltip_killer_mode > 0)
+local show_squad_killer_text    = (tooltip_killer_mode > 1)
+local show_other_killer_text    = (tooltip_killer_mode > 2)
+local tooltip_victim_mode       = 2
+local show_victim_text          = (tooltip_victim_mode > 0)
+local show_squad_victim_text    = (tooltip_victim_mode > 1)
+local show_other_victim_text    = (tooltip_victim_mode > 2)
+monster_tracking_mode           = 3
+local show_monsters             = (monster_tracking_mode > 0)
+local show_monsters_comp        = (monster_tracking_mode > 1)
+local show_monsters_all         = (monster_tracking_mode > 2)
+local ini_mutant                = ini_file("items\\settings\\mutant_loot.ltx")
+local mutant_decay_time         = ini_mutant:r_float_ex("mutant_loot_mod","decay_time") or 7200
+tracked_bodies                  = {}
+
+
+function safename(obj)
+    if not obj then return end
+    local text = gts("st_milpda_thezone")
+    if IsStalker(obj) then
+        text = obj:character_name()
+    elseif IsMonster(obj) then
+        --[[
+            Hack adapted from ui_enemy_health.script
+            This logic acts as a translation layer for
+            any monster kind/species that doesn't line
+            up with the name of its encyclopedia entry
+        --]]
+        local special_cases = {
+            dog             = "blind_dog",
+            bird            = "crow",
+            giant           = "pseudogiant",
+            SM_KARLIK       = "karlik",
+            SM_LURKER       = "lurker",
+            SM_POLTER_G     = "poltergeist",
+            SM_PYRO_G       = "pyrogeist",
+            SM_PSEUDO_G     = "pseudogeist",
+            SM_PSYSUCKER    = "psysucker",
+        }
+        if string.find(obj:section(),'rotan') then
+            text = "rat"
+        elseif string.find(obj:section(),'psy_dog') then
+            text = "psydog"
+        else
+            local what = ini_sys:r_string_ex(obj:section(),"kind") or ini_sys:r_string_ex(obj:section(),"species") or nil
+            text = special_cases[what] or what
+        end
+        --text = string.lower(gts("encyclopedia_mutants_"..text))
+        text = gts("encyclopedia_mutants_"..text)
+    end
+    return text
+end
+
+
+local function debug_dump_kills()
+    if debuglogs and verbose then
+        vl("**** Currently-tracked bodies: %s ****",#tracked_bodies)
+        for k,v in pairs (tracked_bodies) do
+            local kt = "Unknown"
+            -- local comm = ""
+            if v.typ == 1 then
+                kt = "Stalker" -- v.comm .. " stalker"
+            elseif v.typ == 2 then
+                kt = "Monster"
+            end
+            vl("** %s (id %s)\n** Kill ID: %s | Marker text: %s\n** %s killed on map %s at %s\n********",v.name,k,v.kill_id,v.text,kt,v.level,v.tod)
+        end
+    end
+end
+
+local function started()
+    return first_update and item_milpda.first_update
+end
+
+
+function generate_kill_id(victim)
+    if not victim then return end
+    local sec = victim:section() or "unknown"
+    return "KT"..tostring(victim:id() % 1000)
+end
+
+function killspot_text(body)
+    local victim = body and body.id and get_object_by_id(body.id)
+    local killer = body and body.killer_id and get_object_by_id(body.killer_id)
+    if not (victim and killer) then return end
+
+    local kby_actor     = body.killer_id == 0
+    local kby_squad     = body.companion and true or false
+    local show_victim   = show_other_victim_text or
+                        (kby_squad and show_squad_victim_text) or
+                        (kby_actor and show_victim_text)
+    local show_killer   = show_other_killer_text or
+                        (kby_squad and show_squad_killer_text) or
+                        (kby_actor and show_killer_text)
+    local name = body.name or "unknown"
+    local kname = body.kname or "unknown"
+    local kill_id = (body.kill_id or "")
+    local deadbody = gts("st_kiltrak_unidbody")
+    local killed_by = ""
+    if show_victim then
+        deadbody = gts("st_kiltrak_deadbody")..((debuglogs and " "..kill_id) or "")..": "..name
+    end
+    if show_killer then
+        killed_by = ", "..gts("st_kiltrak_killedby").." "..kname
+    end
+    local killtext = deadbody..killed_by
+    vl("Killspot text generated for %s (kba %s | kbs %s | show_v %s | show_k %s)\n".."* Text: %s",
+        name, kby_actor, kby_squad, show_victim, show_killer, killtext)
+    return killtext or ""
+end
+
+function killspot_icon(id)
+    vl("killspot_icon(%s) called",id)
+    local paw = tasks_placeable_waypoints
+    local body = tracked_bodies[id]
+    if not body then return default_style end
+    local actor_kill = is_actor_or_squadmate(body.killer_id)
+    local paw_allowed = false
+    local mode = mode_bio
+    local default = default_style_force or
+                    (actor_kill and default_style_actor) or
+                    default_style_other
+    vl("id %s | default: %s | use_paw_icon %s | mode %s",id,default,use_paw_icon,mode)
+    if actor_kill then mode = mode_bi end
+    if paw and use_paw_icon and (mode == "upaw") then
+        local pawicon = paw.current_body_icon
+        local pawmode = paw.body_icon_mode
+        vl("PAW override found: mode %s",pawmode,pawicon)
+        if pawicon and (pawmode == "set") then
+            vl("Using body set icon %s",pawicon)
+            return pawicon
+        elseif pawmode == "fac" then
+            local comm = body.comm
+            vl("Looking for faction patch icon for comm %s",comm)
+            local icon = paw.faction_body_icon(comm)
+            if icon then
+                vl("found %s",icon)
+                return icon
+            end
+        end
+        vl("no valid icon returned for id %s, assuming monster and using default default_style %s",id,default_style)
+        return default
+    else
+        vl("using default icon (actor_kill = %s, forced = %s)",actor_kill,default_style_force ~= nil)
+        --return mapspot_prefix..bodyicon_other
+        return default
+    end
+end
+
+
+function add_body_dot(id,text)
+    if not id then return end
+    local tb = tracked_bodies[id]
+    if not tb then return end
+    local mapspot_text = text or ""
+    local mstyle = default_style
+    if tb.icon then
+        mstyle = tb.icon
+    else
+        mstyle = killspot_icon(id)
+        tb.icon = mstyle
+    end
+    vl("Adding killspot %s (id %s) as Kill ID %s with style %s: %s",tb.name,id,tb.kill_id,mstyle,mapspot_text)
+    level.map_add_object_spot(id, mstyle, mapspot_text)
+end
+
+
+function is_companion_squad_member(npc)
+    return npc and npc:has_info("npcx_is_companion")
+end
+
+function is_actor_or_squadmate(id)
+    if not (id and (type(id) == "number") and id < 65535) then return end
+    local is_actor = (id == AC_ID)
+    local is_companion = false
+    if not is_actor then
+        local killer = get_object_by_id(id)
+        is_companion = is_companion_squad_member(killer)
+    end
+    --vl("%s is_actor: %s | is_companion: %s ", id, is_actor, is_companion)
+    return is_actor or is_companion
+end
+
+
+function tracked_kill(id)
+    vl("tracked_kill(%s) called", id)
+    if not (id and tracked_bodies[id]) then return end
+    local is_monster = tracked_bodies[id].typ == 2
+    local track_mode = is_monster and monster_tracking_mode or tracking_mode or 0
+    local killer_id = tracked_bodies[id].killer_id
+    local was_actor = (killer_id == AC_ID)
+    local kill_mode = (was_actor and 1) or ((tracked_bodies[id].companion) and 2) or 3
+    local tracked = track_mode >= kill_mode
+    vl("Checking whether %s (%s) is a tracked kill: %s | track_mode %s | kill_mode %s | actor_kill %s",
+        tracked_bodies[id].name, id, tracked, track_mode, kill_mode, was_actor
+    )
+    return tracked
+end
+
+
+function add_dot_if_tracked(id, text)
+    --vl("add_dot_if_tracked called with id %s | text %s", id, text)
+    if text and tracked_kill(id) then add_body_dot(id, text) end
+end
+
+
+function remove_dot(id,style)
+    if not id then return end
+    local tb = tracked_bodies[id] or {icon = default_style}
+    local removed_style = style or tb.icon or default_style_actor
+    tb.icon = nil
+    vl("Removing existing killspot for id %s", id)
+    if level.map_remove_all_object_spots then
+        level.map_remove_all_object_spots(id)
+    else
+        level.map_remove_object_spot(id, removed_style)
+        level.map_remove_object_spot(id, default_style_other)
+    end
+    -- DISABLE
+    debug_dump_kills()
+end
+
+
+function actor_has_pda()
+    local pda = db.actor:item_in_slot(8)
+    if pda and pda_shows_kills(pda:section()) then
+        local battery = pda:condition()
+        if battery > 0.05 then
+            return true
+        end
+    end
+    return false
+end
+
+
+function set_visibility(tf)
+    if is_empty(tracked_bodies) then return end
+    local onoff = tf or false
+    dl("set_visibility: default_style is %s",default_style)
+    if onoff then
+        for k,v in pairs(tracked_bodies) do
+            add_dot_if_tracked(k, v.text)
+        end
+    else
+        for k,v in pairs(tracked_bodies) do
+            remove_dot(k)
+        end
+    end
+end
+
+
+function clear_kill(victim)
+    vl("clear_kill called for %s (%s)",victim and victim:name(),victim and victim:id())
+    if not victim then return end
+    local id = victim:id()
+    if tracked_bodies[id] then
+        dl("Stopped tracking body %s (%s)",id,tracked_bodies[id].text)
+    end
+    if killspots_visible then remove_dot(id) end
+    tracked_bodies[id] = nil
+end
+
+
+function is_living_thing(obj)
+    return IsStalker(obj) or IsMonster(obj)
+end
+
+
+function new_kill(victim, killer)
+    if not (db.actor and victim and killer) then return end
+    local se_obj    = alife_object(victim:id())
+    local comm      = get_object_community(se_obj)
+    local typ       = 0
+    local ktyp      = 0
+    local kname     = safename(killer) or "The Zone"
+    if IsStalker(se_obj) then
+        typ         = 1
+    elseif IsMonster(se_obj) then
+        typ         = 2
+        comm        = "monster"
+    else
+        dl("Dead thing id %s was not a stalker or monster. So what was it?",id)
+        return
+    end
+    local k_comm    = "The Zone"
+    if IsStalker(killer) then
+        ktyp        = 1
+        kname       = killer:character_name()
+    elseif IsMonster(killer) then
+        ktyp        = 2
+        k_comm      = "monster"
+        kname       = killer:character_name() or killer:name()
+    end
+    local id        = victim:id()
+    local name      = safename(victim)
+    local tg        = time_global()
+    local sm        = killer:has_info("npcx_is_companion")
+    local killer_id = killer:id()
+    tracked_bodies[id] = {
+        kill_id     = generate_kill_id(victim),
+        tod         = get_time_elapsed(),
+        id          = id,
+        killer_id   = killer_id,
+        companion   = sm,
+        comm        = comm,
+        k_comm      = k_comm,
+        typ         = typ,
+        ktyp        = ktyp,
+        name        = name,
+        kname       = kname,
+        level       = level.name(),
+    }
+    local body          = tracked_bodies[id]
+    local mapspot_text  = killspot_text(body)
+    body.text           = mapspot_text
+    dl("Tracking new body %s (%s) at %s:| Marker text: %s\nKill ID: %s | killspots visible: %s",
+        name, id, body.tod, body.text, body.kill_id, killspots_visible
+    )
+
+    if killspots_visible then add_dot_if_tracked(id, mapspot_text) end
+end
+
+function new_silent_kill(victim, killer, weapon, was_melee)
+    if not (victim and killer) then return end
+
+    local id = victim and victim:id()
+    if not tracked_bodies[id] then
+        new_kill(victim, killer)
+    end
+    if not tracked_bodies[id] then return end
+    local kd = tracked_bodies[id]
+    kd.silent       = true
+    kd.was_melee    = was_melee
+    kd.killer_id    = killer and killer:id()
+    kd.kname        = killer:character_name() or killer:name()
+    dl("New body %s was a silent kill, updating killspot data (true killer = %s)",kd.name,kd.kname)
+end
+
+local function tick()
+    local now = time_global()
+    if now < next_tick then return end
+    if not started() then return end
+
+    next_tick = get_next_interval(tick_interval)
+    killspots_visible = can_see_killspots()
+    if killspots_visible ~= last_set then
+        reset_markers()
+        last_set = killspots_visible
+    end
+end
+
+function is_empty_mutant_corpse(obj)
+    if not obj and IsMonster(obj) then return end
+    local id = safeid(obj)
+    local looted = se_load_var(id,obj:name(),"looted")
+    local st = db.storage[id]
+    local decayed = (st and st.death_time and game.get_game_time():diffSec(st.death_time) > mutant_decay_time)
+    return looted or decayed
+end
+
+function invalid_body_record(id, kd)
+    if not valid_id(id) then return true end
+    local tod = tonumber(kd and kd.tod) or 0
+    local se_obj = alife_object(id)
+    if not is_living_thing(se_obj) then return true end
+    local invalid = (not se_obj) or                    -- invalid obj
+                    (kd == nil) or                     -- invalid kill data
+                    (se_obj and se_obj:alive()) or     -- not dead
+                    is_empty_mutant_corpse(se_obj) or  -- decayed or looted mutant
+                    (get_time_elapsed(tod) > body_ttl) -- ttl expired
+    return invalid
+end
+
+function reset_markers()
+    if not started() then return end
+    if not is_empty(tracked_bodies) then
+        dl("reset_markers: processing bodies")
+        for id,kd in pairs(tracked_bodies) do
+            remove_dot(id)
+            if invalid_body_record(id,kd) then
+                -- Body data expires after an hour by default
+                -- Remove mutant corpses that have decayed or been looted by others
+                vl("body id %s is invalid, purging from tracked_bodies",id)
+                tracked_bodies[id] = nil
+
+            else
+                tracked_bodies[id].icon = killspot_icon(id)
+                vl("body id %s is still valid, setting icon to %s",id,tracked_bodies[id].icon)
+            end
+        end
+    end
+    set_visibility(killspots_visible)
+end
+
+function map_spot_menu_add_property(property_ui,id,st1,st2)
+    local se_obj = valid_id(id) and alife_object(id)
+    if not se_obj then return end
+
+    -- vl("map_spot_menu_add_property: se_obj:name() %s | clsid %s | id %s | st1 %s | st2 %s",se_obj:name(),se_obj:clsid(),id,st1,st2)
+    local name = se_obj:name()
+    local tracked_body = tracked_bodies[id]
+    if tracked_body or (name == "deadbody") or (name == "deadbody_location") then
+        local text = tracked_body and tracked_body.text or "unknown kill"
+        local context_item = gts("st_milpda_delete_marker").." "..text
+        property_ui:AddItem(context_item)
+    end
+end
+
+local function map_spot_menu_property_clicked(property_ui,id,level_name,prop)
+    local se_obj = valid_id(id) and alife_object(id)
+    if not se_obj then return end
+    local name = se_obj:name()
+
+    if tracked_bodies[id] or prop == "deadbody" then
+        local context_item = gts("st_milpda_delete_marker").." "..tracked_bodies[id].text
+        if prop == "deadbody" then
+            -- catch for vanilla markers that slip through
+            vl("Clearing vanilla map marker %s",prop)
+            level.map_remove_object_spot(id, prop)
+            remove_dot(id)
+            tracked_bodies[id] = nil
+        elseif prop == context_item then
+            vl("Clearing map marker %s",prop)
+            remove_dot(id)
+            tracked_bodies[id] = nil
+        end
+    end
+end
+
+function set_loot_autoclear(onoff)
+    if onoff then --and not clear_on_loot then
+        dl("Toggling autoclear of markers on loot: ON")
+        RegisterScriptCallback("npc_on_use", clear_kill)
+        --RegisterScriptCallback("monster_on_actor_use_callback", clear_kill)
+        RegisterScriptCallback("monster_on_loot_init",clear_kill)
+        clear_on_loot = true
+    else --if clear_on_loot and not onoff then
+        dl("Toggling autoclear of markers on loot: OFF")
+        UnregisterScriptCallback("npc_on_use", clear_kill)
+        --UnregisterScriptCallback("monster_on_actor_use_callback", clear_kill)
+        UnregisterScriptCallback("monster_on_loot_init",clear_kill)
+        clear_on_loot = false
+    end
+end
+
+function clean_slate()
+    dl("Wiping ALL tracked kill and mapspot data per player request")
+    for k,v in pairs(tracked_bodies) do
+        if level.map_remove_all_object_spots then
+            level.map_remove_all_object_spots(k)
+        else
+            for _,s in pairs(styles) do
+                level.map_remove_object_spot(k,s)
+            end
+            level.map_remove_object_spot(k,default_style_force or default_style)
+            level.map_remove_object_spot(k,"deadbody")
+            level.map_remove_object_spot(k,"deadbody_location")
+        end
+    end
+    tracked_bodies = {}
+end
+
+function on_option_change()
+    set_visibility(false)
+
+    if ui_mcm then
+        local pba,pbo 
+        local wipe_all = ui_mcm.get("milpda/milpdagen/wipe_all")
+        if wipe_all then
+            ui_mcm.set("milpda/milpdagen/wipe_all",false)
+            clean_slate()
+        end
+
+        function validate_icon(att,def)
+            local ic = ui_mcm.get("milpda/milpdagen/"..att) or def
+            local val = ic
+            if ic and (ic ~= "upaw") then
+                if (string.len(ic) == 4) then
+                    val = "deadbody_location_"..ic
+                    ui_mcm.set("milpda/milpdagen/"..att,val)
+                end
+            end
+            return val
+        end
+        debuglogs           = get_mcm("milpda/milpdagen/debuglogs", debuglogs)
+        verbose             = get_mcm("milpda/milpdagen/verbose", verbose)
+        tracking_mode       = tonumber(ui_mcm.get("milpda/milpdagen/tracking_mode"))
+        kiltrak_enabled     = (tracking_mode > 0)
+        tracking_companions = (tracking_mode > 1)
+        tracking_all        = (tracking_mode > 2)
+
+        tooltip_victim_mode     = tonumber(ui_mcm.get("milpda/milpdagen/victim_text_mode"))
+        show_victim_text        = (tooltip_victim_mode > 0)
+        show_squad_victim_text  = (tooltip_victim_mode > 1)
+        show_other_victim_text  = (tooltip_victim_mode > 2)
+
+        tooltip_killer_mode     = tonumber(ui_mcm.get("milpda/milpdagen/killer_text_mode"))
+        show_killer_text        = (tooltip_killer_mode > 0)
+        show_squad_killer_text  = (tooltip_killer_mode > 1)
+        show_other_killer_text  = (tooltip_killer_mode > 2)
+
+        monster_tracking_mode   = tonumber(ui_mcm.get("milpda/milpdagen/monster_tracking_mode"))
+        show_monsters           = (monster_tracking_mode > 0)
+        show_monsters_comp      = (monster_tracking_mode > 1)
+        show_monsters_all       = (monster_tracking_mode > 2)
+
+        mode_bi             = validate_icon("bodyicon",default_style_actor)
+        mode_bio            = validate_icon("bodyicon_other",default_style_other)
+        local pba           = mode_bi == "upaw"
+        local pbo           = mode_bio == "upaw"
+        default_style_actor = ((not pba) and mode_bi) or default_style_actor
+        default_style_other = ((not pbo) and mode_bio) or default_style_other
+        local autoclear     = ui_mcm.get("milpda/milpdagen/autoclear")
+
+        if autoclear ~= nil then clear_on_loot = autoclear end
+        set_loot_autoclear(clear_on_loot)
+        dl("MCM settings loaded:\nactor body icon: %s\nother body icon: %s\nloot autoclear: %s\ntracking mode: %s\nshow monsters: %s",
+            (pba and "paw override") or default_style_actor,
+            (pbo and "paw override") or default_style_other,
+            clear_on_loot,
+            tracking_mode,
+            show_monsters
+        )
+
+        ui_mcm.set("milpda/milpdagen/mcm_ver",script_version)
+        for k,v in pairs(tracked_bodies) do
+            v.text = killspot_text(v)
+        end
+        reset_markers()
+    end
+end
+
+local function actor_on_first_update()
+    first_update = true
+    set_loot_autoclear(clear_on_loot)
+    reset_markers()
+end
+
+function load_state(data)
+    if not data.milpda then return end
+    local mpda = data.milpda
+    if not is_empty(mpda.tracked_bodies) then
+        dl("load_state: Loading tracked bodies")
+        for k, v in pairs(mpda.tracked_bodies) do
+            vl("load_state: Found body data %s = %s",k,v)
+            tracked_bodies[k] = v
+        end
+    end
+end
+
+
+function save_state(data)
+    -- Called by item_milpda.script during its save_state call
+    if is_empty(tracked_bodies) then return end
+    dl("save_state: Saving data")
+    if not data.milpda then data.milpda = {} end
+    data.milpda.tracked_bodies = {}
+
+    for k, v in pairs(tracked_bodies) do
+        data.milpda.tracked_bodies[k] = v
+    end
+end
+
+function on_game_start()
+    RegisterScriptCallback("load_state",load_state)
+    RegisterScriptCallback("npc_on_death_callback", new_kill)
+    RegisterScriptCallback("monster_on_death_callback", new_kill)
+    if AddScriptCallback and stealth_kill_detection then
+        RegisterScriptCallback("npc_on_silent_kill_callback", new_silent_kill)
+        -- Fox my Stealth Kill Detection addon
+    end
+    RegisterScriptCallback("actor_on_update", tick)
+    RegisterScriptCallback("actor_on_first_update",actor_on_first_update)
+    RegisterScriptCallback("on_option_change",on_option_change)
+    RegisterScriptCallback("map_spot_menu_add_property",map_spot_menu_add_property)
+    RegisterScriptCallback("map_spot_menu_property_clicked",map_spot_menu_property_clicked)
+    on_option_change()
+end
+

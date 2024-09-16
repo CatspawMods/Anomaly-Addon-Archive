@@ -1,0 +1,47 @@
+-- ======================================================================
+--[[    Mapspot DXML update script
+-- ======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+    Based on example code in the Anomaly Modding Book:
+    https://igigog.github.io/anomaly-modding-book/addons/dxml.html
+
+    Modifying the contents of this file will completely break Milspec PDA.
+
+    However, feel free to modify a copy of it for use in your own addon. 
+    As long as you are running modded exes that support it, injecting 
+    mapspots this way is much better than replacing mapspot files, which 
+    causes conflicts with any other addon replacing the same file.
+
+    To do so:
+    1.  Edit the "addon_name" line below with the full name of your addon.
+
+    2.  Replace the filename on line 40 below with the filename of 
+        your mapspots file, and remove line 41.
+    
+    3.  Rename the "milpda" part of this script's filename using a short 
+        name for your addon.
+
+    I can provide no support at all for this. If it doesn't work, you did
+    something wrong and need to figure it out.
+-- ===================================================================--]]
+addon_name = "Milspec PDA"
+
+function on_xml_read()
+    RegisterScriptCallback("on_xml_read", 
+        function(xml_file_name, xml_obj)
+            if  (xml_file_name == [[ui\map_spots.xml]]) or
+                (xml_file_name == [[ui\map_spots_16.xml]]) or
+                (xml_file_name == [[ui\map_spots_21.xml]]) then
+                printf("DXML is patching mapspots for %s in %s",addon_name,xml_file_name)
+                
+                local mapspots_include_file = 
+[[
+#include "ui\map_spots_milpda.xml"
+#include "ui\map_spots_squadmates.xml"
+]]
+                xml_obj:insertFromXMLString(mapspots_include_file)
+            end
+        end
+    )
+end

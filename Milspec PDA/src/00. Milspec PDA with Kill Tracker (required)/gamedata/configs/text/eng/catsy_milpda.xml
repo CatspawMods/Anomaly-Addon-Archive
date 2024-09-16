@@ -1,0 +1,645 @@
+<!--
+    Milspec PDA
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+    Version: 1.10
+    Updated: 20240329
+    Contents: Official English string definitions
+
+    Permission granted to freely translate into any language.
+-->
+
+<string_table>
+    <string id="st_pda_mil_name">
+        <text>Milspec PDA</text>
+    </string>
+    <string id="st_pda_mil_descr">
+        <text>A pocket-sized electronic device meant to encompass the basic and most vital functions of a computer. The PDA is essential for daily information sharing. It comes with pre-installed GPS module to provide geolocation and time information to the user.\n \nThis sophisticated model was designed by an unknown entity for use by covert military or NGO operators, and includes a cryptographic module enabling the user to infiltrate many of the Zone's secure private networks, revealing the approximate location of enemy squads operating in the area.\n \n
+        %c[ui_gray_3]PROPERTIES:\n
+        %c[d_blue] • %c[ui_gray_2] technological item\n
+        %c[d_blue] • %c[ui_gray_2] high electric power consumption\n
+        %c[d_purple] • %c[ui_gray_2] shows location of all nearby squads.\n
+        </text>
+    </string>
+    <string id="ui_mcm_menu_milpda">
+        <text>Milspec PDA</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall">
+        <text>Uninstall Milspec PDA</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_uninstall_desc">
+        <text>Checking this will delete all copies of the Milspec PDA in the player's inventory.</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_enabled">
+        <text>Enable custom blacklist for the factions below</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_army">
+        <text>Don't show Military stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_bandit">
+        <text>Don't show Bandit stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_csky">
+        <text>Don't show Clear Sky stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_dolg">
+        <text>Don't show Duty stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_ecolog">
+        <text>Don't show Ecologist stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_freedom">
+        <text>Don't show Freedom stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_killer">
+        <text>Don't show Mercenary stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_monolith">
+        <text>Don't show Monolith stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_zombied">
+        <text>Don't show Zombified stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_greh">
+        <text>Don't show Sin stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_isg">
+        <text>Don't show UNISG stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_renegade">
+        <text>Don't show Renegade stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_facblacklist_stalker">
+        <text>Don't show Loner stalkers</text>
+    </string>
+    <string id="ui_mcm_menu_milpdagen">
+        <text>Settings</text>
+    </string>
+    <string id="ui_mcm_menu_facblacklist">
+        <text>Blacklist</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_1">
+        <text>PDA Cfg: 1.0</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_2">
+        <text>PDA Cfg: 2.0</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_3">
+        <text>PDA Cfg: 3.1</text>
+    </string>
+    <string id="ui_mcm_menu_cfg_device_pda_milspec">
+        <text>PDA Cfg: Milspec</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_kiltrak">
+        <text>Enable KilTrak</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_kiltrak_desc">
+        <text>Enable support for the kill tracking feature, originally based on Ishmaeel's Kill Tracker addon.</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_1_enabled">
+        <text>Customize mapspot visibility for PDA 1.0</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_2_enabled">
+        <text>Customize mapspot visibility for PDA 2.0</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_3_enabled">
+        <text>Customize mapspot visibility for PDA 3.1</text>
+    </string>
+    <string id="ui_mcm_milpda_cfg_device_pda_milspec_enabled">
+        <text>Customize mapspot visibility for the Milspec PDA</text>
+    </string>
+
+    <string id="ui_mcm_milpda_show_f">
+        <text>Show map spots for friendly stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_show_n">
+        <text>Show map spots for neutral stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_show_e">
+        <text>Show map spots for enemy stalkers</text>
+    </string>
+    <string id="ui_mcm_milpda_show_k">
+        <text>Show map spots for dead bodies</text>
+    </string>
+    <string id="ui_mcm_milpda_obeybl">
+        <text>Use the faction blacklist</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_debuglogs">
+        <text>Enable debug logging</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_debuglogs_desc">
+        <text>If enabled, the script will spam the console with noisy evidence of what it is doing. This should normally be off. But if you are reporting a problem to me, I will probably need you to reproduce the issue with verbose debug logging enabled.</text>
+    </string>
+<!-- Added in 1.4 -->
+    <string id="st_kiltrak_bodyof">
+        <text>body of</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_bodyicon">
+        <text>Icon style for your (or your squad's) kills</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_whtx">
+        <text>White X</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_skul">
+        <text>Large Skull</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_sdot">
+        <text>Small Blue Dot</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_mdot">
+        <text>Medium Blue Dot</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_ldot">
+        <text>Large Blue Dot</text>
+    </string>
+<!-- Added in 1.5 -->
+    <string id="st_kiltrak_unidbody">
+        <text>unidentified body</text>
+    </string>
+    <string id="st_milpda_delete_marker">
+        <text>Remove kill marker</text>
+    </string>
+<!-- Added in 1.6 -->
+    <string id="st_kiltrak_killedby">
+        <text>killed by</text>
+    </string>
+<!-- Added in 1.7 -->
+    <string id="ui_mcm_milpda_milpdagen_autoclear">
+        <text>Auto-clear bodies on interact</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_autoclear_desc">
+        <text>When enabled, Kill Tracker will automatically clear body markers when you loot or otherwise interact with them. Disabling this will leave body markers on the map until you manually clear them or the body despawns.</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_tracking_mode">
+        <text>Kill Tracker mode</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_tracking_mode_desc">
+        <text>Sets Kill Tracker's mode of operation for dead stalkers.\n
+        --------------------------------------------------\n
+        Off: Kill Tracker is disabled\n
+        Player: Kill Tracker will only display your kills\n
+        Player Squad: Kill Tracker will also display companion kills\n
+        All: Dead bodies will be shown regardless of who or what killed them</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_all">
+        <text>All</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_you">
+        <text>Player</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_cmp">
+        <text>Player Squad</text>
+    </string>
+    <string id="ui_mcm_lst_milpda_trkmode_off">
+        <text>Off</text>
+    </string>
+    <string id="ui_mcm_milpda_milpdagen_getpaw">
+        <text>Download Personal Adjustable Waypoint here:\n\nhttps://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma</text>
+    </string>
+
+<!-- Added in 1.7.4 -->
+
+    <string id="ui_mcm_milpda_milpdagen_bodyicon_other">
+        <text>Icon style for kills made by others</text>
+    </string>
+
+    <string id="ui_mcm_lst_milpda_upaw">
+        <text>Use PAW Icon</text>
+    </string>
+
+    <string id="st_kiltrak_deadbody">
+        <text>Dead body</text>
+    </string>
+
+    <string id="st_milpda_thezone">
+        <text>the Zone</text>
+    </string>
+
+<!-- Added in 1.7.5 -->
+
+
+    <string id ="ui_mcm_milpda_milpdagen_wipe_all">
+        <text>Wipe all body marker data</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_milpdagen_wipe_all_desc">
+        <text>Removes all body markers from the map and wipes the Kill Tracker database. This cannot be undone.</text>
+    </string>
+
+<!-- Added in 1.8 -->
+    <string id="ui_mcm_menu_progressive">
+        <text>Progression</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_enabled">
+        <text>Progressive squad visibility (recommended)</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_enabled_desc">
+        <text>If enabled, the player must unlock squad mapspot visibility for each faction separately by looting PDAs from their corpses and gaining access to their network. By default, PDAs from higher-ranked stalkers provide more progress towards unlocking access.\n
+        --------------------------------------------------\n
+        A supported PDA that can display friendly, neutral, or hostile mapspots (as appropriate) is still required.</text>
+    </string>
+
+    <string id="ui_mcm_prog_comm_descr">
+        <text>In this menu you can customize the amount of PDA data that must be collected in order to unlock squad mapspot visibility for each faction, along with the progress gained for looting NPC PDAs of each rank.</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_army">
+        <text>Military</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_bandit">
+        <text>Bandit</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_csky">
+        <text>Clear Sky</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_dolg">
+        <text>Duty</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_ecolog">
+        <text>Ecologist</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_freedom">
+        <text>Freedom</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_killer">
+        <text>Mercenary</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_monolith">
+        <text>Monolith</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_greh">
+        <text>Sin</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_isg">
+        <text>UNISG</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_renegade">
+        <text>Renegade</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_stalker">
+        <text>Loner</text>
+    </string>
+
+    <string id="ui_mcm_prog_rank_descr">
+        <text>Progress gained based on the rank of the stalker who dropped the PDA:</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_novice">
+        <text>Novice</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_trainee">
+        <text>Trainee</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_experienced">
+        <text>Experienced</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_professional">
+        <text>Professional</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_veteran">
+        <text>Veteran</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_expert">
+        <text>Expert</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_master">
+        <text>Master</text>
+    </string>
+    <string id="ui_mcm_milpda_progressive_legend">
+        <text>Legend</text>
+    </string>
+
+    <string id="st_mapspot_access_prog">
+        <text>With the data on the PDA of this %s stalker, you have made progress towards gaining access to %s GPS data. Total progress: %.2f%% (%s/%s)</text>
+    </string>
+
+    <string id="st_mapspot_access_unlock">
+        <text>The data on the PDA of this %s stalker has given you the breakthrough you needed to breach their faction's network. You now have access to GPS data that allows you to see %s squad locations when using your current PDA, or another supported device.</text>
+    </string>
+
+<!-- Added in 1.8.1 -->
+
+    <string id="st_mapspot_access_lost">
+        <text>The %s faction must have changed their network access codes, because you have lost the ability to see their squads on the map. You'll have to find new %s PDAs in order to regain access to their GPS data.</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_resets">
+        <text>Network access is temporary</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_resets_desc">
+        <text>If enabled, breaching another faction's network in this way is only temporary--after a time, they will discover the intrusion and change their access codes, forcing you to regain access again the same way. This is best combined with low unlock values, creating a regular gameplay loop.</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_resets">
+        <text>Only enemy factions reset your access</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_resets_desc">
+        <text>If this is enabled, neutral factions will not kick you out of their network once you've gained access, but enemy factions still will.\n\nWhen disabled, all factions that are not the player's own faction will also eventually revoke access. This setting has no effect if neutral factions don't require unlocking.</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_time">
+        <text>Duration of network access gained</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_access_unit">
+        <text>Time unit used for access duration</text>
+    </string>
+
+    <string id="ui_mcm_lst_timeunit_day">
+        <text>day</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_days">
+        <text>days</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_hour">
+        <text>hour</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_hours">
+        <text>hours</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_minute">
+        <text>minute</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_minutes">
+        <text>minutes</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_second">
+        <text>second</text>
+    </string>
+    <string id="ui_mcm_lst_timeunit_seconds">
+        <text>seconds</text>
+    </string>
+
+<!-- Added in 1.10 -->
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_unlock">
+        <text>Only enemy factions require unlocking</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_only_enemy_unlock_desc">
+        <text>If enabled, neutral factions are excluded from progression, and obey device visibility settings without needing to first be unlocked.</text>
+    </string>
+
+
+    <string id ="ui_mcm_milpda_progressive_gain_mode">
+        <text>Progression is gained from looted PDAs:</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_progressive_gain_mode_desc">
+        <text>\n
+        When looted: the player gains progression from simply looting a new PDA for the first time. If it is encrypted, it must first be decrypted. After doing so, the player will gain the progress the next time they pick it up or remove it from any container.\n
+        --------------------------------------------------\n
+        When read: the player only gains progression once a new PDA has been read for the first time. If it is locked, it must first be unlocked/unencrypted before the player can gain any benefit.\n
+        --------------------------------------------------\n
+        When scrapped: the player must disassemble the PDA in order to gain progress from it. This mode does not require the PDA to be decrypted.
+        </text>
+    </string>
+
+    <string id ="ui_mcm_lst_milpda_gain_on_pickup">
+        <text>When looted</text>
+    </string>
+
+    <string id ="ui_mcm_lst_milpda_gain_on_read">
+        <text>When read</text>
+    </string>
+
+    <string id ="ui_mcm_lst_milpda_gain_on_scrap">
+        <text>When scrapped</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_verbose">
+        <text>Debug logs are verbose</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_verbose_desc">
+        <text>If enabled, the script's debug logging will spam the console with even more detailed information about everything it does. This has no effect if debug logging is not enabled, but please turn it on if you are reporting a problem.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_must_decrypt">
+        <text>Must decrypt PDA to gain progress</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_must_decrypt_desc">
+        <text>If enabled, the player cannot gain progress from encrypted PDAs, whether by looting them or reading them. The device must be decrypted first.</text>
+    </string>
+
+<!-- Added in 1.11 -->
+
+    <string id="ui_mcm_milpda_progmult">
+        <text>Progression gain multiplier</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progmult_desc">
+        <text>Any progression data gained by the player while this PDA is equipped will be multiplied by this number. Setting to zero will effectively disable progression gain for that PDA type.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_victim_text_mode">
+        <text>Identify victim on map tooltip</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_victim_text_mode_desc">
+        <text>When enabled, the identity of a dead body will be shown on its map tooltip.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_killer_text_mode">
+        <text>Identify killer on map tooltip</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_killer_text_mode_desc">
+        <text>When enabled, the identity of the dead body's killer will be shown on its map tooltip.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_noblacklist">
+        <text>Blacklisted factions do not gain progress</text>
+    </string>
+
+    <string id="ui_mcm_milpda_progressive_noblacklist_desc">
+        <text>When both this setting and the faction blacklist are enabled, factions on the blacklist cannot gain data or progress at all.</text>
+    </string>
+
+    <string id="st_mapspot_access_unlock_nopda">
+        <text>The data on the PDA of this %s stalker has given you the breakthrough you needed to breach their faction's network. However, your current PDA does not allow you to display %s squad locations, so you will need to upgrade in order to see them on the map.</text>
+    </string>
+
+<!-- Added in 1.12 -->
+
+    <string id ="ui_mcm_milpda_milpdagen_monster_tracking_mode">
+        <text>Tracker mode for mutant kills</text>
+    </string>
+
+    <string id ="ui_mcm_milpda_milpdagen_monster_tracking_mode_desc">
+        <text>Sets which mutant kills will be shown on the map.\n
+            --------------------------------------------------\n
+            Off: Kill Tracker is disabled for mutants\n
+            Player: Kill Tracker will only display your mutant kills\n
+            Player Squad: Kill Tracker will also display companion mutant kills\n
+            All: Dead mutants will be shown regardless of who or what killed them.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_main_plaintext">
+        <text>\n
+                 • Allows detailed customization of squad and body mapspots supported by each tier of PDA\n
+                 • Adds the Milspec PDA: a new tier 4 device that isn't sold or dropped, and is difficult to craft\n
+                 • Includes Kill Tracker: customizable body tracking with optional support for PAW map icons\n
+                 • Powerful progression system lets the player unlock access to faction GPS data by looting stalker PDAs\n
+                 • Blacklist lets you prevent certain factions from appearing on any PDA, regardless of its capabilities\n
+                 \n
+                All features are optional, and customizable here in MCM.\n
+                For more information, see the Moddb page:\n
+                https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_main_complex1">
+        <text>\n$clr_def
+                $clr_def • $clr_whtAllows detailed $clr_gldcustomization of squad and body mapspots$clr_wht supported by each tier of PDA\n
+                $clr_def • $clr_whtAdds the $clr_milMilspec PDA$clr_wht: a $clr_gldnew tier 4 device that isn't sold or dropped$clr_wht, and is difficult to craft\n
+                $clr_def • $clr_whtIncludes $clr_milKill Tracker$clr_wht: $clr_gldcustomizable dead body tracking$clr_wht with optional support for PAW map icons\n
+                $clr_def • $clr_whtPowerful $clr_milprogression system$clr_wht lets the player $clr_gldunlock access to faction GPS data by looting stalker PDAs\n
+                $clr_def • $clr_milBlacklist$clr_wht lets you $clr_gldprevent certain factions from appearing on any PDA$clr_wht, regardless of its capabilities\n
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_main_complex2">
+        <text>$clr_def
+            All features are optional, and customizable here in MCM. For more information, see the Moddb page:\n
+            $clr_lblhttps://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_prog_plaintext">
+        <text>\nNormally, the game decides if you can see a squad on the map based on whether their faction is neutral to yours, allied, or an enemy. As soon as you buy a more advanced PDA, you can immediately see all the factions it supports.\n
+        --------------------------------------------------\n
+        That's a powerful advantage, especially against enemy factions. Progressive Mode forces you to earn that advantage by looting PDAs from dead stalkers, and using what you find on those rare drops to break into their faction's network and gain access to their squad GPS data. You can fine-tune the settinngs to your liking below.\n
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_prog_complex1">
+        <text>$clr_defThe game normally decides if you can see a squad on the map based on whether their faction is $clr_gldneutral$clr_def to yours, $clr_grnallied$clr_def, or an $clr_redenemy$clr_def. As soon as you equip a more advanced PDA, you can immediately see all the factions it supports.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_prog_complex2">
+        <text>$clr_defThat's a powerful advantage, especially against enemy factions. $clr_milProgressive Mode $clr_defforces you to earn that advantage by $clr_gldlooting PDAs from dead stalkers$clr_def, and using what you find on those rare drops to $clr_gldbreak into their faction's network$clr_def and $clr_gldgain access to their squad GPS data$clr_def. You can fine-tune the settings to your liking below.
+        </text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_bl_plaintext">
+        <text>Perhaps you think nobody should ever be able to see ISG or Monolith on the map. Maybe you're doing a special challenge ruleset, or you're roleplaying a stalker who's been locked out of certain factions.\n
+        Whatever the reason, enabling the Blacklist will prevent you from seeing certain factions on the map, even if your PDA could normally show that faction. By default, it will also prevent you from gaining data for a blacklisted faction in Progressive Mode.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_bl_complex1">
+        <text>$clr_defPerhaps you think nobody should ever be able to see ISG or Monolith on the map. Maybe you're doing a special challenge ruleset, or you're roleplaying a stalker who's been locked out of certain factions.</text>
+    </string>
+
+    <string id="ui_mcm_milpda_header_bl_complex2">
+        <text>$clr_defWhatever your reasons, enabling the $clr_milBlacklist$clr_def will $clr_gldprevent you from seeing certain factions on the map$clr_def, even if your PDA could normally show that faction. By default, it will also $clr_gldprevent you from gaining data for a blacklisted faction$clr_def when playing in $clr_milProgressive Mode$clr_def.
+        </text>
+    </string>
+    
+    <string id="ui_mcm_milpda_header_pda_plaintext">
+        <text>If desired, you can customize the features supported by this device using the settings below. These settings will only be applied to your game if you enable the top option.</text>
+    </string>
+
+<!-- Added in 1.13 -->
+
+    <string id="ui_mcm_milpda_milpdagen_squadmate_mapspots">
+        <text>Show mapspots for all individual squad members</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_squadmate_mapspots_desc">
+        <text>Normally, Anomaly will only mark the location of a squad's current leader on the map. When this setting is enabled, all individual squad members will also be shown, but with a slightly different icon. This may look familiar to players of previous games.</text>
+    </string>
+
+    <string id="encyclopedia_addons">
+        <text>Addons</text>
+    </string>
+
+    <string id="encyclopedia_addons_milspec_pda">
+        <text>Milspec PDA</text>
+    </string>
+
+    <string id="encyclopedia_addons_milspec_pda_text">
+        <text>
+            \n%c[ui_gray_1]The %c[255,130,180,130]Milspec PDA%c[ui_gray_1] addon has multiple related purposes: \n 
+            %c[ui_gray_1] • %c[pda_white]Allows detailed %c[pda_yellow]customization of squad and body mapspots%c[pda_white] supported by each tier of PDA\n
+            %c[ui_gray_1] • %c[pda_white]Adds the %c[255,130,180,130]Milspec PDA%c[pda_white]: a %c[pda_yellow]tier 4 device that isn't sold or dropped%c[pda_white], and is difficult to craft\n
+            %c[ui_gray_1] • %c[pda_white]Includes %c[255,130,180,130]Kill Tracker%c[pda_white]: %c[pda_yellow]customizable dead body tracking%c[pda_white] with support for PAW icons\n
+            %c[ui_gray_1] • %c[255,130,180,130]Blacklist%c[pda_white] lets you %c[pda_yellow]block a faction from appearing on any PDA%c[pda_white]\n \n
+            %c[ui_gray_1] • %c[pda_white]Powerful %c[255,130,180,130]Progressive Mode%c[pda_white] lets the player %c[pda_yellow]earn access to see other factions on the map\n
+            
+            \n%c[ui_gray_1]Every feature can be customized to your liking in the MCM menus. %c[pda_white]If you don't like how something works, check MCM first! There's probably a setting for it.\n
+
+            \n%c[pda_white]From %c[pda_yellow]MCM > Milspec PDA%c[pda_white]:\n
+            %c[pda_yellow]Settings%c[pda_white]: General settings for the Kill Tracker, UI, and the entire addon.\n
+            %c[pda_yellow]Blacklist%c[pda_white]: Pick which factions will never show on any PDA.\n
+            %c[pda_yellow]Progression%c[pda_white]: Settings for the optional Progression Mode.\n
+            %c[pda_yellow]PDA Cfg: 1.0%c[pda_white]: Customize what mapspots can be seen by the starting 1.0 PDA.\n 
+            %c[pda_yellow]PDA Cfg: 2.0%c[pda_white]: Same, but for the version 2.0 PDA.\n 
+            %c[pda_yellow]PDA Cfg: 3.1%c[pda_white]: Same, but for the version 3.1 PDA.\n
+            %c[pda_yellow]PDA Cfg: Milspec%c[pda_white]: Same, but for the Milspec PDA.\n \n
+
+            %c[pda_red]Still having difficulties? Scroll down for troubleshooting information.\n
+
+            \n%c[pda_green]ADVANCED KILL TRACKER\n
+            %c[ui_gray_1]
+            The %c[pda_yellow]Kill Tracker%c[ui_gray_1] is, by default, supported by all PDAs except the original PDA 1.0. Internally, the addon is always tracking all bodies on the map at all times--but what you see depends on your preferences.\n \n
+
+            By default, Kill Tracker will %c[pda_yellow]display map markers for all kills made by you or your squadmates%c[ui_gray_1]. That includes both stalkers and mutants. However, you won't see body markers for any kills that weren't caused by you or your crew.\n \n
+
+            If you'd prefer to see all kills or the map, this and many other aspects of Kill Tracker are--just like everything else--%c[pda_yellow]completely configurable in MCM%c[ui_gray_1].\n 
+
+            \n%c[pda_green]ACQUIRING THE NEW TIER 4 PDA\n
+            %c[ui_gray_1]
+            The %c[pda_yellow]Milspec PDA%c[ui_gray_1] has higher power requirements than PDA 3.1, but comes with the unique ability to %c[pda_yellow]see the locations of enemy squads%c[ui_gray_1] on the map.\n \n
+
+            This is obviously very powerful, so it is recommended that you balance this power with this addon's %c[pda_yellow]Progressive Mode%c[ui_gray_1], which is described in more detail below.\n \n
+
+            The new PDA cannot be bought anywhere, and no stalker will ever drop it. By default, you must craft it using %c[pda_yellow]Expert Tools%c[ui_gray_1].
+
+            This requires that you have found and read the correct volume of the %c[pda_yellow]Engineering manual%c[ui_gray_1], and also requires certain %c[pda_yellow]rare components%c[ui_gray_1].\n \n
+
+            You can change these requirements in the script or config files if you're adept at that. If you're not, and you can't be bothered to earn the Milspec PDA the hard way, there's always the debug console. I don't judge.\n 
+
+            \n%c[pda_green]PROGRESSIVE MODE\n
+            %c[ui_gray_1]When you enable Milspec PDA's %c[pda_yellow]Progressive Mode%c[ui_gray_1], simply buying or crafting a more advanced PDA does not automatically let you see all of the factions it normally would. Instead, you must earn that access--whether temporarily or permanently--by looting PDAs from dead stalkers.\n \n
+
+            By %c[pda_yellow]looting enough of a faction's PDAs%c[ui_gray_1], you will gain data that lets you infiltrate their faction's wireless network--giving you the ability to %c[pda_yellow]see their squads on the map%c[ui_gray_1]. Most factions will eventually figure out what's happened, and %c[pda_yellow]change their access codes%c[ui_gray_1] after a time--so take advantage of it while you can.\n \n
+
+            Progressive Mode is %c[pda_yellow]very powerful, and configurable to your liking%c[ui_gray_1]. Think unlocking access is too easy, or too hard? Tweak the requirements however you like. Choose whether neutral factions must also be unlocked, whether factions will ever revoke your access at all--and if they do, how long it takes.\n \n
+
+            This unlock duration could be weeks if you like, or even a matter of seconds or minutes--with a low unlock threshold, short unlock durations turn effectively turn each PDA drop into a powerful but temporary buff. Or if you like a long grind for a longer-term advantage, that works too.\n \n
+
+            %c[pda_yellow]It's your game. Play your way.\n 
+
+            \n%c[pda_green]FACTION BLACKLIST\n
+            %c[ui_gray_1]Sure, it makes sense that you could break into the networks of Duty or Freedom. And good Bandit infosec is when their network password is something other than sequential numbers or variations on blyat. But what about Monolith? Or ISG?\n \n
+
+            If you don't think certain factions should ever show up on the map, don't worry--the %c[pda_yellow]Faction Blacklist%c[ui_gray_1] has you covered. Just check off which factions shouldn't show up, and they won't.\n 
+
+            \n%c[ui_gray_1]--------------------------------------------------------------------------------\n \n
+            %c[pda_red]TROUBLESHOOTING\n \n
+
+            %c[pda_white]If you can see this encyclopedia entry at all, your binaries support DLTX. %c[ui_gray_1]Good job: having modded exe files is half the battle. Having updated addon files and the right options installed is most of the rest.\n \n
+
+            %c[pda_red]Before reporting any issue:%c[pda_yellow] If your copy of Milspec PDA came pre-installed as part of a modpack%c[ui_gray_1] then it is possible that it's an old version, that not all of its features were installed, or that some of its MCM defaults have been changed. This is especially true if you have all the crafting recipes and still can't craft the T4 PDA, or if something related to Progression isn't working right.\n \n
+            %c[ui_gray_1]
+            In that case, it may be necessary to %c[pda_yellow]reinstall this addon from the FOMOD%c[pda_white] and ensure that the correct installation options were chosen for what you're trying to do.\n 
+
+            \n%c[pda_red]IMPORTANT: To report any bug, you must do the following:\n \n
+            %c[pda_white]1. Go to %c[pda_yellow]MCM > Milspec PDA > General\n
+            %c[pda_white]2. Enable %c[pda_yellow]Debug logging%c[pda_white] and %c[pda_yellow]Verbose logging\n
+            %c[pda_white]3. Exit and restart the game\n
+            %c[pda_white]4. Reproduce the issue as simply as possible\n
+            %c[pda_white]5. Get the game log from %c[pda_yellow](Your Anomaly Folder)\appdata\logs%c[pda_white] and post it somewhere online\n \n
+            
+            %c[ui_gray_1]If you do not, it is unlikely your log will have the information I need.\n
+
+            \nI don't get notified about Moddb comments, so you will generally get the quickest response on the GAMMA Discord, in Milspec PDA's discussion channel. Unsolicited DMs will be ignored.\n
+        </text>
+    </string>
+
+</string_table>
