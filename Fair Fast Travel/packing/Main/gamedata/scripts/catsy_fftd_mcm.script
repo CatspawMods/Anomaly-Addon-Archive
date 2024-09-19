@@ -1,0 +1,359 @@
+-- ======================================================================
+--[[	Fair Fast Travel System
+-- ======================================================================
+	MCM initialization script
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+-- ====================================================================]]
+if utils_catspaw_text then end
+local parse_colors 	= function(s) return utils_catspaw_text.parse_color_tokens(s, nil, true) end
+local gts 			= game.translate_string
+local sfind 		= string.find
+local ssub 			= string.sub
+local headers 		= {}
+local rel_version
+
+if game_fast_travel then
+	local ver 		= game_fast_travel.script_version or "ersion not found!"
+	local rel 		= tostring(game_fast_travel.release_date) or "date not found! Was game_fast_travel.script overwritten?"
+	rel_version 	= string.format("v%s (rel %s)", ver, rel)
+end
+
+function travelzone_indicator_installed()
+	return (actor_status_travelzone and actor_status_travelzone.feature_mode) ~= nil
+end
+
+local function update_header_text()
+	headers = {
+		["gpheadertxt"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_gameplay"),
+		},
+		["uiheadertxt"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_ui"),
+		},
+		["dbheadertxt"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_debug"),
+		},
+		["mapheader"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_map_travel"),
+		},
+		["locheader"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_loc_travel"),
+		},
+		["ftheader_txtblock"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_ft"),
+			t2 = "$clr_wht"..gts("ui_mcm_header_ftsub"),
+		},
+		["bpheader_txtblock"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_bp"),
+			t2 = "$clr_wht"..gts("ui_mcm_header_bpsub"),
+		},
+		["gtheader_txtblock"] = {
+			t1 = "$clr_gld"..gts("ui_mcm_header_gt"),
+			t2 = "$clr_wht"..gts("ui_mcm_header_gtsub"),
+		},
+		["verheader"] = {},
+		["ftsubhead"] = {},
+		["bpsubhead"] = {},
+		["gtsubhead"] = {},
+	}
+end
+
+function on_mcm_load()
+	update_header_text()
+	op = {	 id= "fftd", gr={
+			{ id = "gen", sh=true, gr={
+					{id = "slide_gen", type= "slide", link= "ui_fft_menuslide_maincfg", size= {512,50}, spacing= 20},
+					{id = "gpheadertxt", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_gameplay",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "shared_cooldown", type = "check", val = 1, def = false},
+					{id = "cond_dmg_mode", type = "list", val = 2, def = 1, 
+							content= {
+									{0,"fft_dmg_all"},
+									{1,"fft_dmg_random"},
+									{2,"fft_dmg_armor"},
+									{3,"fft_dmg_weapons"},
+									{-1,"fft_dmg_disabled"},
+								}
+						},
+					{id = "minimum_health", type = "track", val = 2, min = 0, max = 100, step = 1, def = 0},
+					{id = "minimum_satiety", type = "track", val = 2, min = 0, max = 100, step = 1, def = 0},
+					{id = "combat_dist", type = "track", val = 2, min = 1, max = 100, step = 1, def = 100},
+					{id = "combat_timeout", type = "track", val = 2, min = 1, max = 120, step = 1, def = 10},
+					{id = "northgate", type = "check", val = 1, def = true},
+					{id = "progressive_cost", type = "check", val = 1, def = false},
+					{id = "prog_coef_max", type = "track", val = 2, min = 0, max = 10, step = 0.05, def = 2},
+					{id = "prog_rank_cap", type = "input", val = 2, min = 1, max = 65000, def = 56000},
+					{id = "zones_use_disguises", type = "check", val = 1, def = false},
+					{id = "squad_local_travel", type = "check", val = 1, def = true},
+
+					{id = "uiheadertxt", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_ui",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+	                {id = "squad_tp_bind", type= "key_bind", val = 2, def = -1 },
+	                {id = "squad_tp_mod", type= ui_mcm.kb_mod_radio, val = 2, def = 0, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "show_zone_status_icon", type = "list", val = 2, def = 1, 
+							precondition = {catsy_fftd_mcm.travelzone_indicator_installed},
+							content= {
+									{0,"fft_travelicon_disabled"},
+									{1,"fft_travelicon_vanilla"},
+									{2,"fft_travelicon_altbw"},
+									{3,"fft_travelicon_altcolor"},
+								}
+						},
+					{id = "psyblock_mapspots", type = "check", val = 1, def = true},
+					{id = "nice_round_numbers", type = "check", val = 1, def = true},
+					{id = "show_distdur", type = "check", val = 1, def = true},
+					{id = "allow_open_bp", type = "check", val = 1, def = false},
+					{id = "allow_debug_travel", type = "check", val = 1, def = false},
+
+					{id = "dbheadertxt", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_debug",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "force_vanilla_fares", type = "check", val = 1, def = false},
+					{id = "skillsystem_enabled", type = "check", val = 1, def = false},
+					{id = "use_warfare_fix", type = "check", val = 1, def = false},
+					{id = "use_disguise_fix", type = "check", val = 1, def = true, hint = "fftd_usedisguisefix"},
+					{id = "use_vanilla_calcs", type = "check", val = 1, def = false, hint = "fftd_useoldcalcs"},
+					{id = "debuglogs_enabled", type = "check", val = 1, def = false},
+					{id = "verbose_enabled", type = "check", val = 1, def = true},
+					{id = "divider", type = "line"},
+					{id = "pawlink", type = "desc", text = "ui_mcm_fftd_getpaw"},
+				},
+			},
+
+			{ id = "ftcfg", sh=true, gr={
+					{id = "slide_ft", type= "slide", link= "ui_fft_menuslide_slider_ftravel", size= {512,50}, spacing= 20},
+					{id = "ftheader_txtblock", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_ft",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "ftsubhead", type = "desc", clr = {255,240,240,240}, text = "ui_mcm_header_ftsub",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "zone_mode", type = "list", val = 2, def = 1, hint = "fft_zone_mode",
+							content= {
+									{0,"fft_zonetravel_any"},
+									{1,"fft_zonetravel_friend"},
+									{2,"fft_zonetravel_ally"},
+								}
+						},
+					{id = "campfire_base", type = "check", val = 1, def = false, hint = "fft_campfire_base"},
+					{id = "allow_pin_travel", type = "check", val = 1, def = true, hint = "fftd_allow_pin_travel"},
+					{id = "travel_cooldown", type = "input", val = 2, min = 0, max = 7200, def = 0},
+					{id = "cost_coef", type = "track", val = 2, min = 0, max = 20, step = 0.05, def = 0.5, hint = "fftd_cost_coef"},
+
+					{id = "locheader", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_loc_travel",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+
+					{id = "loccamp_mode", type = "list", val = 2, def = 0, hint = "fft_camp_mode",
+							content= {
+									{0,"fft_campmode_dis"},
+									{1,"fft_campmode_lit"},
+									{2,"fft_campmode_any"},
+								}
+						},
+					{id = "locmpm", type = "track", val = 2, min = 1, max = 120, step = 1, def = 10, hint = "fftd_mpm"},
+					{id = "locpause_stats", type = "check", val = 1, def = false, hint = "fftd_pause_stats"},
+					{id = "locgear_dmg", type = "track", val = 2, min = 0, max = 11, step = 0.1, def = 0, hint = "fftd_gear_dmg_factor"},
+					{id = "locrnd_enabled", type = "check", val = 1, def = false, hint = "fftd_rnd_enabled"},
+
+					{id = "locrnd_hours_min", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_min"},
+					{id = "locrnd_hours_max", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_max"},
+					{id = "locrnd_minutes_min", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_min"},
+					{id = "locrnd_minutes_max", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_max"},
+
+					{id = "mapheader", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_map_travel",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+
+					{id = "mapmpm", type = "track", val = 2, min = 1, max = 120, step = 1, def = 10, hint = "fftd_mpm"},
+					{id = "mappause_stats", type = "check", val = 1, def = false, hint = "fftd_pause_stats"},
+					{id = "mapgear_dmg", type = "track", val = 2, min = 0, max = 11, step = 0.1, def = 1, hint = "fftd_gear_dmg_factor"},
+					{id = "maprnd_enabled", type = "check", val = 1, def = false, hint = "fftd_rnd_enabled"},
+					{id = "maprnd_hours_min", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_min"},
+					{id = "maprnd_hours_max", type = "track", val = 2, min = 0, max = 23, step = 1, def = 2, hint = "fftd_rnd_hours_max"},
+					{id = "maprnd_minutes_min", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_min"},
+					{id = "maprnd_minutes_max", type = "track", val = 2, min = 0, max = 59, step = 1, def = 59, hint = "fftd_rnd_minutes_max"},
+				},
+			},
+
+			{ id = "bpcfg", sh=true, gr={
+					{id = "slide_bp", type= "slide", link= "ui_fft_menuslide_slider_backpack", size= {512,50}, spacing= 20},
+					{id = "bpheader_txtblock", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_bp",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "bpsubhead", type = "desc", clr = {255,200,200,200}, text = "ui_mcm_header_bpsub",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "zone_mode", type = "list", val = 2, def = 0, hint = "fft_zone_mode",
+							content= {
+									{0,"fft_zonetravel_any"},
+									{1,"fft_zonetravel_friend"},
+									{2,"fft_zonetravel_ally"},
+								}
+						},
+					{id = "campfire_base", type = "check", val = 1, def = false, hint = "fft_campfire_base"},
+					{id = "travel_cooldown", type = "input", val = 2, min = 0, max = 7200, def = 0},
+					{id = "cost_coef", type = "track", val = 2, min = 0, max = 20, step = 0.05, def = 0, hint = "fftd_cost_coef"},
+
+					{id = "locheader", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_loc_travel",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "locmpm", type = "track", val = 2, min = 1, max = 120, step = 1, def = 9, hint = "fftd_mpm"},
+					{id = "locpause_stats", type = "check", val = 1, def = false, hint = "fftd_pause_stats"},
+					{id = "locgear_dmg", type = "track", val = 2, min = 0, max = 11, step = 0.1, def = 0, hint = "fftd_gear_dmg_factor"},
+					{id = "locrnd_enabled", type = "check", val = 1, def = false, hint = "fftd_rnd_enabled"},
+					{id = "locrnd_hours_min", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_min"},
+					{id = "locrnd_hours_max", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_max"},
+					{id = "locrnd_minutes_min", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_min"},
+					{id = "locrnd_minutes_max", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_max"},
+
+					{id = "mapheader", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_map_travel",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+
+					{id = "mapmpm", type = "track", val = 2, min = 1, max = 120, step = 1, def = 9, hint = "fftd_mpm"},
+					{id = "mappause_stats", type = "check", val = 1, def = false, hint = "fftd_pause_stats"},
+					{id = "mapgear_dmg", type = "track", val = 2, min = 0, max = 11, step = 0.1, def = 0.5, hint = "fftd_gear_dmg_factor"},
+					{id = "maprnd_enabled", type = "check", val = 1, def = false, hint = "fftd_rnd_enabled"},
+					{id = "maprnd_hours_min", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_min"},
+					{id = "maprnd_hours_max", type = "track", val = 2, min = 0, max = 23, step = 1, def = 2, hint = "fftd_rnd_hours_max"},
+					{id = "maprnd_minutes_min", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_min"},
+					{id = "maprnd_minutes_max", type = "track", val = 2, min = 0, max = 59, step = 1, def = 59, hint = "fftd_rnd_minutes_max"},
+				},
+			},
+
+			{ id = "gtcfg", sh=true, gr={
+					{id = "slide_gt", type= "slide", link= "ui_fft_menuslide_slider_guided", size= {512,50}, spacing= 20},
+					{id = "gtheader_txtblock", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_gt",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "gtsubhead", type = "desc", clr = {255,200,200,200}, text = "ui_mcm_header_gtsub",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+					{id = "enabled", type = "check", val = 1, def = true},
+					{id = "zone_mode", type = "list", val = 2, def = 0, hint = "fft_zone_mode",
+							content= {
+									{0,"fft_zonetravel_any"},
+									{1,"fft_zonetravel_friend"},
+									{2,"fft_zonetravel_ally"},
+								}
+						},
+					{id = "campfire_base", type = "check", val = 1, def = true, hint = "fft_campfire_base"},
+
+					{id = "ignore_status", type = "check", val = 1, def = true},
+					{id = "local_only", type = "check", val = 1, def = false},
+					{id = "cost_coef", type = "track", val = 2, min = 0, max = 20, step = 0.05, def = 2.5, hint = "fftd_cost_coef"},
+					{id = "npc_cost_coef", type = "track", val = 2, min = 0, max = 20, step = 0.05, def = 2},
+					{id = "allow_pin_travel", type = "check", val = 1, def = false, hint = "fftd_allow_pin_travel"},
+					{id = "travel_cooldown", type = "input", val = 2, min = 0, max = 7200, def = 0},
+
+					{id = "locheader", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_loc_travel",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+
+					{id = "loccamp_mode", type = "list", val = 2, def = 2, hint = "fft_camp_mode",
+							content= {
+									{0,"fft_campmode_dis"},
+									{1,"fft_campmode_lit"},
+									{2,"fft_campmode_any"},
+								}
+						},
+					{id = "locmpm", type = "track", val = 2, min = 1, max = 120, step = 1, def = 8, hint = "fftd_mpm"},
+					{id = "locpause_stats", type = "check", val = 1, def = true, hint = "fftd_pause_stats"},
+					{id = "locgear_dmg", type = "track", val = 2, min = 0, max = 11, step = 0.1, def = 0, hint = "fftd_gear_dmg_factor"},
+					{id = "locrnd_enabled", type = "check", val = 1, def = false, hint = "fftd_rnd_enabled"},
+					{id = "locrnd_hours_min", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_min"},
+					{id = "locrnd_hours_max", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_max"},
+					{id = "locrnd_minutes_min", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_min"},
+					{id = "locrnd_minutes_max", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_max"},
+
+					{id = "mapheader", type = "desc", clr = {255,255,215,0}, text = "ui_mcm_header_map_travel",
+						ui_hook_functor = {catsy_fftd_mcm.mcm_init_header_text_block},
+					},
+
+					{id = "mapmpm", type = "track", val = 2, min = 1, max = 120, step = 1, def = 8, hint = "fftd_mpm"},
+					{id = "mappause_stats", type = "check", val = 1, def = true, hint = "fftd_pause_stats"},
+					{id = "mapgear_dmg", type = "track", val = 2, min = 0, max = 11, step = 0.1, def = 0.5, hint = "fftd_gear_dmg_factor"},
+					{id = "maprnd_enabled", type = "check", val = 1, def = false, hint = "fftd_rnd_enabled"},
+					{id = "maprnd_hours_min", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_min"},
+					{id = "maprnd_hours_max", type = "track", val = 2, min = 0, max = 23, step = 1, def = 0, hint = "fftd_rnd_hours_max"},
+					{id = "maprnd_minutes_min", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_min"},
+					{id = "maprnd_minutes_max", type = "track", val = 2, min = 0, max = 59, step = 1, def = 0, hint = "fftd_rnd_minutes_max"},
+				},
+			},
+		}
+	}
+	return op
+end
+
+function get_ratio_for_current_aspect()
+	return (device().height / device().width) / (768 / 1024)	
+end
+
+function mcm_init_header_text_block(anchor, handlers, opts, flags)
+	handlers.desc:SetText("")
+	if sfind(opts.id, "subhead") then return end
+	local unsquish_ratio 	= get_ratio_for_current_aspect()
+	local sec_pre			= ssub(opts.id,1,2)
+	local is_head_block 	= sfind(opts.id, "_txtblock") and true or false
+	local is_head_line 		= sfind(opts.id, "maph") or sfind(opts.id, "loch") and true or false
+	local is_text_section 	= (sec_pre == "gp") or (sec_pre == "ui") or (sec_pre == "db")
+	local lang 	= ui_options.curr_localization()
+	local eng 	= lang == "eng"
+	local h		= headers[opts.id]
+	local xml 	= CScriptXmlInit()
+	xml:ParseFile("fft_ui_elements.xml")
+	local head 	= xml:InitStatic("box",anchor)
+	local tbg1	= xml:InitStatic("box",anchor)
+	local tbox1	= xml:InitTextWnd("box",tbg1)
+	local tbox2	= xml:InitTextWnd("box",tbg1)
+	tbg1:SetWndPos(vector2():set(10, -5))
+
+	local function setup_text_box(txt1, box_w, box_h, t1_w, t1_h, t1_x, t1_y, txt2, t2_w, t2_h, t2_x, t2_y)
+		tbg1:SetWndSize(vector2():set(box_w * unsquish_ratio, box_h))
+		local text = parse_colors(gts(txt1))
+		tbox1:SetWndSize(vector2():set(t1_w * unsquish_ratio, t1_h))
+		tbox1:SetText(text)
+		tbox1:SetWndPos(vector2():set(t1_x, t1_y))
+		if txt2 then
+			text = parse_colors(gts(txt2))
+			tbox2:SetWndSize(vector2():set(t2_w * unsquish_ratio, t2_h))
+			tbox2:SetText(text)
+			tbox2:SetWndPos(vector2():set(t2_x, t2_y))
+		end
+	end
+
+	if is_head_line or is_text_section then
+		anchor:SetWndPos(vector2():set(0, 15))
+		tbg1:InitTexture("ui_mcm_fft_messagebox_transbg_gen")
+		setup_text_box(h.t1, 512, 30, 400, 20, 5, 6)
+		tbox1:SetFont(GetFontLetterica18Russian())
+		if opts.id == "gpheadertxt" then
+			tbox2:SetWndSize(vector2():set(480 * unsquish_ratio, 20))
+			tbox2:SetText(parse_colors("$clr_tgr"..rel_version))
+			tbox2:SetWndPos(vector2():set(-2, -18))
+			tbox2:SetFont(GetFontMedium())
+		end
+	elseif opts.id == "gtheader_txtblock" then
+		anchor:SetWndPos(vector2():set(0, eng and 3 or 0))
+		tbg1:InitTexture("ui_mcm_fft_messagebox_transbg_head140")
+		tbox1:SetFont(GetFontLetterica18Russian())
+		setup_text_box(h.t1, 512, eng and 140 or 162, 480, 25, 10, 11, h.t2, 480, 110, 10, 35)
+	elseif is_head_block then
+		anchor:SetWndPos(vector2():set(0, eng and 12 or 5))
+		tbg1:InitTexture("ui_mcm_fft_messagebox_transbg_head90")
+		tbox1:SetFont(GetFontLetterica18Russian())
+		setup_text_box(h.t1, 512, eng and 90 or 102, 480, 25, 10, 11, h.t2, 480, 60, 10, 32)
+	end
+end

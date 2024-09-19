@@ -1,0 +1,166 @@
+<!--
+	Author: Catspaw (CatspawMods @ ModDB)
+	Addon: Fair Fast Travel
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+	NPC guide destination strings
+	Permission granted to freely translate into any language.
+-->
+
+<string_table>
+	<string id="st_fft_for">
+		<text>for</text>
+	</string>	
+	<string id="st_fft_and">
+		<text>and</text>
+	</string>	
+
+	<string id="st_fft_route_preamble_default">
+		<text>These are the routes I know and their usual prices:</text>
+	</string>
+
+	<string id="st_fft_guidetext_marsh_post_guid">
+		<text>the observation outpost</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_pump_water_guid">
+		<text>the pump station</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_old_church_guid">
+		<text>the old church</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_tech_yard_guid">
+		<text>the machine yard</text>
+	</string>
+	<string id="st_fft_guidetext_escape_village_guid">
+		<text>the Rookie Village in the Cordon</text>
+	</string>
+	<string id="st_fft_guidetext_agroprom_guid">
+		<text>Agroprom</text>
+	</string>
+	<string id="st_fft_guidetext_l05_bar_guid">
+		<text>the Bar</text>
+	</string>
+	<string id="st_fft_guidetext_escape_guid">
+		<text>the Cordon</text>
+	</string>
+	<string id="st_fft_guidetext_escape_guid_military">
+		<text>the checkpoint in the Cordon</text>
+	</string>
+	<string id="st_fft_guidetext_garbage_guid">
+		<text>the Garbage</text>
+	</string>
+	<string id="st_fft_guidetext_military_guid">
+		<text>the Army Warehouses</text>
+	</string>
+	<string id="st_fft_guidetext_radar_guid">
+		<text>Radar</text>
+	</string>
+	<string id="st_fft_guidetext_yantar_guid">
+		<text>Yantar</text>
+	</string>
+	<string id="st_fft_guidetext_yantar_guid_from_freedom_base">
+		<text>Yantar</text>
+	</string>
+	<string id="st_fft_guidetext_jupiter_guid">
+		<text>Jupiter</text>
+	</string>
+	<string id="st_fft_guidetext_jupiter_guid_mon">
+		<text>Jupiter</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_guid">
+		<text>the Great Swamp</text>
+	</string>
+	<string id="st_fft_guidetext_pripyat_2_guid">
+		<text>Pripyat</text>
+	</string>
+	<string id="st_fft_guidetext_l11_pripyat_guid">
+		<text>Pripyat</text>
+	</string>
+	<string id="st_fft_guidetext_l11_pripyat_guid_mon">
+		<text>Pripyat</text>
+	</string>
+	<string id="st_fft_guidetext_red_forest_guid">
+		<text>the Red Forest</text>
+	</string>
+	<string id="st_fft_guidetext_red_forest_guid_mon">
+		<text>the Red Forest</text>
+	</string>
+	<string id="st_fft_guidetext_pripyat_guid">
+		<text>the Pripyat Outskirts</text>
+	</string>
+	<string id="st_fft_guidetext_pripyat_guid_mon">
+		<text>the Pripyat Outskirts</text>
+	</string>
+	<string id="st_fft_guidetext_jupiter_underground_2_guid">
+		<text>Jupiter Underground</text>
+	</string>
+	<string id="st_fft_guidetext_zaton_guid">
+		<text>Zaton</text>
+	</string>
+	<string id="st_fft_guidetext_zat_trash_station">
+		<text>I'm ready, let's head to Zaton</text>
+	</string>
+	<string id="st_fft_guidetext_ds_soviet_store">
+		<text>I'm ready, let's head back to Dead City</text>
+	</string>
+	<string id="st_fft_guidetext_trucks_cemetery_guid">
+		<text>the Truck Cemetery</text>
+	</string>
+	<string id="st_fft_guidetext_jup_guid_bandit_cont">
+		<text>the container warehouse in Jupiter</text>
+	</string>
+	<string id="st_fft_guidetext_agroprom_guid_military">
+		<text>the military base in Agroprom</text>
+	</string>
+	<string id="st_fft_guidetext_darkscape_guid_military">
+		<text>the gas station in the Darkscape</text>
+	</string>
+	<string id="st_fft_guidetext_mil_to_yant_on_heli">
+		<text>the mobile lab in Yantar</text>
+	</string>
+	<string id="st_fft_guidetext_stancia_guid">
+		<text>Chernobyl NPP</text>
+	</string>
+	<string id="st_fft_guidetext_travel_to_jup_depo">
+		<text>Very well</text>
+	</string>
+	<string id="st_fft_guidetext_travel_to_outskirts">
+		<text>Very well</text>
+	</string>
+	<string id="st_fft_guidetext_travel_to_escape_guid_military">
+		<text>the checkpoint in the Cordon</text>
+	</string>
+	<string id="st_fft_guidetext_killer_guide_main_base_list">
+		<text>Your only option is the waste processing plant in southeastern Zaton. It'll cost you $clr_gld$fareval$clr_ui8 rubles.</text>
+	</string>
+	<string id="travel_ds_killer_guide_main_base_1">
+		<text>You sure? Our only option is to the north - we'll be arriving at the waste processing station in southern Zaton.</text>
+	</string>
+	<string id="st_fft_guidetext_zaton_killer_guide_station_list">
+		<text>Did you walk through the Scorcher on your way here? There's only one route. To the Dead City, and it's $clr_gld$fareval$clr_ui8.</text>
+	</string>
+
+	<string id="st_fft_guidetext_cordon_army_airlift_list">
+		<text>To our base in Agroprom for $clr_gld%s$clr_ui8 roubles, as well as the gas station in the Darkscape for $clr_gld%s$clr_ui8 and the mobile lab at lake Yantar for $clr_gld%s$clr_ui8.</text>
+	</string>
+
+	<string id="st_fft_guidetext_agro_army_airlift_list">
+		<text>To our checkpoint in the Cordon for $clr_gld%s$clr_ui8 rubles, as well as the base in Yantar for $clr_gld%s$clr_ui8.</text>
+	</string>
+
+<!-- Added in 2.7 -->
+
+	<string id="st_fft_northgate_pream">
+		<text>Some of my usual destinations are a no-go due to dangerous psy emissions from the Scorcher, but you'd have to ask the eggheads over in Yantar what that's about. For now, here are the routes I take and what they cost:</text>
+	</string>
+
+	<string id="st_fft_northgate_text">
+		<text>(blocked by psy field)</text>
+	</string>
+
+<!-- Added in 2.8 -->
+
+	<string id="st_fft_tourist_intro">
+		<text>Yeah, they call me Tourist. I like to wander around in poorly-mapped areas to find secret paths that no other stalkers know about. Anyway, here's where I can take you: </text>
+	</string>
+
+</string_table>

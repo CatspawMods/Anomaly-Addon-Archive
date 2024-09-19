@@ -1,0 +1,40 @@
+--[[=====================================================================
+	Fair Fast Travel System
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+
+	Based on the Fast Travel system in Anomaly 1.5.2 by:
+		Alundaio (original author)
+		sLoPpYdOtBiGhOlE (marker names, menu and config options, etc)
+
+	IMPORTANT:
+
+	All backpack travel functionality has been moved into 
+	game_fast_travel.script.
+
+	Everything here in game_backpack_travel.script is a stub to ensure 
+	that the vanilla settings are exposed for any legacy addon that 
+	tries to reference them.
+
+	Please do not delete or alter this file.
+-- ==================================================================--]]
+
+bp_travel 	= nil
+bp_combat 	= nil
+bp_damage 	= nil
+bp_notime 	= nil
+bp_storm 	= nil
+bp_weight 	= nil
+
+function update_settings()
+	bp_travel = ui_options.get("gameplay/backpack_travel/state")
+	bp_combat = ui_options.get("gameplay/backpack_travel/on_combat")
+	bp_damage = ui_options.get("gameplay/backpack_travel/on_damage")
+	bp_notime = ui_options.get("gameplay/backpack_travel/time")
+	bp_storm  = ui_options.get("gameplay/backpack_travel/on_emission")
+	bp_weight = ui_options.get("gameplay/backpack_travel/on_overweight")
+end
+
+function on_game_start()
+	RegisterScriptCallback("on_option_change",update_settings)
+end

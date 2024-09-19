@@ -1,0 +1,108 @@
+-- =======================================================================
+--[[	Fair Fast Travel System
+		Travel Zone status indicator
+-- =======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+	https://www.youtube.com/@CatspawAdventures
+
+	This script is not essential to the functioning of Fair Fast Travel
+	itself, and can be safely disabled or deleted for troubleshooting.
+-- =======================================================================
+-- 		SCRIPT DEPENDENCIES
+-- ===================================================================--]]
+-- 	Preload namespaces
+assert(utils_catspaw_common,
+"! ERROR: FFT's travel zone indicator requires utils_catspaw_common, which is missing!")
+assert(actor_status_from_ltx, 
+"! ERROR: FFT's travel zone indicator requires actor_status_from_ltx.script, which is missing!")
+if actor_status 		then end
+if game_fast_travel 	then end
+-- =======================================================================
+local dl = function(logtext, ...) utils_catspaw_common.dlog(game_fast_travel, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(game_fast_travel, logtext, ...) end
+local fft_aitz 			= game_fast_travel.actor_in_travel_zone
+local travel_types 		= game_fast_travel.all_travel_types
+local get_mcm 			= utils_catspaw_common.get_mcm_or_default_val
+local get_next_check 	= utils_catspaw_common.get_next_tg_interval
+-- =======================================================================
+travel_zone_name		= "FastTravelZone"
+travel_zone_icon 		= "ui_fft_travel_icon_"
+vanilla_ibg 			= "ui_inGame2_booster_slot"
+alticon_ibg 			= "ui_button_empty"
+feature_mode 			= 1
+feature_enabled 		= (feature_mode > 1)
+check_interval 			= 500
+icon_suffix 			= "black"
+local next_state_check	= 0
+local last_ret
+
+-- =======================================================================
+-- 		INDICATOR DISPLAY FUNCTOR
+-- =======================================================================
+function show_travel_zone_icon()
+	if not fft_aitz then return end
+	if next_state_check > time_global() then return last_ret end
+	next_state_check = get_next_check(check_interval)
+
+	local in_zone = false
+	for tt,_ in pairs(travel_types) do
+		if game_fast_travel.campfires_are_bases(tt) then
+			in_zone = in_zone or game_fast_travel.actor_is_near_lit_campfire()
+		end
+		local mode = game_fast_travel.get_zone_mode(tt)
+		if mode and mode > 0 then
+			in_zone = in_zone or fft_aitz(tt)
+		end
+	end
+	last_ret = in_zone and 1 or 0
+	return last_ret
+end
+
+-- =======================================================================
+--		CONTROL FUNCTIONS
+-- =======================================================================
+function enable_indicator()
+	dl("Enabling fast travel zone HUD indicator")
+	actor_status.enable_indicator(travel_zone_name)
+end
+
+function disable_indicator()
+	dl("Disabling fast travel zone HUD indicator")
+	actor_status.disable_indicator(travel_zone_name)
+end
+
+function reset_indicator()
+	if not db.actor then return end
+	local enabled = false
+	if feature_enabled then
+		for tt,_ in pairs(travel_types) do
+			local mode = game_fast_travel.get_zone_mode(tt)
+			if mode and mode > 0 then
+				enabled = true
+				break
+			end
+		end
+	end
+	if enabled then
+		enable_indicator()
+		local ind 		= actor_status.indicators[travel_zone_name]
+		icon_suffix 	= (feature_mode > 2) and "color" or (feature_mode > 1) and "white" or "black"
+		ind.icon 		= travel_zone_icon .. icon_suffix
+		ind.background	= (feature_mode > 1) and alticon_ibg or vanilla_ibg
+	else
+		disable_indicator()
+	end
+end
+
+-- =======================================================================
+function on_option_change()
+	feature_mode = tonumber(get_mcm("fftd/gen/show_zone_status_icon", feature_mode))
+	feature_enabled = (feature_mode or 0) > 0
+	reset_indicator()
+end
+
+function on_game_start()
+	RegisterScriptCallback("on_option_change", on_option_change)
+	RegisterScriptCallback("actor_on_first_update", on_option_change)
+end

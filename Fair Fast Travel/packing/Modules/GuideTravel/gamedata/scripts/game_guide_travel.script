@@ -1,0 +1,1124 @@
+-- ======================================================================
+--[[	Fair Fast Travel System - Guide Travel Module
+-- ======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+	https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
+
+	Replaces the dialogue entries of existing faction guides to allow 
+	their prices and strings to be dynamic and customizable.
+
+	Includes compatibility for the custom guides feature of the Western
+	Goods addon.
+
+	Also implements a number of functions intended to allow addon authors 
+	or code-savvy players to tweak each individual guide or route to 
+	suit their preferences. See below for syntax and usage.
+
+-- ======================================================================
+	function get_guide_attr(g, s, a)
+		Returns attr from the guide table
+			g 	= guide (section name of the guide NPC)
+			s 	= guidespot/destination from guides[g] or mlr_utils.CLT
+			a 	= the attribute to query
+	
+	function set_guide_attr(g, s, a, v)
+		Sets an attribute for the specified guide/spot
+		These two functions usually shouldn't be needed, all of the
+		dependent functions below call them to manage any useful attrs.
+-- ======================================================================
+	function get_guidespot_fare_mult(g, s)
+		Returns the current per-route multiplier for generated fares
+
+	function set_guidespot_fare_mult(g, s, v)
+		Sets a per-route multiplier for generated fares - very useful!
+		This allows you to fine-tune the costs of specific routes
+		in a way that scales with all other settings
+-- ======================================================================
+	function get_guidespot_dist(g,s)
+		Returns the calculated distance between guide and guidespot
+
+	function set_guidespot_dist(g,s,v)
+		Overrides the calculated distance between guide and guidespot
+		Probably shouldn't be used in most cases, fare generation
+		already calculates and sets this
+-- ======================================================================
+	function get_guidespot_disabled(g, s)
+		Returns true if this guidespot is set disabled
+
+	function set_guidespot_disabled(g, s, v)
+		Disables guidespot - not fully implemented yet so may
+		produce odd results
+-- ======================================================================
+	function get_guidespot_pos(s)
+		Returns the XYZ pos of the guidespot/destination
+
+	function set_guidespot_pos(s,x,y,z)
+		Sets the coordinates of the specified guidespot
+		Affects ALL guides using this guidespot
+-- ======================================================================
+	function get_guidespot_facing(s)
+		Returns the XYZ vector of the destination facing
+
+	function set_guidespot_facing(s,x,y,z)
+		Optionally sets the vector direction that the player will be
+		facing after travel
+		Affects ALL guides using this guidespot
+-- ======================================================================
+	function get_guidespot_dest(s)
+		Returns a table with the guidespot's XYZ coords and gvid/lvid
+	
+	function set_guidespot_dest(s,x,y,z,lvid,gvid)
+		Overrides the destination coords/gvid/lvid of the guidespot
+		Affects ALL guides using this guidespot
+-- ======================================================================
+	function get_guidespot_level(g, s)
+		Returns the target level name of this guidespot
+	
+	function set_guidespot_level(g, s, v)
+		Sets the target level name of this guidespot
+		This will break travel to the guidespot if this doesn't
+		match the coords/gvid/lvid
+-- ======================================================================
+	function get_guidespot_fixed_fare(g, s)
+		Returns the fixed fare, if any, for this trip
+		Returns nil if no fixed fare is set
+	
+	function set_guidespot_fixed_fare(g, s, v)
+		Sets a fixed fare for this guidespot
+		This will override any fare generation, but not vanilla forcing
+-- ======================================================================
+	function get_guidespot_fare(g, s)
+		Returns the current FINAL fare for the guidespot, generating it
+		first if necessary
+		This respects settings for fixed fares or vanilla overrides, and
+		should be used under almost all circumstances for gameplay 
+		instead of any other method of getting the fare
+
+	function set_guidespot_fare(g, s, v)
+		Sets the current generated fare for the guidespot
+-- ==================================================================--]]
+--		SCRIPT DEPENDENCIES
+-- ======================================================================
+levels_by_guidespot_name = {}
+if game_fast_travel then end
+assert(utils_catspaw_common,
+    "\n! ERROR: game_guide_travel requires utils_catspaw_common, which does not exist!\n"
+)
+assert(utils_catspaw_text,
+    "\n! ERROR: game_guide_travel requires utils_catspaw_text, which does not exist!\n"
+)
+assert(utils_catspaw_common.using_modded_exes, "\n"..
+    "! The Guide Travel Overhaul requires the unlocalizer feature provided by modded binaries!\n"..
+    "! " .. string.format("MODDED_EXES_VERSION: %s", get_modded_exes_version and get_modded_exes_version() or "not found") .. "\n"..
+    "* The Guide Travel Overhaul could not initialize because it requires modded exes\n" ..
+    "* based on the Anomaly binaries by TheMrDemonized. GAMMA, EFP, and Screen Space\n" ..
+    "* Shaders are all based on the demonized binaries and also fully support\n" ..
+    "* the required features.\n" ..
+    "* These binaries fix vanilla bugs, add many engine features and graphical\n" ..
+    "* improvements, and are a superior experience over vanilla in every way.\n" ..
+    "* https://github.com/themrdemonized/STALKER-Anomaly-modded-exes\n"
+)
+
+-- ======================================================================
+--		SHORTCUTS AND DEFAULTS
+-- ======================================================================
+debuglogs 			= false
+verbose				= false
+logprefix 			= "[FFT:GGT] "
+local dl = function(logtext, ...) utils_catspaw_common.dlog(game_guide_travel, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(game_guide_travel, logtext, ...) end
+local to_bool 		= utils_catspaw_common.to_bool
+local who_npc 		= utils_catspaw_common.who_npc
+local safeid 		= utils_catspaw_common.safeid
+local round100 		= utils_catspaw_common.round100
+local lname_for_gvid= utils_catspaw_common.level_name_for_gvid
+local parse_colors 	= utils_catspaw_text.parse_color_tokens
+local floor			= math.floor
+local CLT 			= mlr_utils and mlr_utils.CLT or {}
+local gft 			= game_fast_travel
+local gts 			= game.translate_string
+local wgg 			= western_goods_guide -- Western Goods guide compatibility
+local fftgtext, fftroute, default_pream
+north_gated_pream	= "st_fft_northgate_pream"
+north_gated_text	= "st_fft_northgate_text"
+guide_menu_text 	= ""
+vanilla_menu_text 	= ""
+gated_menu_text 	= ""
+-- ======================================================================
+--		VANILLA ROUTE CUSTOMIZATIONS
+-- ======================================================================
+mlr_utils.CLT["marsh_post_guid"] 		= {-294.81405639648,0.71730107069016,21.673492431641,3145,153}
+mlr_utils.CLT["marsh_pump_water_guid"]	= {-7.9008584022522,0.46835023164749,-38.745407104492,138848,20}
+mlr_utils.CLT["marsh_old_church_guid"]	= {314.69299316406,0.8691970705986,-134.10293579102,344628, 222}
+mlr_utils.CLT["marsh_tech_yard_guid"]	= {381.63909912109,2.7934539318085,243.89410400391,392419, 98}
+-- local Marsh travel, CS legacy
+mlr_utils.CLT["mil_to_yant_on_heli"] 	= {28.6637,-5.93,-270.2215,78867,2198}
+-- better landing spot for the heli trip to yantar
+-- ======================================================================
+--		GUIDE DATA
+-- ======================================================================
+local guidespots 	= {}
+for k,v in pairs(CLT) do guidespots[k] = v end
+
+ranks_by_name = {
+    ["novice"]              = 1,
+    ["trainee"]             = 2,
+    ["experienced"]         = 3,
+    ["professional"]        = 4,
+    ["veteran"]             = 5,
+    ["expert"]              = 6,
+    ["master"]              = 8,
+    ["legend"]              = 10,
+}
+
+-- ======================================================================
+local guides = {	--[[
+-- ======================================================================
+	.level : target level name, will break travel if wrong
+	.vcost : vanilla fare, used when vanilla prices are forced on
+	.fmult : multiplier applied on per-route basis to generated fares
+	.use_vcost : forces use of vanilla fare for this route
+	.custom_route_string : loc string to completely replace generated route list
+	.custom_route_preamble : loc string for what guide says before generating route list
+	.northgate : destination unavailable if brain scorcher active and that feature enabled
+-- ==================================================================--]]
+	["guid_marsh_mlr"] = {
+	-- Clear Sky base guide
+		["marsh_post_guid"] 		= {vcost = 300, 	fmult = 0.5,  	level = "k00_marsh"},
+		["marsh_pump_water_guid"]	= {vcost = 500, 	fmult = 0.9,  	level = "k00_marsh"},
+		["marsh_old_church_guid"]	= {vcost = 500, 	fmult = 0.5,  	level = "k00_marsh"},
+		["marsh_tech_yard_guid"] 	= {vcost = 800, 	fmult = 0.6,  	level = "k00_marsh"},
+		["escape_village_guid"] 	= {vcost = 1500, 	fmult = 0.7, 	level = "l01_escape"},
+		["agroprom_guid"] 			= {vcost = 2000, 	fmult = 0.65, 	level = "l03_agroprom"},
+		["l05_bar_guid"] 			= {vcost = 4000, 	fmult = 0.55, 	level = "l05_bar"},
+	},
+	["guid_bar_stalker_navigator"] = {
+	-- Navigator / Bar guide
+		["escape_guid"] 			= {vcost = 3000, 	fmult = 0.51, 	level = "l01_escape"},
+		["garbage_guid"] 			= {vcost = 700, 	fmult = 0.35, 	level = "l02_garbage"},
+		["military_guid"] 			= {vcost = 1000, 	fmult = 0.91, 	level = "l07_military"},
+		["yantar_guid"] 			= {vcost = 3500, 	fmult = 1.87, 	level = "l08_yantar"},
+		["jupiter_guid"] 			= {vcost = 6000, 	fmult = 1.13, 	level = "jupiter", northgate = true},
+		["marsh_guid"] 				= {vcost = 6000, 	fmult = 1.13, 	level = "k00_marsh"},
+	},
+	["ds_killer_guide_main_base"] = {
+	-- Dead City Merc base guide
+		["cfg"]	= {
+			custom_routelist_str 	= "st_fft_guidetext_killer_guide_main_base_list",
+		},
+		["zat_trash_station"]		= {vcost = 8000, 	fmult = 1.36, 	level = "zaton", northgate = false},
+	},	
+	["guid_dv_mal_mlr"] = {
+	-- Dark Valley Bandit base guide
+		["trucks_cemetery_guid"]	= {vcost = 1500,	fmult = 0.58, 	level = "k02_trucks_cemetery"},
+		["jup_guid_bandit_cont"]	= {vcost = 8000,	fmult = 1.14, 	level = "jupiter", northgate = true},
+	},	
+	["guid_zan_stalker_locman"] = {
+	--  Pilot / Skadovsk guide
+--[[
+		["cfg"] = {
+			northern 	= true
+		},
+--]]		
+		["l11_pripyat_guid"]		= {vcost = 4000,	fmult = 1.25, 	level = "l11_pripyat"},
+		["pripyat_guid_mon"] 		= {vcost = 5000,	fmult = 1.25, 	level = "pripyat"},
+		["jupiter_guid"] 			= {vcost = 2000,	fmult = 0.9, 	level = "jupiter"},
+	},
+	["zat_stancia_trader_merc"] = {
+	-- Zaton Merc base guide
+		["cfg"]	= {
+			custom_routelist_str 	= "st_fft_guidetext_zaton_killer_guide_station_list",
+			},
+		["ds_soviet_store"]			= {vcost = 8000, 	fmult = 1.38, 	level = "l09_deadcity", northgate = false},
+	},
+	["monolith_bridge_trader_mlr"] = {
+	-- Monolith trader/guide in RF by Limansk bridge
+--[[
+		["cfg"] = {
+			northern 	= true
+		},
+--]]	
+		["pripyat_guid_mon"]		= {vcost = 5000, 	fmult = 1.2, 	level = "pripyat"},
+		["jupiter_guid_mon"] 		= {vcost = 6000, 	fmult = 2.5, 	level = "jupiter"},
+		["l11_pripyat_guid_mon"]	= {vcost = 5000, 	fmult = 1.2, 	level = "l11_pripyat"},
+	},
+	["guid_pri_a15_mlr"] = {
+	--  Tourist / Outskirts guide
+		["cfg"] = {
+			--northern 	= true,
+			intro 		= "st_fft_tourist_intro",
+			only_dests 	= true,
+		},
+		["stancia_guid"] 				= {vcost = 12000, 	fmult = 2.39, 	level = "l12_stancia"},
+		["pripyat_2_guid"] 				= {vcost = 3000, 	fmult = 2.55, 	level = "l11_pripyat"},
+		["radar_guid"] 					= {vcost = 8000, 	fmult = 4.4, 	level = "l10_radar", northgate = true},
+		["jupiter_guid"] 				= {vcost = 4000, 	fmult = 0.94, 	level = "jupiter"},
+		["jupiter_underground_2_guid"] 	= {vcost = 1000,	fmult = 0.24, 	level = "jupiter_underground"},
+		["zaton_guid"] 					= {vcost = 4000, 	fmult = 0.84, 	level = "zaton"},
+	},
+	["guid_jup_stalker_garik"] = {
+	-- Garry / Yanov station guide
+--[[
+		["cfg"] = {
+			northern 	= true
+		},
+--]]		
+		["l05_bar_guid"] 				= {vcost = 6000,	fmult = 1.18, 	level = "l05_bar", northgate = true},
+		["l11_pripyat_guid"]			= {vcost = 3000,	fmult = 1.18, 	level = "l11_pripyat"},
+		["red_forest_guid"] 			= {vcost = 2500,	fmult = 1.12, 	level = "l10_red_forest", northgate = true},
+		["jupiter_underground_2_guid"] 	= {vcost = 1500,	fmult = 0.62, 	level = "jupiter_underground"},
+		["zaton_guid"] 					= {vcost = 2000, 	fmult = 0.88, 	level = "zaton"},
+	},
+	["trader_monolith_jup_depo"] = {
+	-- Monolith trader/guide in Jupiter
+--[[
+		["cfg"] = {
+			northern 	= true
+		},
+--]]		
+		["red_forest_guid_mon"]			= {vcost = 6000,	fmult = 2.5, 	level = "l10_red_forest"},
+		["pripyat_guid_mon"] 			= {vcost = 2000,	fmult = 1.5, 	level = "pripyat"},
+		["l11_pripyat_guid_mon"]		= {vcost = 1000, 	fmult = 2.22, 	level = "l11_pripyat"},
+	},
+	["jup_depo_isg_leader"] = {
+	-- ISG leader (not handled by FFT)
+		["travel_to_jup_depo"] 			= {vcost = 0, level = "jupiter"},
+		["travel_to_outskirts"]			= {vcost = 0, level = "pripyat"},
+	},	
+	["agr_smart_terrain_1_6_army_trader_stalker"] = {
+	-- Military airlift from Agroprom
+		["cfg"] = {
+			custom_routelist_str 		= "st_fft_guidetext_agro_army_airlift_list",
+		},
+		["escape_guid_military"] 		= {vcost = 5000, 	fmult = 1, 	level = "l01_escape"},
+		["mil_to_yant_on_heli"]			= {vcost = 7000, 	fmult = 2, 	level = "l08_yantar"},
+	},
+	["esc_3_16_military_trader"] = {
+	-- Military airlift from Cordon
+		["cfg"] = {
+			custom_routelist_str 		= "st_fft_guidetext_cordon_army_airlift_list",
+		},
+		["agroprom_guid_military"]		= {vcost = 5000, 	fmult = 1, 		level = "l03_agroprom"},
+		["darkscape_guid_military"] 	= {vcost = 3000, 	fmult = 1.2, 	level = "k01_darkscape"},
+		["mil_to_yant_on_heli"]			= {vcost = 7000, 	fmult = 1.5, 	level = "l08_yantar"},
+	},
+	["mil_freedom_guid"] = {
+	-- Leshiy / Freedom base guide
+		["jupiter_guid"]				= {vcost = 6000, 	fmult = 1.5, 	level = "jupiter", northgate = true},
+		["escape_guid"] 				= {vcost = 4500, 	fmult = 1, 		level = "l01_escape"},
+		["yantar_guid_from_freedom_base"]= {vcost = 5000, 	fmult = 1, 		level = "l08_yantar"},
+	},
+	["lider_monolith_haron"] = {
+	-- Charon / Monolith leader in Pripyat
+		["pripyat_guid_mon"]			= {vcost = 6000, 	fmult = 6.2,	level = "pripyat"},
+		["jupiter_guid_mon"] 			= {vcost = 4500, 	fmult = 2.21, 	level = "jupiter"},
+		["red_forest_guid_mon"]			= {vcost = 5000, 	fmult = 1.2, 	level = "l10_red_forest"},
+	},
+}
+
+function first_lower(str)
+    return (str:gsub("^%u", string.lower))
+end
+
+function first_upper(str)
+    return (str:gsub("^%l", string.upper))
+end
+
+function generate_trip_parameters(guide, guidespot)
+	local dest 	= guides and guides[guide] and guides[guide][guidespot]
+	if not dest then return end
+	local gspot = guidespots[guidespot]
+	if not gspot then
+		printf(logprefix.."ERROR: generate_trip_parameters could not find guidespot %s for guide %s",guidespot,guide)
+	return 0 end
+
+	local pos 	= vector():set(gspot[1], gspot[2], gspot[3])
+	local d		= gft.get_trip_distance(pos, dest.level, true)
+	dest.dist 	= d.dist
+	local mult 	= dest.fmult or 1
+	local fare	= floor((gft.cost_to_travel(dest.dist,"gt", true) or 500) * mult)
+	if gft.nice_round_numbers then
+		local old 	= fare
+		fare 		= round100(fare)
+		vl("rounding %s down to nearest 100: %s",old,fare)
+	end
+	dest.fare 	= fare
+	dest.time 	= gft.distance_to_duration("gt","loc", dest.dist)
+	return fare
+end
+-- ======================================================================
+--	GUIDESPOT MANAGEMENT FUNCTIONS
+-- ======================================================================
+-- This collection of management functions each take one or more of 
+-- following arguments:
+--
+-- 		g = guide name, e.g. guid_bar_stalker_navigator
+-- 		s = guidespot name, e.g. escape_guid
+-- 		a = attribute to get, e.g. fmult for fare multiplier
+-- 		v = value to pass, if any
+--
+-- As well as functions that handle coordinate vectors in the usual ways.
+
+-- Get or set any attribute in the guides table
+function get_guide_attr(g, s, a)
+	if not (g and s and a and guides[g] and guides[g][s]) then return end
+	return guides[g][s][a]
+end
+function set_guide_attr(g, s, a, v)
+	if not (g and s and a) then return end
+	if not guides[g] then
+		guides[g] = {}
+	end
+	if not guides[g][s] then
+		guides[g][s] = {}
+	end
+	guides[g][s][a] = v
+	return true
+end
+
+local gga = get_guide_attr
+local sga = set_guide_attr
+-- ======================================================================
+-- Get (generate) or set currently-cached fare
+function get_guidespot_fare(g, s)
+	--vl("get_guidespot_fare(%s, %s)",g,s) -- spammy, disable on release
+	local dest 	= guides and guides[g] and guides[g][s]
+	if not dest then return 0 end
+
+	if dest.dist and dest.fare then
+		vl("get_guidespot_fare: cached values dist %s | fare %s | time %s (%sh%sm)",dest.dist,dest.fare,dest.time.t,dest.time.h,dest.time.m)
+	else
+		generate_trip_parameters(g, s)
+		vl("get_guidespot_fare: no values cached, generated dist %s | fare %s | time %s (%sh%sm)",dest.dist,dest.fare,dest.time.t,dest.time.h,dest.time.m)
+	end
+	local force_vanilla = gft.force_vanilla_fares or gga(g,s,"use_vcost")
+	local vcost 		= gga(g,s,"vcost")
+	local vanilla 		= force_vanilla and vcost
+	local fixed 		= gga(g,s,"fixed")
+	local fare 			= vanilla or fixed or dest.fare
+	vl("get_guidespot_fare: f_v: %s | vc: %s | vanilla = %s | fixed %s | generated %s",force_vanilla,vcost,vanilla,fixed,dest and dest.fare)
+
+	dl("get_guidespot_fare: %s",fare)
+	return fare
+end
+
+function set_guidespot_fare(g, s, v)
+	return sga(g, s, "fare", v)
+end
+-- ======================================================================
+-- Get or set the forced/fixed fare for the guidespot
+function get_guidespot_disabled(g, s)
+	return gga(g, s, "disabled")
+end
+function set_guidespot_disabled(g, s, v)
+	return sga(g, s, "disabled", v)
+end
+-- ======================================================================
+-- Get or set the target position
+function get_guidespot_pos(s)
+	local gs = s and guidespots[s]
+	local pos
+	if gs then
+		pos	= vector():set(gs[1] or 0, gs[2] or 0, gs[3] or 0)
+	else
+		pos = VEC_ZERO
+	end
+	return pos
+end
+function set_guidespot_pos(s, x, y, z)
+	if not guidespots[s] then
+		guidespots[s] = {}
+	end
+	guidespots[s][1] = x or guidespots[s][1] or 0
+	guidespots[s][2] = y or guidespots[s][2] or 0
+	guidespots[s][3] = z or guidespots[s][3] or 0
+	return true
+end
+-- ======================================================================
+-- Get or set the direction the player faces after travel
+function get_guidespot_facing(s)
+	local gs = s and guidespots[s]
+	local pos
+	if gs then
+		facing = vector():set(gs[6] or 0, gs[2] or 0, gs[3] or 0)
+	else
+		facing = VEC_ZERO
+	end
+	return facing
+end
+function set_guidespot_facing(s, fx, fy, fz)
+	--if not guidespots[s] then return end
+	if not guidespots[s] then
+		guidespots[s] = {}
+	end
+	guidespots[s][6] = fx or guidespots[s][6] or 0
+	guidespots[s][7] = fy or guidespots[s][6] or 0
+	guidespots[s][8] = fz or guidespots[s][6] or 0
+	return true
+end
+
+-- ======================================================================
+-- Get or set the target coordinates, lvid, gvid, and/or facing
+function get_guidespot_dest(s)
+	return guidespots[s]
+end
+function set_guidespot_dest(s, x, y, z, lvid, gvid, fx, fy, fz)
+	--if not guidespots[s] then return end
+	if not guidespots[s] then
+		guidespots[s] = {}
+	end
+	guidespots[s][1] = x or 	guidespots[s][1] or 0
+	guidespots[s][2] = y or 	guidespots[s][2] or 0
+	guidespots[s][3] = z or 	guidespots[s][3] or 0
+	guidespots[s][4] = lvid or 	guidespots[s][4] or 0
+	guidespots[s][5] = gvid or 	guidespots[s][5] or 0
+	guidespots[s][6] = fx or 	guidespots[s][6] or 0
+	guidespots[s][7] = fy or 	guidespots[s][6] or 0
+	guidespots[s][8] = fz or 	guidespots[s][6] or 0
+	return true
+end
+-- ======================================================================
+-- Get or set the target level for the guidespot
+function get_guidespot_level(g, s)
+	return gga(g, s, "level")
+end
+function set_guidespot_level(g, s, v)
+	return sga(g, s, "level", v)
+end
+-- ======================================================================
+-- Get or set the forced/fixed fare for the guidespot
+function get_guidespot_fixed_fare(g, s)
+	return gga(g, s, "fixed")
+end
+function set_guidespot_fixed_fare(g, s, v)
+	return sga(g, s, "fixed", v)
+end
+-- ======================================================================
+-- Get or set the multiplier for generated fares to the guidespot
+function get_guidespot_fare_mult(g, s)
+	return gga(g, s, "fmult")
+end
+function set_guidespot_fare_mult(g, s, v)
+	return sga(g, s, "fmult", v)
+end
+-- ======================================================================
+-- Get or set the calculated distance to the guidespot
+function get_guidespot_dist(g,s)
+	--vl("get_guidespot_dist(%s,%s)",g,s) -- spammy, disable on release
+	local dist = gga(g, s, "dist")
+	if not dist then
+		generate_trip_parameters(g,s)
+		dist = gga(g, s, "dist")
+	end
+	return dist
+end
+function set_guidespot_dist(g,s,v)
+	sga(g, s, "dist", v)
+end
+-- ======================================================================
+-- Get or override whether the guidespot is gated by northern travel
+function get_guidespot_northgate(g, s)
+	if not db.actor then return end
+	local ngate = gga(g, s, "northgate")
+	if ngate == nil then
+		local nmaps = game_fast_travel.northern_maps or {}
+		local lvl = get_guidespot_level(g, s)
+		local dest_nmap = to_bool(lvl and nmaps[lvl])
+		local curr_nmap = to_bool(nmaps[level.name()])
+		ngate = dest_nmap ~= curr_nmap
+	end
+	return ngate
+end
+function set_guidespot_northgate(g, s, v)
+	-- If this is nil, northgating is determined by the above function
+	return sga(g, s, "northgate", v)
+end
+-- ======================================================================
+-- Gets the duration of a guide trip
+	-- Returns table:
+	-- t = total duration in minutes
+	-- h = hour portion of duration
+	-- m = minute portion of duration	
+function get_guidespot_trip_duration(g,s)
+	--vl("get_guidespot_trip_duration(%s,%s)",g,s) -- spammy, disable on release
+	local gst = gga(g, s, "time")
+	if not gst then
+		generate_trip_parameters(g,s)
+		gst = gga(g, s, "time")
+	end
+	return gst
+end
+-- ======================================================================
+-- Takes speaker 1 and speaker 2 from dialogue functions
+function get_guide_section(s1, s2)
+	if s2 then s1 = who_npc(s1,s2) end
+	local id = safeid(s1)
+	if id and (type(id) ~= "number") then id = s1:id() end
+	local se_obj = id and alife_object(id)
+	local guide_sec = se_obj:section_name()
+	return guide_sec
+end
+-- ======================================================================
+
+function debug_dump_guidespots()
+	local str
+	local div = "\n~ ------------------------------------------------------------------------"
+	for g,gd in pairs(guides) do
+		str = div.."~ Debug data for NPC guide "..g..div
+		for s,sd in pairs(gd) do
+			str = str .. "\n* => Guidespot: "..s
+			local level = sd and sd.level
+			local vcost = sd and sd.vcost
+			local fmult = sd and sd.fmult
+			local use_v = sd and sd.use_vcost
+			local fare 	= get_guidespot_fare(g,s)
+			str = str..string.format("\nlLevel %s | vcost %s | use_vcost %s | fmult %02d | fare %s | dist %s",level,vcost,use_v,fmult,fare,sd.dist)
+		end
+		printf(str..div)
+	end
+end
+
+
+function route_blocked_by_psy(g, s)
+	if gft.monolith_science_toys_off() or not (g and s) then return false end
+	local blocked = (gft.gate_northern_travel and get_guidespot_northgate(g, s)) and true or false
+	--vl("route_blocked_by_psy(%s, %s): %s",g,s,blocked)
+	return blocked
+end
+
+
+function guide_has_gated_routes(g)
+	if not (g and guides[g]) then return end
+	local has_gated = false
+
+	for s, _ in pairs(guides[g]) do
+		--printf("g %s | s %s | blocked %s",g,s,route_blocked_by_psy(g, s))
+		if route_blocked_by_psy(g, s) then
+			has_gated = true
+			break
+		end
+	end
+	vl("guide_has_gated_routes(%s): %s",g,has_gated)
+	return has_gated
+end
+
+
+local function try_travel_aborted(guide, guidespot)
+	gft.reset_trip_data()
+	gft.trip.guide 		= guide
+	gft.trip.guidespot 	= guidespot
+	gft.SendCallback("on_try_fast_travel", gft.trip)
+
+	vl("try_travel_aborted ret_value: %s",gft.trip.ret_value)
+	return (not gft.trip.ret_value) or get_guidespot_disabled(guide, guidespot)
+end
+
+local function do_travel_aborted(guide, guidespot)
+	local guide 		= guide 	or gft.trip.guide
+	local guidespot 	= guidespot or gft.trip.guidespot
+	gft.trip.guidespot 	= guidespot or gft.trip.guidespot
+	gft.SendCallback("on_before_fast_travel", gft.trip)
+	return (not gft.trip.ret_value) or get_guidespot_disabled(guide, guidespot)
+end
+
+
+function advance_time_for_dist(dist, map)
+	-- Fair Fast Travel 2.5 or newer is installed, advance time
+	local gtrav	= gft.get_travel_type("gt", map)
+	local pause = (gtrav.pause_stats and true or false)
+	dl("advance_time_for_dist: actor hired npc guide to travel %sm, advancing time | stats paused: %s", dist, pause)
+	gft.trip.npc = true
+	if do_travel_aborted() then return end
+	-- Note that setting ret_value false for NPC guide trips
+	-- cannot abort travel, only the time advance
+	gft.advance_trip_time("gt", dist, map, pause)
+	return true
+end
+
+
+function clear_guide_fare_cache(guide, guidespot)
+	local args = (guide and guidespot) and "(args passed)" or "called to clear all"
+	dl("clear_guide_fare_cache %s",args)
+	local function clear_fare_cache(g,gs)
+		local dest = g and gs and guides[g] and guides[g][gs]
+		if not (dest and dest.dist) then return end
+		vl("clearing fare cache entry for %s: %s",g,gs)
+		dest.dist = nil
+		dest.fare = nil
+		dest.time = nil
+		return true
+	end
+
+	if clear_fare_cache(guide, guidespot) then return end
+
+	for guide,gd in pairs(guides) do
+		for guidespot,_ in pairs(gd) do
+			clear_fare_cache(guide, guidespot)
+		end
+	end
+end
+
+
+function can_afford_fare(g, s)
+	local can_afford = db.actor:money() >= get_guidespot_fare(g, s)
+	vl("can_afford_fare %s: %s",s,can_afford)
+	return can_afford
+end
+
+
+function is_travel_allowed(s1, s2, guidespot)
+	vl("is_travel_allowed called for dest %s",guidespot)
+	local g,s
+	s 		= guidespot
+	if type(s1) == "string" then
+		g 	= s1
+	else
+		g 	= get_guide_section(s1, s2)
+	end
+
+	if get_guidespot_disabled(g, s) then return false end
+	if route_blocked_by_psy(g, s) then return false end
+	return can_afford_fare(g, s)
+end
+
+
+function charge_actor_fare(s1, s2, guide, guidespot)
+	local fare = get_guidespot_fare(guide, guidespot)
+	vl("charging actor %s for trip: %s",fare, guidespot)
+	gft.charge_for_travel(fare, false, "st_fftd_farepaid_npcguide")
+end
+
+
+function move_to_new_map(guidespot, guide)
+	if db.actor:is_talking() then
+		db.actor:stop_talk()
+	end
+	vl("move_to_new_map: %s | %s",guide,guidespot)
+
+	local gs 		= guidespot and guidespots[guidespot]
+	local pos 		= vector():set(gs[1], gs[2], gs[3])
+	local lvid 		= gs[4]
+	local gvid 		= gs[5]
+	local vec 		= vector():set(gs[6] or 0, gs[7] or 0, gs[8] or 0)
+	local dest 		= guides and guides[guide] and guides[guide][guidespot]
+	local lname 	= levels_by_guidespot_name[guidespot]
+	local dc 		= gft.get_trip_distance(pos, lname, true)
+	local newmap	= (lname ~= level.name())
+		--local abort = not advance_time_for_dist(dc.dist, newmap)
+	advance_time_for_dist(dc.dist, newmap)
+	--[[
+	if abort then
+		dl("level change to %s aborted by callback return value",lname)
+		return
+	end
+	--]]
+	vl("executing map change to %s (%s): pos %s | lvid %s | gvid %s",lname,gft.level_ids[lname],gft.print_pos(pos),lvid,gvid)
+	ChangeLevel(pos, lvid, gvid, vec, true)
+end
+
+
+function do_fade_and_local_travel(guidespot)
+	level.add_pp_effector ("fade_in.ppe", 200, false)
+	local gs 		= guidespot and guidespots[guidespot]
+	if gs then
+		local pos 	= gs and vector():set(gs[1],gs[2],gs[3])
+		db.actor:set_actor_position(pos,gs[4],gs[5])
+	end
+end
+
+
+function do_local_travel(s1, s2, func)
+	local function do_travel(f)
+		if type(f) == "string" then
+			do_fade_and_local_travel(f)
+		else
+			f(s1, s2)
+		end
+	end
+	
+	local pos1 = db.actor:position()
+	do_travel(func)
+	local pos2 = db.actor:position()
+	local dist = pos1:distance_to(pos2)
+	advance_time_for_dist(dist, false)
+	gft.reset_trip_data()
+end
+
+
+function start_local_npc_guide_travel(s1, s2, guidespot)
+	local guide = get_guide_section(s1, s2)
+	if try_travel_aborted(guide, guidespot) then return end
+	vl("beginning local travel from %s to guidespot %s",guide,guidespot)
+	charge_actor_fare(s1, s2, guide, guidespot)
+	do_local_travel(s1, s2, guidespot, guide)
+end
+
+
+function start_newmap_npc_guide_travel(s1, s2, guidespot)
+	local guide = get_guide_section(s1, s2)
+	if try_travel_aborted(guide, guidespot) then return end
+	vl("beginning newmap travel from %s to guidespot %s",guide,guidespot)
+	charge_actor_fare(s1, s2, guide, guidespot)
+	move_to_new_map(guidespot, guide)
+end
+
+
+function compile_trip_data(guide, guidespot)
+	if not (guide and guidespot and guides[guide][guidespot]) then return end
+	local time 		= get_guidespot_trip_duration(guide, guidespot)
+	local cust_name = get_guide_attr(guide, guidespot, "name")
+	local loc_name 	= gts(cust_name or (fftgtext..guidespot))
+	if cust_name and cust_name:sub(1, 16) == "st_western_goods" then
+		loc_name = loc_name:sub(1, -2) -- trim trailing period
+	end
+
+	local tdata = {
+		destname 	= loc_name,
+		dist 		= floor(get_guidespot_dist(guide, guidespot)),
+		cost 		= get_guidespot_fare(guide, guidespot),
+		durt 		= time.t or 0,
+		durh 		= time.h or 0,
+		durm 		= time.m or 0,
+		level 		= get_guidespot_level(guide, guidespot),
+		gated 		= route_blocked_by_psy(guide, guidespot),
+	}
+	return tdata
+end
+
+function generate_menu_text(s1, s2, guidespot, parse_string)
+	local guide 	= get_guide_section(s1, s2)
+	local n 		= route_blocked_by_psy(guide, guidespot)
+	local northgate	= n and gated_menu_text
+	local use_van 	= gft.force_vanilla_fares or gga(g,s,"use_vcost")
+	local vanilla 	= use_van and vanilla_menu_text
+	parse_string 	= parse_string or northgate or vanilla or guide_menu_text
+	local tdata 	= compile_trip_data(guide, guidespot)	
+	local text 		= first_upper(gft.parse_trip_tokens(parse_string, tdata, true))
+	vl("generate_menu_text generated text for guidespot %s: %s",guidespot,text)
+	return text
+end
+
+function get_route_preamble(guide, custom)
+	vl("get_route_preamble for %s",guide)
+	local cfg 		= guides[guide] and guides[guide].cfg
+
+	local gated 	= guide_has_gated_routes(guide)
+	custom 			= custom or (cfg and cfg.custom_route_preamble or (gated and north_gated_pream))
+	local locstr 	= custom or (fftgtext..(guide or ""))
+	local pream		= gts(locstr)
+
+	if pream == locstr then
+		vl("no valid custom localization found, using default route list preamble")
+		pream 	= gts(default_pream)
+	end
+	vl("get_route_preamble for %s generated text: %s",guide,pream)
+
+	return pream
+end
+
+route_prefix	= " $clr_ui8"							-- start of route list string
+route_penult 	= gts("st_fft_and") .. " "				-- penultimate "and" before last route
+route_delim 	= "$clr_ui8, "							-- delimiter between route iterations
+route_for_sep 	= " "..gts("st_fft_for").." $clr_gld"	-- string between route name and cost
+route_end_cap 	= "$clr_ui8."							-- end of route list string
+
+function generate_route_list(s1, s2, guidespot, pream, nocost)
+	local function farestr(f)
+		return nocost and "" or (route_for_sep .. tostring(f))
+	end
+	local guide	= get_guide_section(s1, s2)
+	--printf("generate_route_list for guide %s",guide)
+	local rlist, fare, last, destname
+	local dests		= guide and guides and guides[guide]
+	if not dests then return "" end
+	local cfg 		= dests.cfg
+	local upper 	= cfg and cfg.upper_routes
+	local custom 	= cfg and cfg.custom_routelist_str
+	local gspot		= guidespot and dests[guidespot]
+	if gspot then
+		fare 	= get_guidespot_fare(guide, guidespot)
+		rlist 	= gts(gspot.custom_routelist_str or fftroute..(guidespot or ""))
+		rlist 	= string.format(rlist, fare)
+	elseif custom then
+		rlist 	= gts(custom)
+	else
+		rlist		= (pream or get_route_preamble(guide))..route_prefix
+		local slut 	= {}
+		local uslut = {}
+		for gs,dest in pairs(dests) do
+			if gs ~= "cfg" then
+				fare = string.format("%06d%s",get_guidespot_fare(guide, gs),gs)
+				table.insert(slut,fare)
+				uslut[fare] = gs
+			end
+		end
+		table.sort(slut)
+
+		for _,u in ipairs(slut) do
+			local g 		= guide
+			local s 		= uslut and uslut[u]
+			if s ~= "cfg" then
+				fare 		= last
+				if fare then
+					rlist 	= rlist..fare..route_delim
+				end
+				fare 		= tostring(get_guidespot_fare(g, s))
+				local cname = get_guide_attr(g, s, "name")
+				destname 	= gts(cname or (fftgtext..s))
+				local north = route_blocked_by_psy(g, s) and (" "..gts(north_gated_text)) or ""
+				last 		= destname..farestr(fare)..north
+				if upper then
+					last 	= first_upper(last)
+				end
+			end
+		end
+		rlist 	= parse_colors(rlist..route_penult..last..route_end_cap)
+		vl("route list generated: %s",rlist)
+	end
+	return rlist
+end
+
+function special_guide_routelist_text(s1, s2)
+	local guide		= get_guide_section(s1, s2)
+	local gdata		= guides[guide]
+	local cfg 		= gdata and gdata.cfg
+	local custom 	= cfg and cfg.custom_routelist_str
+	local routestr, tdata
+
+	--vl("special_guide_routelist_text called for guide %s:%s",guide, custom and ("\n* Custom string: "..custom) or "")
+
+	if custom then
+		custom = gts(custom)
+		local getfare = get_guidespot_fare
+		if guide == "ds_killer_guide_main_base" then
+			tdata = compile_trip_data(guide, "zat_trash_station")
+			routestr = gft.parse_trip_tokens(custom, tdata, true)
+		elseif guide == "zat_stancia_trader_merc" then
+			tdata = compile_trip_data(guide, "ds_soviet_store")
+			routestr = gft.parse_trip_tokens(custom, tdata, true)
+		elseif guide == "esc_3_16_military_trader" then
+			routestr = parse_colors(string.format(custom,
+					getfare(guide, "agroprom_guid_military"),
+					getfare(guide, "darkscape_guid_military"),
+					getfare(guide, "mil_to_yant_on_heli")
+				), nil, true)
+		elseif guide == "agr_smart_terrain_1_6_army_trader_stalker" then
+			routestr = parse_colors(string.format(custom,
+					getfare(guide, "escape_guid_military"),
+					getfare(guide, "mil_to_yant_on_heli")
+				), nil, true)
+		end
+	end
+	vl("special_guide_routelist_text: routestr = %s",routestr)
+	return routestr or generate_route_list(s1, s2)
+end
+
+function generate_guide_intro(s1, s2)
+	local guide	= get_guide_section(s1, s2)
+	local gdata	= guides[guide]
+	local cfg 	= gdata and gdata.cfg
+	local intro = cfg and cfg.intro
+	if not intro then return end
+	return generate_route_list(s1, s2, nil, gts(intro), cfg and cfg.only_dests)
+end
+
+--[[=====================================================================
+	Guide Travel dialog functors
+-- ==================================================================--]]
+--	SHORTCUTS
+-- ======================================================================
+ita = is_travel_allowed
+gmt	= generate_menu_text
+lgt	= start_local_npc_guide_travel
+mgt = start_newmap_npc_guide_travel
+-- ======================================================================
+--	TRAVEL PRECONDITION TESTS
+-- ======================================================================
+function allowed_marsh_post_guid(s1, s2) 			return ita(s1, s2, "marsh_post_guid") end
+function allowed_marsh_pump_water_guid(s1, s2) 		return ita(s1, s2, "marsh_pump_water_guid") end
+function allowed_marsh_old_church_guid(s1, s2) 		return ita(s1, s2, "marsh_old_church_guid") end
+function allowed_marsh_tech_yard_guid(s1, s2) 		return ita(s1, s2, "marsh_tech_yard_guid") end
+function allowed_escape_guid(s1, s2) 				return ita(s1, s2, "escape_guid") end
+function allowed_escape_guid_military(s1, s2) 		return ita(s1, s2, "escape_guid_military") end
+function allowed_escape_village_guid(s1, s2) 		return ita(s1, s2, "escape_village_guid") end
+function allowed_agroprom_guid(s1, s2) 				return ita(s1, s2, "agroprom_guid") end
+function allowed_l05_bar_guid(s1, s2) 				return ita(s1, s2, "l05_bar_guid") end
+function allowed_garbage_guid(s1, s2) 				return ita(s1, s2, "garbage_guid") end
+function allowed_military_guid(s1, s2) 				return ita(s1, s2, "military_guid") end
+function allowed_yantar_guid(s1, s2) 				return ita(s1, s2, "yantar_guid") end
+function allowed_jupiter_guid(s1, s2) 				return ita(s1, s2, "jupiter_guid") end
+function allowed_marsh_guid(s1, s2) 				return ita(s1, s2, "marsh_guid") end
+function allowed_pripyat_guid(s1, s2) 				return ita(s1, s2, "pripyat_guid") end
+function allowed_pripyat_guid_mon(s1, s2) 			return ita(s1, s2, "pripyat_guid_mon") end
+function allowed_l11_pripyat_guid(s1, s2) 			return ita(s1, s2, "l11_pripyat_guid") end
+function allowed_l11_pripyat_guid_mon(s1, s2) 		return ita(s1, s2, "l11_pripyat_guid_mon") end
+function allowed_red_forest_guid(s1, s2) 			return ita(s1, s2, "red_forest_guid") end
+function allowed_red_forest_guid_mon(s1, s2) 		return ita(s1, s2, "red_forest_guid_mon") end
+function allowed_zaton_guid(s1, s2) 				return ita(s1, s2, "zaton_guid") end
+function allowed_stancia_guid(s1, s2) 				return ita(s1, s2, "stancia_guid") end
+function allowed_pripyat_2_guid(s1, s2) 			return ita(s1, s2, "pripyat_2_guid") end
+function allowed_radar_guid(s1, s2) 				return ita(s1, s2, "radar_guid") end
+function allowed_jup_underground_2_guid(s1, s2)		return ita(s1, s2, "jupiter_underground_2_guid") end
+function allowed_yantar_from_freedom_guid(s1, s2)	return ita(s1, s2, "yantar_guid_from_freedom_base") end
+function allowed_jup_guid_bandit_cont(s1, s2) 		return ita(s1, s2, "jup_guid_bandit_cont") end
+function allowed_trucks_cemetery_guid(s1, s2) 		return ita(s1, s2, "trucks_cemetery_guid") end
+function allowed_zat_trash_station(s1, s2) 			return ita(s1, s2, "zat_trash_station") end
+function allowed_jupiter_guid_mon(s1, s2) 			return ita(s1, s2, "jupiter_guid_mon") end
+function allowed_darkscape_guid_military(s1, s2) 	return ita(s1, s2, "darkscape_guid_military") end
+function allowed_agroprom_guid_military(s1, s2) 	return ita(s1, s2, "agroprom_guid_military") end
+function allowed_mil_to_yant_on_heli(s1, s2) 		return ita(s1, s2, "mil_to_yant_on_heli") end
+function allowed_jup_depo(s1, s2) 					return ita(s1, s2, "jup_depo") end
+function allowed_out_entrance(s1, s2) 				return ita(s1, s2, "out_entrance") end
+function allowed_ds_soviet_store(s1, s2)			return ita(s1, s2, "ds_soviet_store") end
+-- ======================================================================
+--	DIALOG MENU OPTION TEXT
+-- ======================================================================
+function menutext_marsh_post_guid(s1, s2) 			return gmt(s1, s2, "marsh_post_guid") end
+function menutext_marsh_pump_water_guid(s1, s2) 	return gmt(s1, s2, "marsh_pump_water_guid") end
+function menutext_marsh_old_church_guid(s1, s2) 	return gmt(s1, s2, "marsh_old_church_guid") end
+function menutext_marsh_tech_yard_guid(s1, s2) 		return gmt(s1, s2, "marsh_tech_yard_guid") end
+function menutext_escape_guid(s1, s2) 				return gmt(s1, s2, "escape_guid") end
+function menutext_escape_guid_military(s1, s2) 		return gmt(s1, s2, "escape_guid_military") end
+function menutext_escape_village_guid(s1, s2) 		return gmt(s1, s2, "escape_village_guid") end
+function menutext_agroprom_guid(s1, s2) 			return gmt(s1, s2, "agroprom_guid") end
+function menutext_l05_bar_guid(s1, s2) 				return gmt(s1, s2, "l05_bar_guid") end
+function menutext_garbage_guid(s1, s2) 				return gmt(s1, s2, "garbage_guid") end
+function menutext_military_guid(s1, s2) 			return gmt(s1, s2, "military_guid") end
+function menutext_yantar_guid(s1, s2) 				return gmt(s1, s2, "yantar_guid") end
+function menutext_jupiter_guid(s1, s2) 				return gmt(s1, s2, "jupiter_guid") end
+function menutext_marsh_guid(s1, s2) 				return gmt(s1, s2, "marsh_guid") end
+function menutext_l11_pripyat_guid(s1, s2) 			return gmt(s1, s2, "l11_pripyat_guid") end
+function menutext_l11_pripyat_guid_mon(s1, s2) 		return gmt(s1, s2, "l11_pripyat_guid_mon") end
+function menutext_pripyat_guid(s1, s2) 				return gmt(s1, s2, "pripyat_guid") end
+function menutext_pripyat_guid_mon(s1, s2) 			return gmt(s1, s2, "pripyat_guid_mon") end
+function menutext_red_forest_guid(s1, s2) 			return gmt(s1, s2, "red_forest_guid") end
+function menutext_red_forest_guid_mon(s1, s2) 		return gmt(s1, s2, "red_forest_guid_mon") end
+function menutext_zaton_guid(s1, s2) 				return gmt(s1, s2, "zaton_guid") end
+function menutext_stancia_guid(s1, s2) 				return gmt(s1, s2, "stancia_guid") end
+function menutext_pripyat_2_guid(s1, s2) 			return gmt(s1, s2, "pripyat_2_guid") end
+function menutext_radar_guid(s1, s2) 				return gmt(s1, s2, "radar_guid") end
+function menutext_jup_underground_2_guid(s1, s2)	return gmt(s1, s2, "jupiter_underground_2_guid") end
+function menutext_yantar_from_freedom_guid(s1, s2)	return gmt(s1, s2, "yantar_guid_from_freedom_base") end
+function menutext_jup_guid_bandit_cont(s1, s2) 		return gmt(s1, s2, "jup_guid_bandit_cont") end
+function menutext_trucks_cemetery_guid(s1, s2) 		return gmt(s1, s2, "trucks_cemetery_guid") end
+function menutext_zat_trash_station(s1, s2) 		return gmt(s1, s2, "zat_trash_station") end
+function menutext_jupiter_guid_mon(s1, s2) 			return gmt(s1, s2, "jupiter_guid_mon") end
+function menutext_darkscape_guid_military(s1, s2) 	return gmt(s1, s2, "darkscape_guid_military") end
+function menutext_agroprom_guid_military(s1, s2) 	return gmt(s1, s2, "agroprom_guid_military") end
+function menutext_mil_to_yant_on_heli(s1, s2) 		return gmt(s1, s2, "mil_to_yant_on_heli") end
+function menutext_jup_depo(s1, s2) 					return gmt(s1, s2, "jup_depo") end
+function menutext_out_entrance(s1, s2) 				return gmt(s1, s2, "out_entrance") end
+function menutext_ds_soviet_store(s1, s2)			return gmt(s1, s2, "ds_soviet_store") end
+-- ======================================================================
+--	TRAVEL EXECUTION
+-- ======================================================================
+-- Local travel (Marsh-only, CS legacy)
+function travel_to_marsh_post_guid(s1, s2) 			lgt(s1, s2, "marsh_post_guid") end
+function travel_to_marsh_pump_water_guid(s1, s2) 	lgt(s1, s2, "marsh_pump_water_guid") end
+function travel_to_marsh_old_church_guid(s1, s2) 	lgt(s1, s2, "marsh_old_church_guid") end
+function travel_to_marsh_tech_yard_guid(s1, s2) 	lgt(s1, s2, "marsh_tech_yard_guid") end
+-- Travel to other maps
+function travel_to_escape_guid(s1, s2) 				mgt(s1, s2, "escape_guid") end
+function travel_to_escape_guid_military(s1, s2) 	mgt(s1, s2, "escape_guid_military") end
+function travel_to_escape_village_guid(s1, s2) 		mgt(s1, s2, "escape_village_guid") end
+function travel_to_agroprom_guid(s1, s2) 			mgt(s1, s2, "agroprom_guid") end
+function travel_to_l05_bar_guid(s1, s2) 			mgt(s1, s2, "l05_bar_guid") end
+function travel_to_garbage_guid(s1, s2) 			mgt(s1, s2, "garbage_guid") end
+function travel_to_military_guid(s1, s2) 			mgt(s1, s2, "military_guid") end
+function travel_to_yantar_guid(s1, s2) 				mgt(s1, s2, "yantar_guid") end
+function travel_to_jupiter_guid(s1, s2) 			mgt(s1, s2, "jupiter_guid") end
+function travel_to_marsh_guid(s1, s2) 				mgt(s1, s2, "marsh_guid") end
+function travel_to_l11_pripyat_guid(s1, s2) 		mgt(s1, s2, "l11_pripyat_guid") end
+function travel_to_l11_pripyat_guid_mon(s1, s2) 	mgt(s1, s2, "l11_pripyat_guid_mon") end
+function travel_to_pripyat_guid(s1, s2) 			mgt(s1, s2, "pripyat_guid") end
+function travel_to_pripyat_guid_mon(s1, s2) 		mgt(s1, s2, "pripyat_guid_mon") end
+function travel_to_red_forest_guid(s1, s2) 			mgt(s1, s2, "red_forest_guid") end
+function travel_to_red_forest_guid_mon(s1, s2) 		mgt(s1, s2, "red_forest_guid_mon") end
+function travel_to_zaton_guid(s1, s2) 				mgt(s1, s2, "zaton_guid") end
+function travel_to_stancia_guid(s1, s2) 			mgt(s1, s2, "stancia_guid") end
+function travel_to_pripyat_2_guid(s1, s2) 			mgt(s1, s2, "pripyat_2_guid") end
+function travel_to_radar_guid(s1, s2) 				mgt(s1, s2, "radar_guid") end
+function travel_to_jup_underground_2_guid(s1, s2)	mgt(s1, s2, "jupiter_underground_2_guid") end
+function travel_to_yantar_from_freedom_guid(s1, s2)	mgt(s1, s2, "yantar_guid_from_freedom_base") end
+function travel_to_jup_guid_bandit_cont(s1, s2) 	mgt(s1, s2, "jup_guid_bandit_cont") end
+function travel_to_trucks_cemetery_guid(s1, s2) 	mgt(s1, s2, "trucks_cemetery_guid") end
+function travel_to_zat_trash_station(s1, s2) 		mgt(s1, s2, "zat_trash_station") end
+function travel_to_jupiter_guid_mon(s1, s2) 		mgt(s1, s2, "jupiter_guid_mon") end
+function travel_to_darkscape_guid_military(s1, s2) 	mgt(s1, s2, "darkscape_guid_military") end
+function travel_to_agroprom_guid_military(s1, s2) 	mgt(s1, s2, "agroprom_guid_military") end
+function travel_to_mil_to_yant_on_heli(s1, s2) 		mgt(s1, s2, "mil_to_yant_on_heli") end
+function travel_to_jup_depo(s1, s2) 				mgt(s1, s2, "jup_depo") end
+function travel_to_out_entrance(s1, s2) 			mgt(s1, s2, "out_entrance") end
+function travel_to_ds_soviet_store(s1, s2)			mgt(s1, s2, "ds_soviet_store") end
+-- ======================================================================
+--	STARTUP
+-- ======================================================================
+function setup_wg_guides()
+	if western_goods_guide then
+		-- ==============================================================
+		-- WESTERN GOODS GUIDE COMPATIBILITY
+		-- ==============================================================
+		-- Adapted from western_goods_guide.load_guides_data
+		-- License : Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+       	vl("Injecting guides added by Western Goods")
+		local ini_guides = ini_file([[plugins\western_goods\guides\importer.ltx]])
+	    ini_guides:section_for_each(function(char_id)
+	        local config = utils_data.collect_section(ini_guides, char_id, true)
+	        for location,price in pairs(config) do
+	        	set_guide_attr(char_id, location, "vcost", price)
+	        	if price == 0 then
+	        		set_guidespot_fixed_fare(char_id, location, 0)
+	        	end
+	        	local gsdata 	= western_goods_utils.get_named_location(location)
+	        	local pos 		= gsdata.position
+	        	local facing 	= gsdata.orientation
+	        	local level 	= lname_for_gvid(gsdata.gvid)
+	        	set_guide_attr(char_id, location, "name", "st_" .. (gsdata.name or ""))
+	        	set_guide_attr(char_id, location, "level", level)
+	        	set_guidespot_dest(location, pos.x, pos.y, pos.z, gsdata.lvid, gsdata.gvid, facing.x, facing.y, facing.z)
+	        	vl("WG guide %s: spot %s | pos %s,%s,%s | lvid %s | gvid %s | facing %s,%s,%s",char_id, location, pos.x, pos.y, pos.z, gsdata.lvid, gsdata.gvid, facing.x, facing.y, facing.z)
+	        end
+	    end)
+   		-- ==============================================================
+   		--	MONKEYPATCHES FOR WESTERN GOODS GUIDE FUNCTIONS
+		-- ==============================================================
+		function wgg.get_route_label(actor, npc, dialog_id, phrase_id, next_id, p)
+		    local route = wgg.get_route_info(wgg.character_id, p[1])
+			return generate_menu_text(actor, npc, route.location)
+		end
+	    function wgg.can_pay(npc, actor)
+	    	local route = wgg.get_route_info(wgg.character_id, wgg.selected_route_idx)
+			return can_afford_fare(wgg.character_id, route.location)
+		end
+		function wgg.pay(npc, actor)
+		    local route = wgg.get_route_info(wgg.character_id, wgg.selected_route_idx)
+			charge_actor_fare(npc, actor, wgg.character_id, route.location)
+		end
+	end
+end
+-- ======================================================================
+
+function update_gft_vars()
+	fftgtext			= gft.fftgtext
+	fftroute			= gft.fftroute
+	default_pream 		= fftroute.."preamble_default"
+	guide_menu_text 	= gft.guide_menu_text
+	vanilla_menu_text 	= gft.vanilla_menu_text
+	gated_menu_text 	= gft.gated_menu_text
+end
+
+function on_option_change()
+	clear_guide_fare_cache()
+	update_gft_vars()
+end
+
+function actor_on_first_update()
+	update_gft_vars()
+	setup_wg_guides()
+end
+
+function on_game_start()
+	RegisterScriptCallback("on_option_change", on_option_change)
+	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+end

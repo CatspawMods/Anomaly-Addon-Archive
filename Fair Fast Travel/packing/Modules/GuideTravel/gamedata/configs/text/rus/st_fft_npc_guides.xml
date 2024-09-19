@@ -1,0 +1,164 @@
+<!--
+	Author: Catspaw (CatspawMods @ ModDB)
+	Addon: Fair Fast Travel
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+	NPC guide destination strings
+	Permission granted to freely translate into any language.
+-->
+
+<string_table>
+	<string id="st_fft_for">
+		<text>за</text>
+	</string>	
+	<string id="st_fft_and">
+		<text>и</text>
+	</string>	
+
+	<string id="st_fft_route_preamble_default">
+		<text>Вот маршруты, по которым я езжу, и их обычные цены:</text>
+	</string>
+
+	<string id="st_fft_guidetext_marsh_post_guid">
+		<text>наблюдательная застава</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_pump_water_guid">
+		<text>насосная станция</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_old_church_guid">
+		<text>старая церковь</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_tech_yard_guid">
+		<text>Машинный двор</text>
+	</string>
+	<string id="st_fft_guidetext_escape_village_guid">
+		<text>Деревня новичков на Кордоне</text>
+	</string>
+	<string id="st_fft_guidetext_agroprom_guid">
+		<text>Агропром</text>
+	</string>
+	<string id="st_fft_guidetext_l05_bar_guid">
+		<text>Бар</text>
+	</string>
+	<string id="st_fft_guidetext_escape_guid">
+		<text>к Кордону</text>
+	</string>
+	<string id="st_fft_guidetext_escape_guid_military">
+		<text>Южный блокпост на Кордоне</text>
+	</string>
+	<string id="st_fft_guidetext_garbage_guid">
+		<text>к Свалка</text>
+	</string>
+	<string id="st_fft_guidetext_military_guid">
+		<text>на Армейские склады</text>
+	</string>
+	<string id="st_fft_guidetext_radar_guid">
+		<text>Радар</text>
+	</string>	
+	<string id="st_fft_guidetext_yantar_guid">
+		<text>в Янтарь</text>
+	</string>
+	<string id="st_fft_guidetext_yantar_guid_from_freedom_base">
+		<text>в Янтарь</text>
+	</string>
+	<string id="st_fft_guidetext_jupiter_guid">
+		<text>к Окрестности «Юпитера»</text>
+	</string>
+	<string id="st_fft_guidetext_jupiter_guid_mon">
+		<text>к Окрестности «Юпитера»</text>
+	</string>
+	<string id="st_fft_guidetext_marsh_guid">
+		<text>к болоту</text>
+	</string>
+	<string id="st_fft_guidetext_pripyat_2_guid">
+		<text>в Припять</text>
+	</string>
+	<string id="st_fft_guidetext_l11_pripyat_guid">
+		<text>в Припять</text>
+	</string>
+	<string id="st_fft_guidetext_l11_pripyat_guid_mon">
+		<text>в Припять</text>
+	</string>
+	<string id="st_fft_guidetext_red_forest_guid">
+		<text>в Рыжий лес</text>
+	</string>
+	<string id="st_fft_guidetext_red_forest_guid_mon">
+		<text>в Рыжий лес</text>
+	</string>
+	<string id="st_fft_guidetext_pripyat_guid">
+		<text>на Окраины Припяти</text>
+	</string>
+	<string id="st_fft_guidetext_pripyat_guid_mon">
+		<text>на Окраины Припяти</text>
+	</string>
+	<string id="st_fft_guidetext_jupiter_underground_2_guid">
+		<text>к Путепровод «Припять-1»</text>
+	</string>
+	<string id="st_fft_guidetext_zaton_guid">
+		<text>в Затон</text>
+	</string>
+	<string id="st_fft_guidetext_zat_trash_station">
+		<text>Я готов, давайте отправимся в Затон</text>
+	</string>
+	<string id="st_fft_guidetext_ds_soviet_store">
+		<text>Я готов, давайте вернемся в Мёртвый город</text>
+	</string>
+	<string id="st_fft_guidetext_trucks_cemetery_guid">
+		<text>на Кладбище техники</text>
+	</string>
+	<string id="st_fft_guidetext_jup_guid_bandit_cont">
+		<text>на Склад контейнеров</text>
+	</string>
+	<string id="st_fft_guidetext_agroprom_guid_military">
+		<text>База на Агропроме</text>
+	</string>
+	<string id="st_fft_guidetext_darkscape_guid_military">
+		<text>Заправка в Тёмной лощине</text>
+	</string>
+	<string id="st_fft_guidetext_mil_to_yant_on_heli">
+		<text>Мобильная лаборатория на Янтаре</text>
+	</string>
+	<string id="st_fft_guidetext_stancia_guid">
+		<text>Север ЧАЭС</text>
+	</string>	
+	<string id="st_fft_guidetext_travel_to_jup_depo">
+		<text>Ладно</text>
+	</string>
+	<string id="st_fft_guidetext_travel_to_outskirts">
+		<text>Ага</text>
+	</string>
+	<string id="st_fft_guidetext_travel_to_escape_guid_military">
+		<text>Южный блокпост на Кордоне</text>
+	</string>
+	<string id="st_fft_guidetext_killer_guide_main_base_list">
+		<text>На Затоне есть станция переработки отходов - $fare рублей.</text>
+	</string>
+	<string id="travel_ds_killer_guide_main_base_1">
+		<text>Уверен? Можем вывести только на Затон.</text>
+	</string>
+	<string id="st_fft_guidetext_zaton_killer_guide_station_list">
+		<text>У тебя что, дырка в башке? Один Мёртвый город - и $fare бумажных друзей.</text>
+	</string>
+	<string id="st_fft_guidetext_cordon_army_airlift_list">
+		<text>База на Агропроме - %s рублей;\nЗаправка в Лощине - %s рублей;\nМобильная лаборатория на Янтаре - %s рублей.</text>
+	</string>
+	<string id="st_fft_guidetext_agro_army_airlift_list">
+		<text>Южный блокпост на Кордоне за %s руб и на Янтарь к Бункеру за %s руб.</text>
+	</string>
+
+<!-- Added in 2.7 -->
+
+	<string id="st_fft_northgate_pream">
+		<text>Некоторые из моих обычных маршрутов недоступны из-за опасных пси-излучений Выжигатель мозгов, но вам придется спросить об этом у яйцеголовых в Янтарь. А пока вот маршруты, по которым я езжу, и их стоимость:</text>
+	</string>
+
+	<string id="st_fft_northgate_text">
+		<text>(заблокировано пси-полем)</text>
+	</string>
+	
+<!-- Added in 2.8 -->
+
+	<string id="st_fft_tourist_intro">
+		<text>Так и есть. Туристом величают. Понимаешь, люблю я бродить по слабо обжитым территориям, поэтому и тропку нужную в два счёта найду. Ладно, вот куда я могу тебя отвести: </text>
+	</string>
+
+</string_table>

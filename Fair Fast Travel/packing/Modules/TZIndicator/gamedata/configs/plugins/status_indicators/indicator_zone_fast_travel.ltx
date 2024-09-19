@@ -1,0 +1,13 @@
+[ind_zone_fast_travel]
+name 		= FastTravelZone
+; Used as the key name in the indicators table both here and in actor_status.script
+enable 		= true
+; Add indicator to actor_status on startup
+index 		= 21
+typ 		= state
+script		= actor_status_travelzone
+func		= show_travel_zone_icon
+icon 		= ui_fft_travel_icon_black
+background 	= ui_inGame2_booster_slot
+anim_icon 	= false
+anim_bk 	= false

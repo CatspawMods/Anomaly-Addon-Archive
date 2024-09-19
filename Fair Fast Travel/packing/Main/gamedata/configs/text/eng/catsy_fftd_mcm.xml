@@ -1,0 +1,752 @@
+<!--
+	Author: Catspaw (CatspawMods @ ModDB)
+	Addon: Fair Fast Travel
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+	Permission granted to freely translate into any language.
+-->
+
+<string_table>
+	<string id="ui_mcm_menu_fftd">
+		<text>Fair Fast Travel</text>
+	</string>
+
+	<string id="st_fftd_mapspot_estdur">
+		<text>at least</text>
+	</string>
+
+	<string id="st_fftd_mapspot_meters">
+		<text>m</text>
+	</string>
+
+	<string id="ui_mcm_menu_gen">
+		<text>General</text>
+	</string>
+
+	<string id="ui_mcm_menu_ftcfg">
+		<text>Fast Travel</text>
+	</string>
+
+	<string id="ui_mcm_menu_bpcfg">
+		<text>Backpack Travel</text>
+	</string>
+
+	<string id="st_pda_backpack_travel_to">
+		<text>Backpack travel to</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_skillsystem_enabled">
+		<text>Enable Haruka Skill System integration</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_haruka_enabled_desc">
+		<text>If Haruka's Skill System mod is installed and this option is enabled, FFTD will take the movement speed multiplier from your Endurance skill into account and adjust travel times accordingly, e.g. a movement multiplier of 1.15 would reduce all fast travel times by approximately 15%.\n\nIf Skill System is not installed, this setting has no effect.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_usedisguisefix">
+		<text>Use fix for disguise system</text>
+	</string>
+
+	<string id="ui_mcm_fftd_useoldcalcs">
+		<text>Use Anomaly's awful default distance calcs</text>
+	</string>
+
+	<string id="ui_mcm_fftd_mpm">
+		<text>Minutes of game time passed per 100 meters traveled</text>
+	</string>
+
+	<string id="ui_mcm_fftd_rnd_enabled">
+		<text>Random delay enabled for travel duration?</text>
+	</string>
+
+	<string id="ui_mcm_fftd_rnd_hours_min">
+		<text>If enabled, minimum hours added</text>
+	</string>
+
+	<string id="ui_mcm_fftd_rnd_hours_max">
+		<text>If enabled, maximum hours added</text>
+	</string>
+
+	<string id="ui_mcm_fftd_rnd_minutes_min">
+		<text>If enabled, minimum minutes added</text>
+	</string>
+
+	<string id="ui_mcm_fftd_rnd_minutes_max">
+		<text>If enabled, maximum minutes added</text>
+	</string>
+
+	<string id="ui_mcm_header_loc_travel">
+		<text>Travel Within the Same Map</text>
+	</string>
+
+	<string id="ui_mcm_header_map_travel">
+		<text>Travel to Another Map</text>
+	</string>
+
+	<string id="st_currency_rub">
+		<text>RU</text>
+	</string>
+
+	<string id="st_fftd_toopoor">
+		<text>You can't afford to pay for passage</text>
+	</string>
+
+	<string id="st_fftd_mapspot_guideto">
+		<text>Hire a guide to</text>
+	</string>
+
+	<string id="st_fftd_farepaid_guide">
+		<text>You called up a nearby veteran guide, and paid them %s to bring you to your destination.</text>
+	</string>
+
+	<string id="st_fftd_guides_ignored">
+		<text>No guides are willing to come to this kind of place just to pick you up</text>
+	</string>
+
+	<string id="ui_mcm_menu_gtcfg">
+		<text>Guide Travel</text>
+	</string>
+
+	<string id="ui_mcm_fftd_cost_coef">
+		<text>Cost in rubles per meter traveled</text>
+	</string>
+
+	<string id="ui_mcm_fftd_pause_stats">
+		<text>Pause survival stats during travel?</text>
+	</string>
+
+	<string id="st_fftd_notyet">
+		<text>%s unavailable for another %s</text>
+	</string>
+
+	<string id="st_fft_hour">
+		<text>hour</text>
+	</string>
+	<string id="st_fft_hours">
+		<text>hours</text>
+	</string>
+	<string id="st_fft_minute">
+		<text>minute</text>
+	</string>
+	<string id="st_fft_minutes">
+		<text>minutes</text>
+	</string>
+	<string id="st_fft_second">
+		<text>second</text>
+	</string>
+	<string id="st_fft_seconds">
+		<text>seconds</text>
+	</string>
+
+	<string id="st_fftd_travelname_ft">
+		<text>fast travel</text>
+	</string>
+
+	<string id="st_fftd_travelname_bp">
+		<text>backpack travel</text>
+	</string>
+
+	<string id="st_fftd_travelname_gt">
+		<text>guide travel</text>
+	</string>
+
+	<string id="st_fftd_ftsystem">
+		<text>Fast Travel System</text>
+	</string>
+
+	<string id="st_fftd_guides_far">
+		<text>There are no guides close enough to respond</text>
+	</string>
+
+	<string id="st_fftd_enemy_guides">
+		<text>The only guides around here are enemies of your current faction</text>
+	</string>
+
+	<string id="st_fftd_guides_none">
+		<text>No guides are currently answering your messages</text>
+	</string>
+
+	<string id="ui_mcm_fftd_rnd_enabled_desc">
+		<text>If enabled for this travel type, a random delay may be added to each trip according to the settings below. A setting of 0-2 hours and 0-59 minutes will precisely replicate Anomaly's vanilla behavior, if desired.</text>
+	</string>	
+
+	<string id="ui_mcm_fftd_pause_stats_desc">
+		<text>If enabled, most survival stats (hunger, thirst) will be frozen for the duration of this travel type.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_enabled">
+		<text>Hire fast travel guides from the PDA map</text>
+	</string>
+
+	<string id="ui_mcm_fftd_ftcfg_travel_cooldown">
+		<text>Fast travel cooldown time</text>
+	</string>
+
+	<string id="ui_mcm_fftd_bpcfg_travel_cooldown">
+		<text>Backpack travel cooldown time</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_travel_cooldown">
+		<text>Guide travel cooldown time</text>
+	</string>
+
+	<string id="ui_mcm_fftd_ftcfg_travel_cooldown_desc">
+		<text>You must wait this many realtime seconds between fast travel trips. To disable this feature, set it to zero.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_bpcfg_travel_cooldown_desc">
+		<text>You must wait this many realtime seconds between backpack travel trips. To disable this feature, set it to zero.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_travel_cooldown_desc">
+		<text>You must wait this many realtime seconds between guided travel trips. To disable this feature, set it to zero.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_add_travel_time">
+		<text>Guides take time to reach you</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_add_travel_time_desc">
+		<text>If enabled, the trip duration will include calculations of how long it takes the guide to travel from their origin point to where the player is.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_local_only">
+		<text>Guides are local-only</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_local_only_desc">
+		<text>If enabled, guides will only be available if there is one who is based out of the current map.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_guides_loyal">
+		<text>Guides are loyal to their faction</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_guides_loyal_desc">
+		<text>If enabled, guides will refuse to do business with players who are enemies of their faction. Guides will, however, look the other way if the player is properly disguised.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_shared_cooldown">
+		<text>All travel types share cooldown trigger</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_shared_cooldown_desc">
+		<text>If this option is enabled, the cooldowns for all travel types are linked--that is, when one is triggered, they all are. For example, travelling to a backpack will also trigger the cooldowns, if any, for fast travel and guided travel.\n\nWhen disabled, each travel type tracks its cooldown separately, if applicable.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_debuglogs_enabled">
+		<text>Enable debug logging</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_allow_debug_travel">
+		<text>Allow travel to debug mapspots</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_allow_debug_travel_desc">
+		<text>When launched in Debug mode, vanilla Anomaly allows fast travel to stalkers, area markers, and various other debug mapspots that aren't normally valid destinations. This can be undesirable, because these markers can get in the way and cause you to teleport to the wrong place, like behind Barkeep or another trader. By default, FFT filters these out.\n\nEnabling this setting will revert to the vanilla behavior. Unless you are testing something, or stuck in the map and need to get out, it is recommended that you leave this option disabled at all times.</text>
+	</string>
+
+	<string id="ui_mcm_header_ft">
+		<text>Normal Fast Travel Settings</text>
+	</string>
+
+	<string id="ui_mcm_header_ftsub">
+		<text>This is the default form of fast travel, which is  controlled by all of Anomaly's fast travel settings. If a travel option says "fast travel" rather than "backpack" or "guide", it is using the settings on this page.</text>
+	</string>
+
+	<string id="ui_mcm_header_bp">
+		<text>Backpack Fast Travel Settings</text>
+	</string>
+
+	<string id="ui_mcm_header_bpsub">
+		<text>Backpack travel allows you to fast travel to placed backpack stashes, and is also managed by Anomaly's backpack travel settings. It will show the proper names for stashes that were created after FFT's installation.</text>
+	</string>
+
+	<string id="ui_mcm_header_gt">
+		<text>PDA Guide Travel Settings</text>
+	</string>
+
+	<string id="ui_mcm_header_gtsub">
+		<text>Guide travel is unique to FFT, and allows you to hire a veteran guide to escort you to your destination. You must pay them, but guides are assumed to pack supplies for the journey--your survival stats will be paused during the trip (configurable below), and they will come get you even if you are hurt or overweight, ignoring those two settings. However, there are certain places they simply will not go for pay.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_allow_pin_travel">
+		<text>Allow travel to Quick Pin markers? (requires PAW)</text>
+	</string>
+
+	<string id="ui_mcm_fftd_allow_pin_travel_desc">
+		<text>If enabled for this type of travel, Quick Pin markers can be used as fast travel destinations. Pin Travel requires the Personal Adjustable Waypoint addon, and this setting has no effect if it is not installed.\n\nThis is only allowed for Quick Pins because they can only be placed in locations that are reachable by the player.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_getpaw">
+		<text>The Pin Travel feature requires the Personal Adjustable Waypoint addon:\nhttps://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma</text>
+	</string>
+
+	<string id="ui_mcm_fftd_usedisguisefix_desc">
+		<text>A bug in vanilla Anomaly causes disguises to be blown if you fast travel near NPCs with time passage enabled. This setting fixes the bug by disabling time-based suspicion in the disguise settings until the timeskip is complete. This should never be disabled except for troubleshooting.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_useoldcalcs_desc">
+		<text>In vanilla Anomaly, the distance calculation only works correctly within the same map. When calculating travel to other maps, it often produces bizarre and nonsensical results. FFT replaces this method with a global distance calculation.\n\nThe vanilla method is bad and you should never enable this--but for compatibility reasons you can if you really, really need to.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_cost_coef_desc">
+		<text>By default, only Guide Travel has a cost. You can optionally set the other two travel types to have a cost as well, and if this value is greater than zero, they will use the same calculations as Guide Travel.</text>
+	</string>
+
+	<string id="st_fftd_farepaid_noguide">
+		<text>Fast travel fare paid: %s</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_ignore_status">
+		<text>Guides ignore "wounded" and "overweight" status</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_ignore_status_desc">
+		<text>If enabled, Guide Travel ignores the settings that prevent fast travel if the player is bleeding, irradiated, or overweight. This is to represent that guides are willing to administer first aid or help you carry some of your burden.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_combat_dist">
+		<text>NPC combat distance</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_combat_dist_desc">
+		<text>The maximum distance at which the player is considered to be "in combat" for the purposes of blocking fast travel.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_combat_timeout">
+		<text>NPC combat timeout</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_combat_timeout_desc">
+		<text>If an enemy has not seen the player for this many seconds, they no longer count for the purposes of blocking fast travel.</text>
+	</string>
+
+<!-- Added in 2.3 -->
+
+	<string id="ui_mcm_fftd_gen_use_warfare_fix">
+		<text>Use Warfare Alife Overhaul addon fix</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_use_warfare_fix_desc">
+		<text>If this is enabled and Warfare Mode is active, FFT will skip trying to add fast travel icons to the map. If map icons or context menus aren't working correctly when the Warfare Alife Overhaul addon is installed, try enabling this.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_allow_open_bp">
+		<text>Allow opening backpacks from the map</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_allow_open_bp_desc">
+		<text>Enabling this option will re-enable a vanilla feature that allows you to open a backpack from anywhere on the same map. For balance reasons, this is off by default.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gear_dmg_factor">
+		<text>Gear condition damage multiplier</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gear_dmg_factor_desc">
+		<text>Adjusts the multiplier for the amount of condition damage applied to all of the player's equipped gear when fast traveling. The further you go, the more wear and tear.\n\nValues around 1 or 2 are recommended as a "normal" difficulty setting, while the maximum setting of 11 is probably far beyond overkill for most normal play.\n\nSetting this to zero will disable the feature for this travel type.</text>
+	</string>
+
+<!-- Added in 2.3.1 -->
+
+	<string id="ui_mcm_fftd_gen_cond_dmg_mode">
+		<text>Gear condition damage feature</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_cond_dmg_mode_desc">
+		<text>All Gear: condition loss is applied to all equipped gear\n
+			Random: condition loss is applied to one equipped item at random\n
+			Armor: condition loss is applied to equipped armor and helmet\n
+			Weapons: condition loss is applied to equipped weapons\n
+			Disabled: turns off all equipment condition loss for all travel types, regardless of their individual settings.\n
+		</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_dmg_disabled">
+		<text>Disabled</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_dmg_all">
+		<text>All Gear</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_dmg_random">
+		<text>Random</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_dmg_armor">
+		<text>Armor</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_dmg_weapons">
+		<text>Weapons</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_minimum_health">
+		<text>Minimum health to travel</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_minimum_health_desc">
+		<text>If the player would normally be prevented from traveling due to radiation or bleeding, they will also be unable to travel if their health is below this percentage. Setting this to zero effectively disables the feature.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_minimum_satiety">
+		<text>Minimum satiety to travel</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_minimum_satiety_desc">
+		<text>If the player would normally be prevented from traveling due to radiation or bleeding, they will also be unable to travel if their "satiety" (hunger/thirst) is below this percentage. Setting this to zero effectively disables the feature.</text>
+	</string>
+
+<!-- Added in 2.4 -->
+
+	<string id="ui_mcm_fftd_ftcfg_enabled">
+		<text>Allow usage of regular fast travel</text>
+	</string>
+
+<!-- Added in 2.5 -->
+
+	<string id="ui_mcm_fftd_gtcfg_npc_guides_too">
+		<text>Some settings also apply to NPC guides</text>
+	</string>
+
+<!-- Added in 2.6 -->
+
+	<string id="st_fftd_farepaid_npcguide">
+		<text>You paid a guide %s to bring you to your destination.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_progressive_cost">
+		<text>Prices scale based on player rank</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_progressive_cost_desc">
+		<text>If enabled, all fast travel costs will increase along a curve based on the player's rank. The rise in cost is slow at first, and maxes out at the multiplier below.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_prog_coef_max">
+		<text>Cost multiplier at max rank</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_prog_coef_max_desc">
+		<text>When the player reaches the maximum rank defined below, all fast travel costs will be increased by this multiplier. Below that rank, the multiplier will scale along an escalating curve from zero to this setting. [Curve func: 1 - cos((x * pi) / 2)]</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_prog_rank_cap">
+		<text>Progressive rank cap</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_prog_rank_cap_desc">
+		<text>If the progressive cost setting is enabled, this is the rank value at which costs stop increasing.</text>
+	</string>
+	
+	<string id="ui_mcm_fftd_gtcfg_npc_cost_coef">
+		<text>Cost to hire NPCs in dialogue</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gtcfg_npc_cost_coef_desc">
+		<text>When hiring an NPC guide face-to-face from dialogue, this cost per meter is used instead of the usual value.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_force_vanilla_fares">
+		<text>Force vanilla NPC guide fares</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_force_vanilla_fares_desc">
+		<text>If enabled, the vanilla prices will be used instead of FFT's calculations when hiring NPC guides in person.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_nice_round_numbers">
+		<text>Generated fares round to 100s</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_nice_round_numbers_desc">
+		<text>If enabled, fares that FFT generates will be rounded down to the nearest 100 in order to resemble the cleaner appearance of the vanilla prices.</text>
+	</string>
+
+<!-- Added in 2.7 -->
+
+	<string id="st_fftd_mapspot_kilometers">
+		<text>km</text>
+	</string>
+
+	<string id="st_fft_travel_psyblocked">
+		<text>A powerful psy field prevents travel to this location</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_northgate">
+		<text>Brain Scorcher blocks travel</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_northgate_desc">
+		<text>If enabled, the Brain Scorcher's psy field will block all fast travel between the north and south of the map until it is deactivated, including guide travel. This setting has no effect unless story mode is enabled.</text>
+	</string>
+
+	<string id="ui_mcm_header_gameplay">
+		<text>Gameplay and Balance Settings</text>
+	</string>
+
+	<string id="ui_mcm_header_ui">
+		<text>Interface and Appearance Settings</text>
+	</string>
+
+	<string id="ui_mcm_header_debug">
+		<text>Troubleshooting and Compatibility</text>
+	</string>	
+
+	<string id="ui_mcm_fftd_gen_show_distdur">
+		<text>Show distance and duration in context menu</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_show_distdur_desc">
+		<text>If enabled, all fast travel options will show the distance and duration in the PDA map's context menu. Disabling this option will remove this useful information, making the menus appear more like vanilla.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_verbose_enabled">
+		<text>Debug logging is verbose</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_verbose_enabled_desc">
+		<text>"Verbose" is programmer-speak for "really spammy". This puts the maximum amount of information into the log, and must be enabled if you are reporting a problem.</text>
+	</string>
+
+	<string id="pol_smart_terrain_1_1">
+		<text>Meadow Crossroads</text>
+	</string>
+
+	<string id="pol_smart_terrain_1_3">
+		<text>Meadow Bandit Camp</text>
+	</string>
+
+<!-- Added in 2.8 -->
+
+	<string id="st_fft_travel_zoneblocked_1">
+		<text>You can only initiate %s from bases owned by a friendly faction</text>
+	</string>
+
+	<string id="st_fft_travel_zoneblocked_2">
+		<text>You can only initiate %s from within your own faction's bases</text>
+	</string>
+
+	<string id="ui_mcm_fft_zone_mode">
+		<text>Only allow travel from faction bases</text>
+	</string>
+
+	<string id="ui_mcm_fft_zone_mode_desc">
+		<text>Optionally restrict from where the player may initiate travel:\n
+			Disabled: travel may be initiated from anywhere, just as in vanilla.\n
+			Friendly: travel may only be initiated if the player is within the boundaries of a friendly faction base. Recommended for most players.\n
+			Own Faction: travel may only be initiated if the player is within the boundaries of their own faction's bases. This will impact some factions more than others.
+		</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_zonetravel_any">
+		<text>Disabled</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_zonetravel_friend">
+		<text>Friendly</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_zonetravel_ally">
+		<text>Own Faction</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_zones_use_disguises">
+		<text>Can use enemy faction bases while disguised</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_zones_use_disguises_desc">
+		<text>If a "only travel from faction bases" option is enabled, enabling this option as well will allow players in an appropriate disguise to also fast travel from the bases of unfriendly factions. Without this option, wearing a disguise will have no effect on fast travel permission.</text>
+	</string>
+
+<!-- Added in 2.9 -->
+
+    <string id="st_fft_costfree">
+        <text>Free</text>
+    </string>
+
+	<string id="ui_mcm_fftd_gen_show_zone_status_icon">
+		<text>Show status icon when in a travel zone</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_show_zone_status_icon_desc">
+		<text>When enabled, a unique icon will appear in the usual status indicator area when the player is within a fast travel zone that is valid for them. This setting is meaningless if you are not restricting the initiation of travel to faction bases or campfires.\n
+		You can choose from one of three styles--one vanilla, and two which are meant to match the style of the Alternative Icons set (b/w and color).</text>
+	</string>
+
+	<string id="ui_mcm_fft_campfire_base">
+		<text>Campfires count as faction bases</text>
+	</string>
+
+	<string id="ui_mcm_fft_campfire_base_desc">
+		<text>If enabled, being within 5 meters of a lit campfire counts as being within a faction base for the purposes of fast travel.</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_travelicon_disabled">
+		<text>Disabled</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_travelicon_vanilla">
+		<text>Vanilla</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_travelicon_altbw">
+		<text>Alticons BW</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_travelicon_altcolor">
+		<text>Alticons Color</text>
+	</string>
+
+	<string id="ui_mcm_fft_camp_mode">
+		<text>Campfires are fast travel destinations</text>
+	</string>
+
+	<string id="ui_mcm_fft_camp_mode_desc">
+		<text>If enabled, allows campfires to be used as fast travel destinations:\n
+			Any: any known campfire is a valid fast travel destination.\n
+			Lit: a campfire must be lit in order to be used as a fast travel destination.\n
+			Campfires aren't shown on the map in vanilla, so using them as fast travel destinations requires an addon such as Haruka's Display Campfires on Map (included in GAMMA):\n
+			https://www.moddb.com/mods/stalker-anomaly/addons/displaycampfiresonmap
+		</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_campmode_dis">
+		<text>Disabled</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_campmode_any">
+		<text>Any</text>
+	</string>
+
+	<string id="ui_mcm_lst_fft_campmode_lit">
+		<text>Lit</text>
+	</string>
+
+	<string id="st_fft_campfire">
+		<text>a campfire</text>
+	</string>
+
+<!-- Added in 2.10 -->
+
+	<string id="ui_mcm_fftd_gen_squad_local_travel">
+		<text>Teleport squadmates for local travel</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_squad_local_travel_desc">
+		<text>Vanilla Anomaly leaves player squadmates behind when traveling within the same map. If this option is enabled, Fair Fast Travel will attempt to teleport all companions so that they travel with the player. Note that due to engine limitations with teleporting NPCs, this doesn't always work reliably. This is not an issue with the addon.</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_squad_tp_bind">
+		<text>Teleport squad to player position</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_squad_tp_bind_desc">
+		<text>Fair Fast Travel will try to bring your companions to your current location. It does this automatically whenever you fast travel locally if that option is enabled, but you can manually force them to teleport to you. Unrescued hostages and companions told to wait will not be teleported.</text>
+	</string>
+
+<!-- Added in 2.14 -->
+
+	<string id="ui_mcm_fftd_gen_psyblock_mapspots">
+		<text>Blocked destinations use different icons</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_psyblock_mapspots_desc">
+		<text>If fast travel is blocked to a specific destination due to the Brain Scorcher still being active (or for any other reason), the icon used by the fast travel point will change to reflect that.</text>
+	</string>
+
+<!-- Added in 2.15 -->
+
+	<string id="encyclopedia_addons">
+		<text>Addons</text>
+	</string>
+
+	<string id="encyclopedia_addons_fair_fast_travel">
+		<text>Fair Fast Travel</text>
+	</string>
+
+	<string id="encyclopedia_addons_fair_fast_travel_text">
+		<text>
+			%c[pda_white]Overview: %c[255,0,200,220]https://www.youtube.com/watch?v=lzywMbXErVo\n
+			%c[ui_gray_1]
+			\n%c[pda_yellow]Fair Fast Travel%c[ui_gray_1] is a comprehensive overhaul for Anomaly's fast travel and backpack travel systems. It places you in total control over how travel behaves in your game, letting you make it as restrictive or as lenient as you like.\n 
+
+			\nEvery feature can be customized to your liking in the MCM menus. Don't want any travel type to have a cost? Set cost per meter to zero. Want to make it so that you can only fast travel to and from lit campfires? You can. %c[pda_white]If you don't like how something works, check MCM first!\n
+
+			\n%c[pda_white]From %c[pda_yellow]MCM > Fair Fast Travel%c[pda_white]:\n
+			%c[pda_yellow]General%c[pda_white]: Settings affecting the UI, or that apply to all travel types\n
+			%c[pda_yellow]Fast Travel%c[pda_white]: Travel type settings, only for options using the exact words "fast travel"\n
+			%c[pda_yellow]Backpack Travel%c[pda_white]: Travel type settings, apply only when traveling to a backpack stash\n
+			%c[pda_yellow]Guide Travel%c[pda_white]: Travel type settings, apply only to travel initiated with NPC guides, whether from the PDA or (with the Guide Travel Overhaul option installed) in person.\n \n
+
+			%c[pda_red]Still having difficulties? Scroll down for troubleshooting information.\n
+			%c[ui_gray_1]
+			\n%c[pda_green]FEATURE LIST\n
+			%c[pda_yellow]• Better Trip Durations%c[ui_gray_1]
+			\nBy default, travel within the same map consistently takes 10 minutes per 100m of distance (configurable in MCM), and--unlike vanilla Anomaly--has no random element. This is roughly equal to the time it would take to travel the same distance at the character's normal in-game walking speed--it assumes that you are neither sprinting nor being unduly delayed. Travel to other maps uses the same formula, but can be customized separately.\n \n
+
+			%c[pda_yellow]• Better Context Menu UI%c[ui_gray_1]
+			\nWhen right-clicking on a map icon, the fast travel option will now also tell you how far away it is, and approximately how long it will take to get there and (if applicable) how much it will cost.\n \n
+
+			%c[pda_yellow]• Guided Travel from PDA Map%c[ui_gray_1]
+			\nThe Zone is full of veteran guides of all factions who are willing to carry your loot or come to your aid--for a price. Now you can hire them by right-clicking on the map to go to any valid fast travel point. Hired guides are assumed to bring provisions for the journey, and your survival stats are paused during the trip. What's more, guided travel will ignore the "wounded" and "overweight" rules, if either are enabled in Anomaly's base game settings.\n \n
+
+			%c[pda_yellow]• NPC Guide Travel Overhaul%c[ui_gray_1]
+			\nIf you installed this option, NPC guides have been completely overhauled to bring them in line with the rest of the fast travel system--with details such as duration and cost fully managed by Fair Fast Travel. Travelling with a hired NPC guide now takes time just like any other fast travel trip, and obey all of Guide Travel's settings--including pausing your survival stats.\n \n
+
+			%c[pda_yellow]• Optional Equipment Condition Loss%c[ui_gray_1]
+			\nWhether it's from taking a stray bullet or the fact that you had to fire one, most journeys in the Zone leave their mark on your equipment in the form of normal wear and tear. If you wish, FFT lets you simulate this by applying a configurable amount of condition loss to your equipped items, with separate values for every travel type. Setting it to zero will disable the feature, and like everything else it is configurable in MCM.\n \n
+
+			%c[pda_yellow]• Configurable Cooldowns%c[ui_gray_1]
+			\nEach of the three fast travel types can now be configured with a cooldown of up to two hours before that travel type can be used again. The remaining duration will always be shown in the context menu option. Each travel type can have its own separate cooldown, or you can link them all so that when one cooldown is triggered, they all are. Of course, all cooldowns are optional--and off by default.\n \n
+
+			%c[pda_yellow]• Restrict Travel to Friendly Bases Only%c[ui_gray_1]
+			\nThis optional feature can separately restrict each travel type so that the player can only initiate travel when they are within a friendly base. This preserves the QoL of fast travel while preventing the player from cheaply teleporting out of anomaly fields or other dangers. Everything is configurable, including whether an appropriate faction disguise will "fool" this feature.\n \n
+
+			%c[pda_yellow]• Campfire Travel Options, Travel Indicator%c[ui_gray_1]
+			\nCampfires can optionally be used as fast travel destinations. By default, this is enabled only for Guide Travel, in order to represent the value added by a guide's knowledge of local routes. If you're using the option that restricts fast travel to bases only, you can now optionally choose to have lit campfires count as friendly bases for travel purposes as well. If installed, the feature also has an optional status indicator that will show when you're currently in a valid travel zone.\n \n
+
+			%c[pda_yellow]• Gate Northern Travel Behind Story Progress%c[ui_gray_1]
+			\nIf you're playing as most factions in Story Mode, and the Brain Scorcher hasn't been disabled yet, certain guide and fast travel routes will be unavailable until you shut off the Monolith's science toys. Of course, like anything else you can turn this off in MCM.\n \n
+
+			%c[pda_yellow]• Filter Out Debug Mapspots%c[ui_gray_1]
+			\nMany of us play Anomaly in Debug Mode for troubleshooting purposes, but playing in that mode enables unrestricted fast travel to any visible map icon--even to things like level transitions or traders that aren't supposed to be destinations, often resulting in accidents like teleporting behind the Barkeep or to the wrong icon. By default, FFT filters out all of these invalid mapspots while Debug Mode is on--but if you do actually want them, there's an option in MCM to re-enable them.\n \n
+
+			%c[pda_yellow]• Better Combat Detection%c[ui_gray_1]
+			\nWhen deciding whether you're in combat for travel purposes, FFT uses Anomaly's list of NPCs in combat, but filters out any that are more than 100 meters away, or which haven't seen you in the last ten seconds.\n \n
+
+			%c[pda_yellow]• Skill System Integration%c[ui_gray_1]
+			\nIf you have Haruka's %c[pda_white]Skill System%c[ui_gray_1] or one of the expansion addons built upon it, you can optionally choose to have Fair Fast Travel adjust all travel times based on the modifier from your Endurance skill.\n \n
+
+			%c[pda_yellow]• Personal Adjustable Waypoint Pin Travel%c[ui_gray_1]
+			\nIf you have my %c[pda_white]Personal Adjustable Waypoint%c[ui_gray_1] addon, you can now optionally allow fast travel to Quick Pin markers that you've placed in the world, letting you set up custom fast travel points virtually anywhere that you can reach!\n \n
+
+			%c[pda_yellow]• Western Goods Support%c[ui_gray_1]
+			\nThe latest version of the %c[pda_white]Western Goods%c[ui_gray_1] addon includes a dynamic guide feature which adds several new guides and allows others to be easily added. Fair Fast Travel is compatible with this feature straight out of the box, with no settings or installation options necessary. Western Goods guides will calculate and show distance and travel time just like any other.\n \n
+
+			%c[pda_yellow]• Disguise Bugfix%c[ui_gray_1]
+			\nFFT fixes a vanilla Anomaly bug that causes your disguise to be exposed if you fast travel in front of an NPC with the "consider time spent near NPCs" option enabled.\n \n
+			
+			--------------------------------------------------------------------------------\n \n
+			
+			%c[pda_red]Q: %c[pda_white]Why does it say something about a "powerful psy field" when I try to right-click on some destinations?\n
+			%c[pda_green]A: %c[pda_white]You are playing in story mode, and the Brain Scorcher is still active. You can disable this option in MCM: %c[pda_yellow]Fair Fast Travel > General > Brain Scorcher blocks travel\n \n
+
+			%c[pda_red]Q: %c[pda_white]Why can't I fast travel to a pin I placed using Personal Adjustable Waypoint?\n
+			%c[pda_green]A: %c[pda_white]Only Quick Pins can be used as destinations, because they can only be placed in spots where the player can reach. If this is a Quick Pin, then Pin Travel is not enabled in MCM for this travel type.\n \n
+
+			%c[pda_red]••• IMPORTANT: To report any bug, you must do the following: •••\n \n
+			%c[pda_white]1. Go to %c[pda_yellow]MCM > Fair Fast Travel > General\n
+			%c[pda_white]2. Enable %c[pda_yellow]Debug logging%c[pda_white] and %c[pda_yellow]Verbose logging\n
+			%c[pda_white]3. Exit and restart the game\n
+			%c[pda_white]4. Reproduce the issue as simply as possible\n
+			%c[pda_white]5. Get the game log from %c[pda_yellow](Your Anomaly Folder)\appdata\logs%c[pda_white] and post it somewhere online\n \n
+			
+			%c[ui_gray_1]If you do not, it is unlikely your log will have the information I need.\n
+
+			\nI don't get notified about Moddb comments, so you will generally get the quickest response on the GAMMA Discord, in Fair Fast Travel's discussion channel. Unsolicited DMs will be ignored.\n
+		</text>
+	</string>
+
+</string_table>

@@ -1,0 +1,577 @@
+-- ======================================================================
+--[[	Fair Fast Travel System - Guide Travel DXML Module
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+	https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
+
+	Replaces the dialogue entries of existing faction guides to allow 
+	their prices and strings to be dynamic and customizable.
+-- ==================================================================--]]
+local generate_route_list 			= [[<script_text>game_guide_travel.generate_route_list</script_text>]]
+local generate_guide_intro			= [[<script_text>game_guide_travel.generate_guide_intro</script_text>]]
+local generate_special_routelist 	= [[<script_text>game_guide_travel.special_guide_routelist_text</script_text>]]
+
+dialogue_replacements = {
+	-- ==================================================================
+	--	MARSH
+	-- ==================================================================
+	["gameplay\\dialogs_marsh.xml"] = {
+		-- Clear Sky base guide
+		["meet_guid_marsh_csky_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},
+		["travel_guid_marsh_csky"] = {	
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_marsh_post_guid</script_text>
+					<precondition>game_guide_travel.allowed_marsh_post_guid</precondition>
+					<action>game_guide_travel.travel_to_marsh_post_guid</action>
+					<action>dialogs.break_dialog</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_marsh_pump_water_guid</script_text>
+					<precondition>game_guide_travel.allowed_marsh_pump_water_guid</precondition>
+					<action>game_guide_travel.travel_to_marsh_pump_water_guid</action>
+					<action>dialogs.break_dialog</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_marsh_old_church_guid</script_text>
+					<precondition>game_guide_travel.allowed_marsh_old_church_guid</precondition>
+					<action>game_guide_travel.travel_to_marsh_old_church_guid</action>
+					<action>dialogs.break_dialog</action>
+				]]},
+				[5] = {		new = [[
+					<script_text>game_guide_travel.menutext_marsh_tech_yard_guid</script_text>
+					<precondition>game_guide_travel.allowed_marsh_tech_yard_guid</precondition>
+					<action>game_guide_travel.travel_to_marsh_tech_yard_guid</action>
+					<action>dialogs.break_dialog</action>
+				]]},
+				[6] = {		new = [[
+					<script_text>game_guide_travel.menutext_escape_village_guid</script_text>
+					<precondition>game_guide_travel.allowed_escape_village_guid</precondition>
+					<action>game_guide_travel.travel_to_escape_village_guid</action>
+				]]},
+				[7] = {		new = [[
+					<script_text>game_guide_travel.menutext_agroprom_guid</script_text>
+					<precondition>game_guide_travel.allowed_agroprom_guid</precondition>
+					<action>game_guide_travel.travel_to_agroprom_guid</action>
+				]]},
+				[8] = {		new = [[
+					<script_text>game_guide_travel.menutext_l05_bar_guid</script_text>
+					<precondition>game_guide_travel.allowed_l05_bar_guid</precondition>
+					<action>game_guide_travel.travel_to_l05_bar_guid</action>
+				]]},
+			},
+		},
+	},
+	-- ==================================================================
+	--	CORDON
+	-- ==================================================================
+	["gameplay\\dialogs_escape.xml"] = {
+		["guid_esc_mlr_military_list"] = {	-- Military airlift
+			phrases = {
+				[1] = {		new = generate_special_routelist,
+							del = {"text"},
+				},
+			},
+		},		["guid_esc_mlr_military_vert"] = {
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_agroprom_guid_military</script_text>
+					<precondition>game_guide_travel.allowed_agroprom_guid_military</precondition>
+					<action>game_guide_travel.travel_to_agroprom_guid_military</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_darkscape_guid_military</script_text>
+					<precondition>game_guide_travel.allowed_darkscape_guid_military</precondition>
+					<action>game_guide_travel.travel_to_darkscape_guid_military</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_mil_to_yant_on_heli</script_text>
+					<precondition>game_guide_travel.allowed_mil_to_yant_on_heli</precondition>
+					<action>game_guide_travel.travel_to_mil_to_yant_on_heli</action>
+				]]},
+			},
+		},
+	},	
+	-- ==================================================================
+	--	AGROPROM
+	-- ==================================================================
+	["gameplay\\dialogs_agroprom.xml"] = {
+		["guid_agr_mlr_military_list"] = {	-- Sergeant Spooner (Military Trader)
+			phrases = {
+				[1] = {		new = generate_special_routelist,
+							del = {"text"},
+				},
+			},
+		},
+		["guid_agr_mlr_military_vert"] = {
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_escape_guid_military</script_text>
+					<precondition>game_guide_travel.allowed_escape_guid_military</precondition>
+					<action>game_guide_travel.travel_to_escape_guid_military</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_mil_to_yant_on_heli</script_text>
+					<precondition>game_guide_travel.allowed_mil_to_yant_on_heli</precondition>
+					<action>game_guide_travel.travel_to_mil_to_yant_on_heli</action>
+				]]},
+			},
+		},
+	},
+	-- ==================================================================
+	--	BAR
+	-- ==================================================================
+	["gameplay\\dialogs_bar.xml"] = {
+		["meet_guid_bar_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},	
+		["travel_guid_bar"] = {	-- Navigator
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_escape_guid</script_text>
+					<precondition>game_guide_travel.allowed_escape_guid</precondition>
+					<action>game_guide_travel.travel_to_escape_guid</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_garbage_guid</script_text>
+					<precondition>game_guide_travel.allowed_garbage_guid</precondition>
+					<action>game_guide_travel.travel_to_garbage_guid</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_military_guid</script_text>
+					<precondition>game_guide_travel.allowed_military_guid</precondition>
+					<action>game_guide_travel.travel_to_military_guid</action>
+				]]},
+				[5] = {		new = [[
+					<script_text>game_guide_travel.menutext_yantar_guid</script_text>
+					<precondition>game_guide_travel.allowed_yantar_guid</precondition>
+					<action>game_guide_travel.travel_to_yantar_guid</action>
+				]]},
+				[6] = {		new = [[
+					<script_text>game_guide_travel.menutext_jupiter_guid</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_guid</precondition>
+					<action>game_guide_travel.travel_to_jupiter_guid</action>
+				]]},
+				[7] = {		new = [[
+					<script_text>game_guide_travel.menutext_marsh_guid</script_text>
+					<precondition>game_guide_travel.allowed_marsh_guid</precondition>
+					<action>game_guide_travel.travel_to_marsh_guid</action>
+				]]},
+			},
+		},
+	},
+	-- ==================================================================	
+	--	JUPITER
+	-- ==================================================================	
+	["gameplay\\dialogs_jupiter.xml"] = {
+		["meet_guid_jup_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},		
+		["travel_guid_jup"] = {	-- Garry
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_l05_bar_guid</script_text>
+					<precondition>game_guide_travel.allowed_l05_bar_guid</precondition>
+					<action>game_guide_travel.travel_to_l05_bar_guid</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_l11_pripyat_guid</script_text>
+					<precondition>game_guide_travel.allowed_l11_pripyat_guid</precondition>
+					<action>game_guide_travel.travel_to_l11_pripyat_guid</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_red_forest_guid</script_text>
+					<precondition>game_guide_travel.allowed_red_forest_guid</precondition>
+					<action>game_guide_travel.travel_to_red_forest_guid</action>
+				]]},
+				[5] = {		new = [[
+					<script_text>game_guide_travel.menutext_jup_underground_2_guid</script_text>
+					<precondition>game_guide_travel.allowed_jup_underground_2_guid</precondition>
+					<action>game_guide_travel.travel_to_jup_underground_2_guid</action>
+				]]},
+				[6] = {		new = [[
+					<script_text>game_guide_travel.menutext_zaton_guid</script_text>
+					<precondition>game_guide_travel.allowed_zaton_guid</precondition>
+					<action>game_guide_travel.travel_to_zaton_guid</action>
+				]]},
+			},
+		},
+		["meet_guid_jupdepo_mon_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},	
+		["travel_guid_jupdepo_mon_mon"] = {	-- Monolith trader at factory
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_red_forest_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_red_forest_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_red_forest_guid_mon</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_pripyat_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_pripyat_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_pripyat_guid_mon</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_l11_pripyat_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_l11_pripyat_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_l11_pripyat_guid_mon</action>
+				]]},
+			},
+		},
+	},
+	["gameplay\\dialogs_pripyat.xml"] = {
+	-- ==================================================================
+	--	OUTSKIRTS
+	-- ==================================================================
+		["meet_guid_pri_stalker"] = {
+			phrases = {
+				[1] = {		new = generate_guide_intro,
+							del = {"text"},
+				},
+			},
+		},	
+		["meet_guid_pri_stalker_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},	
+		["travel_guid_pri_stalker"] = {	-- Tourist
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_stancia_guid</script_text>
+					<precondition>game_guide_travel.allowed_stancia_guid</precondition>
+					<action>game_guide_travel.travel_to_stancia_guid</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_pripyat_2_guid</script_text>
+					<precondition>game_guide_travel.allowed_pripyat_2_guid</precondition>
+					<action>game_guide_travel.travel_to_pripyat_2_guid</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_radar_guid</script_text>
+					<precondition>game_guide_travel.allowed_radar_guid</precondition>
+					<action>game_guide_travel.travel_to_radar_guid</action>
+				]]},
+				[5] = {		new = [[
+					<script_text>game_guide_travel.menutext_jupiter_guid</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_guid</precondition>
+					<action>game_guide_travel.travel_to_jupiter_guid</action>
+				]]},
+				[6] = {		new = [[
+					<script_text>game_guide_travel.menutext_jup_underground_2_guid</script_text>
+					<precondition>game_guide_travel.allowed_jup_underground_2_guid</precondition>
+					<action>game_guide_travel.travel_to_jup_underground_2_guid</action>
+				]]},
+				[7] = {		new = [[
+					<script_text>game_guide_travel.menutext_zaton_guid</script_text>
+					<precondition>game_guide_travel.allowed_zaton_guid</precondition>
+					<action>game_guide_travel.travel_to_zaton_guid</action>
+				]]},
+			},
+		},
+		["meet_guid_prikbo_mon_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},	
+		["travel_guid_prikbo_mon_mon"] = {	-- Monolith guide
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_red_forest_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_red_forest_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_red_forest_guid_mon</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_jupiter_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_jupiter_guid_mon</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_l11_pripyat_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_l11_pripyat_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_l11_pripyat_guid_mon</action>
+				]]},
+			},
+		},
+	-- ==================================================================
+	--	PRIPYAT
+	-- ==================================================================	
+		["travel_guid_l11pri_mon_haron"] = {	-- Charon in the Palace of Culture
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_pripyat_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_pripyat_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_pripyat_guid_mon</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_jupiter_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_jupiter_guid_mon</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_red_forest_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_red_forest_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_red_forest_guid_mon</action>
+				]]},
+			},
+		},
+
+	},
+	
+	-- ==================================================================
+	--	ZATON
+	-- ==================================================================
+	["gameplay\\dialogs_zaton.xml"] = {
+		["meet_guid_zat_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},
+		["travel_guid_zat"] = {		-- Pilot
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_l11_pripyat_guid</script_text>
+					<precondition>game_guide_travel.allowed_l11_pripyat_guid</precondition>
+					<action>game_guide_travel.travel_to_l11_pripyat_guid</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_pripyat_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_pripyat_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_pripyat_guid_mon</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_jupiter_guid</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_guid</precondition>
+					<action>game_guide_travel.travel_to_jupiter_guid</action>
+				]]},
+			},
+		},
+		["meet_zaton_killer_guide_station_list"] = {	-- Merc guide
+			phrases = {
+				[1] = {		new = generate_special_routelist,
+							del = {"text"},
+				},
+			},
+		},
+		["travel_zaton_killer_guide_station_base"] = {
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_ds_soviet_store</script_text>
+					<precondition>game_guide_travel.allowed_ds_soviet_store</precondition>
+					<action>game_guide_travel.travel_to_ds_soviet_store</action>
+				]]},
+			},
+		},
+		
+	},	
+	-- ==================================================================
+	--	ARMY WAREHOUSES
+	-- ==================================================================	
+	["gameplay\\dialogs_military.xml"] = {
+		["mil_freedom_guid_go"] = {	-- Leshiy - Freedom guide (often dies)
+			phrases = {
+				[2] = {		new = 
+					[[<script_text>game_guide_travel.menutext_jupiter_guid</script_text>]],
+							del = {"text"},
+				},
+				[3] = {		new = [[
+					[[<script_text>game_guide_travel.menutext_escape_guid</script_text>]],
+							del = {"text"},
+				},
+				[4] = {	new = 
+					[[<script_text>game_guide_travel.menutext_yantar_from_freedom_guid</script_text>]],
+							del = {"text"},
+				},
+				[8] = {		new = [[
+					<precondition>game_guide_travel.allowed_jupiter_guid</precondition>
+					<action>game_guide_travel.travel_to_jupiter_guid</action>
+				]],
+							del = {"precondition","action"},
+				},
+				[9] = {		new = [[
+					<precondition>game_guide_travel.allowed_escape_guid</precondition>
+					<action>game_guide_travel.travel_to_escape_guid</action>
+				]],
+							del = {"precondition","action"},
+				},
+				[10] = {	new = [[
+					<precondition>game_guide_travel.allowed_yantar_from_freedom_guid</precondition>
+					<action>game_guide_travel.travel_to_yantar_from_freedom_guid</action>
+				]],
+							del = {"precondition","action"},
+				},
+			},
+		},
+	},	
+
+	-- ==================================================================
+	--	DEAD CITY
+	-- ==================================================================
+	["gameplay\\dialogs_deadcity.xml"] = {
+		["meet_ds_killer_guide_main_base_list"] = {
+			phrases = {
+				[1] = {		new = generate_special_routelist,
+							del = {"text"},
+				},
+			},
+		},
+		["travel_ds_killer_guide_main_base"] = {	-- Merc base
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_zat_trash_station</script_text>
+					<precondition>game_guide_travel.allowed_zat_trash_station</precondition>
+					<action>game_guide_travel.travel_to_zat_trash_station</action>
+				]]},
+			},
+		},
+	},	
+	-- ==================================================================
+	--	DARK VALLEY
+	-- ==================================================================	
+	["gameplay\\dialogs_darkvalley.xml"] = {
+		["travel_guid_dv_bandit"] = {	-- Bandit base
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_trucks_cemetery_guid</script_text>
+					<precondition>game_guide_travel.allowed_trucks_cemetery_guid</precondition>
+					<action>game_guide_travel.travel_to_trucks_cemetery_guid</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_jup_guid_bandit_cont</script_text>
+					<precondition>game_guide_travel.allowed_jup_guid_bandit_cont</precondition>
+					<action>game_guide_travel.travel_to_jup_guid_bandit_cont</action>
+				]]},
+			},
+		},
+	},
+	-- ==================================================================
+	--	RED FOREST
+	-- ==================================================================	
+	["gameplay\\dialogs_redforest.xml"] = {
+		["meet_guid_red_forest_mon_list"] = {
+			phrases = {
+				[1] = {		new = generate_route_list,
+							del = {"text"},
+				},
+			},
+		},
+		["travel_guid_red_forest_mon"] = {	-- Monolith trader
+			phrases = {
+				[2] = {		new = [[
+					<script_text>game_guide_travel.menutext_pripyat_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_pripyat_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_pripyat_guid_mon</action>
+				]]},
+				[3] = {		new = [[
+					<script_text>game_guide_travel.menutext_jupiter_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_jupiter_guid_mon</action>
+				]]},
+				[4] = {		new = [[
+					<script_text>game_guide_travel.menutext_l11_pripyat_guid_mon</script_text>
+					<precondition>game_guide_travel.allowed_l11_pripyat_guid_mon</precondition>
+					<action>game_guide_travel.travel_to_l11_pripyat_guid_mon</action>
+				]]},
+			},
+		},
+	},
+--[[	-- Currently leaving story guides alone, they use vanilla logic
+	-- ==================================================================
+	--	ISG STORYLINE (Hollow Boundaries)
+	-- ==================================================================	
+	["gameplay\\dialogs_lostzone_hb.xml"] = {
+		["hb_hernandez_guide_dialog"] = {	-- Hernandez
+			phrases = {
+				[5] = {		new = [[
+					<script_text>game_guide_travel.menutext_jup_depo</script_text>
+					<action>game_guide_travel.travel_to_jup_depo</action>
+				]]--,
+							--del = {"text","action"}
+				--},
+				--[6] = {		new = [[
+					--<script_text>game_guide_travel.menutext_out_entrance</script_text>
+					--<action>game_guide_travel.travel_to_out_entrance</action>
+				--]]},
+			--},
+		--},
+	--},
+--]]
+}
+-- ======================================================================
+
+function query_element(xml_obj, str)
+	local res = xml_obj:query(str)
+    if res and res[1] then
+     	return res[1]
+    end
+end
+
+function remove_element(xml_obj, node, element)
+	if not (node and element) then return end
+	local path = node.." "..element
+    local res = xml_obj:query(path)
+    if res then for k,v in pairs(res) do
+    	--local el_text = xml_obj:getText(v)
+    	--printf("<FFT> Removing %s element containing ( %s ) from:\n* %s\n* (%s | %s)",element,el_text,path,v,v and v.el)
+    	xml_obj:removeElement(v)
+    end end
+end
+
+
+
+function on_xml_read()
+    RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj)
+        local dr = dialogue_replacements[xml_file_name]
+        if dr then
+        	printf("[FFT] Fair Fast Travel is processing DXML for %s", xml_file_name)
+        	
+            local el, dialog_node, node
+
+            for did, p in pairs(dr) do
+            	dialog_node = "dialog [id="..did.."] phrase_list"
+            	--printf("<FFT> processing dialog %s @ %s",did,dialog_node)
+            	for pid,edits in pairs(p.phrases) do
+            		node = dialog_node.." phrase [id="..tostring(pid).."]"
+            		--printf("[FFT] processing phrase %s @ %s",pid,node)
+		            for _, ele in pairs(edits and edits.del or {"text", "precondition", "action"}) do
+		            	--printf("<FFT> removing existing %s elements",ele)
+		            	remove_element(xml_obj, node, ele)
+		            end
+		            local text = edits and edits.new or ""
+		            if text then
+			            --printf("<FFT> inserting dialog block into node: %s\n* %s",node,text)
+			            el = query_element(xml_obj, node)
+			            xml_obj:insertFromXMLString(text, el, 1)
+			        else
+			        	printf("<FFT> ERROR: no new XML block provided for %s")
+			        end
+            	end
+            end
+        end
+    end)
+end
+

@@ -1,0 +1,169 @@
+; This file defines the custom space restrictors for the fast
+; travel zones in each faction base.
+;
+; If you change the space restrictors during mid-save, you 
+; must regenerate them by executing the following function:
+;
+; game_fast_travel.spawn_fast_travel_zones(true)
+;
+; parameters used in the zone attributes:
+; x, y, z, lvid, gvid, size_x, size_y, size_z, [angle_rad]
+
+[rookie_village]
+owner = stalker
+smart = esc_smart_terrain_2_12
+zone1 = -206.0193, -20.3856, -148.0225, 47034, 453, 100, 20, 50
+
+[northern_farm]
+owner = stalker
+smart = esc_smart_terrain_5_7
+zone1 = 1.1010, 0.5372, 274.1233, 303740, 434, 41, 20, 48
+
+[army_cordon]
+owner = army
+smart = esc_smart_terrain_3_16
+zone1 = -146.5695, -29.8804, -373.57, 106749, 373, 77, 20, 53
+
+[army_dv]
+owner = army
+smart = val_smart_terrain_1_2
+zone1 = 161.9911, 5.8265, -256.5998, 344805, 1483, 108, 30, 65
+
+[garbage_hangar]
+smart = gar_smart_terrain_3_5
+zone1 = -92.8095, 10, -2.1873, 105307, 726, 104, 25, 80
+
+[freedom_base]
+owner = freedom
+smart = mil_smart_terrain_7_7
+zones = 2
+zone1 = -5.9021, -6.1777, 37.5306, 286933, 2068, 242, 40, 95
+zone2 = -23.4858, -8.4476, -39.1581, 269772, 2096, 272, 40, 62
+
+[rostok_bar]
+owner = dolg
+smart = bar_dolg_general
+zone1 = 162.2871, 0, 70.5831, 42945, 1684, 160, 40, 175
+
+[csky_base]
+owner = csky
+smart = mar_smart_terrain_base
+zone1 = -154.05, 0.5899, -310.8667, 68285, 136, 74, 20, 82
+
+[renegade_base]
+owner = renegade
+smart = mar_smart_terrain_3_3
+zone1 = -189.4919, 1.0513, 406.1832, 46698, 80, 52, 10, 36
+
+[army_marsh]
+owner = army
+smart = mar_smart_terrain_10_5
+zone1 = 409.5656, 3.5093, 258.7098, 413488, 238, 91, 20, 56
+
+[merc_base]
+owner = killer
+smart = cit_killers
+zone1 = -40.2302, 7.3827, 38.1789, 108895, 2367, 60, 20, 64
+
+[merc_waste]
+owner = killer
+smart = zat_b40_smart_terrain
+zone1 = 325.2908, 35, -388.2797, 1511198, 4138, 182, 30, 114
+
+[yantar]
+owner = ecologist
+smart = yan_smart_terrain_6_4
+zone1 = 26.7268, -10.6048, -270.3784, 77762, 2281, 64, 20, 72
+
+[army_agroprom]
+owner = army
+smart = agr_smart_terrain_1_6
+zone1 = -152.3414, 0, -181.0988, 64203, 913, 96, 30, 96
+
+[agro_factory]
+smart = agr_smart_terrain_4_4
+zone1 = 9.5565, 10, 6.5732, 207713, 1026, 114, 30, 68
+
+[darkscape_farm]
+smart = ds2_domik_st
+zone1 = 261.2, 0, -184.6248, 682165, 1246, 48, 5, 38
+
+[bandit_meadow]
+owner = bandit
+smart = pol_smart_terrain_1_3
+zone1 = -106.0125, -0.0276, 161.7281, 23133, 5323, 120, 20, 60, 6.0737
+
+[bandit_dv]
+owner = bandit
+smart = val_smart_terrain_7_4
+zones = 3
+zone1 = 8.5127, 0.0873, 31.7904, 177084, 1512, 90, 40, 38
+zone2 = 0.0795, 1.1741, -8.066, 168124, 1514, 106, 40, 43
+zone3 = 16.1829, 0.3825, -65.6342, 184758, 1649, 65, 50, 73
+
+[bandit_tc]
+owner = bandit
+smart = trc_sim_20
+zone1 = 222.4946, 7.6536, 306.5898, 734376, 5297, 38.5, 10, 39
+
+[bandit_warehouse]
+owner = bandit
+smart = jup_a12
+zone1 = -419.5993, 0.0112, -355.4865, 17833, 4469, 74, 20, 79
+
+[yanov]
+owner = freedom
+smart = jup_a6
+zones = 2
+zone1 = -51.4095, 3.4869, 197.6493, 633855, 4478, 40.5, 30, 74
+zone2 = -23.4957, 4.5931, 238.4627, 677742, 4559, 44.5, 40, 31
+
+[mobile_lab]
+owner = ecologist
+smart = jup_b41
+zone1 = -213.0871, 0, 74.1083, 356691, 4486, 50, 15, 40
+
+[skadovsk]
+owner = stalker
+smart = zat_stalker_base_smart
+zone1 = 132.4929, -7.3461, 183.5880, 1193488, 4457, 66, 20, 18
+
+[laundromat]
+owner = stalker
+smart = pri_a16
+zone1 = 143.4503, 10, -186.0260, 373566, 4921, 31, 25, 40
+
+[outskirts_bookstore]
+owner = killer
+smart = pri_a18_smart_terrain
+zone1 = -172.4671, 0.5458, -358.7828, 39389, 5013, 28, 20, 36
+
+[palace_culture]
+owner = monolith
+smart = pri_monolith
+zone1 = -12.7043, 6.9439, 168.2624, 4294967295, 2954, 157, 40, 114
+
+[monolith_x8]
+owner = monolith
+smart = pri_b306
+zone1 = -63.1031, 8.6007, 91.4395, 126729, 4937, 60, 40, 60
+
+[monolith_bs]
+owner = monolith
+smart = rad_antenna_patrol
+zone1 = 28.0392, -1.8515, 10.3282, 19769, 2500, 126, 30, 168
+
+[sin_oldmine]
+owner = greh
+smart = red_smart_terrain_3_2
+zone1 = -127.5437, 5, -49.036, 6791, 2838, 86, 10, 66
+
+[limansk_radio]
+owner = monolith
+smart = lim_smart_terrain_10
+zone1 = 64.3670, 20, 286.9821, 58644, 2473, 70, 40, 90
+
+[limansk_consite]
+owner = monolith
+smart = lim_smart_terrain_9
+zone1 = 7.3627, 24.4966, 190.6140, 29483, 2441, 78, 60, 44

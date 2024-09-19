@@ -1,0 +1,100 @@
+-- ======================================================================
+--[[	Status Indicators - Load from LTX
+-- ====================================================================]]
+script_version 	= 1.2
+release_date 	= 20240705
+--[[=====================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+	https://www.youtube.com/@CatspawAdventures
+
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+
+	1.1 - added enable/disable logic.
+
+	1.2 - simplified logic to fix indicator enable/disable issues.
+-- ====================================================================]]
+if actor_status then end -- preload actor_status.script namespace
+file_data_loaded, started = false, false
+loaded_indicators = {}
+
+function strbool(s)
+	-- Returns boolean value whether it was stored as a string or bool
+	return s and ((s == "true") or (s == true)) and true or false
+end
+
+function load_file_data()
+	local inds_ini = ini_file_ex("plugins\\status_indicators\\indicators.ltx")
+	local inds_ltx = inds_ini:get_sections(true)
+	for ind, _ in pairs(inds_ltx) do
+		printf("# actor_status_from_ltx is loading actor status indicator %s", ind)
+		local icfg = inds_ini:collect_section(ind)
+		if icfg and icfg.name and icfg.script and icfg.func then
+			loaded_indicators[icfg.name] = icfg
+			if not icfg.background then
+				if icfg.typ == "state" then
+					icfg.background = "ui_inGame2_indicator_slot"
+				else
+					icfg.background = "ui_inGame2_booster_slot"
+				end
+			end
+			local functor 	= { icfg.script, icfg.func }
+			local cfg		= loaded_indicators[icfg.name]
+			cfg.enable 		= strbool(icfg.enable)
+			cfg.index 		= tonumber(icfg.index or 0)
+			cfg.functor 	= functor or (function() return false end)
+			cfg.anim_icon 	= strbool(icfg.anim_icon)
+			cfg.anim_bk 	= strbool(icfg.anim_bk)
+			cfg.anim_period = tonumber(icfg.anim_period or 0)
+			-- All else is loaded raw
+		end
+	end
+	return not is_empty(loaded_indicators)
+end
+file_data_loaded = load_file_data()
+-- =======================================================================
+
+function actor_status.is_indicator_enabled(name)
+	local ind = name and actor_status.indicators[name] or loaded_indicators[name]
+	if not ind then return false end
+	return ind.enable or (ind.enable == nil) -- catches vanilla or third-party indicators
+end
+
+function actor_status.enable_indicator(name)
+	if not (name and db.actor) then return end
+	local inds 						= actor_status.indicators
+	if not loaded_indicators[name] then return end
+	loaded_indicators[name].enable 	= true
+	inds[name] 						= loaded_indicators[name]
+end
+
+function actor_status.disable_indicator(name)
+	if not (name and db.actor) then return end
+	if not actor_status.indicators[name] then return end
+	loaded_indicators[name] 		= actor_status.indicators[name]
+	actor_status.indicators[name] 	= nil
+	if not loaded_indicators[name] then return end
+	loaded_indicators[name].enable 	= false
+	
+end
+-- =======================================================================
+function setup_indicators()
+	if started then return end
+	if is_empty(loaded_indicators) then return end
+	actor_status.prepare_indictors_list()
+	for k,v in pairs(loaded_indicators) do
+		actor_status.indicators[k] = v.enable and v
+	end
+	started = true
+end
+
+function on_game_start()
+	if file_data_loaded then
+		RegisterScriptCallback("actor_on_first_update", setup_indicators)
+	end
+end
