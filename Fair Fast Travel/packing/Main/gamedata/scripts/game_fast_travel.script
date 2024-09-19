@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.14"
-release_date 	= 20240919
+script_version 	= "2.14.1"
+release_date 	= 20240919.1
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
@@ -1538,6 +1538,9 @@ end
 
 function set_travel_point_mapspot(id, mapspot, hint)
     if level.map_remove_all_object_spots then
+    	local se_obj = id and alife_object(id)
+    	local cls = se_obj and se_obj:clsid()
+    	local name = se_obj and se_obj:name()
         level.map_remove_all_object_spots(id)
     else
     	if has_mapspot(id, mapspot) then
@@ -1573,11 +1576,10 @@ function update_travel_markers()
 		local curr_lvl = level.name()
 		local not_warfare = not (use_warfare_fix and IsWarfare())
 		for id = 1,65534 do
-			set_travel_point_mapspot(id)
 			local smart = alife():object(id)
 			local smartname = smart and smart:name()
 			if not_warfare and (smart and smart:clsid() == clsid.smart_terrain and smartname and tsmarts[smartname]) then
-				
+				set_travel_point_mapspot(id)
 				local level_name = alife():level_name(gg():vertex(smart.m_game_vertex_id):level_id())
 				local ftstate = basecfg["ft"].state
 				local visited = (game_statistics.has_actor_visited_smart(smartname) == true)
