@@ -1,0 +1,1752 @@
+<!-- ====================================================================
+	Personal Adjustable Waypoint
+    Author: Catspaw
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+
+    Permission granted to freely translate into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+	<string id="st_paw_waypoint_set">
+		<text>Установить точку маршрута здесь</text>
+	</string>
+	
+	<string id="st_paw_waypoint_mov">
+		<text>Переместить точку маршрута сюда</text>
+	</string>
+	
+	<string id="st_paw_waypoint_del">
+		<text>Удалить текущую точку маршрута</text>
+	</string>
+	
+	<string id="st_paw_placed_waypoint">
+		<text>Размещенная точка маршрута</text>
+	</string>
+	
+	<string id="st_paw_proceed">
+		<text>Продолжайте движение к выбранной вами точке маршрута</text>
+	</string>
+	
+<!-- Added in 1.2 -->
+	<string id="st_paw_missing_waypoint_error">
+		<text>Размещенный маркер точки маршрута отсутствовал в текущем сохранении, поэтому он был удален во избежании сбоя. Это сделано в целях безопастности и не должно повториться после вашего следующего сохранения.</text>
+	</string>
+
+<!-- Added in 1.3 -->
+	<string id ="ui_mcm_menu_pawsys">
+		<text>PAW</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawgen">
+		<text>Общие настройки</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawpins">
+		<text>Маркеры-булавки для карты</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawmenu">
+		<text>Контекстное меню</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawbinds">
+		<text>Сочетания клавиш / Мышь</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_enabled">
+		<text>Включите персональную настраиваемую систему точек маршрута</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_uninstall_desc">
+		<text>Включение этой опции приведет к очистке всех текущих данных точек маршрута, удалению всех маркеров точек маршрута на карте и отмене любой активной задачи определения точек маршрута.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_milpda">
+		<text>Интеграция с аддоном "КПК Milspec"</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_milpda_desc">
+		<text>Обеспечивает интеграцию/совместимость с аддоном "КПК Milspec". \n\nhttps://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_debuglogs">
+		<text>Включить ведение журнала отладки</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_debuglogs_desc">
+		<text>Для устранения неполадок. Если вы столкнулись со сбоем или другой проблемой с PAW, пожалуйста:\n1. Включите эту опцию\n2. Воспроизведите проблему\n3. Загрузите копию журнала, чтобы я мог ознакомиться с ней\n\nБез ведения журнала отладки маловероятно, что ваш лог покажет что-либо полезное.</text>
+	</string>
+
+	<string id="st_paw_pin_add">
+		<text>Добавить маркер на карте здесь</text>
+	</string>
+
+	<string id="st_paw_pin_del">
+		<text>Удалить этот маркер</text>
+	</string>
+
+	<string id="st_paw_pin_ren">
+		<text>Переименовать этот маркер</text>
+	</string>
+
+	<string id="st_paw_pin_dbg">
+		<text>Удалите все иконки на карте с этого места</text>
+	</string>
+
+	<string id="st_paw_pin_clr">
+		<text>Удалите все ваши маркеры - отменить невозможно</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_wptoggle">
+		<text>Нажатие клавиши переключает текущую активную точку маршрута</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_wptoggle_desc">
+		<text>При нажатии этой клавиши происходит отключение текущей точки маршрута (если она активна) или повторная активация последней точки маршрута, если ни одна из них в данный момент не активна. Это не действует, если точка маршрута не задана.</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_quickpin">
+		<text>Нажмите клавишу, чтобы быстро ввести "Быстрый маркер"</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_quickpin_desc">
+		<text>При нажатии эта клавиша помещает "Быстрый маркер" в ближайшую к текущему местоположению игрока точку умного рельефа. Если у вас есть аддон Fair Fast Travel, то "Быстрые маркеры" можно использовать в качестве точек быстрого перемещения.</text>
+	</string>
+	
+	<string id = "ui_mcm_pawsys_pawbinds_bind_cartmode">
+		<text>Выбор клавиши для режима картографии</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_cartmode_desc">
+		<text>При нажатии этой клавиши включается режим картографии, в котором отображаются все допустимые точки местности и другие инструменты, позволяющие игроку устанавливать свои маркеры и управлять ими.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_pin_icon">
+		<text>Используйте пользовательскую текстурную иконку для маркеров на карте</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_pin_icon_desc">
+		<text>Если включено, PAW попытается использовать указанный идентификатор текстуры для иконок маркера. Если вы добавите сюда что-то недопустимое, это, вероятно, приведет к сбою вашей игры. Я ничем не могу с этим помочь.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_pin_icon">
+		<text>Пользовательский идентификатор текстуры для использования</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_pin_icon_desc">
+		<text>Если вы знаете имя действительного идентификатора текстуры из файлов mapspots, введите его здесь. ПРЕДУПРЕЖДЕНИЕ: недопустимые значения, скорее всего, приведут к сбою вашей игры. Сбросьте его на "user_defined", если больше ничего не работает; это просто и легко запоминается.</text>
+	</string>
+
+	<string id ="st_paw_pin_default_name">
+		<text>Местоположение маркеров на карте</text>
+	</string>
+
+	<string id ="st_paw_pin_quick_name">
+		<text>Быстрый маркер</text>
+	</string>
+
+	<string id ="st_paw_pin_dropped">
+		<text>"Быстрый маркер" сброшен в текущее местоположение</text>
+	</string>
+
+	<string id ="st_paw_pin_already">
+		<text>У вас уже есть маркер в ближайшем smart %s</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_1">
+		<text>Включить функцию определения точки маршрута и маркера на КПК 1.0</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_1_desc">
+		<text>Если этот параметр включен, КПК 1.0 будет разрешено использовать все функции точек маршрута и маркеров. Если отключено, существующие маркеры будут сохранены, но не смогут отображаться до тех пор, пока не будет установлено совместимое устройство.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_2">
+		<text>Включить функцию определения точки маршрута и маркера на КПК 2.0</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_2_desc">
+		<text>Если эта функция включена, КПК 2.0 будет разрешено использовать все функции точек маршрута и маркеров.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_3">
+		<text>Включить функцию определения точки маршрута и маркера на КПК 3.1</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_3_desc">
+		<text>Если эта функция включена, КПК 3.1 будет разрешено использовать все функции точек маршрута и маркеров. </text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_milspec">
+		<text>Включить функцию определения точки маршрута и маркера на КПК Milspec</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_milspec_desc">
+		<text>Если эта функция включена, в КПК "Milspec" (если он установлен и доступен) будет разрешено использовать все функции точек маршрута и маркеров.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_pins">
+		<text>Иконка по умолчанию для маркеров</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_pins_desc">
+		<text>Когда активна группа иконок маркеров, этот параметр определяет, какая иконка будет присвоена маркеру карты во время его создания. Каждый маркер карты может иметь свою иконку.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_patches">
+		<text>Иконка по умолчанию для группировок</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_patches_desc">
+		<text>Когда активна группа иконок группировок, этот параметр определяет, какая иконка будет присвоена маркеру карты во время его создания. Каждый маркер карты может иметь свою иконку.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_bwhr">
+		<text>Иконка по умолчанию для BW Hi-res POIs</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_bwhr_desc">
+		<text>Когда активен набор иконок BW Hi-res POIs (Black and White Hi-res POI icons - Черно-белые иконки POI высокого разрешения), этот параметр определяет, какая иконка будет присвоен маркеру на карте во время его создания. Каждый маркер на карте может иметь свою иконку.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_faves">
+		<text>Иконка по умолчанию для "Избранное"</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_faves_desc">
+		<text>Когда набор иконок "Избранное" активен, этот параметр определяет, какая иконка будет присвоен маркеру на карте во время его создания. Каждый маркер на карте может иметь свою иконку. Примечание: вы можете настроить "Избранное" или любой другой набор иконок, отредактировав файл "configs\scripts\paw\icon_set_*.ltx"</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_faves">
+		<text>Избранное</text>
+	</string>
+	
+	<string id="st_paw_no_last_wp">
+		<text>Здесь нет предыдущей или активной точки маршрута для переключения.</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redround32">
+		<text>Маркер "Красный круглый шарик с булавкой"</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_stalker32">
+		<text>Маркер в стиле "Сталкер Курсор"</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redmodern32">
+		<text>Маркер в стиле "Современные карты"</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redpush32">
+		<text>Маркер "Красная канцелярская кнопка с булавкой"</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_yelpush32">
+		<text>Маркер "Желтая канцелярская кнопка с булавкой"</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_whtsimple32">
+		<text>Маркер "Белый маленький круглый шарик с булавкой"</text>
+	</string>
+	
+	<string id="ui_mcm_lst_paw_badge_stalker">
+		<text>Сталкер</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_army">
+		<text>Военный</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_bandit">
+		<text>Бандит</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_csky">
+		<text>"Чистое небо"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_dolg">
+		<text>"Долг"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_ecolog">
+		<text>Эколог/ученый</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_freedom">
+		<text>"Свобода"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_killer">
+		<text>Наемник</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_monolith">
+		<text>"Монолит"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_greh">
+		<text>"Грех"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_isg">
+		<text>"ИИГ"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_renegade">
+		<text>Ренегат</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_cart">
+		<text>Только картография</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_norm">
+		<text>Обычный вид КПК</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_all">
+		<text>Всегда</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_off">
+		<text>Отключено</text>
+	</string>
+	
+	<string id="ui_mcm_pawsys_pawpins_pin_icon_group">
+		<text>Набор иконок "Активный маркер"</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_pin_icon_group_desc">
+		<text>Каждая группа иконок ниже (например, маркеры, патчи) имеют иконку, которая в данный момент выбрана в их выпадающем списке. Этот переключатель определяет, какие из этих наборов иконок будут использоваться при размещении любого нового маркера.\n\nНабор "Избранное" всегда будет располагаться вверху списка, и вы можете свободно редактировать иконки, которые он содержит, в:\n configs\scripts\paw\icon_set_faves.ltx.</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_pins">
+		<text>Иконки в стиле "Маркер с булавкой"</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_patches">
+		<text>Иконки в виде "Нашивки группировок"</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_headertxt">
+		<text>Это меню позволяет настраивать внутриигровые контекстные меню PAW. Вы можете отключить каждый из следующих параметров, чтобы убрать беспорядок в меню, или выбрать, будет ли каждый из них отображаться "Всегда", только когда активен "режим Картографии" или только когда он не активен (обычный вид КПК).</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_wp_set">
+		<text>Установить точку маршрута</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_wp_mov">
+		<text>Переместить точку маршрута</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_wp_del">
+		<text>Удалить точку маршрута</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_add">
+		<text>Добавить маркер</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_del">
+		<text>Удалить маркер</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_ren">
+		<text>Переименовать маркер</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_clr">
+		<text>Очистите все маркеры</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_spt">
+		<text>Очистить все в этой точке</text>
+	</string>
+
+
+<!-- Added in 1.4 -->
+	<string id="ui_mcm_lst_pawsys_pg_bwhr">
+		<text>BW Hi-res POIs</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_info">
+		<text>BWHR (иконка "Информация")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_signal">
+		<text>BWHR (иконка "Источник сигнала")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_loot">
+		<text>BWHR (иконка "Лут/вещи")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_death">
+		<text>BWHR (иконка "Опасность")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_ak">
+		<text>BWHR (иконка "Оружие")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_ammo">
+		<text>BWHR (иконка "Патроны")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_bio">
+		<text>BWHR (иконка "Биологическая опасность")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_rad">
+		<text>BWHR (иконка "Радиация")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_warn">
+		<text>BWHR (иконка "Внимание")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_magn">
+		<text>BWHR (иконка "Увеличительное стекло")</text>
+	</string>
+
+<!-- Added in 1.5 -->
+
+	<string id="ui_mcm_lst_paw_badge_hr_stalker">
+		<text>HR Сталкер</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_army">
+		<text>HR Военный</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_bandit">
+		<text>HR Бандит</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_csky">
+		<text>HR "Чистое небо"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_dolg">
+		<text>HR "Долг"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_ecolog">
+		<text>HR Эколог/ученый</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_freedom">
+		<text>HR "Свобода"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_killer">
+		<text>HR Наемник</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_monolith">
+		<text>HR "Монолит"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_greh">
+		<text>HR "Грех"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_isg">
+		<text>HR "ИИГ"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_renegade">
+		<text>HR "Ренегат"</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_badge_uhr_stalker">
+		<text>UHR Сталкер</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_army">
+		<text>UHR Военный</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_bandit">
+		<text>UHR Бандит</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_csky">
+		<text>UHR "Чистое небо"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_dolg">
+		<text>UHR "Долг"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_ecolog">
+		<text>UHR Эколог/ученый</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_freedom">
+		<text>UHR "Свобода"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_killer">
+		<text>UHR Наемник</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_monolith">
+		<text>UHR "Монолит"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_greh">
+		<text>UHR "Грех"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_isg">
+		<text>UHR "ИИГ"</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_renegade">
+		<text>UHR "Ренегат"</text>
+	</string>
+
+	<string id ="st_paw_pingspot">
+		<text>Установка маркера на карте — щелкните ПКМ, чтобы установить точка маршрута или маркер</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawmenu_mping">
+		<text>Установить маркер на карте</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_pingsound">
+		<text>Воспроизвести звуковой эффект при установке маркера на карте</text>
+	</string>
+
+<!-- Added in 1.6 -->
+
+	<string id ="ui_mcm_pawsys_pawpins_milpda_body_icon">
+		<text>Настройка иконки убитых, используемая КПК "Milspec"</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_milpda_body_icon_desc">
+		<text>Эта дополнительная функция позволяет вам настроить иконку маркера убитых, используемую функцией отслеживания убийств КПК "Milspec", если у вас установлено это дополнение.\n\nОтключено: КПК "Milspec" работает нормально \n\nНашивка группировок убитых: у мертвых сталкеров будут "Нашивки группировок" для их маркера убитых, все остальные используют значение по умолчанию из "Набора маркеров убитых" \n\n "Набор маркеров убитых": КПК "Milspec" будет использовать текущую иконку по умолчанию из "Набора маркеров убитых" для всех тел</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_get_milpda">
+		<text>Требуется КПК "Milspec" 1.7.3 или выше:\nhttps://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_pg_bodies">
+		<text>Маркеры убитых</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_poi_icon_bodies">
+		<text>Иконка по умолчанию для маркеров убитых</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_patch_res">
+		<text>Разрешение, используемое для нашивок группировок</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_patch_res_desc">
+		<text>Этот параметр определяет, какое качество иконок используется для нашивок группировок: ванильная иконка инвентаря с низким разрешением, патчи PAW с высоким разрешением 64x64 или версия 128x128 с белым контуром. Точки на карте с низким и высоким разрешением имеют одинаковый размер; UHR-версии примерно на 25% больше.</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_badge_res">
+		<text>Low-Res (ванильная иконка инвентаря)</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_badge_hr_res">
+		<text>Hi-Res (аккуратно очищенная)</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_badge_uhr_res">
+		<text>Ultra Hi-Res (с белым контуром)</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_milpda_body_icon">
+		<text>Настройка иконки убитых, используемая КПК "Milspec"</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_bodyoff">
+		<text>Отключено</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_bodyfac">
+		<text>Нашивка группировок убитых</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_bodyset">
+		<text>Набор маркеров убитых</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawmenu_waypoint_rename">
+		<text>Переименовать точку маршрута</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawmenu_waypoint_redesc">
+		<text>Изменить описание точки маршрута</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_death_small">
+		<text>BWHR Маленькая смерть</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_blue_circle">
+		<text>Синий круг</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_white">
+		<text>Белое перекрестие</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_red">
+		<text>Красное перекрестие</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_green">
+		<text>Зеленое перекрестие</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_green">
+		<text>Зеленое перекрестие</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_green">
+		<text>Зеленая иконка тайника</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_white">
+		<text>Белая иконка тайника</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_purple">
+		<text>Фиолетовая иконка тайника</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_red">
+		<text>Красная иконка тайника</text>
+	</string>
+
+<!-- Added in 1.6.1 -->
+
+	<string id ="ui_mcm_pawsys_pawgen_wipe_all">
+		<text>Стереть все данные маркера</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_wipe_all_desc">
+		<text>Удаляет все маркеры с карты и стирает базу данных маркеров. Это нельзя отменить.</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_sdot">
+		<text>[MPDA] Маленькая синяя точка</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_mdot">
+		<text>[MPDA] Средняя синяя точка</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_ldot">
+		<text>[MPDA] Большая синяя точка</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_whtx">
+		<text>[MPDA] Белый крестик</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_skul">
+		<text>[MPDA] Маленький простой череп</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_togglehold">
+		<text>Поведение сочетания клавиш в "режиме Картографии"</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_toggle">
+		<text>Переключение</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_hold">
+		<text>Удерживать</text>
+	</string>
+	
+<!-- Added in 1.7 -->
+
+	<string id="ui_mcm_pawsys_pawbinds_mwheel_enabled">
+		<text>Поддержка колесика мыши (требуются модифицированные двоичные файлы)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_mwheel_enabled_desc">
+		<text>При включении колесиком мыши можно прокручивать вверх и вниз для циклического перемещения по активным иконкам или наборам.\n
+		Для этой функции требуются модифицированные двоичные файлы версии 20230701 или новее.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_mwheel_notify">
+		<text>Вывод сообщения при изменении режима работы колеса мыши</text>
+	</string>
+
+	<string id="ui_mcm_paw_modded_binaries">
+		<text>Модифицированные двоичные файлы от demonized (требуется для поддержки колесика мыши):\n https://github.com/themrdemonized/xray-monolith
+		</text>
+	</string>
+
+	<string id="st_paw_change_set">
+		<text>Активный набор изменен на %s.\n
+		</text>
+	</string>
+
+	<string id="st_paw_change_icon">
+		<text>Теперь иконка активна</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_next">
+		<text>Переход к следующему набору</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_next_desc">
+		<text>Опциональная привязка клавиш для перехода к следующему набору</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_prev">
+		<text>Вернуться к предыдущему набору</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_prev_desc">
+		<text>Опциональная привязка клавиш для возврата к предыдущему набору</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_next">
+		<text>Переход к следующей иконке в активном наборе</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_next_desc">
+		<text>Необязательная привязка клавиш для перехода к следующей иконке в активном наборе</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_prev">
+		<text>Переход к предыдущей иконке в активном наборе</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_prev_desc">
+		<text>Необязательная привязка клавиш для перехода к предыдущей  иконке в активном наборе</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_scroll">
+		<text>Удерживайте, чтобы изменить наборы с помощью колесика мыши</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_scroll_desc">
+		<text>При удержании этой клавиши прокрутка выделения колесиком мыши будет циклически перемещаться по списку наборов, если включена прокрутка мыши.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_scroll">
+		<text>Удерживайте, чтобы изменить иконки с помощью колесика мыши</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_scroll_desc">
+		<text>При удержании этой клавиши прокрутка выделения колесиком мыши будет циклически перемещаться по иконкам в активном наборе, если режим прокрутки установлен на удержание для обоих. </text>
+	</string>
+
+	<string id="st_paw_cycling_sets">
+		<text>Колесико мыши теперь вращается по кругу</text>
+	</string>
+
+	<string id="st_paw_cycling_icons">
+		<text>Колесико мыши теперь вращает иконки</text>
+	</string>
+
+	<string id="st_paw_mwheel_normal">
+		<text>Колесико мыши вернулось к поведению по умолчанию</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawhud">
+		<text>HUD-виджет</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_widget_enable">
+		<text>Включить HUD-виджет</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_autohide">
+		<text>Задержка автоматического исчезновения в секундах (0 - никогда не исчезает)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_hudsound">
+		<text>Воспроизведение звукового эффекта при изменении иконки / набора</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawhud_pingsound">
+		<text>Воспроизведение звукового эффекта при установке маркера на карте</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_active_theme">
+		<text>Визуальная тема виджета (описание смотрите ниже)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_custompos">
+		<text>Используйте пользовательскую позицию ниже вместо темы по умолчанию</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_widgetinfo">
+		<text>HUD-виджет отображает текущую активную иконку и, в зависимости от темы, может также отображать другую информацию.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_x_desc">
+		<text>Задает координату X (по горизонтали) верхнего левого угла виджета. 0,0 - верхний левый угол экрана, 1024,768 - нижний правый. Игра преобразует это в соответствии с разрешением вашего дисплея.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_y_desc">
+		<text>Задает координату Y (по вертикали) верхнего левого угла виджета. 0,0 - верхний левый угол экрана, 1024,768 - нижний правый. Игра преобразует это в соответствии с разрешением вашего дисплея.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_x">
+		<text>Координата X (по горизонтали, слева направо)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_y">
+		<text>Координата Y (по вертикали, сверху вниз)</text>
+	</string>
+
+	<string id="ui_mcm_themes_list">
+		<text>Вы можете прочитать полное описание каждой доступной темы ниже.\n</text>
+	</string>
+
+	<string id="ui_mcm_themes_classicauto">
+		<text>
+			Классический сталкер, автоматическое переключение: 138x75 (позиция по умолчанию 890,620)\n
+			Описание иконки и набора, следующие/текущие/предыдущие иконки\n
+			Автоматическое переключение в классическое вертикальное положение вправо при открытом КПК\n
+			Выберите "Классическую" тему, если вы не хотите автоматического переключения\n
+			Рекомендуется по умолчанию
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_classic">
+		<text>
+			Классический сталкер, горизонтальный: 138x75 (позиция по умолчанию 890,620)\n
+			Описание иконки и набора, следующие/текущие/предыдущие иконки\n
+			Не переключается автоматически, но блокируется КПК в положении по умолчанию
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_vertright">
+		<text>
+			Классический вертикальный, выровненный по правому краю: 100x154 (позиция по умолчанию 922,440)\n
+			Описание иконки, следующие/текущие/предыдущие иконки\n
+			Режим КПК для классического автоматического переключения Stalker, но может использоваться и самостоятельно
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_vertleft">
+		<text>
+			Классический вертикальный, выровненный по левому краю: 100x154 (позиция по умолчанию 4,570)\n
+			Описание иконки, следующие/текущие/предыдущие иконки\n
+			Может блокировать новостные сообщения в позиции по умолчанию\n
+			Рекомендуемое пользовательское положение
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_gamma_right">
+		<text>
+			Стиль ГАММЫ, выровненный по правому краю: 136x150 (позиция по умолчанию 888,440)\n
+			Описание иконки и набора, следующие/текущие/предыдущие иконки\n
+			Виден как с открытым КПК, так и без него
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_gamma_left">
+		<text>
+			Стиль ГАММЫ, выровненный по левому краю: 136x150 (позиция по умолчанию 4,440)\n
+			Описание иконки и набора, следующие/текущие/предыдущие иконки\n
+			Может блокировать новостные сообщения в позиции по умолчанию\n
+			Рекомендуемое пользовательское положение
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_minimal_h">
+		<text>
+			Минималистичный, горизонтальный: 94x52 (позиция по умолчанию 924,645)\n
+			Описание иконки, следующие/текущие/предыдущие иконки в отбрасываемой тени\n
+			Заблокирован КПК в его положении по умолчанию\n
+			Рекомендуемое пользовательское положение
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_minimal_v">
+		<text>
+			Минималистичный, вертикальный: 92x112 (позиция по умолчанию 924,440)\n
+			Описание иконки, следующие/текущие/предыдущие иконки в отбрасываемой тени\n
+			Версия без выравнивания по левому краю
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_minicom">
+		<text>
+			Минималистичный, компактный: 38x38 (позиция по умолчанию 890,440)\n
+			Отображает только текущий значок в отбрасываемой тени\n
+			заблокирован КПК в положении по умолчанию
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_compact_noui">
+		<text>
+			Компактный, без рамки пользовательского интерфейса: 32x32 (позиция по умолчанию 890,440)\n
+			Отображает только текущий значок, никакого другого пользовательского интерфейса или фона\n
+			Подходит для позиционирования практически в любом месте, легко интегрируется с пользовательскими HUD-ом
+		</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_classicauto">
+		<text>Классический Сталкер, автопереключение H/V (гор./верт.)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_classic">
+		<text>Классический сталкер, горизонтальный (890,620)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_vertright">
+		<text>Классический, вертикальный, выровненный по правому краю (922,440)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_vertleft">
+		<text>Классический, вертикальный, выровненный по левому краю (4,570)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_gamma_right">
+		<text>Стиль ГАММА, выровненный по правому краю (888,440)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_gamma_left">
+		<text>Стиль ГАММА, выровненный по левому краю (4,574)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_minimal_h">
+		<text>Минималистичный, горизонтальный (890,650)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_minimal_v">
+		<text>Минималистичный, вертикальный (890,440)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_minicom">
+		<text>Минималистичный, компактный (820,725)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_compact_noui">
+		<text>Компактный, без рамки пользовательского интерфейса (820,725)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_enabled">
+		<text>Включено</text>
+	</string>
+
+<!-- Added in 1.7.1 -->
+
+	<string id="st_paw_waypoint_cleared">
+		<text>Текущая точка маршрута очищена</text>
+	</string>	
+
+<!-- Added in 1.7.2 -->
+
+	<string id="ui_mcm_paw_moddb_link">
+		<text>PAW: https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+		</text>
+	</string>
+
+	<string id="ui_mcm_paw_milpda_link">
+		<text>Milspec PDA: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+		</text>
+	</string>
+
+<!-- Added in 1.7.3 -->
+
+	<string id="ui_mcm_pawsys_pawgen_disable_mcmups">
+		<text>Отключение немедленного обновления MCM</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_disable_mcmups_desc">
+		<text>Когда вы меняете текущую иконку/набор во время игры, PAW обновляет ту же настройку в MCM. Это сделано для того, чтобы ваши изменения сохранялись даже в случае сбоя игры, но это может повлиять на производительность некоторых ПК. Включение этого параметра отключит эту функцию, но настройки все равно сохранятся при сохранении игры. Однако изменения не будут отражены в MCM, если вы войдете в его меню перед сохранением.</text>
+	</string>
+
+<!-- Added in 1.7.4 -->
+
+	<string id="ui_mcm_pawsys_pawmenu_show_all_pins">
+		<text>Показать все маркеры</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hide_all_pins">
+		<text>Скрыть все маркеры</text>
+	</string>
+
+<!-- Added in 1.8 -->
+
+	<string id="ui_mcm_pawsys_pawgen_wp_clear_dist">
+		<text>Расстояние автоматической очистки точки маршрута (в метрах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_hud_icon_enabled">
+		<text>Отображение маркера точки маршрута на HUD</text>
+	</string>
+	
+	<string id="ui_mcm_pawsys_pawgen_welcome_msg_shown">
+		<text>Не показывать приветственное сообщение PAW при загрузке сохранения в игре</text>
+	</string>
+
+	<string id="st_pawsys_welcome_msg">
+		<text>$clr_prp[ Инициализация Персональной Настраиваемой Системы Точек Маршрута ]$clr_wht \n \n
+• Щелкните ПКМ на любом видимом значке карты для установки пользовательского маркера ($clr_lblточек маршрута$clr_wht) или для размещения и обозначения маркеров карты.\n
+• Нажмите $clr_yel%s$clr_wht, чтобы в любой момент включить или выключить точки маршрута. Если вам не нужен видимый HUD-маркер, вы можете отключить его в MCM.\n
+• Нажмите $clr_yel%s$clr_wht, чтобы отметить на карте $clr_lblБыстрый маркер$clr_wht в текущем местоположении.\n
+• Удерживайте нажатой кнопку $clr_yel%s$clr_wht, чтобы войти в режим $clr_lblКартография$clr_wht для использования дополнительных функций на карте, например $clr_lblпинг$clr_wht для отображения временных маркеров и для точного размещения маркеров и точек маршрута.\n
+\n
+Все это и многое другое вы найдете в MCM в разделе $clr_lblНастройка Точек Маршрута$clr_wht.\n 
+\n
+Это сообщение больше не появится. Счастливой охоты, %s.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hud_vis_on">
+		<text>Показать маркер на HUD</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hud_vis_off">
+		<text>Скрыть маркер из HUD</text>
+	</string>
+
+	<string id="st_paw_system_disabled">
+		<text>Система PAW отключена</text>
+	</string>
+
+
+<!-- Added in 1.10 -->
+
+
+	<string id="ui_mcm_paw_current_active_pin">
+		<text>Активный маркер:</text>
+	</string>
+
+	<string id="ui_mcm_paw_pinmenu_header">
+		<text>При размещении маркера на карте по умолчанию используется иконка из активного, в данный момент, набора. Вы можете изменить их здесь или переключать маркеры и наборы в игре, используя комбинации клавиш по своему усмотрению.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_toggle">
+		<text>Переключатель "Режима Картографии"</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_toggle_desc">
+		<text>По умолчанию для включения "Режима Картографии" необходимо удерживать нажатой клавишу. Если эта опция включена, то она работает как переключатель.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cart_shows_smarts">
+		<text>В "Режиме Картографии" отображаются "умные" точки местности</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cart_shows_smarts_desc">
+		<text>По умолчанию в режиме "Картография" отображается иконка (белая карта с лупой), указывающай на "умные" точки местности. Если по каким-либо причинам их отображение не нужно или нежелательно, их можно отключить с помощью этой опции.</text>
+	</string>
+
+<!-- Added in 1.11 -->
+
+	<string id="st_paw_meters_abbr">
+		<text>м</text>
+	</string>
+
+	<string id="st_paw_unknown">
+		<text>Неопознанный</text>
+	</string>
+
+	<string id="st_paw_stash">
+		<text>тайник</text>
+	</string>
+
+	<string id="st_paw_squad">
+		<text>отряд</text>
+	</string>
+	
+	<string id="st_paw_npc_pda_equipped">
+		<text>В данный момент вы используете добытый КПК НПС, а не свой собственный. Задействуйте КПК игрока, чтобы использовать точки маршрута, маркеры карты или другие функции системы PAW.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_wp">
+		<text>Отображение расстояния на точке маршрута HUD-маркера</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_wp_desc">
+		<text>Выберите, когда HUD-маркер точки маршрута должен показывать индикатор расстояния: "никогда", "всегда", только когда активен "режим Картографии" или только когда он не активен (обычный вид КПК). Не имеет эффекта, если HUD-маркер не включен.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_pins">
+		<text>Отображение расстояния на "Маркерах-булавках" на HUD</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_pins_desc">
+		<text>Выберите, когда "Маркеры-булавки" на HUD должны показывать индикатор расстояния: "никогда", "всегда", только когда активен "режим Картографии", или только когда он не активен (обычный вид КПК). Не имеет эффекта при отсутствии видимых на HUD маркеров.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_hint_pins">
+		<text>Отображение надписей на маркерах HUD</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_hint_pins_desc">
+		<text>Выберите, когда "Маркеры-булавки" на HUD должны отображать свою текстовую метку над пиктограммой: "никогда", "всегда", только когда активен "режим Картографии" или только когда он не активен (обычный вид КПК). Не имеет эффекта при отсутствии видимых на HUD маркеров.</text>
+	</string>
+
+<!-- Added in 1.12 -->
+
+	<string id="ui_mcm_lst_pawsys_pg_npcs">
+		<text>НПС и службы</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_npcs">
+		<text>Значок по умолчанию для НПС и служб</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_diamond_friendly">
+		<text>Друг (стиль "бриллиант")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_diamond_neutral">
+		<text>Нейтрал (стиль "бриллиант")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_diamond_enemy">
+		<text>Враг (стиль "бриллиант")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_chevron_friendly">
+		<text>Друг (стиль "нашивка")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_chevron_neutral">
+		<text>Нейтрал (стиль "нашивка")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_chevron_enemy">
+		<text>Враг (стиль "нашивка")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_flag_friendly">
+		<text>Друг (стиль "флаг")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_flag_neutral">
+		<text>Нейтрал (стиль "флаг")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_flag_enemy">
+		<text>Враг (стиль "флаг")</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_mechanic">
+		<text>Механик</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_trader">
+		<text>Торговец</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_guide">
+		<text>Проводник</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_food_trader">
+		<text>Продавец продуктов питания</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_medic">
+		<text>Медик</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_sleep_zone">
+		<text>Спальная зона</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_obj_briefcase">
+		<text>Контейнерный объект</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_obj_lock">
+		<text>Заблокированный объект</text>
+	</string>
+
+	<string id="ui_mcm_paw_cartmode_head">
+		<text>Режим "Картографии"</text>
+	</string>
+
+	<string id="ui_mcm_paw_cartmode_desc">
+		<text>Режим "Картографии" позволяет использовать дополнительные картографические функции, не загромождая HUD или меню во время обычной игры. Настроить отображение функций в этом режиме (или в обычном режиме КПК) можно в подменю контекстного меню MCM.</text>
+	</string>
+
+	<string id="ui_mcm_paw_mousewheel_head">
+		<text>Поддержка колесика мыши</text>
+	</string>
+
+	<string id="ui_mcm_paw_crosshair_target_head">
+		<text>"Точки маршрута" и "Маркеры-булавки" - Наведение на цель по перекрестию прицела</text>
+	</string>
+
+	<string id="ui_mcm_paw_crosshair_target_head">
+		<text>"Точки маршрута" и "Маркеры-булавки" - Наведение на цель по перекрестию прицела</text>
+	</string>
+	
+	<string id="ui_mcm_paw_crosshair_target_desc">
+		<text>Эти две комбинации клавиш позволяют использовать "Точки маршрута" и "Маркеры-булавки" на любом объекте, находящемся в данный момент под перекрестием. Для того чтобы игра зарегистрировала это, объект должен находиться точно под центром перекрестия. Для сталкеров это означает, что объект должен быть достаточно центрирован, чтобы активировалась идентификация перекрестия.</text>
+	</string>
+
+	<string id="ui_mcm_paw_generalbinds_head">
+		<text>"Точки маршрута" и "Маркеры-булавки" — основные сочетания клавиш</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_wp_target_obj">
+		<text>Нажмите клавишу, чтобы установить "Точку маршрута" на целевом объекте</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_wp_target_obj_desc">
+		<text>При нажатии этой клавиши "Точка маршрута" будет установлена или перемещена на объект под перекрестием игрока. Если он уже был установлен для целевого объекта, он будет отключен.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_pin_target_obj">
+		<text>Нажмите клавишу, чтобы установить маркер на целевом объекте</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_pin_target_obj_desc">
+		<text>При нажатии этой клавиши "Маркер-булавка" будет помещен на объект под перекрестием игрока, если его еще нет, с использованием текущей активной иконки. Если для цели уже существует "Маркер-булавка", он будет удален.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_pin_auto_visible">
+		<text>Маркеры, созданные таким образом, по умолчанию отображаются в HUD</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_pin_auto_visible_desc">
+		<text>Если "Маркер-булавка" был создан путем нацеливания на объект с помощью указанной выше комбинации клавиш, он автоматически отобразится в HUD. Вы можете в любое время показать или скрыть маркеры на HUD с помощью КПК.</text>
+	</string>
+
+
+	<string id="st_paw_pin_removed_from_target">
+		<text>Маркер $clr_yel%s$clr_wht удален из $clr_lbl%s$clr_wht.</text>
+	</string>
+
+	<string id="st_paw_pin_added_to_target">
+		<text>Маркер добавлен в $clr_lbl%s$clr_wht используя текущую иконку: $clr_lbl%s$clr_wht.\n
+		Вы можете изменить текущую активную иконку с помощью $clr_yel%s$clr_wht/$clr_yel%s$clr_wht.</text>
+	</string>
+
+	<string id="ui_mcm_paw_pin_target_desc">
+		<text>Маркер $clr_yel%s$clr_wht удален из $clr_lbl%s$clr_wht.</text>
+	</string>
+	
+	<string id="ui_mcm_pawsys_pawgen_tip_on_icoset_change">
+		<text>Показывать подсказку при смене иконок или наборов с помощью привязки клавиш</text>
+	</string>
+
+<!-- Added in 1.13 -->
+
+	<string id="ui_mcm_pawsys_pawgen_pin_near_fade_dist">
+		<text>Расстояние до затухания маркера (в метрах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_near_fade_dist_desc">
+		<text>Когда игрок приближается на это расстояние к маркеру, он начнет исчезать.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_fade_dist">
+		<text>Расстояние начала затухания маркера (в метрах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_fade_dist_desc">
+		<text>Когда игрок окажется на таком расстоянии от маркера, он начнет исчезать.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_hide_dist">
+		<text>Расстояние до исчезновения маркера (в метрах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_hide_dist_desc">
+		<text>Если игрок находится более чем на таком расстоянии от места начала затухания, то маркер исчезнет полностью.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_unfade">
+		<text>Маркеры на HUD не исчезают в режиме картографии</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_unfade_desc">
+		<text>Если на HUD есть какие-либо маркеры, и они обычно настроены на затухание, то при активном режиме картографии они не будут затухать.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_lock_pin">
+		<text>Заблокировать маркер</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_unlock_pin">
+		<text>Разблокировать маркер</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mode">
+		<text>Показывать интеллектуальный прицел при наведении на правильный объект</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mode_desc">
+		<text>Этот параметр определяет, когда может появляться интеллектуальная прицельная сетка: "всегда", только при активном "режиме Картографии" или "никогда" (отключено).</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_alpha">
+		<text>Прозрачность перекрестия</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_alpha_desc">
+		<text>Значение прозрачности (альфа) перекрестия, при этом 0 означает полную прозрачность, а 255 - отсутствие прозрачности.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_attack_time">
+		<text>Длительность появления прицельной сетки для объекта</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_attack_time_desc">
+		<text>Время в миллисекундах, которое требуется прицелу для завершения исчезновения при наведении на действительный объект.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_decay_time">
+		<text>Длительность исчезновения прицельной сетки для объекта</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_decay_time_desc">
+		<text>Время в миллисекундах, необходимое для того, чтобы прицельная сетка полностью исчезла после того, как перекрестие больше не указывает на цель.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_preview_aspect">
+		<text>Соотношение сторон для экрана, показанного ниже</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_4_3">
+		<text>4:3 (Стандартное разрешение)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_16_10">
+		<text>16:10 (1920x1200, 2560x1600)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_16_9">
+		<text>16:9 (1080p, 1440p, 2160p)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_21_9">
+		<text>21:9 (Ультраширокий)</text>
+	</string>
+
+<!-- Added in 1.14 -->
+
+	<string id="ui_mcm_paw_resolutions">
+		<text>Примеры разрешений в этом соотношении сторон:\n</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_4_3">
+		<text>\n1024x768\n1600x1200</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_16_9">
+		<text>\n1920x1080 (1080p)\n1280x720\n1600x900\n2560x1440\n3840x2160</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_16_10">
+		<text>\n1280x800\n1920x1200\n2560x1600\n3840x2400</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_21_9">
+		<text>\n2560x1080\n3440x1440\n3840x1600</text>
+	</string>
+
+<!-- Added in 1.16 -->
+
+	<string id="ui_mcm_menu_pawret">
+		<text>Прицельная сетка / Автометка</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_enable_autotag">
+		<text>Включить автоматическую интеллектуальную маркировку идентификатора прицела</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_enable_autotag_desc">
+		<text>При включении этой функции HUD-прицел PAW будет автоматически "помечать" действительные объекты цели соответствующим маркером после их идентификации, как показано ниже.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_reticle_info1">
+		<text>Использование маркеров и точек маршрута на любом действительном объекте под перекрестием с помощью настраиваемых горячих клавиш. По умолчанию прицел затухает и исчезает, указывая на то, что вы нацелились на действительный объект.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_reticle_info2">
+		<text>Чтобы вместо этого автоматически помечать объекты, см. настройку "Автометка" ниже.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_autotag_info">
+		<text>Функция "Автометка" позволяет автоматически помечать определенные типы объектов заранее заданными метками по вашему выбору после их идентификации. Это позволяет освободить клавиши и сосредоточиться на Зоне, а не на КПК или меню.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_autotag_facid">
+		<text>Он функционирует аналогично аддону "Faction Identification" (FacID «Идентификация группировок»), считывая его MCM-настройки, чтобы PAW и FacID могли работать вместе. Изменения, внесенные в MCM-меню FacID, будут учтены PAW.</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_smartpins">
+		<text>Умные маркеры</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_smartpins">
+		<text>Иконка по умолчанию для "Умных маркеров"</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_human_f_enable">
+		<text>Включение автометок для дружественных сталкеров</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_f">
+		<text>Иконка человека (друг)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_f_desc">
+		<text>"Автометка" присвоит эту иконку дружественным сталкерам.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_human_n_enable">
+		<text>Включить автометку для нейтральных сталкеров</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_n">
+		<text>Иконка человека (нейтральный)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_n_desc">
+		<text>"Автометка" присвоит эту иконку нейтральным сталкерам.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_e_enable">
+		<text>Включение автометки для вражеских сталкеров</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_e">
+		<text>Иконка человека (враг)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_e_desc">
+		<text>"Автометка" присвоит эту иконку вражеским сталкерам.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_monster_enable">
+		<text>Включение автометки для монстров</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_monster">
+		<text>Монстры</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_monster_desc">
+		<text>"Автометка" будет присваивать эту иконку мутантам, монстрам и другим нечеловеческим существам.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_stash_enable">
+		<text>Включение автометки для контейнеров-тайников</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_stash">
+		<text>Иконка контейнера-тайника</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_stash_desc">
+		<text>"Автометка" присвоит этот иконку тайникам и другим ящикам с инвентарем.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mustzoom">
+		<text>Активен только при использовании оптического прицела/бинокля</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mustzoom_desc">
+		<text>Если эта опция включена, то прицел (и его возможности по созданию меток) будет включаться только при увеличении с помощью бинокля или прицела на оружии. Это рекомендуется для того, чтобы метки не создавались просто при приближении или разговоре с НПС.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_manual_smart_pins">
+		<text>Маркеры, размещаемые вручную, также являются «умными»</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_manual_smart_pins_desc">
+		<text>Если эта опция включена, то маркеры прицела, созданные путем ручного запуска связанной с ними привязки клавиш, также будут использовать приведенные ниже настройки "Автометки", назначая выбранную иконку для целевого объекта вместо текущей активной иконки.</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redskull">
+		<text>Красный звериный череп</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_gradient">
+		<text>Градиентное перекрестие</text>
+	</string>
+
+<!-- Added in 1.16.3 -->
+
+	<string id="st_paw_texture_load_error_tip">
+		<text>Аддон $clr_yelPersonal Adjustable Waypoint $clr_redне смог загрузить свои данные текстур$clr_wht, и отключил свои функции во избежание сбоев.\n \n
+		Проверьте журнал игры на наличие ошибок и убедитесь, что после PAW не загружается ничего, что изменяет файл $clr_yelmap_spots_relations.xml$clr_red.\n \n
+		Если Вы никогда не собираетесь использовать возможности PAW и Вам безразлично, что этот файл заменило что-то другое, Вы можете отключить эту ошибку в меню $clr_yelPAW$clr_wht в MCM.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error_mcmhead1">
+		<text>ВНИМАНИЕ: отсутствуют данные текстур маркеров карт.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error_mcmhead2">
+		<text>Во избежание сбоев, как PAW, так и многие части меню MCM были отключены до устранения этой проблемы.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error1">
+		<text>Personal Adjustable Waypoint не смог загрузить данные текстур из файла map_spots_relations.xml. Практически ВСЕГДА причиной этого является загрузка после PAW другого аддона, который изменяет этот файл. Примерами могут служить (но не ограничиваются ими) Kill Tracker или Milspec PDA.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error2">
+		<text>Если вы используете GAMMA или Mod Organizer 2, измените порядок загрузки таким образом, чтобы PAW загружался после (ниже) всех аддонов, изменяющих map_spots_relations.xml. Если вы не используете MO2, то вам следует использовать его.
+		</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_disable_load_warning">
+		<text>Отключить внутриигровое предупреждение об этой ошибке (НЕ рекомендуется)</text>
+	</string>	
+
+<!-- Added in 1.17 -->
+
+	<string id="ui_mcm_pawsys_pawret_autotag_persistence">
+		<text>Автометки являются постоянными</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_autotag_persistence">
+		<text>Если эта опция не включена, то все метки, добавленные с помощью автоматической маркировки, будут временными - то есть они автоматически исчезнут при следующем изменении карты или загрузке сохранения игры.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_autotag_lifetime">
+		<text>Время истечения срока действия автометки (в секундах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_autotag_lifetime_desc">
+		<text>Если для автометок не включено сохранение, они будут автоматически очищены через это количество секунд. Если установить это значение в ноль, то таймаут будет отключен, но метки все равно будут очищены при следующем изменении карты или загрузке сохранения игры.</text>
+	</string>
+
+<!-- Added in 2.0 -->
+
+	<string id="ui_mcm_pawsys_pawgen_headertxt">
+		<text>
+		$clr_yelPAW$clr_wht - это не просто точка маршрута, это набор картографических и навигационных инструментов, которые дают вам больше контроля над картой и HUD, позволяя прокладывать свой собственный путь по Зоне. $clr_yelВсе эти функции являются опциональными и настраиваются по вашему желанию.$clr_wht \n \n
+		•$clr_lbl Установите свой собственный маркер квеста в любом месте и в любое время и настройте его описание$clr_wht \n 
+		•$clr_lbl Размещать, переименовывать и удалять картографические маркеры ("маркеры") в любом месте карты с выбранной вами иконкой$clr_wht \n 
+		•$clr_lbl Автоматически помечать идентифицированные цели "умными" маркерами по вашему выбору и отображать их на HUD$clr_wht \n \n
+		$clr_yelНе позволяйте НПС указывать вам, куда идти - PAW может сделать карту вашей.$clr_wht
+		</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_clear_dist_desc">
+		<text>Когда игрок приблизится на это расстояние к маркеру  точки маршрута, он будет автоматически очищен. Если установить это значение в ноль, то автоочистка будет полностью отключена.</text>
+	</string>
+
+<!-- Added in 2.1 -->
+
+	<string id="ui_mcm_pawsys_pawmenu_show_label">
+		<text>Показать метку на карте</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hide_label">
+		<text>Скрыть метку на карте</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_pn_settings">
+		<text>Настройки маркера</text>
+	</string>
+
+	<string id="st_paw_argb_a">
+		<text>A</text>
+	</string>
+
+	<string id="st_paw_argb_r">
+		<text>R</text>
+	</string>
+
+	<string id="st_paw_argb_g">
+		<text>G</text>
+	</string>
+
+	<string id="st_paw_argb_b">
+		<text>B</text>
+	</string>
+
+	<string id="ui_paw_use_custom_color">
+		<text>Индивидуальный цвет</text>
+	</string>
+
+	<string id="ui_paw_reset_defaults">
+		<text>Настройки по умолчанию</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_tag">
+		<text>Метка цели BWHR</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_convert_to_pin">
+		<text>Преобразование в маркер и настройка</text>
+	</string>
+
+	<string id="ui_paw_hint_sidebar_desc">
+		<text>Открыть или закрыть маркер и установить боковую панель управления</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_wp_settings">
+		<text>Настройки точек маршрута</text>
+	</string>
+
+	<string id="st_paw_target">
+		<text>Цель</text>
+	</string>
+
+	<string id="st_paw_wp_active">
+		<text>Точка маршрута активна</text>
+	</string>
+
+	<string id="st_paw_none">
+		<text>Нет</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_backpack_icon">
+		<text>Настройка иконки для тайников из рюкзака игрока</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_backpack_icon_desc">
+		<text>Если эта функция включена, то при размещении тайника из рюкзака PAW попытается заменить обычный значок тайника на выбранный вами.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_backpack_icon">
+		<text>Иконка использует набор "Избранное"</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_backpack_icon_desc">
+		<text>Если вы не видите здесь нужной вам иконки, отредактируйте configs\ui\icon_set_faves.ltx и добавьте ее в список.</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_backpack">
+		<text>Тайник из рюкзака</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_stash">
+		<text>Иконка тайника BWHR</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_sidebar_desc">
+		<text>$clr_whtОткройте или закройте боковую панель библиотеки иконок $clr_yel$clr_wht, которая позволяет просматривать все ваши наборы и заменять текущую иконку маркера на любую другую. Для перебора наборов и иконок можно прокручивать колесико мыши при наведении на некоторые элементы управления.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_delete_desc">
+		<text>\nНажав на эту кнопку, вы немедленно и навсегда удалите этот маркер.\nПодтверждение не требуется, и отменить его нельзя.\nВы можете заблокировать маркер, чтобы защитить его от случайного удаления.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_ok_desc">
+		<text>$clr_whtПримите все изменения этого маркера и закройте диалог.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_cancel_desc">
+		<text>$clr_whtОтмените все изменения этого маркера и закройте диалог.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_sound_desc">
+		<text>$clr_whtВключение или выключение звуковых эффектов $clr_yelUI$clr_wht. Это также можно установить в меню MCM PAW.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_lock_desc">
+		<text>$clr_whtА$clr_yel заблокированный$clr_wht маркер защищен от любых изменений, кроме стирания данных маркера в MCM. Даже контекстное действие $clr_yel Clear All Pins$clr_wht будет игнорировать его.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_text_desc">
+		<text>$clr_whtПоказать или скрыть название иконки в виде видимой метки$clr_yel$clr_wht на карте в КПК.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_hud_desc">
+		<text>$clr_whtПоказать или скрыть видимый "HUD-маркер"$clr_yel для этого маркера.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_desc">
+		<text>$clr_whtНажмите здесь, чтобы$clr_yel отредактировать метку$clr_wht для этого маркера.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_argb_desc">
+		<text>$clr_whtВключение или отключение настройки цвета и прозрачности$clr_yel для иконки этого маркера. Обратите внимание, что все изменения относятся к начальному цвету иконки - некоторые изменения будут выглядеть лучше, чем другие, но только черно-белые иконки можно сделать любого цвета.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_a_desc">
+		<text>$clr_whtНажмите здесь, чтобы$clr_yel изменить значение альфа (прозрачности)$clr_wht для иконки этого маркера. Если установить значение 0, значок станет невидимым; 255 - полностью непрозрачным.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_r_desc">
+		<text>$clr_whtНажмите здесь, чтобы$clr_yel изменить красный канал$clr_wht для цвета иконки этого маркера. Это изменение относится к начальному цвету иконки - только черно-белые иконки могут быть сделаны любого цвета.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_g_desc">
+		<text>$clr_whtНажмите здесь, чтобы$clr_yel изменить зеленый канал$clr_wht для цвета иконки этого маркера. Это изменение относится к начальному цвету иконки - только черно-белые иконки могут быть сделаны любого цвета.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_b_desc">
+		<text>$clr_whtНажмите здесь, чтобы$clr_yel изменить синий канал$clr_wht для цвета иконки этого маркера. Это изменение относится к начальному цвету иконки - только черно-белые иконки могут быть сделаны любого цвета.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_wpreset_desc">
+		<text>$clr_whtСбрасывает все настройки точек маршрута к значениям по умолчанию, включая все настройки текста, указанные выше. Текущая точка маршрута, если таковая имеется, сохраняется.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_near_fade_dist">
+		<text>Точка маршрута на расстоянии до затухания (в метрах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_near_fade_dist_desc">
+		<text>Когда игрок приблизится к точке маршрута на такое расстояние, она начнет исчезать.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_fade_dist">
+		<text>Расстояние дальнего затухания точки маршрута (в метрах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_fade_dist_desc">
+		<text>Когда игрок отойдет так далеко от точки маршрута, она начнет исчезать.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_hide_dist">
+		<text>Расстояние до дальнего скрытия точки маршрута (в метрах)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_hide_dist_desc">
+		<text>Если игрок окажется дальше того места, где начинается затухание, точка маршрута полностью исчезнет.</text>
+	</string>
+
+<!-- Added in 2.1.2 -->
+
+	<string id="ui_paw_mapspot_tooltip_mode">
+		<text>Режим всплывающих подсказок</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_msttmode_text">
+		<text>Используйте текст метки</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_msttmode_obj">
+		<text>Используйте название объекта</text>
+	</string>
+
+<!-- Added in 2.2 -->
+
+	<string id="ui_mcm_pawsys_pawbinds_raytrace_wp_targets">
+		<text>Путевые точки не требуют целевого объекта</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_raytrace_wp_targets_desc">
+		<text>Обычно для наведения на путевую точку в PAW требуется, чтобы под курсором находился действующий объект, например NPC. Если эта опция включена, а под курсором нет объекта, то вместо него будет установлена пользовательская путевая точка в произвольной точке пространства, на которую нацелился игрок.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_uninstall">
+		<text>Удалите PAW (удалите данные из сохранения)</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_uninstall_desc">
+		<text>Как и «Стереть все», но полностью удаляет все данные PAW из сохранения, а также устанавливает временный флаг, чтобы данные PAW не записывались при сохранении игры. Это позволит вам "почистить" сохранение при необходимости.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_clear_nearby">
+		<text>Удалите близлежащие штифты</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_clear_radius">
+		<text>Радиус для «Удалить близлежащие штифты» (в м)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_clear_radius_desc">
+		<text>
+		При использовании функции «Удалить близлежащие штифты» все маркеры в этом радиусе вокруг точки щелчка будут безвозвратно удалены.
+		\n\n
+		Чтобы убедиться, что все маркеры были очищены, все значки также будут удалены с этих точек. Обратите внимание, что если в результате этого будет удален системный значок, сохранение и перезагрузка, как правило, снова добавляют маркер.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawret_notify_pin_target">
+		<text>Отображение сообщения при ручном маркировании цели</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_verbose_enabled">
+		<text>Включить ведение подробного журнала отладки</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_verbose_enabled_desc">
+		<text>Эта опция очень спамная, но зато в журнал попадает максимальное количество информации. Эту опцию следует включить, если вы сообщаете о проблеме.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_pers_desc">
+		<text>Маркер имеет постоянство</text>
+	</string>
+	
+	<string id="ui_paw_hint_check_pers_desc">
+		<text>$clr_whtОпределяет, имеет ли пин $clr_yelпостоянство$clr_wht, и будет ли он оставаться до тех пор, пока вы его не удалите. Срок действия пинов, которые $clr_yelне имеют постоянства$clr_wht, может истекать в зависимости от настроек MCM, и они всегда будут удаляться при следующей загрузке или переходе.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_hide_intro_header">
+		<text>Скрыть текст заголовка для PAW</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_hide_intro_header_desc">
+		<text>В PAW есть красочное вступительное сообщение для новых пользователей, но если вы уже знакомы с PAW, оно просто занимает место в меню. Эта опция скрывает или показывает заголовок.</text>
+	</string>
+
+	<string id="ui_paw_hide_intro_header">
+		<text>$clr_tgrБольше не показывайте это сообщение</text>
+	</string>
+
+</string_table>

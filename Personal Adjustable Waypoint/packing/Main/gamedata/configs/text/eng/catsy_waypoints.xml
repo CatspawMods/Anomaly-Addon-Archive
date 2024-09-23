@@ -1,0 +1,1783 @@
+<!-- ====================================================================
+	Personal Adjustable Waypoint
+    Author: Catspaw
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+
+    Permission granted to freely translate into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+	<string id="st_paw_waypoint_set">
+		<text>Set waypoint here</text>
+	</string>
+
+	<string id="st_paw_waypoint_mov">
+		<text>Move waypoint here</text>
+	</string>
+
+	<string id="st_paw_waypoint_del">
+		<text>Remove current waypoint</text>
+	</string>
+
+	<string id="st_paw_placed_waypoint">
+		<text>Placed Waypoint</text>
+	</string>
+
+	<string id="st_paw_proceed">
+		<text>Proceed to your chosen waypoint</text>
+	</string>
+
+<!-- Added in 1.2 -->
+	<string id="st_paw_missing_waypoint_error">
+		<text>Placed waypoint was missing from current save, so the task was cancelled to avoid a crash. This is a safety catch and shouldn't happen again after your next save.</text>
+	</string>
+
+<!-- Added in 1.3 -->
+	<string id ="ui_mcm_menu_pawsys">
+		<text>Adjustable Waypoint</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawgen">
+		<text>General Settings</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawpins">
+		<text>Map Pins</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawmenu">
+		<text>Context Menus</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawbinds">
+		<text>Keybinds / Mouse</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_enabled">
+		<text>Enable Personal Adjustable Waypoint System</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_uninstall_desc">
+		<text>Enabling this option will clear all current waypoint data, remove all waypoint map markers, and cancel any active waypoint task.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_milpda">
+		<text>Integrate with Milspec PDA addon</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_milpda_desc">
+		<text>Enables integration/compatibility with the Milspec PDA addon. \n\nhttps://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_debuglogs">
+		<text>Enable debug logging</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_debuglogs_desc">
+		<text>For troubleshooting. If you encounter a crash or other issue with PAW, please:\n1. Enable this option\n2. Reproduce the issue\n3. Upload a copy of the log for me to examine\n\nWithout debug logging it is unlikely that your log will show anything useful.</text>
+	</string>
+
+	<string id="st_paw_pin_add">
+		<text>Add pin to map here</text>
+	</string>
+
+	<string id="st_paw_pin_del">
+		<text>Remove this pin</text>
+	</string>
+
+	<string id="st_paw_pin_ren">
+		<text>Rename this pin</text>
+	</string>
+
+	<string id="st_paw_pin_dbg">
+		<text>Remove all map icons from this spot</text>
+	</string>
+
+	<string id="st_paw_pin_clr">
+		<text>Clear ALL of your pins - cannot be undone</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_wptoggle">
+		<text>Keypress to toggle the current active waypoint</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_wptoggle_desc">
+		<text>When pressed, this key will toggle off the current waypoint (if one is active), or reactivate the last waypoint if none is currently active. It has no effect if you haven't set a waypoint.</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_quickpin">
+		<text>Keypress to drop a Quick Pin</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_quickpin_desc">
+		<text>When pressed, this key will place a Quick Pin at the nearest valid smart terrain point to the player's current location. If you have the Fair Fast Travel addon, Quick Pins can optionally be used as fast travel points.</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_cartmode">
+		<text>Key bind for Cartography Mode</text>
+	</string>
+
+	<string id = "ui_mcm_pawsys_pawbinds_bind_cartmode_desc">
+		<text>While held, this key will enable Cartography Mode, which displays all valid smart terrain points and other tools allowing the player to set and manage their Pins. The default hold can be changed to a toggle.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_pin_icon">
+		<text>Use a custom mapspot icon for map pins</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_pin_icon_desc">
+		<text>If enabled, PAW will attempt to use the specified mapspot ID for pin icons. Valid mapspots are in map_spots.xml or its includes. If you put something invalid here, it will probably crash your game. Use at your own risk.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_pin_icon">
+		<text>Custom mapspot ID to use</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_pin_icon_desc">
+		<text>If you know the name of a valid mapspot ID from the mapspots files, enter it here. WARNING: invalid values will very likely crash your game. Reset it to "user_defined" if nothing else works; it's simple and easy to remember.</text>
+	</string>
+
+	<string id ="st_paw_pin_default_name">
+		<text>Pinned Map Location</text>
+	</string>
+
+	<string id ="st_paw_pin_quick_name">
+		<text>Quick Pin</text>
+	</string>
+
+	<string id ="st_paw_pin_dropped">
+		<text>Quick pin dropped at current location</text>
+	</string>
+
+	<string id ="st_paw_pin_already">
+		<text>You already have a pin at nearest smart %s</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_1">
+		<text>Enable Waypoint and Pin functionality on PDA 1.0</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_1_desc">
+		<text>If enabled, PDA 1.0 will be allowed to use all Waypoint and Pin functionality. If disabled, existing Pins will be preserved, but cannot be displayed until a compatible device is equipped.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_2">
+		<text>Enable Waypoint and Pin functionality on PDA 2.0</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_2_desc">
+		<text>If enabled, PDA 2.0 will be allowed to use all Waypoint and Pin functionality.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_3">
+		<text>Enable Waypoint and Pin functionality on PDA 3.1</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_3_desc">
+		<text>If enabled, PDA 3.1 will be allowed to use all Waypoint and Pin functionality. </text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_milspec">
+		<text>Enable Waypoint and Pin functionality on the Milspec PDA</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_s_device_pda_milspec_desc">
+		<text>If enabled, the Milspec PDA (if installed and available) will be allowed to use all Waypoint and Pin functionality. </text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_pins">
+		<text>Default icon for Pins</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_pins_desc">
+		<text>When the Pins icon set is active, this option determines which icon is assigned to a map pin at the time it is created. Each map pin can have a different icon.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_patches">
+		<text>Default icon for Faction Patches</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_patches_desc">
+		<text>When the Faction Patches icon set is active, this option determines which icon is assigned to a map pin at the time it is created. Each map pin can have a different icon.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_bwhr">
+		<text>Default icon for BW Hi-res POIs</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_bwhr_desc">
+		<text>When the BW Hi-res POIs icon set is active, this option determines which icon is assigned to a map pin at the time it is created. Each map pin can have a different icon.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_faves">
+		<text>Default icon for Favorites</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_faves_desc">
+		<text>When the Favorites icon set is active, this option determines which icon is assigned to a map pin at the time it is created. Each map pin can have a different icon.\n\nNote: you can customize the Favorites, or any other icon set, by editing configs\scripts\paw\icon_set_*.ltx</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_faves">
+		<text>Favorites</text>
+	</string>
+
+	<string id="st_paw_no_last_wp">
+		<text>There is no previous or active waypoint to toggle</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redround32">
+		<text>Red Round Pin</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_stalker32">
+		<text>Stalker Cursor-style Pin</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redmodern32">
+		<text>Modern GMaps-style Pin</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redpush32">
+		<text>Red Push Pin</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_yelpush32">
+		<text>Yellow Push Pin</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_whtsimple32">
+		<text>White Minimalist</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_badge_stalker">
+		<text>Loner</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_army">
+		<text>Military</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_bandit">
+		<text>Bandit</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_csky">
+		<text>Clear Sky</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_dolg">
+		<text>Duty</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_ecolog">
+		<text>Ecologist</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_freedom">
+		<text>Freedom</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_killer">
+		<text>Mercenary</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_monolith">
+		<text>Monolith</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_greh">
+		<text>Sin</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_isg">
+		<text>UNISG</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_renegade">
+		<text>Renegade</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_cart">
+		<text>Cartography Only</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_norm">
+		<text>Normal Only</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_all">
+		<text>Always</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_cmenu_off">
+		<text>Disabled</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_pin_icon_group">
+		<text>Active Pin icon set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_pin_icon_group_desc">
+		<text>Each set of icons below (e.g. Pins, Patches) has an icon that is currently selected in their drop-down list. This radio button determines which of those sets' icons will be used when placing any new pin.\n\nThe Favorites set will always be placed at the top of the list, and you can freely edit which icons it contains in:\n configs\scripts\paw\icon_set_faves.ltx.</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_pins">
+		<text>Pin-Style Icons</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_patches">
+		<text>Faction Patch Icons</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_headertxt">
+		<text>This menu allows you to customize PAW's in-game context menus. You can disable each of the following options to de-clutter your menu, or choose whether each of them appears Always, only when Cartography Mode is active, or only when it is not (Normal PDA view).</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_wp_set">
+		<text>Set Waypoint</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_wp_mov">
+		<text>Move Waypoint</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_wp_del">
+		<text>Remove Waypoint</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_add">
+		<text>Add Pin</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_del">
+		<text>Remove Pin</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_ren">
+		<text>Rename Pin</text>
+	</string>
+	<string id="ui_mcm_pawsys_pawmenu_pn_clr">
+		<text>Clear All Pins</text>
+	</string>
+
+<!-- Added in 1.4 -->
+	<string id="ui_mcm_lst_pawsys_pg_bwhr">
+		<text>BW Hi-res POIs</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_info">
+		<text>BWHR Info</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_signal">
+		<text>BWHR Signal Source</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_loot">
+		<text>BWHR Loot/Valuables</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_death">
+		<text>BWHR Danger</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_ak">
+		<text>BWHR Weapons</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_ammo">
+		<text>BWHR Ammo</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_bio">
+		<text>BWHR Biohazard</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_rad">
+		<text>BWHR Radiation</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_warn">
+		<text>BWHR Warning</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_magn">
+		<text>BWHR Magnifying Glass</text>
+	</string>
+
+<!-- Added in 1.5 -->
+
+	<string id="ui_mcm_lst_paw_badge_hr_stalker">
+		<text>HR Loner</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_army">
+		<text>HR Military</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_bandit">
+		<text>HR Bandit</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_csky">
+		<text>HR Clear Sky</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_dolg">
+		<text>HR Duty</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_ecolog">
+		<text>HR Ecologist</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_freedom">
+		<text>HR Freedom</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_killer">
+		<text>HR Mercenary</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_monolith">
+		<text>HR Monolith</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_greh">
+		<text>HR Sin</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_isg">
+		<text>HR UNISG</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_hr_renegade">
+		<text>HR Renegade</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_badge_uhr_stalker">
+		<text>UHR Loner</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_army">
+		<text>UHR Military</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_bandit">
+		<text>UHR Bandit</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_csky">
+		<text>UHR Clear Sky</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_dolg">
+		<text>UHR Duty</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_ecolog">
+		<text>UHR Ecologist</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_freedom">
+		<text>UHR Freedom</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_killer">
+		<text>UHR Mercenary</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_monolith">
+		<text>UHR Monolith</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_greh">
+		<text>UHR Sin</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_isg">
+		<text>UHR UNISG</text>
+	</string>
+	<string id="ui_mcm_lst_paw_badge_uhr_renegade">
+		<text>UHR Renegade</text>
+	</string>
+
+	<string id ="st_paw_pingspot">
+		<text>Map Ping - Right-click to set waypoint or pin</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawmenu_mping">
+		<text>Ping the map</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_pingsound">
+		<text>Play sound effect when pinging the map</text>
+	</string>
+
+<!-- Added in 1.6 -->
+
+	<string id ="ui_mcm_pawsys_pawpins_milpda_body_icon">
+		<text>Customize body icon used by Milspec PDA</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_milpda_body_icon_desc">
+		<text>This optional feature allows you configure the body marker icon used by Milspec PDA's Kill Tracker feature, if you have that addon installed.\n\nDisabled: MilPDA operates normally\n\nVictim Faction Patch: dead stalkers will have a faction patch for their body marker, all others use the default from the Body Markers set\n\nBody Markers set: MilPDA will use the current default icon from the Body Markers set for all bodies</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_get_milpda">
+		<text>Requires Milspec PDA 1.7.3 or higher:\nhttps://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_pg_bodies">
+		<text>Body Markers</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_poi_icon_bodies">
+		<text>Default icon for Body Markers</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_patch_res">
+		<text>Resolution used for faction patches</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_patch_res_desc">
+		<text>This option determines which icon quality is used for faction patches: the low-res vanilla inventory icons, PAW's hi-res 64x64 patches, or 128x128 versions with a white outline. The low-res and hi-res mapspots are the same size; the UHR versions are about 25% bigger.</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_badge_res">
+		<text>Low-Res (vanilla inventory icon)</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_badge_hr_res">
+		<text>Hi-Res (from clean master)</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_badge_uhr_res">
+		<text>Ultra Hi-Res (with white outline)</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_milpda_body_icon">
+		<text>Customize body icon used by Milspec PDA</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_bodyoff">
+		<text>Disabled</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_bodyfac">
+		<text>Victim Faction Patch</text>
+	</string>
+
+	<string id ="ui_mcm_lst_pawsys_cfg_bodyset">
+		<text>Body Markers set</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawmenu_waypoint_rename">
+		<text>Rename waypoint</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawmenu_waypoint_redesc">
+		<text>Change waypoint description</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_death_small">
+		<text>Small BWHR Death </text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_blue_circle">
+		<text>Blue Circle</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_white">
+		<text>White Crosshairs</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_red">
+		<text>Red Crosshairs</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_green">
+		<text>Green Crosshairs</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_green">
+		<text>Green Crosshairs</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_green">
+		<text>Green Stash Icon</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_white">
+		<text>White Stash Icon</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_purple">
+		<text>Purple Stash Icon</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_red">
+		<text>Red Stash Icon</text>
+	</string>
+
+<!-- Added in 1.6.1 -->
+
+	<string id ="ui_mcm_pawsys_pawgen_wipe_all">
+		<text>Wipe all pin data</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_wipe_all_desc">
+		<text>Removes all pins from the map and wipes the pin database. This cannot be undone.</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_sdot">
+		<text>[MPDA] Small Blue Dot</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_mdot">
+		<text>[MPDA] Medium Blue Dot</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_ldot">
+		<text>[MPDA] Large Blue Dot</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_whtx">
+		<text>[MPDA] White X Mark</text>
+	</string>
+
+	<string id="ui_mcm_lst_deadbody_location_skul">
+		<text>[MPDA] Small Plain Skull</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_togglehold">
+		<text>Behavior of the Cartography Mode keybind</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_toggle">
+		<text>Toggle</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_hold">
+		<text>Hold</text>
+	</string>
+
+<!-- Added in 1.7 -->
+
+	<string id="ui_mcm_pawsys_pawbinds_mwheel_enabled">
+		<text>Mouse wheel support (requires modded binaries)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_mwheel_enabled_desc">
+		<text>When enabled, the mouse wheel can be scrolled up and down to cycle through the active icons or sets.\n
+		This feature requires modded binaries version 20230701 or newer. GAMMA also supports this from 0.9.1 onward.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_mwheel_notify">
+		<text>Display a message when changing mouse wheel mode</text>
+	</string>
+
+	<string id="ui_mcm_paw_modded_binaries">
+		<text>Modded binaries by demonized (required for mouse wheel support):\n https://github.com/themrdemonized/xray-monolith
+		</text>
+	</string>
+
+	<string id="st_paw_change_set">
+		<text>Active Set changed to %s.\n
+		</text>
+	</string>
+
+	<string id="st_paw_change_icon">
+		<text>Active Icon is now</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_next">
+		<text>Cycle to next set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_next_desc">
+		<text>Optional keybind to cycle to the next set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_prev">
+		<text>Cycle to previous set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_prev_desc">
+		<text>Optional keybind to cycle to the previous set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_next">
+		<text>Cycle to next icon in active set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_next_desc">
+		<text>Optional keybind to cycle to the next icon in the active set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_prev">
+		<text>Cycle to previous icon in active set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_prev_desc">
+		<text>Optional keybind to cycle to the previous icon in the active set</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_scroll">
+		<text>Hold to change sets with mouse wheel</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_set_scroll_desc">
+		<text>While this key is held, scrolling the mouse wheel will cycle through the list of sets if mouse scrolling is enabled.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_scroll">
+		<text>Hold to change icons with mouse wheel</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_ico_scroll_desc">
+		<text>While this key is held, scrolling the mouse wheel will cycle through the icons in the active set if mouse scrolling is enabled.</text>
+	</string>
+
+	<string id="st_paw_cycling_sets">
+		<text>Mouse wheel is now cycling sets</text>
+	</string>
+
+	<string id="st_paw_cycling_icons">
+		<text>Mouse wheel is now cycling icons</text>
+	</string>
+
+	<string id="st_paw_mwheel_normal">
+		<text>Mouse wheel returned to default behavior</text>
+	</string>
+
+	<string id ="ui_mcm_menu_pawhud">
+		<text>HUD Widget</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_widget_enable">
+		<text>Enable HUD widget</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_autohide">
+		<text>Autohide delay in seconds (0 never hides)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_hudsound">
+		<text>Play sound effects for UI interactions</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawhud_pingsound">
+		<text>Play sound effect when pinging the map</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_active_theme">
+		<text>Widget visual theme (see below for descriptions)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_custompos">
+		<text>Use the custom position below instead of theme default</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_widgetinfo">
+		<text>The HUD widget displays the current active icon and, depending on the theme, can also display other information.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_x_desc">
+		<text>Sets the X (horizontal) coordinate of the widget's upper left corner. 0,0 is the upper left corner of the screen, 1024,768 is the lower right. The game converts this to your display resolution.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_y_desc">
+		<text>Sets the Y (vertical) coordinate of the widget's upper left corner. 0,0 is the upper left corner of the screen, 1024,768 is the lower right. The game converts this to your display resolution.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_x">
+		<text>X (horizontal, left to right) coordinate</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_pos_y">
+		<text>Y (vertical, top to bottom) coordinate</text>
+	</string>
+
+	<string id="ui_mcm_themes_list">
+		<text>You can read a full description of each available theme below.\n</text>
+	</string>
+
+	<string id="ui_mcm_themes_classicauto">
+		<text>
+			Classic Stalker, Auto-Switch: 138x75 (default pos 890,620)\n
+			Icon and Set text, Next/Current/Prev icons\n
+			Auto-switches to Classic Vertical Right when PDA is open\n
+			Select "Classic" theme if you don't want the auto-switch\n
+			Recommended default
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_classic">
+		<text>
+			Classic Stalker, Horizontal: 138x75 (default pos 890,620)\n
+			Icon and Set text, Next/Current/Prev icons\n
+			Does not auto-switch, but blocked by PDA in its default position
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_vertright">
+		<text>
+			Classic Vertical, Right-aligned: 100x154 (default pos 922,440)\n
+			Icon text, Next/Current/Prev icons\n
+			PDA mode for Classic Stalker Auto-Switch, but can be used on its own
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_vertleft">
+		<text>
+			Classic Vertical, Left-aligned: 100x154 (default pos 4,570)\n
+			Icon text, Next/Current/Prev icons\n
+			Can block news messages in its default position\n
+			Custom position recommended
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_gamma_right">
+		<text>
+			GAMMA Style, Right-aligned: 136x150 (default pos 888,440)\n
+			Icon and Set text, Next/Current/Prev icons\n
+			Visible both with and without PDA open
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_gamma_left">
+		<text>
+			GAMMA Style, Left-aligned: 136x150 (default pos 4,440)\n
+			Icon and Set text, Next/Current/Prev icons\n
+			Can block news messages in its default position\n
+			Custom position recommended
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_minimal_h">
+		<text>
+			Minimalist, Horizontal: 94x52 (default pos 924,645)\n
+			Icon text, Next/Current/Prev icons on drop shadow\n
+			Blocked by PDA in its default position\n
+			Custom position recommended
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_minimal_v">
+		<text>
+			Minimalist, Vertical: 92x112 (default pos 924,440)\n
+			Icon text, Next/Current/Prev icons on drop shadow\n
+			No left-aligned version
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_minicom">
+		<text>
+			Minimalist, Compact: 38x38 (default pos 890,440)\n
+			Displays current icon only, on drop shadow\n
+			blocked by PDA in its default position
+		</text>
+	</string>
+
+	<string id="ui_mcm_themes_compact_noui">
+		<text>
+			Compact, No UI Frame: 32x32 (default pos 890,440)\n
+			Displays current icon only, no other UI or background\n
+			Suitable for positioning nearly anywhere, easy to integrate with custom HUDs
+		</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_classicauto">
+		<text>Classic Stalker, H/V Auto Switch</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_classic">
+		<text>Classic Stalker, Horizontal (890,620)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_vertright">
+		<text>Classic, Vertical, Right-Aligned (922,440)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_vertleft">
+		<text>Classic, Vertical, Left-Aligned (4,570)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_gamma_right">
+		<text>GAMMA Style, Right-Aligned (888,440)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_gamma_left">
+		<text>GAMMA Style, Left-Aligned (4,574)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_minimal_h">
+		<text>Minimalist, Horizontal (890,650)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_minimal_v">
+		<text>Minimalist, Vertical (890,440)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_minicom">
+		<text>Minimalist, Compact (820,725)</text>
+	</string>
+
+	<string id="ui_mcm_lst_theme_compact_noui">
+		<text>Compact, No UI Frame (820,725)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_enabled">
+		<text>Enabled</text>
+	</string>
+
+<!-- Added in 1.7.1 -->
+
+	<string id="st_paw_waypoint_cleared">
+		<text>Current waypoint cleared</text>
+	</string>
+
+<!-- Added in 1.7.2 -->
+
+	<string id="ui_mcm_paw_moddb_link">
+		<text>PAW: https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+		</text>
+	</string>
+
+	<string id="ui_mcm_paw_milpda_link">
+		<text>Milspec PDA: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+		</text>
+	</string>
+
+<!-- Added in 1.7.3 -->
+
+	<string id="ui_mcm_pawsys_pawgen_disable_mcmups">
+		<text>Disable immediate MCM updates</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_disable_mcmups_desc">
+		<text>When you change the current icon/set during gameplay, PAW updates the same setting in MCM. This is so that your changes will be saved even if the game crashes, but it can cause a performance impact on some machines. Enabling this setting will turn off this feature, but the settings will still be stored when you save your game. However, changes will not be reflected in MCM if you enter its menu before saving.</text>
+	</string>
+
+<!-- Added in 1.7.4 -->
+
+	<string id="ui_mcm_pawsys_pawmenu_show_all_pins">
+		<text>Show All Pins</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hide_all_pins">
+		<text>Hide All Pins</text>
+	</string>
+
+<!-- Added in 1.8 -->
+
+	<string id="ui_mcm_pawsys_pawgen_wp_clear_dist">
+		<text>Waypoint autoclear distance (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_hud_icon_enabled">
+		<text>Show waypoint marker on HUD</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_welcome_msg_shown">
+		<text>Don't show PAW welcome message on savegame load</text>
+	</string>
+
+	<string id="st_pawsys_welcome_msg">
+		<text>$clr_prp[ Personal Adjustable Waypoint System initialized ]$clr_wht \n \n
+• Right-click on any visible map icon to set a custom quest marker ($clr_lblwaypoint$clr_wht) or place and label map markers called $clr_lblpins$clr_wht.\n
+• Press $clr_yel%s$clr_wht to toggle the waypoint on or off at any time. If you don't want a visible HUD marker, you can disable it in MCM.\n
+• Press $clr_yel%s$clr_wht to mark the map with a $clr_lblQuick Pin$clr_wht at your current location.\n
+• Hold $clr_yel%s$clr_wht to enter $clr_lblCartography Mode$clr_wht for more map functions, like $clr_lblpinging$clr_wht the map to display temporary markers for precise pin and waypoint placement.\n
+\n
+You'll find all this and more in MCM under $clr_lblAdjustable Waypoint$clr_wht.\n
+\n
+This message won't bother you again. Good hunting, %s.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hud_vis_on">
+		<text>Show Pin on HUD</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hud_vis_off">
+		<text>Hide Pin from HUD</text>
+	</string>
+
+	<string id="st_paw_system_disabled">
+		<text>PAW System is disabled</text>
+	</string>
+
+
+<!-- Added in 1.10 -->
+
+
+	<string id="ui_mcm_paw_current_active_pin">
+		<text>Active Pin:</text>
+	</string>
+
+	<string id="ui_mcm_paw_pinmenu_header">
+		<text>When you place a pin, it uses the Default icon from the Current Active Set. You can change them here, or cycle through pins and sets in-game using keybinds of your choice.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_toggle">
+		<text>Cartography Mode is a toggle</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_toggle_desc">
+		<text>By default, you must hold down the key for Cartography Mode. If this option is enabled, it operates as a toggle instead.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cart_shows_smarts">
+		<text>Cartography Mode shows smart terrains</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cart_shows_smarts_desc">
+		<text>By default, Cartography Mode shows an icon (white map with a magnifying glass) to indicate smart terrain spots. If you don't need or want to see these for any reason, you can turn them off with this option.</text>
+	</string>
+
+<!-- Added in 1.11 -->
+
+	<string id="st_paw_meters_abbr">
+		<text>m</text>
+	</string>
+
+	<string id="st_paw_unknown">
+		<text>Unknown</text>
+	</string>
+
+	<string id="st_paw_stash">
+		<text>stash</text>
+	</string>
+
+	<string id="st_paw_squad">
+		<text>squad</text>
+	</string>
+
+	<string id="st_paw_npc_pda_equipped">
+		<text>You are currently using an NPC's looted PDA, not your own. Equip a player PDA to make use of waypoints, map pins, or other PAW System functionality.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_wp">
+		<text>Show distance on waypoint HUD marker</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_wp_desc">
+		<text>Choose when the waypoint HUD marker should show an indicator for distance: never, always, only when Cartography Mode is active, or only when it is not (Normal PDA view). Has no effect when the HUD marker is not enabled.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_pins">
+		<text>Show distance on pin HUD markers</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_dist_pins_desc">
+		<text>Choose when markers for pins on the HUD should show an indicator for distance: never, always, only when Cartography Mode is active, or only when it is not (Normal PDA view). Has no effect if there are no pins set visible on the HUD.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_show_hint_pins">
+		<text>Show label on pin HUD markers</text>
+	</string>
+	
+	<string id="ui_mcm_pawsys_pawgen_show_hint_pins_desc">
+		<text>Choose when markers for pins on the HUD should display their text label above the icon: never, always, only when Cartography Mode is active, or only when it is not (Normal PDA view). Has no effect if there are no pins set visible on the HUD.</text>
+	</string>
+
+<!-- Added in 1.12 -->
+
+	<string id="ui_mcm_lst_pawsys_pg_npcs">
+		<text>NPCs and Services</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_npcs">
+		<text>Default icon for NPCs and Services</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_diamond_friendly">
+		<text>Friendly (diamond style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_diamond_neutral">
+		<text>Neutral (diamond style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_diamond_enemy">
+		<text>Enemy (diamond style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_chevron_friendly">
+		<text>Friendly (chevron style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_chevron_neutral">
+		<text>Neutral (chevron style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_chevron_enemy">
+		<text>Enemy (chevron style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_flag_friendly">
+		<text>Friendly (flag style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_flag_neutral">
+		<text>Neutral (flag style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_flag_enemy">
+		<text>Enemy (flag style)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_mechanic">
+		<text>NPC Mechanic</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_trader">
+		<text>NPC Trader</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_guide">
+		<text>NPC Guide</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_food_trader">
+		<text>NPC Food Trader</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_npc_medic">
+		<text>NPC Medic</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_sleep_zone">
+		<text>Sleeping Area</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_obj_briefcase">
+		<text>Briefcase Object</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_obj_lock">
+		<text>Locked Object</text>
+	</string>
+
+	<string id="ui_mcm_paw_cartmode_head">
+		<text>Cartography Mode</text>
+	</string>
+
+	<string id="ui_mcm_paw_cartmode_desc">
+		<text>Cartography Mode enables additional mapping functionality without cluttering the HUD or menu during normal play. You can configure what functions appear in this mode (or in normal PDA mode) in the Context Menus MCM submenu.</text>
+	</string>
+
+	<string id="ui_mcm_paw_mousewheel_head">
+		<text>Mouse Wheel Support</text>
+	</string>
+
+	<string id="ui_mcm_paw_crosshair_target_head">
+		<text>Waypointing and Pins - Crosshair Targeting</text>
+	</string>
+
+	<string id="ui_mcm_paw_crosshair_target_desc">
+		<text>These two keybinds allow you to use waypoints and pins on whatever object is currently under your crosshair. Waypoints have the option of being set anywhere. When setting pins, there must be a valid object exactly under the center of the crosshair. For a stalker, this means centered enough for the crosshair identification to activate.</text>
+	</string>
+
+	<string id="ui_mcm_paw_generalbinds_head">
+		<text>Waypointing and Pins - General Keybinds</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_wp_target_obj">
+		<text>Keypress to set waypoint on the target object</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_wp_target_obj_desc">
+		<text>When this key is pressed, the waypoint will be set--or moved--to the object under the player's crosshair. If it was already set to the target object, it will be disabled.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_pin_target_obj">
+		<text>Keypress to set a pin on the target object</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_bind_pin_target_obj_desc">
+		<text>When this key is pressed, a pin will be placed on the object under the player's crosshair if there isn't one already, using the current active icon. If a pin already exists for the target, it will be removed.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_pin_auto_visible">
+		<text>Pins created by targeting default to visible on the HUD</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_pin_auto_visible_desc">
+		<text>If a pin was created by targeting an object with the crosshairs (whether manually or with Autotag), it will automatically be shown on the HUD. You can show or hide pins on the HUD at any time using your PDA.</text>
+	</string>
+
+
+	<string id="st_paw_pin_removed_from_target">
+		<text>Pin $clr_yel%s$clr_wht removed from $clr_lbl%s$clr_wht.</text>
+	</string>
+
+	<string id="st_paw_pin_added_to_target">
+		<text>Pin added to $clr_lbl%s$clr_wht using icon: $clr_lbl%s$clr_wht.\n
+		You can change the current active icon with $clr_yel%s$clr_wht/$clr_yel%s$clr_wht.</text>
+	</string>
+
+	<string id="ui_mcm_paw_pin_target_desc">
+		<text>Pin $clr_yel%s$clr_wht removed from $clr_lbl%s$clr_wht.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_tip_on_icoset_change">
+		<text>Show news tip when changing icons or sets using keybinds</text>
+	</string>
+
+<!-- Added in 1.13 -->
+
+	<string id="ui_mcm_pawsys_pawgen_pin_near_fade_dist">
+		<text>Pin near fade-out distance (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_near_fade_dist_desc">
+		<text>When the player comes within this distance of a pin, it will begin to fade out.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_fade_dist">
+		<text>Pin far fade-out distance (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_fade_dist_desc">
+		<text>When the player gets this far away from a pin, it will begin to fade out.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_hide_dist">
+		<text>Pin far hide distance (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_pin_far_hide_dist_desc">
+		<text>If the player is more than this far beyond where the fade-out begins, a pin will disappear completely.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_unfade">
+		<text>Pins on the HUD never fade out while in Cartography Mode</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_cartmode_unfade_desc">
+		<text>If there are any pins on the HUD, and they are normally set to fade out, they won't do so while Cartography Mode is active.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_lock_pin">
+		<text>Lock Pin</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_unlock_pin">
+		<text>Unlock Pin</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mode">
+		<text>Show smart reticle when a valid object is targeted</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mode_desc">
+		<text>This setting controls when the smart reticle can appear: always, only when Cartography Mode is active, or never (disabled).</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_alpha">
+		<text>Reticle transparency</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_alpha_desc">
+		<text>The reticle's maximum alpha (transparency) value, with 0 being completely hidden and 255 being fully opaque.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_attack_time">
+		<text>Fade-in duration for object reticle</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_attack_time_desc">
+		<text>The time, in milliseconds, that it takes for the reticle to finish fading in when targeting a valid object.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_decay_time">
+		<text>Fade-out duration for object reticle</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_ret_fade_decay_time_desc">
+		<text>The time, in milliseconds, that it takes for the reticle to finish fading out after the crosshair no longer has a target.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_preview_aspect">
+		<text>Aspect ratio for the screen preview below</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_4_3">
+		<text>4:3 (Standard Definition)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_16_10">
+		<text>16:10 (1920x1200, 2560x1600)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_16_9">
+		<text>16:9 (1080p, 1440p, 2160p)</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_aspect_21_9">
+		<text>21:9 (Ultrawide)</text>
+	</string>
+
+<!-- Added in 1.14 -->
+
+	<string id="ui_mcm_paw_resolutions">
+		<text>Example resolutions in this aspect ratio:\n</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_4_3">
+		<text>\n1024x768\n1600x1200</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_16_9">
+		<text>\n1920x1080\n1280x720\n1600x900\n2560x1440\n3840x2160</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_16_10">
+		<text>\n1280x800\n1920x1200\n2560x1600\n3840x2400</text>
+	</string>
+
+	<string id="ui_mcm_paw_resolutions_21_9">
+		<text>\n2560x1080\n3440x1440\n3840x1600</text>
+	</string>
+
+<!-- Added in 1.16 -->
+
+	<string id="ui_mcm_menu_pawret">
+		<text>Reticle / Autotag</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_enable_autotag">
+		<text>Enable automatic smart tagging on reticle ID</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_enable_autotag_desc">
+		<text>When this feature is enabled, PAW's HUD reticle will automatically "tag" valid target objects with an appropriate pin once they are identified, as configured below.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_reticle_info1">
+		<text>Use pins and waypoints on any valid object under your crosshairs using configurable hotkeys. By default, the reticle fades in and out to indicate when you are targeting a valid object.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_reticle_info2">
+		<text>To instead mark targeted objects automatically, see the "Autotag" setting below.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_autotag_info">
+		<text>Autotag will automatically mark certain types of objects with pre-defined pins of your choice once they are positively identified. This allows you to free up keybinds, and focus on the Zone instead of your PDA or menus.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawhud_autotag_facid">
+		<text>It functions similarly to the Faction Identification addon, reading its MCM settings so that PAW and FacID can work together. Changes that you make in FacID's MCM menu will be respected by PAW.</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_pg_smartpins">
+		<text>Smart Pins</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawpins_poi_icon_smartpins">
+		<text>Default icon for Smart Pins</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_human_f_enable">
+		<text>Enable Autotagging for friendly stalkers</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_f">
+		<text>Human (friendly) icon</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_f_desc">
+		<text>Autotag will assign this icon to friendly stalkers.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_human_n_enable">
+		<text>Enable Autotagging for neutral stalkers</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_n">
+		<text>Human (neutral) icon</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_n_desc">
+		<text>Autotag will assign this icon to neutral stalkers.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_human_e_enable">
+		<text>Enable Autotagging for enemy stalkers</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_e">
+		<text>Human (enemy) icon</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_human_e_desc">
+		<text>Autotag will assign this icon to enemy stalkers.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_monster_enable">
+		<text>Enable Autotagging for monsters</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_monster">
+		<text>Monsters</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_monster_desc">
+		<text>Autotag will assign this icon to mutants, monsters, and other nonhuman creatures.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_stash_enable">
+		<text>Enable Autotagging for stash containers</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_stash">
+		<text>Stash container icon</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_stash_desc">
+		<text>Autotag will assign this icon to stashes and other inventory boxes.</text>
+	</string>
+
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mustzoom">
+		<text>Only active while using scope/binoculars</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_reticle_mustzoom_desc">
+		<text>If this option is enabled, the reticle (and its tagging features) will only be enabled while zoomed with binoculars or a scoped weapon. This is recommended so that tags won't be created just from walking up to or talking to an NPC.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_manual_smart_pins">
+		<text>Manually targeted pins are also smart</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_manual_smart_pins_desc">
+		<text>If this option is enabled, reticle pins created by manually triggering the associated keybind will also use the Autotag settings below, assigning the selected icon for the targeted object instead of the current active icon.</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_pin_redskull">
+		<text>Red Beast Skull</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_crosshair_gradient">
+		<text>Gradient Crosshairs</text>
+	</string>
+
+<!-- Added in 1.16.3 -->
+
+	<string id="st_paw_texture_load_error_tip">
+		<text>The $clr_yelPersonal Adjustable Waypoint$clr_wht addon $clr_redfailed to load its texture data$clr_wht, and has disabled itself in order to protect your game from crashes. \n \n
+		Check the game log for errors, and ensure that nothing loads after PAW which modifies the file $clr_yelmap_spots_relations.xml$clr_wht. \n \n
+		This only requires a change in load order, and is usually easy to resolve. However, if you never intend to use PAW's features, and don't care that something else is breaking it, you can disable this error message under the $clr_yelAdjustable Waypoint$clr_wht menu in MCM.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error_mcmhead1">
+		<text>WARNING: mapspot texture data missing.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error_mcmhead2">
+		<text>To avoid crashes, both PAW and many parts of its MCM menus have been disabled until this issue is resolved.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error1">
+		<text>Personal Adjustable Waypoint could not load texture data from map_spots_relations.xml. This is almost ALWAYS caused by loading another addon after PAW which modifies that file. Examples include (but are not limited to) Kill Tracker or Milspec PDA.</text>
+	</string>
+
+	<string id="st_paw_texture_load_error2">
+		<text>If you are using Mod Organizer 2 (or a modpack such as GAMMA that uses it), adjust your load order so that PAW loads after (below) any and all addons which modify map_spots_relations.xml. If you are not using MO2, you should do so.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_disable_load_warning">
+		<text>Disable the in-game warning for this error (NOT recommended)</text>
+	</string>
+
+<!-- Added in 1.17 -->
+
+	<string id="ui_mcm_pawsys_pawret_autotag_persistence">
+		<text>Autotag pins are persistent</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_autotag_persistence_desc">
+		<text>Unless this option is enabled, all pins added by autotagging will be temporary--that is, they will automatically disappear on next map change or savegame load, or when timed out after the below number of seconds.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_autotag_lifetime">
+		<text>Autotag expiration time (in seconds)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawret_autotag_lifetime_desc">
+		<text>If Autotag persistence is not enabled, tags will be automatically cleared after this many seconds. Setting this to zero will disable the timeout, but temporary tags will still be cleared on the next map change or savegame load.</text>
+	</string>
+
+<!-- Added in 2.0 -->
+
+	<string id="ui_mcm_pawsys_pawgen_headertxt">
+		<text>
+		$clr_yelPAW$clr_wht isn't just a waypoint marker--it's a suite of mapping and navigation tools that give you more control over your map and HUD, letting you mark your own path through the Zone. $clr_yelAll of these features are optional and customizable to your liking.$clr_wht \n \n
+		•$clr_lbl Set your own quest marker anywhere, anytime, and customize its text$clr_wht \n 
+		•$clr_lbl Place, rename, and remove map markers ("pins") anywhere on the map with your choice of icon$clr_wht \n 
+		•$clr_lbl Automatically tag ID'd targets with "smart" pins of your choice, and display them on the HUD$clr_wht \n \n
+		$clr_yelDon't let NPCs tell you where to go--put your PAW down and make the map yours.$clr_wht
+		</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_clear_dist_desc">
+		<text>When the player comes within this distance of the waypoint marker, it will automatically be cleared. Setting this to zero will disable the autoclear setting entirely.</text>
+	</string>
+
+<!-- Added in 2.1 -->
+
+	<string id="ui_mcm_pawsys_pawmenu_show_label">
+		<text>Show Map Label</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_hide_label">
+		<text>Hide Map Label</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_pn_settings">
+		<text>Pin Settings</text>
+	</string>
+
+	<string id="st_paw_argb_a">
+		<text>A</text>
+	</string>
+
+	<string id="st_paw_argb_r">
+		<text>R</text>
+	</string>
+
+	<string id="st_paw_argb_g">
+		<text>G</text>
+	</string>
+
+	<string id="st_paw_argb_b">
+		<text>B</text>
+	</string>
+
+	<string id="ui_paw_use_custom_color">
+		<text>Customize color</text>
+	</string>
+
+	<string id="ui_paw_reset_defaults">
+		<text>Default Settings</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_tag">
+		<text>BWHR Target Tag</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_convert_to_pin">
+		<text>Convert to Pin and Customize</text>
+	</string>
+
+	<string id="ui_paw_hint_sidebar_desc">
+		<text>Open or close the pin and set control sidebar</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_wp_settings">
+		<text>Waypoint Settings</text>
+	</string>
+
+	<string id="st_paw_target">
+		<text>Target</text>
+	</string>
+
+	<string id="st_paw_wp_active">
+		<text>Waypoint is active</text>
+	</string>
+
+	<string id="st_paw_none">
+		<text>None</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_backpack_icon">
+		<text>Customize icon for player backpack stashes</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_use_custom_backpack_icon_desc">
+		<text>If enabled, when placing a backpack stash, PAW will attempt to replace the usual generic stash icon with one of your choosing.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_backpack_icon">
+		<text>Icon to use from Favorites set</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawpins_custom_backpack_icon_desc">
+		<text>If you don't see the icon you want here, edit configs\ui\icon_set_faves.ltx and add it to the list.</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_stash_backpack">
+		<text>Backpack Stash</text>
+	</string>
+
+	<string id="ui_mcm_lst_paw_bwhr_stash">
+		<text>BWHR Stash Icon</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_sidebar_desc">
+		<text>$clr_whtOpen or close the$clr_yel Icon Library Sidebar$clr_wht, which lets you browse through all of your sets and replace the pin's current icon with any other. You can scroll your mouse wheel while hovering certain controls to cycle through sets and icons.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_delete_desc">
+		<text>$clr_whtClicking this button will$clr_orn immediately and permanently remove this pin.$clr_wht There is no confirmation, and this cannot be undone.\nYou can$clr_yel lock$clr_wht a pin to protect it from accidental deletion.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_ok_desc">
+		<text>$clr_whtAccept any changes to this pin and close the dialog.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_cancel_desc">
+		<text>$clr_whtDiscard any changes to this pin and close the dialog.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_sound_desc">
+		<text>$clr_whtToggle $clr_yelUI sound effects on or off$clr_wht. This can also be set in PAW's MCM menu.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_lock_desc">
+		<text>$clr_whtA$clr_yel locked$clr_wht pin is protected from any and all changes other than the pin data wipe in MCM. Even the$clr_yel Clear All Pins$clr_wht context action will ignore it.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_text_desc">
+		<text>$clr_whtShow or hide the pin's text as a$clr_yel visible label$clr_wht on the PDA map.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_hud_desc">
+		<text>$clr_whtShow or hide a$clr_yel visible HUD marker$clr_wht for this pin.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_desc">
+		<text>$clr_whtClick here to$clr_yel edit the label$clr_wht for this pin.</text>
+	</string>
+
+	<string id="ui_paw_hint_check_argb_desc">
+		<text>$clr_whtEnable or disable$clr_yel color and transparency customization$clr_wht for this pin's icon. Note that all changes are relative to the starting color of the icon--some changes will look better than others, but only black-and-white icons can be made any color.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_a_desc">
+		<text>$clr_whtClick here to$clr_yel edit the Alpha (transparency)$clr_wht for this pin's icon. Setting it to 0 will make the pin invisible; 255 is completely opaque.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_r_desc">
+		<text>$clr_whtClick here to$clr_yel edit the Red channel$clr_wht for this pin's icon color. This change is relative to the starting color of the icon--only black-and-white icons can be made any color.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_g_desc">
+		<text>$clr_whtClick here to$clr_yel edit the Green channel$clr_wht for this pin's icon color. This change is relative to the starting color of the icon--only black-and-white icons can be made any color.</text>
+	</string>
+
+	<string id="ui_paw_hint_input_b_desc">
+		<text>$clr_whtClick here to$clr_yel edit the Blue channel$clr_wht for this pin's icon color. This change is relative to the starting color of the icon--only black-and-white icons can be made any color.</text>
+	</string>
+
+	<string id="ui_paw_hint_btn_wpreset_desc">
+		<text>$clr_whtResets all waypoint settings back to their defaults, including any text customizations above. The current waypoint, if any, is preserved.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_near_fade_dist">
+		<text>Waypoint near fade-out distance (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_near_fade_dist_desc">
+		<text>When the player comes within this distance of the waypoint, it will begin to fade out.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_fade_dist">
+		<text>Waypoint far fade-out distance (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_fade_dist_desc">
+		<text>When the player gets this far away from the waypoint, it will begin to fade out.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_hide_dist">
+		<text>Waypoint far hide distance (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_wp_far_hide_dist_desc">
+		<text>If the player is more than this far beyond where the fade-out begins, the waypoint will disappear completely.</text>
+	</string>
+
+
+<!-- Added in 2.1.2 -->
+
+	<string id="ui_paw_mapspot_tooltip_mode">
+		<text>Tooltip Mode</text>
+	</string>
+
+	<string id="ui_mcm_lst_pawsys_msttmode_text">
+		<text>Use Pin Text</text>
+	</string>
+	<string id="ui_mcm_lst_pawsys_msttmode_obj">
+		<text>Use Object Name</text>
+	</string>
+
+<!-- Added in 2.2 -->
+
+	<string id="ui_mcm_pawsys_pawbinds_raytrace_wp_targets">
+		<text>Waypoints don't require a target object</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawbinds_raytrace_wp_targets_desc">
+		<text>Normally, PAW's waypoint targeting requires a valid object under the cursor, such as an NPC. When this option is enabled, and there is no object under the cursor, a custom waypoint will instead be set on the arbitrary point in space being targeted by the player.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_uninstall">
+		<text>Uninstall PAW (delete data from save)</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawgen_uninstall_desc">
+		<text>Like Wipe All, but also completely deletes all PAW data from your save, and sets a temporary flag so that PAW data will not be written when your game is saved. This allows you to "clean" a save if necessary.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_clear_nearby">
+		<text>Clear Nearby Pins</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_clear_radius">
+		<text>Radius for Clear Nearby Pins (in meters)</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_clear_radius_desc">
+		<text>
+		When Clear Nearby Pins is used, all pins within this radius around the clicked point will be irrevocably deleted.\n\n
+		To ensure all markers have been cleaned up, all mapspots will be removed from these pins as well. Note that if this results in a system mapspot being removed, it will be re-added by Anomaly on the next saveload or map transition.</text>
+	</string>
+
+	<string id ="ui_mcm_pawsys_pawret_notify_pin_target">
+		<text>Show news tip when manually tagging a target</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_verbose">
+		<text>Debug logging is verbose</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_verbose_desc">
+		<text>"Verbose" is programmer-speak for "really spammy". This puts the maximum amount of information into the log, and must be enabled if you are reporting a problem.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawmenu_persistent">
+		<text>Pin is persistent</text>
+	</string>
+
+	<string id="ui_paw_hint_check_pers_desc">
+		<text>$clr_whtToggle whether the pin is $clr_yelpersistent$clr_wht, and will stay until you remove it. Pins that are $clr_yelnot persistent$clr_wht may have an expiration time depending on MCM settings, and will always be removed on the next saveload or level transition.</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_hide_intro_header">
+		<text>Hide PAW's MCM intro header</text>
+	</string>
+
+	<string id="ui_mcm_pawsys_pawgen_hide_intro_header_desc">
+		<text>PAW has a colorful intro message for new users, but if you're already familiar with PAW, it's just taking up space in the menu. This option hides or shows the header.</text>
+	</string>
+
+	<string id="ui_paw_hide_intro_header">
+		<text>$clr_tgrDon't show this intro message again</text>
+	</string>
+
+</string_table>
+
+<!-- Added in 2.3 -->
+
+<string_table>
+	<string id="encyclopedia_addons">
+		<text>Addons</text>
+	</string>
+
+	<string id="encyclopedia_addons_addon_name">
+		<text>Personal Adjustable Waypoint</text>
+	</string>
+
+	<string id="encyclopedia_addons_addon_name_text">
+		<text>
+
+			Needs content
+
+
+			%c[ui_gray_1]
+			\n%c[pda_yellow]Addon Name%c[ui_gray_1] description goes here.\n 
+
+			\nSecond description paragraph.\n
+
+			\n%c[pda_white]From MCM, go to %c[pda_yellow]MCM > Adjustable Waypoint%c[pda_white]:\n
+			%c[pda_yellow]General%c[pda_white]: General settings\n \n
+
+			\n%c[pda_green]FEATURE LIST\n
+			%c[pda_yellow]• First Feature%c[ui_gray_1]
+			\nFeature Description\n \n
+
+			%c[pda_yellow]• Second Feature%c[ui_gray_1]
+			\nFeature Description\n \n
+
+			Anything further
+		</text>
+	</string>
+
+</string_table>

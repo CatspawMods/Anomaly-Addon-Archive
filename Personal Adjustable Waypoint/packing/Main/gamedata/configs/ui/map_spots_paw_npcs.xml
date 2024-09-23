@@ -1,0 +1,164 @@
+<!-- ======================================================================
+	Personal Adjustable Waypoint 
+	Author: Catspaw (CatspawMods @ ModDB)
+	Updated: 20231012
+===========================================================================
+	Hi-res colored NPC and service icons
+========================================================================-->
+	<paw_diamond_friendly>
+		<level_map spot="paw_diamond_friendly_spot"/>
+		<mini_map spot="paw_diamond_friendly_spot"/>
+	</paw_diamond_friendly>
+
+	<paw_diamond_friendly_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_diamond_f</texture>
+	</paw_diamond_friendly_spot>
+
+	<paw_diamond_neutral>
+		<level_map spot="paw_diamond_neutral_spot"/>
+		<mini_map spot="paw_diamond_neutral_spot"/>
+	</paw_diamond_neutral>
+
+	<paw_diamond_neutral_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_diamond_n</texture>
+	</paw_diamond_neutral_spot>
+
+	<paw_diamond_enemy>
+		<level_map spot="paw_diamond_enemy_spot"/>
+		<mini_map spot="paw_diamond_enemy_spot"/>
+	</paw_diamond_enemy>
+
+	<paw_diamond_enemy_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_diamond_e</texture>
+	</paw_diamond_enemy_spot>
+
+
+	<paw_chevron_friendly>
+		<level_map spot="paw_chevron_friendly_spot"/>
+		<mini_map spot="paw_chevron_friendly_spot"/>
+	</paw_chevron_friendly>
+
+	<paw_chevron_friendly_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_chevron_f</texture>
+	</paw_chevron_friendly_spot>
+
+	<paw_chevron_neutral>
+		<level_map spot="paw_chevron_neutral_spot"/>
+		<mini_map spot="paw_chevron_neutral_spot"/>
+	</paw_chevron_neutral>
+
+	<paw_chevron_neutral_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_chevron_n</texture>
+	</paw_chevron_neutral_spot>
+
+	<paw_chevron_enemy>
+		<level_map spot="paw_chevron_enemy_spot"/>
+		<mini_map spot="paw_chevron_enemy_spot"/>
+	</paw_chevron_enemy>
+
+	<paw_chevron_enemy_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_chevron_e</texture>
+	</paw_chevron_enemy_spot>
+
+
+	<paw_flag_friendly>
+		<level_map spot="paw_flag_friendly_spot"/>
+		<mini_map spot="paw_flag_friendly_spot"/>
+	</paw_flag_friendly>
+
+	<paw_flag_friendly_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_flag_f</texture>
+	</paw_flag_friendly_spot>
+
+	<paw_flag_neutral>
+		<level_map spot="paw_flag_neutral_spot"/>
+		<mini_map spot="paw_flag_neutral_spot"/>
+	</paw_flag_neutral>
+
+	<paw_flag_neutral_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_flag_n</texture>
+	</paw_flag_neutral_spot>
+
+	<paw_flag_enemy>
+		<level_map spot="paw_flag_enemy_spot"/>
+		<mini_map spot="paw_flag_enemy_spot"/>
+	</paw_flag_enemy>
+
+	<paw_flag_enemy_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_cursor_flag_e</texture>
+	</paw_flag_enemy_spot>
+
+
+	<paw_npc_mechanic>
+		<level_map spot="paw_npc_mechanic_spot"/>
+		<mini_map spot="paw_npc_mechanic_spot"/>
+	</paw_npc_mechanic>
+
+	<paw_npc_mechanic_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_impobj_mechanic</texture>
+	</paw_npc_mechanic_spot>
+
+	<paw_npc_trader>
+		<level_map spot="paw_npc_trader_spot"/>
+		<mini_map spot="paw_npc_trader_spot"/>
+	</paw_npc_trader>
+
+	<paw_npc_trader_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_impobj_trade</texture>
+	</paw_npc_trader_spot>
+
+	<paw_npc_guide>
+		<level_map spot="paw_npc_guide_spot"/>
+		<mini_map spot="paw_npc_guide_spot"/>
+	</paw_npc_guide>
+
+	<paw_npc_guide_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_impobj_person</texture>
+	</paw_npc_guide_spot>
+
+	<paw_npc_food_trader>
+		<level_map spot="paw_npc_food_trader_spot"/>
+		<mini_map spot="paw_npc_food_trader_spot"/>
+	</paw_npc_food_trader>
+
+	<paw_npc_food_trader_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_impobj_food</texture>
+	</paw_npc_food_trader_spot>
+
+	<paw_npc_medic>
+		<level_map spot="paw_npc_medic_spot"/>
+		<mini_map spot="paw_npc_medic_spot"/>
+	</paw_npc_medic>
+
+	<paw_npc_medic_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_impobj_medic</texture>
+	</paw_npc_medic_spot>
+
+	
+	<paw_sleep_zone>
+		<level_map spot="paw_sleep_zone_spot"/>
+		<mini_map spot="paw_sleep_zone_spot"/>
+	</paw_sleep_zone>
+
+	<paw_sleep_zone_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_impobj_bed</texture>
+	</paw_sleep_zone_spot>
+
+	<paw_obj_briefcase>
+		<level_map spot="paw_obj_briefcase_spot"/>
+		<mini_map spot="paw_obj_briefcase_spot"/>
+	</paw_obj_briefcase>
+
+	<paw_obj_briefcase_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_impobj_briefcase</texture>
+	</paw_obj_briefcase_spot>
+
+	<paw_obj_lock>
+		<level_map spot="paw_obj_lock_spot"/>
+		<mini_map spot="paw_obj_lock_spot"/>
+	</paw_obj_lock>
+
+	<paw_obj_lock_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_obj_lock</texture>
+	</paw_obj_lock_spot>
+

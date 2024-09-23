@@ -1,0 +1,125 @@
+<!-- ======================================================================
+	Personal Adjustable Waypoint 
+	Author: Catspaw (CatspawMods @ ModDB)
+	Updated: 20230830
+===========================================================================
+	Hi-res BW mapspot icons - custom-made for PAW
+========================================================================-->
+	<paw_bwhr_loot>
+		<level_map spot="paw_bwhr_loot_spot"/>
+		<mini_map spot="paw_bwhr_loot_spot"/>
+	</paw_bwhr_loot>
+
+	<paw_bwhr_loot_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_loot64</texture>
+	</paw_bwhr_loot_spot>
+
+
+	<paw_bwhr_warn>
+		<level_map spot="paw_bwhr_warn_spot"/>
+		<mini_map spot="paw_bwhr_warn_spot"/>
+	</paw_bwhr_warn>
+
+	<paw_bwhr_warn_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_warn64</texture>
+	</paw_bwhr_warn_spot>
+
+
+	<paw_bwhr_ak>
+		<level_map spot="paw_bwhr_ak_spot"/>
+		<mini_map spot="paw_bwhr_ak_spot"/>
+	</paw_bwhr_ak>
+
+	<paw_bwhr_ak_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_ak64</texture>
+	</paw_bwhr_ak_spot>
+
+
+	<paw_bwhr_signal>
+		<level_map spot="paw_bwhr_signal_spot"/>
+		<mini_map spot="paw_bwhr_signal_spot"/>
+	</paw_bwhr_signal>
+
+	<paw_bwhr_signal_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_signal64</texture>
+	</paw_bwhr_signal_spot>
+
+
+	<paw_bwhr_death>
+		<level_map spot="paw_bwhr_death_spot"/>
+		<mini_map spot="paw_bwhr_death_spot"/>
+	</paw_bwhr_death>
+
+	<paw_bwhr_death_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_death64</texture>
+	</paw_bwhr_death_spot>
+
+
+	<paw_bwhr_ammo>
+		<level_map spot="paw_bwhr_ammo_spot"/>
+		<mini_map spot="paw_bwhr_ammo_spot"/>
+	</paw_bwhr_ammo>
+
+	<paw_bwhr_ammo_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_ammo64</texture>
+	</paw_bwhr_ammo_spot>
+
+
+	<paw_bwhr_rad>
+		<level_map spot="paw_bwhr_rad_spot"/>
+		<mini_map spot="paw_bwhr_rad_spot"/>
+	</paw_bwhr_rad>
+
+	<paw_bwhr_rad_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_rad64</texture>
+	</paw_bwhr_rad_spot>
+
+
+	<paw_bwhr_info>
+		<level_map spot="paw_bwhr_info_spot"/>
+		<mini_map spot="paw_bwhr_info_spot"/>
+	</paw_bwhr_info>
+
+	<paw_bwhr_info_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_info64</texture>
+	</paw_bwhr_info_spot>
+
+
+	<paw_bwhr_magn>
+		<level_map spot="paw_bwhr_magn_spot"/>
+		<mini_map spot="paw_bwhr_magn_spot"/>
+	</paw_bwhr_magn>
+
+	<paw_bwhr_magn_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_magn64</texture>
+	</paw_bwhr_magn_spot>
+
+
+	<paw_bwhr_bio>
+		<level_map spot="paw_bwhr_bio_spot"/>
+		<mini_map spot="paw_bwhr_bio_spot"/>
+	</paw_bwhr_bio>
+
+	<paw_bwhr_bio_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_bio64</texture>
+	</paw_bwhr_bio_spot>
+
+
+	<paw_bwhr_tag>
+		<level_map spot="paw_bwhr_tag_spot"/>
+		<mini_map spot="paw_bwhr_tag_spot"/>
+	</paw_bwhr_tag>
+
+	<paw_bwhr_tag_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_bwhr_horizon64</texture>
+	</paw_bwhr_tag_spot>
+
+	<paw_bwhr_stash>
+		<level_map spot="paw_bwhr_stash_spot"/>
+		<mini_map spot="paw_bwhr_stash_spot"/>
+	</paw_bwhr_stash>
+
+	<paw_bwhr_stash_spot width="12" height="12" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.5">
+		<texture>ui_icons_paw_pin_bwhr_stash64</texture>
+	</paw_bwhr_stash_spot>
+

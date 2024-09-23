@@ -1,0 +1,238 @@
+<w>
+	<pawhudind x="0" y="0" width="136" height="75" stretch="1"> 
+		<head x="3" y="1" width="126" height="12" stretch="1">
+			<text color="ui_gray_2" align="c" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="3" y="7" width="126" height="12" stretch="1">
+			<text r="255" g="255" b="255" align="c" vert_align="c" stretch="1" font="letterica16"/>
+		</head2>
+		<curr x="52" y="33" width="32" height="37" stretch="1"/>
+		<prev x="9" y="36" width="24" height="28" stretch="1"/>
+		<next x="102" y="36" width="24" height="28" stretch="1"/>
+	</pawhudind>
+
+	<pawhudind_vertleft x="0" y="0" width="100" height="154" stretch="1"> 
+		<head x="5" y="3" width="100" height="12" stretch="1">
+			<text color="ui_gray_2" align="l" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="2000" y="2000" width="1" height="1" stretch="1" />
+		<curr x="7" y="70" width="32" height="37" stretch="1"/>
+		<prev x="11" y="121" width="24" height="28" stretch="1"/>
+		<next x="11" y="25" width="24" height="28" stretch="1"/>
+	</pawhudind_vertleft>
+
+	<pawhudind_vertright x="0" y="0" width="100" height="154" stretch="1"> 
+		<head x="-3" y="3" width="98" height="12" stretch="1">
+			<text color="ui_gray_2" align="r" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="2000" y="2000" width="1" height="1" stretch="1" />
+		<curr x="60" y="69" width="32" height="37" stretch="1"/>
+		<prev x="65" y="119" width="24" height="28" stretch="1"/>
+		<next x="65" y="26" width="24" height="28" stretch="1"/>
+	</pawhudind_vertright>
+
+	<pawhudind_gamma_left x="0" y="0" width="130" height="150" stretch="1"> 
+		<head x="5" y="3" width="124" height="12" stretch="1">
+			<text r="255" g="255" b="255" align="l" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="5" y="10" width="126" height="12" stretch="1">
+			<text r="255" g="255" b="255" align="l" vert_align="c" stretch="1" font="letterica16"/>
+		</head2>
+		<curr x="7" y="78" width="32" height="37" stretch="1"/>
+		<prev x="12" y="119" width="24" height="28" stretch="1"/>
+		<next x="12" y="41" width="24" height="28" stretch="1"/>
+	</pawhudind_gamma_left>
+
+	<pawhudind_gamma_right x="0" y="0" width="130" height="150" stretch="1"> 
+		<head x="-4" y="3" width="124" height="12" stretch="1">
+			<text r="255" g="255" b="255" align="r" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="-4" y="10" width="126" height="12" stretch="1">
+			<text r="255" g="255" b="255" align="r" vert_align="c" stretch="1" font="letterica16"/>
+		</head2>
+		<curr x="92" y="76" width="32" height="37" stretch="1"/>
+		<prev x="97" y="116" width="24" height="28" stretch="1"/>
+		<next x="97" y="41" width="24" height="28" stretch="1"/>
+	</pawhudind_gamma_right>
+
+	<pawhudind_minimal_h x="0" y="0" width="94" height="52" stretch="1"> 
+		<head x="1" y="2" width="90" height="12" stretch="1">
+			<text color="ui_gray_1" align="c" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="2000" y="2000" width="1" height="1" stretch="1" />
+		<curr x="31" y="17" width="32" height="37" stretch="1"/>
+		<prev x="3" y="17" width="24" height="28" stretch="1"/>
+		<next x="67" y="17" width="24" height="28" stretch="1"/>
+	</pawhudind_minimal_h>
+
+	<pawhudind_minimal_v x="0" y="0" width="92" height="112" stretch="1"> 
+		<head x="1" y="3" width="90" height="12" stretch="1">
+			<text color="ui_gray_1" align="c" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="2000" y="2000" width="1" height="1" stretch="1" />
+		<curr x="56" y="46" width="32" height="37" stretch="1"/>
+		<prev x="65" y="18" width="24" height="28" stretch="1"/>
+		<next x="65" y="83" width="24" height="28" stretch="1"/>
+	</pawhudind_minimal_v>	
+
+	<pawhudind_minicom x="0" y="0" width="38" height="37" stretch="1"> 
+		<head x="2000" y="2000" width="1" height="1" stretch="1">
+			<text color="ui_gray_1" align="c" vert_align="c" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="2000" y="2000" width="1" height="1" stretch="1" />
+		<curr x="3" y="1" width="32" height="37" stretch="1"/>
+		<prev x="2000" y="2000" width="1" height="1" stretch="1"/>
+		<next x="2000" y="2000" width="1" height="1" stretch="1"/>
+	</pawhudind_minicom>
+
+	<pawhudind_compact_noui x="0" y="0" width="32" height="37" stretch="1"> 
+		<head x="2000" y="2000" width="1" height="1" stretch="1"/>
+		<head2 x="2000" y="2000" width="1" height="1" stretch="1"/>
+		<curr x="0" y="0" width="32" height="37" stretch="1"/>
+		<prev x="2000" y="2000" width="1" height="1" stretch="1"/>
+		<next x="2000" y="2000" width="1" height="1" stretch="1"/>
+	</pawhudind_compact_noui>
+
+	<paw_mcm_indicator x="0" y="0" width="563" height="50" stretch="1">
+		<desc complex_mode="1" x="10" y="16" width="270" height="24" stretch="1">
+			<text r="200" g="200" b="200" align="l" vert_align="c" stretch="1" font="letterica16"/>
+		</desc>
+		<curr x="283" y="0" width="41" height="50" stretch="1" align="c" vert_align="c">
+			<icon x="5" y="7" width="32" height="38" stretch="1" align="c" vert_align="c" />
+		</curr>
+		<head x="332" y="4" width="220" height="24" stretch="1">
+			<text r="200" g="200" b="200" align="l" vert_align="c" stretch="1" font="graffiti22"/>
+		</head>
+		<pname x="332" y="26" width="220" height="24" stretch="1">
+			<text r="250" g="218" b="94" align="l" vert_align="c" stretch="1" font="graffiti22"/>
+		</pname>
+		<mini_left x="-25" y="-6" width="24" height="31" stretch="1" vert_align="c">
+			<icon x="2" y="3" width="20" height="26" stretch="1" align="c" vert_align="c" />
+		</mini_left>
+	</paw_mcm_indicator>
+
+	<paw_mcm_pos_preview  complex_mode="1" x="20" y="0" width="640" height="270" stretch="1" align="l">
+		<preview_4_3 x="0" y="0" width="360" height="270" stretch="1" />
+		<preview_16_9 x="0" y="0" width="480" height="270" stretch="1" />
+		<preview_16_10 x="0" y="0" width="420" height="262" stretch="1" />
+		<preview_21_9 x="0" y="0" width="640" height="270" stretch="1" />
+		<widget  x="0" y="0"  width="1" height="1" stretch="1" />
+	</paw_mcm_pos_preview>
+
+	<paw_ui_wnd_box x="0" y="0" width="240" height="24" stretch="1">
+		<min_left x="0" y="0" width="12" height="16" stretch="1">
+			<texture>ui_paw_fade_cap_bg_left</texture>
+		</min_left>
+		<min_right x="12" y="0" width="228" height="16" stretch="1" complex_mode="1">
+			<texture>ui_paw_fade_cap_bg_right</texture>
+		</min_right>
+		<min_full x="0" y="0" width="334" height="22" stretch="1" complex_mode="1">
+			<texture>ui_paw_fade_cap_bg_full</texture>
+		</min_full>
+
+		<frm_UL width="6" height="6" x="0" y="0" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_UL</texture>
+		</frm_UL>
+		<frm_UM width="228" height="6" x="6" y="0" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_UM</texture>
+		</frm_UM>
+		<frm_UR width="6" height="6" x="234" y="0" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_UR</texture>
+		</frm_UR>
+
+		<frm_LM width="6" height="16" x="0" y="5" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_LM</texture>
+		</frm_LM>
+
+		<content x="6" y="5" width="228" height="20" align="c" vert_align="c" font="letterica16" stretch="1" complex_mode="1">
+			<text x="5" y="2.5" width="224" height="18" align="l" vert_align="c" font="letterica16" stretch="1" complex_mode="1" />
+			<text_sh x="6" y="3" width="224" height="18" align="l" vert_align="c" font="letterica16" stretch="1" complex_mode="1" />
+		</content>
+
+		<frm_RM width="6" height="16" x="234" y="5" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_RM</texture>
+		</frm_RM>
+
+		<frm_BL width="6" height="6" x="0" y="12" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_BL</texture>
+		</frm_BL>
+		<frm_BL_extend width="6" height="6" x="0" y="12" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_BL_extend</texture>
+		</frm_BL_extend>
+		<frm_BP width="8" height="12" x="0" y="12" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_BP</texture>
+		</frm_BP>		
+		<frm_BM width="6" height="6" x="6" y="14" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_BM</texture>
+		</frm_BM>
+		<frm_BM_extend width="228" height="6" x="8" y="0" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_BM_extend</texture>
+		</frm_BM_extend>
+		<frm_BR width="6" height="6" x="234" y="12	" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_BR</texture>
+		</frm_BR>
+
+		<frm_UT width="2" height="6" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_UT</texture>
+		</frm_UT>
+		<frm_LT width="6" height="2" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_LT</texture>
+		</frm_LT>
+		<frm_RT width="6" height="2" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_RT</texture>
+		</frm_RT>
+		<frm_BT width="2" height="6" stretch="1">
+			<texture>ui_paw_hud_wnd_frmcrv_BT</texture>
+		</frm_BT>		
+	</paw_ui_wnd_box>
+
+	<icoset_controls x="0" y="0" width="200" height="300" align="l" stretch="1">
+		<btn_set_prev x="9" y="4" width="9" height="28">
+			<texture>ui_paw_btn_arw_nobg_left</texture>
+		</btn_set_prev>
+
+		<logo_set x="17" y="6.5" width="19.5" height="22" align="c" vert_align="c" stretch="1">
+			<texture>ui_icons_paw_btn_setemboss</texture>
+		</logo_set>
+
+		<btn_set_next x="31" y="4" width="9" height="28">
+			<texture>ui_paw_btn_arw_nobg_right</texture>
+		</btn_set_next>
+
+		<btn_ico_next x="0" y="0" width="19.5" height="29">
+			<texture>ui_paw_btn_yelarrow_up</texture>
+		</btn_ico_next>
+
+		<logo_icon x="-3000" y="-3000" width="28" height="28" align="c" vert_align="c" stretch="1">
+			<texture>ui_icons_paw_btn_icon</texture>
+		</logo_icon>
+
+		<btn_ico_prev x="0" y="57" width="19.5" height="26">
+			<texture>ui_paw_btn_yelarrow_down</texture>
+		</btn_ico_prev>
+
+		<btn_apply x="0" y="0" width="29" height="26">
+			<texture>ui_paw_btn_applyicon</texture>
+		</btn_apply>
+	</icoset_controls>
+
+	<mwheel_ind x="0" y="0" width="7" height="12" stretch="1">
+		<texture>ui_paw_mwheel_ind_icon</texture>
+	</mwheel_ind>
+
+	<pawhudind_pin_sidebar x="0" y="0" width="161.25" height="158" stretch="1"> 
+		<head x="29" y="130.5" width="70" align="r" height="12" stretch="1">
+			<text color="ui_gray_2" align="r" stretch="1" font="arial_14"/>
+		</head>
+		<head2 x="43" y="7" width="98" height="12" align="r" stretch="1" />
+		<next x="125" y="34.5" width="18" height="24" stretch="1"/>
+		<curr x="120" y="58.5" width="27.75" height="37" stretch="1"/>
+		<prev x="125" y="95.5" width="18" height="24" stretch="1"/>
+	</pawhudind_pin_sidebar>
+
+	<hide_head x="0" y="0" width="300" height="30" vert_align="c" complex_mode="1"/>
+	
+	<check x="0" y="0" width="35" height="30" stretch="1">
+        <texture>ui_inGame2_checkbox</texture>
+    </check>
+</w>

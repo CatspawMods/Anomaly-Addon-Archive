@@ -1,0 +1,279 @@
+-- =======================================================================
+--[[	Catsy's utilities: text and names
+-- ===================================================================--]]
+script_name 	= "utils_catspaw_text"
+script_version 	= "1.3"
+release_date    = 20240816
+--[[======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+	There are a bunch of functions that I use across my addons, and over
+	time they've added up to a fair bit of duplicated code that I also 
+	have to update in multiple places anytime they get improved/fixed.
+
+	This is an attempt at centralizing them, and unifying some functions
+	that I'd like to be more consistent across my addons (like color and
+	text tokenization). I will endeavor to always make these backwards-
+	compatible, so heed well:
+
+		IN THE EVENT OF A FILE CONFLICT, ALWAYS USE THE MOST RECENT.
+
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+-- ===================================================================--]]
+-- 		DEPENDENCIES
+-- =======================================================================
+assert(utils_catspaw_common,
+"! ERROR: " .. script_name .. " requires utils_catspaw_common, which could not be found!")
+-- =======================================================================
+-- 		SHORTCUTS
+-- =======================================================================
+local dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+local safeid 			= utils_catspaw_common.safeid
+local getstrtbl_support	= utils_catspaw_common.exe_getstrtbl_support
+-- =======================================================================
+local psk       		= utils_data.parse_string_keys
+local gts 				= game.translate_string
+local sformat 			= string.format
+local sfind 			= string.find
+local floor 			= math.floor
+-- =======================================================================
+-- 		TEXT SUBSTITUTION
+-- =======================================================================
+local female_names		= {}
+local default_tokens 	= {}
+local game_tokens = {
+	ruble 		= "",
+}
+local actor_tokens = {
+	actorcomm 	= "",
+	actordisg 	= "",
+	actorname	= "",
+	actorfn		= "",
+	actorln 	= "",
+	actorlead 	= "",
+	actorloc	= "",
+	freq 		= "",
+}
+
+local ruble_locstr 		= "st_currency_rub"
+
+
+function explode_name(name)
+	--
+	return str_explode(name or ""," ")
+end
+
+function get_firstname_lastname(name, default_nil)
+	if (not name) then
+		if db.actor then
+			name = alife():actor():character_name()
+		else
+			return
+		end
+	end
+	local firstlast = explode_name(name)
+	return 	firstlast[1] or ((not default_nil) and name),
+			firstlast[2] or ((not default_nil) and (firstlast[1] or name))
+end
+
+function get_name_gender(name)
+	-- A bit hacky and only detectable/relevant if Dux's character kit is installed
+	local gender = "m"
+	if name and female_names and not is_empty(female_names) then
+		name = explode_name(name)
+		if female_names[name[1]] then gender = "f" end
+	end
+	return gender
+end
+
+function refresh_tokens(args)
+	local custom_tokens = args and args.tokens or {}
+	local obj_tokens 	= {
+		name		= "",
+		firstname	= "",
+		lastname 	= "",
+		location 	= "",
+		comm		= "",
+		leader 		= "",
+	}
+	local tokens 		= {}
+
+	if db.actor then
+		local actor_name 	= alife():actor():character_name()
+		local afirst, alast	= get_firstname_lastname()
+		local actor_comm 	= gameplay_disguise.get_default_comm()
+		local disg_comm 	= db.actor:character_community()
+		local fac 			= faction_expansions.faction[actor_comm]
+
+		actor_tokens["actorcomm"]	= actor_comm	-- Actor true faction
+		actor_tokens["actordisg"] 	= disg_comm 	-- Actor disguised faction (or true faction if not disguised)
+		actor_tokens["actorname"]	= actor_name 	-- Actor character name in this save
+		actor_tokens["actorfn"] 	= afirst 		-- Actor first name
+		actor_tokens["actorln"] 	= alast 		-- Actor last name
+		actor_tokens["actorlead"]	= gts(fac["leader_name"] or "") -- Actor faction leader name
+		actor_tokens["actorloc"] 	= dynamic_news_helper.GetPointDescription(db.actor)
+		-- Actor nearest spot location description - the blurb used in news messages about
+		-- a particular location at a point, e.g. "in Cordon, east of the Rookie Village"
+	end
+
+
+	if args then
+		local function add_tokens_from_args()
+			-- Refresh token tables with any existing token names also present in args
+			for k,v in pairs(args) do
+				if type(v) == "string" then
+					if actor_tokens[k] then actor_tokens[k] = v end
+					if game_tokens[k] then game_tokens[k] = v end
+					if obj_tokens[k] then obj_tokens[k] = v end
+				end
+			end
+		end
+
+		add_tokens_from_args()
+
+		if args.first_init or args.force_refresh then
+			dl("Refreshing standard text substitution tokens")
+			
+			local ruble = gts(ruble_locstr)
+			if ruble == ruble_locstr then ruble = "RU" end
+			game_tokens["ruble"]= ruble
+		end
+
+		if args.obj then
+			if IsStalker(args.obj) then
+				local id 			= safeid(args.obj)
+				local npc 			= alife_object(id)
+				local npc_gobj 		= db.storage[id] and db.storage[id].object or level.object_by_id(id)
+				obj_tokens.comm 	= get_object_community(npc)
+				local fac 			= faction_expansions.faction[obj_tokens.comm]
+				obj_tokens.leader 	= gts(fac["leader_name"] or "")
+				local npcname 		= npc:character_name()
+				local nfirst, nlast = get_firstname_lastname(npcname)
+				obj_tokens.firstname= first
+				obj_tokens.lastname = last
+				obj_tokens.location = dynamic_news_helper.GetPointDescription(npc_gobj)
+			end
+		end
+	end
+end
+
+local parse_colors 		= true
+local color_tokens 		= {
+	["clr_def"] = "%" .. "%c[default]",			-- UI element's default color
+	-- NOTE: %c[default] must be lowercase, or Anomaly will shit itself with more than two commas in the string
+	-- Thanks to xcvb for pointing this out the cause of this weird-ass bug.
+    ["clr_wht"] = "%" .. "%c[255,220,220,220]",	-- white, but not fullbright
+    ["clr_red"] = "%" .. "%c[255,255,0,0]", 	-- full red
+    ["clr_grn"] = "%" .. "%c[255,0,255,0]", 	-- full green
+    ["clr_blu"] = "%" .. "%c[255,0,0,255]", 	-- full blue
+    ["clr_orn"] = "%" .. "%c[255,255,140,0]",	-- the orange used in some dialogs, like the vanilla guide costs
+    ["clr_gld"] = "%" .. "%c[255,255,215,0]", 	-- gold color
+    ["clr_yel"] = "%" .. "%c[255,255,255,0]",	-- full yellow
+    ["clr_lbl"] = "%" .. "%c[255,0,200,220]",	-- light blue color
+    ["clr_prp"] = "%" .. "%c[255,137,48,225]", 	-- purple
+    ["clr_cmg"]	= "%" .. "%c[255,150,150,150]",	-- context menu gray
+    ["clr_tgr"] = "%" .. "%c[128,90,90,90]",    -- transparent neutral gray - used by me in menus for version tags
+    ["clr_ui2"]	= "%" .. "%c[ui_2]",			-- system color: 255,232,208
+    ["clr_ui8"]	= "%" .. "%c[ui_8]",			-- dialogue text: 216,186,140 - you know, that pale khaki
+}
+local nocolor_tokens 	= {}
+
+function get_color_tokens()			return color_tokens or {} end
+function get_nocolor_tokens()		return nocolor_tokens or {} end
+
+function update_nocolor_tokens()
+	-- manually resync nocolor_tokens table with color_tokens
+	for k,v in pairs(color_tokens) do
+		nocolor_tokens[k] = ""
+	end
+end
+
+function set_color_token(k, s)
+	-- set or add a color token in the format of the color_tokens table above
+	color_tokens[k] = s
+	nocolor_tokens[k] = ""
+end
+
+update_nocolor_tokens()
+
+function int_to_rgba(i)
+	-- Converts integer to RGB or RGBA values
+	-- returns r, g, b, a, defaulting alpha to 255 if not specified (value is <= 0xffffff)
+	return 	floor(floor(i / 256) / 256) % 256, 
+			floor(i / 256) % 256, 
+			(i % 256), 
+			(i > 0xffffff) and (floor(floor(floor(i / 256) / 256) / 256) % 256) or 255
+end
+
+function parse_hex_colors(str)
+	-- Populates the color_tokens table on the fly with any hex color codes found in str
+	-- Looks for color codes are in the format: $0xNh, where N is a hexadecimal integer
+	-- If N is 24-bit rather than 32-bit, the alpha will default to 255
+	-- e.g.:
+	-- 	$0xff0080h 		-> 	%%c[255,255,0,128]
+	-- 	$0x40ff0080h	-> 	%%c[64,255,0,128]
+	local pattern = "$0x%x?%x?%x?%x?%x?%x?%x?%xh"
+	
+	repeat
+		local mt = str:match(pattern)
+		if mt then
+			local key = mt:sub(2)
+			local i = str:find(pattern) + #mt
+			str = str:sub(i)
+			if not color_tokens[key] then
+				local hexcode = mt:sub(2, #mt - 1)
+				local r, g, b, a = int_to_rgba(tonumber(hexcode or 0))
+				local subst = "%" .. "%c[" .. sformat("%s,%s,%s,%s",a,r,g,b) .. "]"
+				set_color_token(key, subst)
+			end
+		end
+	until not mt
+end
+
+function parse_color_tokens(s, t, c)
+	-- s: string to parse
+	-- t: optional table of string replacement tokens for utils_data.parse_string_keys
+	-- c: true/false whether to parse or strip color tokens
+	if not s then return end
+	local docolor = (c == nil) and parse_colors or c
+	vl("parse_color_tokens | text: %s | docolor: %s%s", s, docolor, (c == nil) and " (default)" or "")
+	if t and not is_empty(t) then
+		s = psk(s, t or {})
+	end
+	if s:find("$0x") then
+		parse_hex_colors(s)
+	end
+	return psk(s, docolor and color_tokens or nocolor_tokens)
+end
+
+function load_female_name_strings()
+	if not getstrtbl_support() then
+		dl("load_female_name_strings: function get_string_table is unsupported by GAMMA or vanilla, aborting")
+	return end
+	-- GAMMA does not support this recent modded exes feature
+	-- Compile list of female names starting with "name_woman_"
+	-- Mainly for Dux's character kit
+	dl("load_female_name_strings: parsing any recognized female names in the character list")
+    local t = get_string_table()
+    if not female_names then female_names = {} end
+    for k, v in pairs(t) do
+        if k:find("name_woman_") then
+        	local name = str_explode(v," ")
+            female_names[k] = name[1]
+            --This log line will be very noisy on every load, only enable for targeted troubleshooting
+            --vl("Found female name: %s = %s", k, v)
+        end
+    end
+end
+
+function on_game_start()
+	-- Disabled by default, but feature is fully working and can be used by launching load_female_name_strings()
+	-- RegisterScriptCallback("actor_on_first_update", load_female_name_strings)
+end

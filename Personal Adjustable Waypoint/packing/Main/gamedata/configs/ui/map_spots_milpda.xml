@@ -1,0 +1,73 @@
+<!-- ======================================================================
+	Milspec PDA include file
+	Author: Catspaw (CatspawMods @ ModDB)
+	Updated: 20230830
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+===========================================================================
+	Mapspot icon definitions for MilPDA's body markers
+========================================================================-->
+
+	<deadbody_location_sdot hint="deadbody_sdot">
+		<level_map spot="deadbody_pda_spot_sdot"/>
+		<mini_map  spot="deadbody_mini_spot_sdot"/>
+	</deadbody_location_sdot>
+
+	<deadbody_location_mdot hint="deadbody_mdot">
+		<level_map spot="deadbody_pda_spot_mdot"/>
+		<mini_map  spot="deadbody_mini_spot_mdot"/>
+	</deadbody_location_mdot>
+	
+	<deadbody_location_ldot hint="deadbody_ldot">
+		<level_map spot="deadbody_pda_spot_ldot"/>
+		<mini_map  spot="deadbody_mini_spot_ldot"/>
+	</deadbody_location_ldot>
+
+	<deadbody_location_skul hint="deadbody_skul">
+		<level_map spot="deadbody_pda_spot_skull"/>
+		<mini_map  spot="deadbody_mini_spot_skull"/>
+	</deadbody_location_skul>
+
+	<deadbody_location_whtx hint="deadbody_whtx">
+		<level_map spot="deadbody_pda_spot_whtx"/>
+		<mini_map  spot="deadbody_mini_spot_whtx"/>
+	</deadbody_location_whtx>
+
+	<deadbody_mini_spot_sdot width="7" height="7" stretch="1" alignment="c" location_level="5">
+		<texture r="50" g="195" b="255">ui_mmap_common_actor</texture>
+	</deadbody_mini_spot_sdot>
+
+	<deadbody_mini_spot_mdot width="8" height="8" stretch="1" alignment="c" location_level="5">
+		<texture r="50" g="195" b="255">ui_mmap_common_actor</texture>
+	</deadbody_mini_spot_mdot>
+
+	<deadbody_mini_spot_ldot width="9" height="9" stretch="1" alignment="c" location_level="5">
+		<texture r="50" g="195" b="255">ui_mmap_common_actor</texture>
+	</deadbody_mini_spot_ldot>
+
+	<deadbody_pda_spot_sdot width="8" height="8" stretch="1" alignment="c" location_level="5">
+		<texture r="50" g="195" b="255">ui_mmap_common_actor</texture>
+	</deadbody_pda_spot_sdot>
+
+	<deadbody_pda_spot_mdot width="10" height="10" stretch="1" alignment="c" location_level="5">
+		<texture r="50" g="195" b="255">ui_mmap_common_actor</texture>
+	</deadbody_pda_spot_mdot>
+
+	<deadbody_pda_spot_ldot width="12" height="12" stretch="1" alignment="c" location_level="5">
+		<texture r="50" g="195" b="255">ui_mmap_common_actor</texture>
+	</deadbody_pda_spot_ldot>
+
+	<deadbody_pda_spot_skull width="9" height="11" stretch="0" alignment="c" location_level="5">
+		<texture>ui_mapspot_skull_large</texture>
+	</deadbody_pda_spot_skull>
+
+	<deadbody_mini_spot_skull width="7" height="9" stretch="0" alignment="c">
+		<texture>ui_mapspot_skull_small</texture>
+	</deadbody_mini_spot_skull>
+
+	<deadbody_mini_spot_whtx width="7" height="7" stretch="0" alignment="c">
+		<texture>ui_AlphaLion_XCorpseMarker-small</texture>
+	</deadbody_mini_spot_whtx>
+
+	<deadbody_pda_spot_whtx width="9" height="9" stretch="0" alignment="c" location_level="5">
+		<texture>ui_AlphaLion_XCorpseMarker-large</texture>
+	</deadbody_pda_spot_whtx>

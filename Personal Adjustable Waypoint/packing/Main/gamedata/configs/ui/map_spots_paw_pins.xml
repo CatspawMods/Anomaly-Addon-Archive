@@ -1,0 +1,89 @@
+<!-- ======================================================================
+	Personal Adjustable Waypoint 
+	Author: Catspaw (CatspawMods @ ModDB)
+	Updated: 20230830
+===========================================================================
+	Mapspots for default pin-style icons
+========================================================================-->
+	<paw_pin_redpush32>
+		<level_map spot="paw_pin_redpush32_spot"/>
+		<mini_map spot="paw_pin_redpush32_spot_mini"/>
+	</paw_pin_redpush32>
+
+	<paw_pin_redpush32_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_redpush32</texture>
+	</paw_pin_redpush32_spot>
+
+	<paw_pin_redpush32_spot_mini width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_redpush32</texture>
+	</paw_pin_redpush32_spot_mini>
+
+
+	<paw_pin_redmodern32>
+		<level_map spot="paw_pin_redmodern32_spot"/>
+		<mini_map spot="paw_pin_redmodern32_spot_mini"/>
+	</paw_pin_redmodern32>
+
+	<paw_pin_redmodern32_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_redmodern32</texture>
+	</paw_pin_redmodern32_spot>
+
+	<paw_pin_redmodern32_spot_mini width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_redmodern32</texture>
+	</paw_pin_redmodern32_spot_mini>
+
+
+	<paw_pin_redround32>
+		<level_map spot="paw_pin_redround32_spot"/>
+		<mini_map spot="paw_pin_redround32_spot_mini"/>
+	</paw_pin_redround32>
+
+	<paw_pin_redround32_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_redround32</texture>
+	</paw_pin_redround32_spot>
+
+	<paw_pin_redround32_spot_mini width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_redround32</texture>
+	</paw_pin_redround32_spot_mini>
+
+
+	<paw_pin_stalker32>
+		<level_map spot="paw_pin_stalker32_spot"/>
+		<mini_map spot="paw_pin_stalker32_spot_mini"/>
+	</paw_pin_stalker32>
+
+	<paw_pin_stalker32_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_stalker64</texture>
+	</paw_pin_stalker32_spot>
+
+	<paw_pin_stalker32_spot_mini width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_stalker64</texture>
+	</paw_pin_stalker32_spot_mini>
+
+
+	<paw_pin_yelpush32>
+		<level_map spot="paw_pin_yelpush32_spot"/>
+		<mini_map spot="paw_pin_yelpush32_spot_mini"/>
+	</paw_pin_yelpush32>
+
+	<paw_pin_yelpush32_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_yelpush32</texture>
+	</paw_pin_yelpush32_spot>
+
+	<paw_pin_yelpush32_spot_mini width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_yelpush32</texture>
+	</paw_pin_yelpush32_spot_mini>	
+
+
+	<paw_pin_whtsimple32>
+		<level_map spot="paw_pin_whtsimple32_spot"/>
+		<mini_map spot="paw_pin_whtsimple32_spot_mini"/>
+	</paw_pin_whtsimple32>
+
+	<paw_pin_whtsimple32_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_whtsimple32</texture>
+	</paw_pin_whtsimple32_spot>
+
+	<paw_pin_whtsimple32_spot_mini width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_pin_whtsimple32</texture>
+	</paw_pin_whtsimple32_spot_mini>

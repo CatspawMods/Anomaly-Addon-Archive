@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<w>
+	<marker x="0" y="0" width="20" height="20" stretch="1" alignment="c" location_level="5" light_anim="ui_slow_blinking_alpha" la_cyclic="1" la_texture="1" la_text="0" la_alpha="1">
+	    	<!-- <texture>ui_inGame2_PDA_icon_Secondary_mission</texture>-->
+	    	<texture>ui_icons_paw_hud_waypoint</texture>
+	    	<distance_sh x="0" y="0" width="1" height="1" font="letterica16" stretch="1" alignment="c" r="0" g="0" b="0" >
+	    		<distance x="0" y="-1" width="0" height="0" font="letterica16" stretch="1" alignment="c" r="255" g="255" b="255" />
+	    	</distance_sh>
+	</marker>
+</w>

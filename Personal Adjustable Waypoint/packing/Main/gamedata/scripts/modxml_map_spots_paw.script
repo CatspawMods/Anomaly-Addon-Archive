@@ -1,0 +1,27 @@
+-- ======================================================================
+--[[    Personal Adjustable Waypoint
+-- ======================================================================
+    Mapspot DXML update script
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+
+    Modifying the contents of this file will only result in sadness.
+-- ===================================================================--]]
+
+function on_xml_read()
+    RegisterScriptCallback("on_xml_read", 
+        function(xml_file_name, xml_obj)
+            if  (xml_file_name == [[ui\map_spots.xml]]) or
+                (xml_file_name == [[ui\map_spots_16.xml]]) or
+                (xml_file_name == [[ui\map_spots_21.xml]]) then
+                printf("DXML is patching mapspots for PAW in %s",xml_file_name)
+                
+                local paw_mapspots_include = 
+[[
+#include "ui\map_spots_paw.xml"
+]]
+                xml_obj:insertFromXMLString(paw_mapspots_include)
+            end
+        end
+    )
+end

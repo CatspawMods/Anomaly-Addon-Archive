@@ -1,0 +1,248 @@
+; This file allows you to customize the context menu options available
+; when right-clicking on mapspots while PAW is active.
+; 
+; enable: setting this to false will hard-killswitch an option to off
+; mode 	: controls when the option is shown, see below
+; text	: translation string to display in the menu option
+; act 	: the action executed by the option - currently only pn_add
+;	 		has any use beyond the existing option for that action
+; icon 	: forces use of this icon - only for action pn_add
+; func 	: functor to execute, passing args
+; funcN : any N number of additional functors, each will receive args 
+
+; The args passed to the functors include the object ID of the target
+; (if there was one), and all attributes of the action itself.
+
+;  Modes: 
+;     -1: only when debug mode is enabled
+;      0: disabled completely
+;      1: enabled in normal view only
+;      2: enabled in cartography mode only
+;      4: enabled in both
+
+; ==================================================
+
+[my_stash_icon]
+
+; This is an example of how you can add a 
+; new menu option that drops a pin with a
+; specific icon. It is disabled by default.
+;
+; To make your own:
+; 1. Make a copy of everything between the ==
+;    lines, including the [my_stash_icon]
+;    section name at the top.
+; 2. Rename the section to something unique
+;    (different from any other in this file).
+; 3. Change enable to true.
+; 4. Choose any valid icon from icons.ltx and
+;    replace stash_green with that.
+; 5. Change the mode number, if desired.
+; 6. Edit the text as desired - this can be 
+; 	 either a string literal as in the example,
+; 	 or the ID of a valid translation string as 
+; 	 in most of the default functions.
+;
+; Your new quick pin option should now appear 
+; in the context menu when you right-click on
+; any mapspot. You can make more than one as 
+; long as each has a unique section name.
+
+mode 		= 4
+enable 		= false
+text 		= "Place stash icon"
+act 		= pn_add
+func 		= tasks_placeable_waypoints.func_pn_add
+icon 		= bwhr_stash
+colors 		= 255, 100, 100, 255
+
+; Color values (in order) are Alpha, Red, Green, Blue
+; 
+; Using the bwhr_stash icon instead of a normal stash
+; icon will give you the freedom to customize its
+; color. But if you just want the usual green icon, 
+; you can remove the "colors" line above, and change 
+; "bwhr_stash" to "stash_green" (or any valid icon).
+;
+; NOTE: this file will be overwritten when PAW is
+; updated. Back up your customizations.
+
+; ==================================================
+; Another useful example:
+[tag_signal_source]
+; I often use PAW to mark where I encountered beeps or
+; other signals when hunting with the RF receiver--seeing
+; these on the map can really help visualize where the 
+; target actually is.
+mode 		= 4
+enable 		= false
+; As before, change enable to true if you want to use 
+; this custom action.
+text 		= "Signal source contact"
+act 		= pn_add
+func 		= tasks_placeable_waypoints.func_pn_add
+icon 		= bwhr_signal
+; ==================================================
+
+
+[mping]
+; Ping the map
+mode        = 2
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_mping
+act 		= mping
+func 		= tasks_placeable_waypoints.ping_area_around
+
+[wp_set]
+; Set a new waypoint here when one does not exist yet
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_wp_set
+act         = wp_set
+func 		= tasks_placeable_waypoints.func_wp_set
+
+[wp_mov]
+; Move an existing waypoint to here
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_wp_mov
+act         = wp_mov
+func 		= tasks_placeable_waypoints.func_wp_mov
+
+[wp_del]
+; Remove the existing waypoint
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_wp_del
+act         = wp_del
+func 		= tasks_placeable_waypoints.func_wp_del
+
+[pn_add]
+; Add a new map pin
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_pn_add
+act         = pn_add
+func 		= tasks_placeable_waypoints.func_pn_add
+func1 		= tasks_placeable_waypoints.func_pn_settings
+
+[pn_del]
+; Delete a map pin
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_pn_del
+act         = pn_del
+func 		= tasks_placeable_waypoints.func_pn_del
+
+[pn_settings]
+; Open Pin Settings window
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_pn_settings
+act         = pn_settings
+func 		= tasks_placeable_waypoints.func_pn_settings
+
+[wp_settings]
+; Open Waypoint Settings window
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_wp_settings
+act         = wp_settings
+func 		= tasks_placeable_waypoints.open_waypoint_settings
+
+[hud_vis_on]
+; Shows a pin on the HUD
+mode        = 2
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_hud_vis_on
+act         = hud_vis_on
+func 		= tasks_placeable_waypoints.func_hud_vis_on
+
+[hud_vis_off]
+; Hides a pin from the HUD
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_hud_vis_off
+act         = hud_vis_off
+func 		= tasks_placeable_waypoints.func_hud_vis_off
+
+[show_all_pins]
+; Show pins if hidden
+mode        = 2
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_show_all_pins
+act         = show_pins
+func 		= tasks_placeable_waypoints.func_show_all_pins
+
+[hide_all_pins]
+; Hides pins if shown
+mode        = 2
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_hide_all_pins
+act         = hide_pins
+func 		= tasks_placeable_waypoints.func_hide_all_pins
+
+[lock_pin]
+; Lock pin to prevent changes
+mode        = 2
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_lock_pin
+act         = lock_pin
+func 		= tasks_placeable_waypoints.func_lock_pin
+
+[unlock_pin]
+; Unlock pin
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_unlock_pin
+act         = unlock_pin
+func 		= tasks_placeable_waypoints.func_unlock_pin
+
+[show_label]
+; Show a hint-like label/caption banner above pin on PDA map
+mode        = 2
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_show_label
+act         = show_label
+func 		= tasks_placeable_waypoints.func_show_pin_label
+
+[hide_label]
+; Hide the label/caption banner
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_hide_label
+act         = hide_label
+func 		= tasks_placeable_waypoints.func_hide_pin_label
+
+[convert_to_pin]
+mode        = 4
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_convert_to_pin
+act         = convert_to_pin
+func 		= tasks_placeable_waypoints.func_convert_to_pin
+
+[pn_clr]
+; Clear all map pins - no confirmation!
+; Disabled by default, set mode nonzero to enable
+mode        = 0
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_pn_clr
+act         = pn_clr
+func 		= tasks_placeable_waypoints.func_pn_clr
+
+[clear_nearby]
+; Clear all nearby map pins - no confirmation!
+; radius definable, measured from clicked spot
+mode        = 2
+enable      = true
+text        = ui_mcm_pawsys_pawmenu_clear_nearby
+act         = clear_nearby
+func 		= tasks_placeable_waypoints.clear_nearby_pins
+
+;[cm_dbg]
+; Debug menu -- currently deprecated
+;mode        = -1
+;enable      = false
+;text        = ui_mcm_pawsys_pawmenu_cm_dbg
+;act         = cm_dbg
+

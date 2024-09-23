@@ -1,0 +1,19 @@
+; Personal Adjustable Waypoint
+; https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+; Changing things in this file will only bring you sadness
+
+[task_placeable_waypoint]
+
+icon = ui_inGame2_Mesta_evakuatsii
+storyline = false
+prior = 100
+dont_send_update_news = true
+;title = st_paw_placed_waypoint
+title_functor = waypoint_task_text_functor
+;descr = st_paw_proceed
+descr_functor = waypoint_task_text_functor
+
+condlist_0 = {+drx_sl_dummy_info} complete
+
+stage_complete = 2
+target_functor = waypoint_task_target_functor

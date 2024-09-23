@@ -1,0 +1,106 @@
+<!-- ======================================================================
+	Personal Adjustable Waypoint 
+	Author: Catspaw (CatspawMods @ ModDB)
+	Updated: 20230830
+===========================================================================
+	Mapspot icon includes and runtime asset definitions
+========================================================================-->
+#include "ui\map_spots_paw_pins.xml"
+#include "ui\map_spots_paw_patches.xml"
+#include "ui\map_spots_paw_bwhr.xml"
+#include "ui\map_spots_paw_npcs.xml"
+#include "ui\map_spots_paw_bodies.xml"
+
+	<!-- Cartography Mode icon for smart terrain -->
+	<paw_pin_magnifier32>
+		<level_map spot="paw_pin_magnifier32_spot"/>
+		<mini_map spot="paw_pin_magnifier32_spot"/>
+	</paw_pin_magnifier32>
+
+	<paw_pin_magnifier32_spot width="20" height="20" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_magnifier32</texture>
+	</paw_pin_magnifier32_spot>
+
+	<!-- Cartography Mode icon for pings, opaque and semi-transparent -->
+	<paw_ping ttl="5">
+		<level_map spot="paw_ping_spot"/>
+		<mini_map spot="paw_ping_spot"/>
+	</paw_ping>
+
+	<paw_ping_spot width="12" height="12" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_ping_spot_alpha</texture>
+	</paw_ping_spot>
+
+	<paw_ping_alpha50 ttl="5">
+		<level_map spot="paw_ping_spot"/>
+		<mini_map spot="paw_ping_spot"/>
+	</paw_ping_alpha50>
+
+	<paw_ping_alpha50_spot width="12" height="12" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_ping_spot_alpha</texture>
+	</paw_ping_alpha50_spot>
+
+	<paw_task_default ttl="15" hint="disable_hint" location_level="-1">
+        <level_map spot="paw_task_default_spot"/>
+	</paw_task_default>
+
+    <paw_task_default_spot x="-8" y="-40" width="39" height="39" stretch="1" light_anim="new_task_highlight_00" light_anim_cyclic="1" la_texture="1" xform_anim="new_task_highlight_xform" xform_anim_cyclic="1" alignment="c" location_level="-1">
+        <texture color="blue">ui_pda2_stask_last_01a</texture>
+    </paw_task_default_spot>
+
+<!-- Vanilla icons -->
+<!-- These are given new names to avoid conflict with vanilla scripts that key off of the mapspot ID -->
+
+	<paw_stash_green>
+        <level_map spot="paw_stash_green_spot"/>
+        <mini_map spot="paw_stash_green_spot"/>
+    </paw_stash_green>
+
+	<paw_stash_green_spot width="12" height="12" alignment="c" stretch="1" scale="1" scale_min="1" scale_max="1.5">
+            <texture>paw_vanilla_stash_icon_green</texture>
+    </paw_stash_green_spot>
+
+	<paw_stash_white>
+        <level_map spot="paw_stash_white_spot"/>
+        <mini_map spot="paw_stash_white_spot"/>
+    </paw_stash_white>
+
+	<paw_stash_white_spot width="12" height="12" alignment="c" stretch="1" scale="1" scale_min="1" scale_max="1.5">
+            <texture>paw_vanilla_stash_icon_white</texture>
+    </paw_stash_white_spot>
+
+	<paw_stash_purple>
+        <level_map spot="paw_stash_purple_spot"/>
+        <mini_map spot="paw_stash_purple_spot"/>
+    </paw_stash_purple>
+
+	<paw_stash_purple_spot width="12" height="12" alignment="c" stretch="1" scale="1" scale_min="1" scale_max="1.5">
+            <texture>paw_vanilla_stash_icon_purple</texture>
+    </paw_stash_purple_spot>
+	
+	<paw_stash_red>
+        <level_map spot="paw_stash_red_spot"/>
+        <mini_map spot="paw_stash_red_spot"/>
+    </paw_stash_red>
+
+	<paw_stash_red_spot width="12" height="12" alignment="c" stretch="1" scale="1" scale_min="1" scale_max="1.5">
+            <texture>paw_vanilla_stash_icon_red</texture>
+    </paw_stash_red_spot>
+
+	<paw_stash_backpack>
+        <level_map spot="paw_stash_backpack_spot"/>
+        <mini_map spot="paw_stash_backpack_spot"/>
+    </paw_stash_backpack>
+
+	<paw_stash_backpack_spot width="11" height="11" alignment="c" stretch="1" scale="1" scale_min="1" scale_max="1.5">
+            <texture>paw_backpack_stash_icon_green64</texture>
+    </paw_stash_backpack_spot>
+
+	<paw_stash_gold>
+        <level_map spot="paw_stash_gold_spot"/>
+        <mini_map spot="paw_stash_gold_spot"/>
+    </paw_stash_gold>
+
+	<paw_stash_gold_spot width="12" height="12" alignment="c" stretch="1" scale="1" scale_min="1" scale_max="1.5">
+            <texture>paw_vanilla_stash_icon_gold</texture>
+    </paw_stash_gold_spot>

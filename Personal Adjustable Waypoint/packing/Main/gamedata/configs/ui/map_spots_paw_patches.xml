@@ -1,0 +1,339 @@
+<!-- ======================================================================
+	Personal Adjustable Waypoint 
+	Author: Catspaw (CatspawMods @ ModDB)
+	Updated: 20230830
+===========================================================================
+	Mapspots for faction patches
+===========================================================================
+	Faction badge icons - low-res, same as used for patches in inv
+========================================================================-->
+	<paw_badge_army>
+		<level_map spot="paw_badge_army_spot"/>
+		<mini_map spot="paw_badge_army_spot"/>
+	</paw_badge_army>
+
+	<paw_badge_army_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_army</texture>
+	</paw_badge_army_spot>
+
+	<paw_badge_bandit>
+		<level_map spot="paw_badge_bandit_spot"/>
+		<mini_map spot="paw_badge_bandit_spot"/>
+	</paw_badge_bandit>
+
+	<paw_badge_bandit_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_bandit</texture>
+	</paw_badge_bandit_spot>
+
+	<paw_badge_csky>
+		<level_map spot="paw_badge_csky_spot"/>
+		<mini_map spot="paw_badge_csky_spot"/>
+	</paw_badge_csky>
+
+	<paw_badge_csky_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_csky</texture>
+	</paw_badge_csky_spot>
+
+	<paw_badge_dolg>
+		<level_map spot="paw_badge_dolg_spot"/>
+		<mini_map spot="paw_badge_dolg_spot"/>
+	</paw_badge_dolg>
+
+	<paw_badge_dolg_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_dolg</texture>
+	</paw_badge_dolg_spot>
+
+	<paw_badge_ecolog>
+		<level_map spot="paw_badge_ecolog_spot"/>
+		<mini_map spot="paw_badge_ecolog_spot"/>
+	</paw_badge_ecolog>
+
+	<paw_badge_ecolog_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_ecolog</texture>
+	</paw_badge_ecolog_spot>
+
+	<paw_badge_freedom>
+		<level_map spot="paw_badge_freedom_spot"/>
+		<mini_map spot="paw_badge_freedom_spot"/>
+	</paw_badge_freedom>
+
+	<paw_badge_freedom_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_freedom</texture>
+	</paw_badge_freedom_spot>
+
+	<paw_badge_killer>
+		<level_map spot="paw_badge_killer_spot"/>
+		<mini_map spot="paw_badge_killer_spot"/>
+	</paw_badge_killer>
+
+	<paw_badge_killer_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_killer</texture>
+	</paw_badge_killer_spot>
+
+	<paw_badge_monolith>
+		<level_map spot="paw_badge_monolith_spot"/>
+		<mini_map spot="paw_badge_monolith_spot"/>
+	</paw_badge_monolith>
+
+	<paw_badge_monolith_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_monolith</texture>
+	</paw_badge_monolith_spot>
+
+	<paw_badge_stalker>
+		<level_map spot="paw_badge_stalker_spot"/>
+		<mini_map spot="paw_badge_stalker_spot"/>
+	</paw_badge_stalker>
+
+	<paw_badge_stalker_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_stalker</texture>
+	</paw_badge_stalker_spot>
+
+	<paw_badge_greh>
+		<level_map spot="paw_badge_greh_spot"/>
+		<mini_map spot="paw_badge_greh_spot"/>
+	</paw_badge_greh>
+
+	<paw_badge_greh_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_greh</texture>
+	</paw_badge_greh_spot>
+
+	<paw_badge_isg>
+		<level_map spot="paw_badge_isg_spot"/>
+		<mini_map spot="paw_badge_isg_spot"/>
+	</paw_badge_isg>
+
+	<paw_badge_isg_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_isg</texture>
+	</paw_badge_isg_spot>
+
+	<paw_badge_renegade>
+		<level_map spot="paw_badge_renegade_spot"/>
+		<mini_map spot="paw_badge_renegade_spot"/>
+	</paw_badge_renegade>
+
+	<paw_badge_renegade_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_renegade</texture>
+	</paw_badge_renegade_spot>
+
+<!-- ======================================================================
+	Hi-res Faction badge icons - 64x64 source image
+========================================================================-->
+	<paw_badge_hr_army>
+		<level_map spot="paw_badge_hr_army_spot"/>
+		<mini_map spot="paw_badge_hr_army_spot"/>
+	</paw_badge_hr_army>
+
+	<paw_badge_hr_army_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_army</texture>
+	</paw_badge_hr_army_spot>
+
+	<paw_badge_hr_bandit>
+		<level_map spot="paw_badge_hr_bandit_spot"/>
+		<mini_map spot="paw_badge_hr_bandit_spot"/>
+	</paw_badge_hr_bandit>
+
+	<paw_badge_hr_bandit_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_bandit</texture>
+	</paw_badge_hr_bandit_spot>
+
+	<paw_badge_hr_csky>
+		<level_map spot="paw_badge_hr_csky_spot"/>
+		<mini_map spot="paw_badge_hr_csky_spot"/>
+	</paw_badge_hr_csky>
+
+	<paw_badge_hr_csky_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_csky</texture>
+	</paw_badge_hr_csky_spot>
+
+		<paw_badge_hr_dolg>
+		<level_map spot="paw_badge_hr_dolg_spot"/>
+		<mini_map spot="paw_badge_hr_dolg_spot"/>
+	</paw_badge_hr_dolg>
+
+	<paw_badge_hr_dolg_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_dolg</texture>
+	</paw_badge_hr_dolg_spot>
+
+	<paw_badge_hr_ecolog>
+		<level_map spot="paw_badge_hr_ecolog_spot"/>
+		<mini_map spot="paw_badge_hr_ecolog_spot"/>
+	</paw_badge_hr_ecolog>
+
+	<paw_badge_hr_ecolog_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_ecolog</texture>
+	</paw_badge_hr_ecolog_spot>
+
+	<paw_badge_hr_freedom>
+		<level_map spot="paw_badge_hr_freedom_spot"/>
+		<mini_map spot="paw_badge_hr_freedom_spot"/>
+	</paw_badge_hr_freedom>
+
+	<paw_badge_hr_freedom_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_freedom</texture>
+	</paw_badge_hr_freedom_spot>
+
+	<paw_badge_hr_killer>
+		<level_map spot="paw_badge_hr_killer_spot"/>
+		<mini_map spot="paw_badge_hr_killer_spot"/>
+	</paw_badge_hr_killer>
+
+	<paw_badge_hr_killer_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_killer</texture>
+	</paw_badge_hr_killer_spot>
+
+	<paw_badge_hr_monolith>
+		<level_map spot="paw_badge_hr_monolith_spot"/>
+		<mini_map spot="paw_badge_hr_monolith_spot"/>
+	</paw_badge_hr_monolith>
+
+	<paw_badge_hr_monolith_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_monolith</texture>
+	</paw_badge_hr_monolith_spot>
+
+	<paw_badge_hr_stalker>
+		<level_map spot="paw_badge_hr_stalker_spot"/>
+		<mini_map spot="paw_badge_hr_stalker_spot"/>
+	</paw_badge_hr_stalker>
+
+	<paw_badge_hr_stalker_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_stalker</texture>
+	</paw_badge_hr_stalker_spot>
+
+	<paw_badge_hr_greh>
+		<level_map spot="paw_badge_hr_greh_spot"/>
+		<mini_map spot="paw_badge_hr_greh_spot"/>
+	</paw_badge_hr_greh>
+
+	<paw_badge_hr_greh_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_greh</texture>
+	</paw_badge_hr_greh_spot>
+
+	<paw_badge_hr_isg>
+		<level_map spot="paw_badge_hr_isg_spot"/>
+		<mini_map spot="paw_badge_hr_isg_spot"/>
+	</paw_badge_hr_isg>
+
+	<paw_badge_hr_isg_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_isg</texture>
+	</paw_badge_hr_isg_spot>
+
+	<paw_badge_hr_renegade>
+		<level_map spot="paw_badge_hr_renegade_spot"/>
+		<mini_map spot="paw_badge_hr_renegade_spot"/>
+	</paw_badge_hr_renegade>
+
+	<paw_badge_hr_renegade_spot width="18" height="18" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_hr_renegade</texture>
+	</paw_badge_hr_renegade_spot>
+
+<!-- ======================================================================
+	Ultra-hi-res Faction badge icons - 128x128px source image,
+	high-visibility white outline
+========================================================================-->
+	<paw_badge_uhr_army>
+		<level_map spot="paw_badge_uhr_army_spot"/>
+		<mini_map spot="paw_badge_uhr_army_spot"/>
+	</paw_badge_uhr_army>
+
+	<paw_badge_uhr_army_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_army</texture>
+	</paw_badge_uhr_army_spot>
+
+	<paw_badge_uhr_bandit>
+		<level_map spot="paw_badge_uhr_bandit_spot"/>
+		<mini_map spot="paw_badge_uhr_bandit_spot"/>
+	</paw_badge_uhr_bandit>
+
+	<paw_badge_uhr_bandit_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_bandit</texture>
+	</paw_badge_uhr_bandit_spot>
+
+	<paw_badge_uhr_csky>
+		<level_map spot="paw_badge_uhr_csky_spot"/>
+		<mini_map spot="paw_badge_uhr_csky_spot"/>
+	</paw_badge_uhr_csky>
+
+	<paw_badge_uhr_csky_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_csky</texture>
+	</paw_badge_uhr_csky_spot>
+
+		<paw_badge_uhr_dolg>
+		<level_map spot="paw_badge_uhr_dolg_spot"/>
+		<mini_map spot="paw_badge_uhr_dolg_spot"/>
+	</paw_badge_uhr_dolg>
+
+	<paw_badge_uhr_dolg_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_dolg</texture>
+	</paw_badge_uhr_dolg_spot>
+
+	<paw_badge_uhr_ecolog>
+		<level_map spot="paw_badge_uhr_ecolog_spot"/>
+		<mini_map spot="paw_badge_uhr_ecolog_spot"/>
+	</paw_badge_uhr_ecolog>
+
+	<paw_badge_uhr_ecolog_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_ecolog</texture>
+	</paw_badge_uhr_ecolog_spot>
+
+	<paw_badge_uhr_freedom>
+		<level_map spot="paw_badge_uhr_freedom_spot"/>
+		<mini_map spot="paw_badge_uhr_freedom_spot"/>
+	</paw_badge_uhr_freedom>
+
+	<paw_badge_uhr_freedom_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_freedom</texture>
+	</paw_badge_uhr_freedom_spot>
+
+	<paw_badge_uhr_killer>
+		<level_map spot="paw_badge_uhr_killer_spot"/>
+		<mini_map spot="paw_badge_uhr_killer_spot"/>
+	</paw_badge_uhr_killer>
+
+	<paw_badge_uhr_killer_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_killer</texture>
+	</paw_badge_uhr_killer_spot>
+
+	<paw_badge_uhr_monolith>
+		<level_map spot="paw_badge_uhr_monolith_spot"/>
+		<mini_map spot="paw_badge_uhr_monolith_spot"/>
+	</paw_badge_uhr_monolith>
+
+	<paw_badge_uhr_monolith_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_monolith</texture>
+	</paw_badge_uhr_monolith_spot>
+
+	<paw_badge_uhr_stalker>
+		<level_map spot="paw_badge_uhr_stalker_spot"/>
+		<mini_map spot="paw_badge_uhr_stalker_spot"/>
+	</paw_badge_uhr_stalker>
+
+	<paw_badge_uhr_stalker_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_stalker</texture>
+	</paw_badge_uhr_stalker_spot>
+
+	<paw_badge_uhr_greh>
+		<level_map spot="paw_badge_uhr_greh_spot"/>
+		<mini_map spot="paw_badge_uhr_greh_spot"/>
+	</paw_badge_uhr_greh>
+
+	<paw_badge_uhr_greh_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_greh</texture>
+	</paw_badge_uhr_greh_spot>
+
+	<paw_badge_uhr_isg>
+		<level_map spot="paw_badge_uhr_isg_spot"/>
+		<mini_map spot="paw_badge_uhr_isg_spot"/>
+	</paw_badge_uhr_isg>
+
+	<paw_badge_uhr_isg_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_isg</texture>
+	</paw_badge_uhr_isg_spot>
+
+	<paw_badge_uhr_renegade>
+		<level_map spot="paw_badge_uhr_renegade_spot"/>
+		<mini_map spot="paw_badge_uhr_renegade_spot"/>
+	</paw_badge_uhr_renegade>
+
+	<paw_badge_uhr_renegade_spot width="24" height="24" alignment="c" stretch="0" scale="1" scale_min="1.0" scale_max="1.2">
+		<texture>ui_icons_paw_badge_uhr_renegade</texture>
+	</paw_badge_uhr_renegade_spot>
