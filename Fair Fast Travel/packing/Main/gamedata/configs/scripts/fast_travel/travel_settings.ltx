@@ -1,9 +1,14 @@
-; Fair Fast Travel
-; Core settings file
-; Most values are also configurable in MCM
+; Fair Fast Travel - Core settings file
+; 	Most values are also configurable in MCM
+; 	MCM settings (if any) will override these
 
 [feature_flags]
-guide_travel 			= true 	; Enable hiring guides from the PDA
+skillsystem_enabled		= false ; Runtime flag, do not change
+skillsystem_started 	= false ; Runtime flag, do not change
+survival_paused 		= false ; Runtime flag, do not change
+use_remall_mapspots 	= false ; Whether or not to use level.map_remove_all_object_spots
+use_map_hazard_coef 	= true	; Vary costs based on how dangerous the origin and destination maps are
+use_hazard_coef_avg 	= true 	; Hazard coef is the average of origin and destination rather than the greater of the two
 guides_ignore_status 	= true 	; Guides ignore wounded and overweight status for fast travel
 gate_northern_travel 	= true 	; North-south routes are blocked in story mode while Brain Scorcher/MM are still active
 psyblock_mapspots 		= true 	; Known fast travel points will have a different icon if the Scorcher blocks travel there
@@ -36,11 +41,12 @@ minimum_health		 	= 0 	; Minimum health to travel (0 disables)
 minimum_satiety 		= 0 	; Minimum satiety to travel (0 disables)
 squad_tp_bind 			= -1 	; Default keybind for squad teleport (-1 is unbound)
 squad_tp_mod 			= 0 	; Default modifier key for squad teleport
-tick_int 				= 1080 	; Base interval for script update ticks
+tick_int 				= 1080 	; Base interval (in ms) for script update ticks
 
 [travel_types]
 ; List of travel types and their name localization strings
 ; Used to iterate the "cfg", "loc", and "map" sections below for each travel type
+; Messing with the key values will probably break all sorts of shit
 ft 	= st_fftd_travelname_ft		; "Fast Travel"
 bp 	= st_fftd_travelname_bp 	; "Backpack Travel"
 gt 	= st_fftd_travelname_gt 	; "Guide Travel"

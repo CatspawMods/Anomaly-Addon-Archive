@@ -82,6 +82,7 @@ function on_mcm_load()
 					{id = "combat_dist", type = "track", val = 2, min = 1, max = 100, step = 1, def = 100},
 					{id = "combat_timeout", type = "track", val = 2, min = 1, max = 120, step = 1, def = 10},
 					{id = "northgate", type = "check", val = 1, def = true},
+					{id = "use_map_hazard_coef", type = "check", val = 1, def = true},
 					{id = "progressive_cost", type = "check", val = 1, def = false},
 					{id = "prog_coef_max", type = "track", val = 2, min = 0, max = 10, step = 0.05, def = 2},
 					{id = "prog_rank_cap", type = "input", val = 2, min = 1, max = 65000, def = 56000},
@@ -253,7 +254,7 @@ function on_mcm_load()
 
 					{id = "ignore_status", type = "check", val = 1, def = true},
 					{id = "local_only", type = "check", val = 1, def = false},
-					{id = "cost_coef", type = "track", val = 2, min = 0, max = 20, step = 0.05, def = 2.5, hint = "fftd_cost_coef"},
+					{id = "cost_coef", type = "track", val = 2, min = 0, max = 20, step = 0.05, def = 1.5, hint = "fftd_cost_coef"},
 					{id = "npc_cost_coef", type = "track", val = 2, min = 0, max = 20, step = 0.05, def = 2},
 					{id = "allow_pin_travel", type = "check", val = 1, def = false, hint = "fftd_allow_pin_travel"},
 					{id = "travel_cooldown", type = "input", val = 2, min = 0, max = 7200, def = 0},

@@ -8,6 +8,7 @@
 	<file name ="ui\fft\ui_icons_fft">
 		<texture id = "ui_fft_menuslide_maincfg" x="0" y="312" width="512" height="50" />
 		<texture id = "encyclopedia_addons_fair_fast_travel_image" x="0" y="312" width="512" height="50" />
+		<texture id = "encyclopedia_addons_fair_fast_travel_psyblocked_image" x="0" y="560" width="512" height="110" />
 
 		<texture id = "ui_fft_menuslide_slider_ftravel" x="0" y="412" width="512" height="50" />
 

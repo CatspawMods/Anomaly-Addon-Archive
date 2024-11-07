@@ -663,7 +663,7 @@
 	</string>
 
 	<string id="encyclopedia_addons_fair_fast_travel">
-		<text>Fair Fast Travel</text>
+		<text>Fair Fast Travel: Addon Overview</text>
 	</string>
 
 	<string id="encyclopedia_addons_fair_fast_travel_text">
@@ -747,6 +747,28 @@
 
 			\nI don't get notified about Moddb comments, so you will generally get the quickest response on the GAMMA Discord, in Fair Fast Travel's discussion channel. Unsolicited DMs will be ignored.\n
 		</text>
+	</string>
+
+<!-- Added in 2.16 -->
+
+	<string id="encyclopedia_addons_fair_fast_travel_psyblocked">
+		<text>Fast Travel Blocked by Psy Field</text>
+	</string>
+
+	<string id="encyclopedia_addons_fair_fast_travel_psyblocked_text">
+		<text>%c[ui_gray_1]If you're playing in %c[pda_yellow]Story Mode%c[ui_gray_1], and you haven't yet deactivated the %c[pda_yellow]Brain Scorcher%c[ui_gray_1], the %c[pda_yellow]Fair Fast Travel%c[ui_gray_1] addon includes an optional feature which prevents any fast travel trip that might require passing through the affected area of influence. Destinations which are unavailable for this reason will be indicated by the special icon you see above.\n
+
+		\n%c[pda_white]To restore fast travel to these locations, either progress the main story or disable the feature in the Mod Configuration Menu:\n \n
+		%c[pda_yellow]MCM > Fair Fast Travel > General > Brain Scorcher blocks travel
+		</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_use_map_hazard_coef">
+		<text>Scale travel costs by map threat</text>
+	</string>
+
+	<string id="ui_mcm_fftd_gen_use_map_hazard_coef_desc">
+		<text>When this option is enabled, Fair Fast Travel will scale travel costs based on the highest "threat" level of the origin and destination maps. Put simply, it means that travelling within "newbie" areas like Cordon and Swamps will cost less, while travel to and from "endgame" maps like Pripyat will be more expensive.</text>
 	</string>
 
 </string_table>

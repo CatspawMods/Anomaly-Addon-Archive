@@ -117,7 +117,7 @@ assert(utils_catspaw_common.using_modded_exes, "\n"..
     "* the required features.\n" ..
     "* These binaries fix vanilla bugs, add many engine features and graphical\n" ..
     "* improvements, and are a superior experience over vanilla in every way.\n" ..
-    "* https://github.com/themrdemonized/STALKER-Anomaly-modded-exes\n"
+    "* https://github.com/themrdemonized/xray-monolith\n"
 )
 
 -- ======================================================================
@@ -175,13 +175,20 @@ ranks_by_name = {
 -- ======================================================================
 local guides = {	--[[
 -- ======================================================================
-	.level : target level name, will break travel if wrong
-	.vcost : vanilla fare, used when vanilla prices are forced on
-	.fmult : multiplier applied on per-route basis to generated fares
-	.use_vcost : forces use of vanilla fare for this route
-	.custom_route_string : loc string to completely replace generated route list
-	.custom_route_preamble : loc string for what guide says before generating route list
-	.northgate : destination unavailable if brain scorcher active and that feature enabled
+	[section_name_of_character] = {
+	A guide may have a [cfg] child table with the following optional attributes:
+		custom_routelist_str 	: loc string to completely replace generated route list
+		custom_route_preamble 	: loc string to replace what guide says before generating route list
+
+		They will then have a table for each destination (guidespot) with the following properties:
+		[section_name_of_destination_guidespot] = {
+			level 		: str with target level name, required and will break travel if wrong
+			vcost 		: int, vanilla fare, used when vanilla prices are forced on
+			fmult 		: float, optional multiplier applied on per-route basis to generated fares
+			use_vcost 	: bool, if true, forces use of vanilla fare for this route
+			northgate 	: bool, if true, destination blocked by brain scorcher feature
+		}
+	}
 -- ==================================================================--]]
 	["guid_marsh_mlr"] = {
 	-- Clear Sky base guide
@@ -216,11 +223,6 @@ local guides = {	--[[
 	},	
 	["guid_zan_stalker_locman"] = {
 	--  Pilot / Skadovsk guide
---[[
-		["cfg"] = {
-			northern 	= true
-		},
---]]		
 		["l11_pripyat_guid"]		= {vcost = 4000,	fmult = 1.25, 	level = "l11_pripyat"},
 		["pripyat_guid_mon"] 		= {vcost = 5000,	fmult = 1.25, 	level = "pripyat"},
 		["jupiter_guid"] 			= {vcost = 2000,	fmult = 0.9, 	level = "jupiter"},
@@ -234,15 +236,18 @@ local guides = {	--[[
 	},
 	["monolith_bridge_trader_mlr"] = {
 	-- Monolith trader/guide in RF by Limansk bridge
---[[
-		["cfg"] = {
-			northern 	= true
-		},
---]]	
 		["pripyat_guid_mon"]		= {vcost = 5000, 	fmult = 1.2, 	level = "pripyat"},
 		["jupiter_guid_mon"] 		= {vcost = 6000, 	fmult = 2.5, 	level = "jupiter"},
 		["l11_pripyat_guid_mon"]	= {vcost = 5000, 	fmult = 1.2, 	level = "l11_pripyat"},
 	},
+
+	["trader_monolith_kbo"] = {
+	-- Monolith trader/guide in Outskirts
+		["red_forest_guid_mon"]		= {vcost = 5000,	fmult = 0.49, 	level = "l10_red_forest"},
+		["jupiter_guid_mon"] 		= {vcost = 2000, 	fmult = 0.32, 	level = "jupiter"},
+		["l11_pripyat_guid_mon"]	= {vcost = 1000, 	fmult = 0.37, 	level = "l11_pripyat"},
+	},
+
 	["guid_pri_a15_mlr"] = {
 	--  Tourist / Outskirts guide
 		["cfg"] = {
@@ -259,11 +264,6 @@ local guides = {	--[[
 	},
 	["guid_jup_stalker_garik"] = {
 	-- Garry / Yanov station guide
---[[
-		["cfg"] = {
-			northern 	= true
-		},
---]]		
 		["l05_bar_guid"] 				= {vcost = 6000,	fmult = 1.18, 	level = "l05_bar", northgate = true},
 		["l11_pripyat_guid"]			= {vcost = 3000,	fmult = 1.18, 	level = "l11_pripyat"},
 		["red_forest_guid"] 			= {vcost = 2500,	fmult = 1.12, 	level = "l10_red_forest", northgate = true},
@@ -272,17 +272,12 @@ local guides = {	--[[
 	},
 	["trader_monolith_jup_depo"] = {
 	-- Monolith trader/guide in Jupiter
---[[
-		["cfg"] = {
-			northern 	= true
-		},
---]]		
 		["red_forest_guid_mon"]			= {vcost = 6000,	fmult = 2.5, 	level = "l10_red_forest"},
 		["pripyat_guid_mon"] 			= {vcost = 2000,	fmult = 1.5, 	level = "pripyat"},
 		["l11_pripyat_guid_mon"]		= {vcost = 1000, 	fmult = 2.22, 	level = "l11_pripyat"},
 	},
 	["jup_depo_isg_leader"] = {
-	-- ISG leader (not handled by FFT)
+	-- ISG leader (placeholder, ISG is not currently handled by FFT)
 		["travel_to_jup_depo"] 			= {vcost = 0, level = "jupiter"},
 		["travel_to_outskirts"]			= {vcost = 0, level = "pripyat"},
 	},	
@@ -608,7 +603,7 @@ local function try_travel_aborted(guide, guidespot)
 	gft.reset_trip_data()
 	gft.trip.guide 		= guide
 	gft.trip.guidespot 	= guidespot
-	gft.SendCallback("on_try_fast_travel", gft.trip)
+	SendScriptCallback("on_try_fast_travel", gft.trip)
 
 	vl("try_travel_aborted ret_value: %s",gft.trip.ret_value)
 	return (not gft.trip.ret_value) or get_guidespot_disabled(guide, guidespot)
@@ -618,7 +613,7 @@ local function do_travel_aborted(guide, guidespot)
 	local guide 		= guide 	or gft.trip.guide
 	local guidespot 	= guidespot or gft.trip.guidespot
 	gft.trip.guidespot 	= guidespot or gft.trip.guidespot
-	gft.SendCallback("on_before_fast_travel", gft.trip)
+	SendScriptCallback("on_before_fast_travel", gft.trip)
 	return (not gft.trip.ret_value) or get_guidespot_disabled(guide, guidespot)
 end
 
@@ -765,7 +760,8 @@ end
 
 
 function compile_trip_data(guide, guidespot)
-	if not (guide and guidespot and guides[guide][guidespot]) then return end
+	printf("guide: %s | guidespot %s",guide,guidespot)
+	if not (guide and guidespot and guides[guide] and guides[guide][guidespot]) then return end
 	local time 		= get_guidespot_trip_duration(guide, guidespot)
 	local cust_name = get_guide_attr(guide, guidespot, "name")
 	local loc_name 	= gts(cust_name or (fftgtext..guidespot))
@@ -824,9 +820,6 @@ route_for_sep 	= " "..gts("st_fft_for").." $clr_gld"	-- string between route nam
 route_end_cap 	= "$clr_ui8."							-- end of route list string
 
 function generate_route_list(s1, s2, guidespot, pream, nocost)
-	local function farestr(f)
-		return nocost and "" or (route_for_sep .. tostring(f))
-	end
 	local guide	= get_guide_section(s1, s2)
 	--printf("generate_route_list for guide %s",guide)
 	local rlist, fare, last, destname
@@ -843,6 +836,9 @@ function generate_route_list(s1, s2, guidespot, pream, nocost)
 	elseif custom then
 		rlist 	= gts(custom)
 	else
+		local function farestr(f)
+			return nocost and "" or (route_for_sep .. tostring(f))
+		end
 		rlist		= (pream or get_route_preamble(guide))..route_prefix
 		local slut 	= {}
 		local uslut = {}
@@ -1055,46 +1051,45 @@ function travel_to_ds_soviet_store(s1, s2)			mgt(s1, s2, "ds_soviet_store") end
 --	STARTUP
 -- ======================================================================
 function setup_wg_guides()
-	if western_goods_guide then
+	if not western_goods_guide then return end
+	-- ==============================================================
+	-- WESTERN GOODS GUIDE COMPATIBILITY
+	-- ==============================================================
+	-- Adapted from western_goods_guide.load_guides_data
+	-- License : Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+   	vl("Injecting guides added by Western Goods")
+	local ini_guides = ini_file([[plugins\western_goods\guides\importer.ltx]])
+    ini_guides:section_for_each(function(char_id)
+        local config = utils_data.collect_section(ini_guides, char_id, true)
+        for location,price in pairs(config) do
+        	set_guide_attr(char_id, location, "vcost", price)
+        	if price == 0 then
+        		set_guidespot_fixed_fare(char_id, location, 0)
+        	end
+        	local gsdata 	= western_goods_utils.get_named_location(location)
+        	local pos 		= gsdata.position
+        	local facing 	= gsdata.orientation
+        	local level 	= lname_for_gvid(gsdata.gvid)
+        	set_guide_attr(char_id, location, "name", "st_" .. (gsdata.name or ""))
+        	set_guide_attr(char_id, location, "level", level)
+        	set_guidespot_dest(location, pos.x, pos.y, pos.z, gsdata.lvid, gsdata.gvid, facing.x, facing.y, facing.z)
+        	vl("WG guide %s: spot %s | pos %s,%s,%s | lvid %s | gvid %s | facing %s,%s,%s",char_id, location, pos.x, pos.y, pos.z, gsdata.lvid, gsdata.gvid, facing.x, facing.y, facing.z)
+        end
+    end)
 		-- ==============================================================
-		-- WESTERN GOODS GUIDE COMPATIBILITY
-		-- ==============================================================
-		-- Adapted from western_goods_guide.load_guides_data
-		-- License : Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
-       	vl("Injecting guides added by Western Goods")
-		local ini_guides = ini_file([[plugins\western_goods\guides\importer.ltx]])
-	    ini_guides:section_for_each(function(char_id)
-	        local config = utils_data.collect_section(ini_guides, char_id, true)
-	        for location,price in pairs(config) do
-	        	set_guide_attr(char_id, location, "vcost", price)
-	        	if price == 0 then
-	        		set_guidespot_fixed_fare(char_id, location, 0)
-	        	end
-	        	local gsdata 	= western_goods_utils.get_named_location(location)
-	        	local pos 		= gsdata.position
-	        	local facing 	= gsdata.orientation
-	        	local level 	= lname_for_gvid(gsdata.gvid)
-	        	set_guide_attr(char_id, location, "name", "st_" .. (gsdata.name or ""))
-	        	set_guide_attr(char_id, location, "level", level)
-	        	set_guidespot_dest(location, pos.x, pos.y, pos.z, gsdata.lvid, gsdata.gvid, facing.x, facing.y, facing.z)
-	        	vl("WG guide %s: spot %s | pos %s,%s,%s | lvid %s | gvid %s | facing %s,%s,%s",char_id, location, pos.x, pos.y, pos.z, gsdata.lvid, gsdata.gvid, facing.x, facing.y, facing.z)
-	        end
-	    end)
-   		-- ==============================================================
-   		--	MONKEYPATCHES FOR WESTERN GOODS GUIDE FUNCTIONS
-		-- ==============================================================
-		function wgg.get_route_label(actor, npc, dialog_id, phrase_id, next_id, p)
-		    local route = wgg.get_route_info(wgg.character_id, p[1])
-			return generate_menu_text(actor, npc, route.location)
-		end
-	    function wgg.can_pay(npc, actor)
-	    	local route = wgg.get_route_info(wgg.character_id, wgg.selected_route_idx)
-			return can_afford_fare(wgg.character_id, route.location)
-		end
-		function wgg.pay(npc, actor)
-		    local route = wgg.get_route_info(wgg.character_id, wgg.selected_route_idx)
-			charge_actor_fare(npc, actor, wgg.character_id, route.location)
-		end
+		--	MONKEYPATCHES FOR WESTERN GOODS GUIDE FUNCTIONS
+	-- ==============================================================
+	function wgg.get_route_label(actor, npc, dialog_id, phrase_id, next_id, p)
+	    local route = wgg.get_route_info(wgg.character_id, p[1])
+		return generate_menu_text(actor, npc, route.location)
+	end
+    function wgg.can_pay(npc, actor)
+    	local route = wgg.get_route_info(wgg.character_id, wgg.selected_route_idx)
+		return can_afford_fare(wgg.character_id, route.location)
+	end
+	function wgg.pay(npc, actor)
+	    local route = wgg.get_route_info(wgg.character_id, wgg.selected_route_idx)
+		charge_actor_fare(npc, actor, wgg.character_id, route.location)
 	end
 end
 -- ======================================================================
