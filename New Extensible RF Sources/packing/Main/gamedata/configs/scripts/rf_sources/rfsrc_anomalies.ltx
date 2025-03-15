@@ -1,0 +1,108 @@
+; Added by NERFS 
+; Aside from adding electrical and psy anomalies to the 
+; list of objects that the RF receiver can pick up, this 
+; file also serves as an example of how to add your 
+; own signal sources.
+
+[class_anom_electro_s]
+exact_match	= true
+	; The above flag tells NERFS that it should match more 
+	; than just the clsid--it needs an exact match for some 
+	; other field. Currently supported are section and RFID
+	; (for tagged stashes in the RF_stashes list).
+match_by 	= section
+
+clsid 		= zone_mbald_s
+	; A base entry with the clsid (class ID) must be present, 
+	; it is the first criteria the script looks for.
+
+dist 		= 25
+	; Range of the signal
+
+snd 		= func
+	; Sound effect, or func if calling a functor
+	; Valid (default) sound effects are:
+	; noise:  background static
+	; rfid_beep: stash signal
+	; random: random noise, default anomalous signal
+	; emission: emission noise
+	; chatter: stalker radio chatter
+	; gsm: cellular RF interference
+	; psy: different-sounding interference for psy
+	; silence: exactly what it says
+	; See the rfcfg_*.ltx files for sound effect defs
+
+func 		= item_radio.sfx_random_noise
+	; If snd = func, the script will instead call this 
+	; functor and use the value it returns as the path
+	; to the sound effect to use e.g.:
+	; detectors\\RF\\noise
+
+[rfss_zone_mine_electric]
+match_key 	= true
+match_by 	= section
+	; Once it matches the clsid, if exact_match is true the 
+	; script then searches for a record that is keyed by 
+	; the value in said field.
+
+section 	= zone_mine_electric
+	; In this case, if it matches clsid.zone_mbald_s, it 
+	; then checks to see whether there is a source entry 
+	; with a section of "zone_mine_electric"
+
+dist 		= 25
+snd 		= func
+func 		= item_radio.sfx_random_noise
+freq 		= 491
+	; If it finds that match, it uses these values instead.
+	; If it doesn't, it assumes this is not a valid source.
+
+[rfss_zone_mine_electric_weak]
+	; And then because the section must be an exact match,
+	; repeat for any variants.
+match_key 	= true
+match_by 	= section
+section 	= zone_mine_electric_weak
+dist 		= 25
+snd 		= func
+func 		= item_radio.sfx_random_noise
+freq 		= 491
+
+[rfss_zone_mine_electric_average]
+match_key 	= true
+match_by 	= section
+section 	= zone_mine_electric_average
+dist 		= 25
+snd 		= func
+func 		= item_radio.sfx_random_noise
+freq 		= 491
+
+[rfss_zone_mine_electric_strong]
+match_key 	= true
+match_by 	= section
+section 	= zone_mine_electric_strong
+dist 		= 25
+snd 		= func
+func 		= item_radio.sfx_random_noise
+freq 		= 491
+
+[class_tesla_anomaly]
+	; Same for this one. If it matches clsid.zone_torrid_s, 
+	; it checks whether the anomaly's section is equal to 
+	; "fireball_electric_zone"
+exact_match = true
+match_by 	= section
+clsid 		= zone_torrid_s
+dist 		= 25
+snd 		= func
+func 		= item_radio.sfx_random_noise
+
+[rfss_fireball_electric_zone]
+match_key 	= true
+match_by 	= section
+section 	= fireball_electric_zone
+dist 		= 25
+snd 		= func
+func 		= item_radio.sfx_random_noise
+freq 		= 522
+

@@ -7,7 +7,7 @@ This is a version archive and general code repository for any [Stalker: Anomaly 
 2. Generally speaking, please DO NOT include modified versions of the same files in your own addons.
 3. **ALL CONTENT FOUND HERE IS USED AT YOUR OWN RISK.** I can't provide any support at all for what you find here, period.
 
-In other words, if I have a file called `utils_catsy_common.script`, you're free to include it in your own addon, unmodified. You're also free to take code from it, and use that code in your own scripts that are named something else. What I don't want you doing is modifying `utils_catsy_common.script` (or anything else) and then including a modified copy of that same file in some other addon or modpack.
+In other words, if I have a file called `utils_catspaw_common.script`, you're free to include it in your own addon, unmodified. You're also free to take code from it, and use that code in your own scripts that are named something else. What I don't want you doing is modifying `utils_catspaw_common.script` (or anything else) and then including a modified copy of that same file in some other addon or modpack.
 
 Do you want ugly mod conflicts? Because that's how you get ugly mod conflicts. Don't do it, please.
 

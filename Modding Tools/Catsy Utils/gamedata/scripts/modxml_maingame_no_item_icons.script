@@ -1,0 +1,66 @@
+-- ======================================================================
+--[[	Disable floating inventory icons for pickups - DXML Module
+-- ===================================================================--]]
+script_name 	= "modxml_maingame16_no_item_icons"
+script_version 	= "1.0"
+release_date    = 20250305
+--[[======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- =======================================================================	
+	DEPENDENCIES:
+	This script requires modded exes. Get them here:
+
+	https://github.com/themrdemonized/xray-monolith
+-- =======================================================================	
+	PURPOSE:
+	Disables the floating inventory icon of the item targeted for pickup
+	on the main HUD.
+
+	You don't need this module if you have DynaHUD.
+-- =======================================================================
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+	Give your script a different name. That's all I ask.
+-- ====================================================================]]
+
+local exes_version 		= MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version())
+local dxml_cache_enabled= exes_version and (exes_version >= 20250228)
+local do_once 			= false
+local xml_table
+
+function on_xml_read()
+    RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj, flags)
+    	if (xml_file_name ~= "ui\\maingame.xml") and
+    		(xml_file_name ~= "ui\\maingame_16.xml") and
+    		(xml_file_name ~= "ui\\maingame_21.xml") then
+    	return end
+
+    	if dxml_cache_enabled and is_not_empty(flags) then
+    		-- Enable DXML cache feature
+    		flags.cache = true
+    	end
+
+    	if do_once then
+    		-- DXML already ran once for this file, passing back cached xml_table
+    		xml_obj.xml_table.kids = xml_table.kids
+    		return
+    	end
+
+    	do_once = true
+       	local _ = DEV_DEBUG and printf("Processing DXML in %s for %s", xml_file_name, script_name)
+
+		local res = xml_obj:query("pick_up_item")
+		if res and res[1] then
+			xml_obj:setElementAttr(res[1], {x=-9999})
+		end
+        -- Cache the results
+        if dxml_cache_enabled then
+        	xml_table = xml_obj.xml_table
+        end
+    end)
+end

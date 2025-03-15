@@ -45,7 +45,7 @@ local load_error_text2		= {id = "load_error2", type= "desc", text = "st_paw_text
 local action_codes          = {}
 local action                = {}
 -- =======================================================================
-local rel_version = "PAW not installed!"
+local rel_version 	= "PAW not installed!"
 
 if paw.load_me() then
 	local ver 		= tasks_placeable_waypoints.script_version
@@ -902,7 +902,7 @@ icoset._changed 	= {}
 local xml 			= CScriptXmlInit()
 local xmlroot 		= "paw_mcm_pos_preview"
 local box_pname, ui_img, theme_box, theme_preview, theme_curr_i, theme_next_i, theme_prev_i
-
+local UIMCM 		= ui_mcm.UI_MCM or ui_mcm.UIMCM
 --[[
 function get_cached_pin_for_set(setname,opid,default)
 	if not setname then return end
@@ -912,7 +912,7 @@ function get_cached_pin_for_set(setname,opid,default)
 		pcur = axr_main.config:r_value("mcm", opid, {val=0})
 		if pcur == nil then
 			local setdata = icon_sets[setname]
-			pcur = ui_mcm.UIMCM:GetDefaultValue(path,icoset_id,{def=default or (setdata and setdata.default or "redpush32"),val=0})
+			pcur = UIMCM:GetDefaultValue(path,icoset_id,{def=default or (setdata and setdata.default or "redpush32"),val=0})
 		end
 	end
 	return pcur
@@ -927,7 +927,7 @@ function get_cached_pin_for_set(setname,opid)
 		pcur = axr_main.config:r_value("mcm", opid, {val=0})
 		if pcur == nil then
 			local setdata = icon_sets[setname]
-			pcur = ui_mcm.UIMCM:GetDefaultValue(path,icoset_id,{def=(setdata and setdata.default or "redpush32"),val=0})
+			pcur = UIMCM:GetDefaultValue(path,icoset_id,{def=(setdata and setdata.default or "redpush32"),val=0})
 		end
 	end
 	return pcur
@@ -943,7 +943,7 @@ function load_icoset_state()
 		icoset.setdata 	= icon_sets[icoset.set_curr]
 		local setdata 	= icoset.setdata
 		local icoset_id = "poi_icon_"..icoset.set_curr
-		icoset.pin_curr = ui_mcm.UIMCM:GetDefaultValue(path,icoset_id,{def=(setdata and setdata.default or "redpush32"),val=0})
+		icoset.pin_curr = UIMCM:GetDefaultValue(path,icoset_id,{def=(setdata and setdata.default or "redpush32"),val=0})
 	end
 	icoset.ico_curr = icons[icoset.pin_curr]
 	icoset.tex_curr = "ui_icons_paw_pin_redpush32"
@@ -1443,7 +1443,7 @@ function mcm_on_value_select(path,opt,value,v)
 			icon_change = true
 			icoset.set_curr = value
 			if icoset.set_curr == nil then
-				icoset.set_curr = ui_mcm.UIMCM:GetDefaultValue(path,"pin_icon_group",{def="pins",val=0})
+				icoset.set_curr = UIMCM:GetDefaultValue(path,"pin_icon_group",{def="pins",val=0})
 			end
 			icoset_id = "poi_icon_"..icoset.set_curr
 		end

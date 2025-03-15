@@ -1,0 +1,20 @@
+[config_defaults]
+scan_time 			= 5000 		; time in ms between RF signal scans
+min_gap 			= 400 		; minimum time in ms between beeps so the sound doesn't get spammed
+max_freq			= 999 		; default maximium allowable frequency - MCM will override this
+min_flash_time 		= 100 		; internal flag for the lights on the detector
+disable_all_sounds 	= false
+disable_ui_sounds 	= false
+disable_rf_sounds 	= false
+explosive_triggered = false
+enable_rrfr 		= false
+rrfr_update_sources = false
+rrfr_must_equip_det = false
+dar_sound_from_inv 	= false
+path_silence 		= $no_sound
+path_default_noise 	= detectors\RF\noise
+path_default_beep 	= detectors\RF\beep_02
+path_sound_on 		= detectors\RF\on
+path_sound_off 		= detectors\RF\off
+tb_beep				= detectors\tb_detector_radio_beep
+indicator_file 		= rax_rf_indicator.xml

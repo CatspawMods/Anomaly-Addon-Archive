@@ -1,0 +1,137 @@
+-- ======================================================================
+--[[	Interaction Dot Marks ("DotMarks")
+-- ======================================================================
+ 	MCM initialization script
+ 	Author: Catspaw (CatspawMods @ ModDB)
+-- ====================================================================]]
+if ui_hud_dotmarks then end
+local cfg = {}
+ui_hud_dotmarks.load_file_data("scripts\\dotmarks_defaults.ltx", cfg)
+
+main_menu = {
+		{ id = "menuslide_main", type = "slide", link = "ui_mcm_dotmarks_banner_main", size = {512,50}, spacing = 0 },
+		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
+		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
+		{ id = "hide_pri_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_pri_interact_ui },
+		{ id = "hide_sec_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_sec_interact_ui },
+		{ id = "hide_van_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_van_interact_ui },
+		{ id = "dot_marker_size", 		type = "track",		val = 2, min = 0, step = 0.1, max = 2, def = cfg.dot_marker_size },
+		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha },
+
+		{id = "divider", type= "line"},
+		{ id = "headerdesc_alti", 		type = "desc", text = "ui_mcm_dotmarks_alti_desc"},
+		{ id = "bind_sec_interact", 	type = "key_bind", 			val = 2, def = cfg.bind_sec_interact },
+		{ id = "modk_sec_interact", 	type = ui_mcm.kb_mod_radio, val = 2, def = cfg.modk_sec_interact, hint = "mcm_kb_modifier", 
+			content = {
+				{0,"mcm_kb_mod_none"},
+				{1,"mcm_kb_mod_shift"},
+				{2,"mcm_kb_mod_ctrl"},
+				{3,"mcm_kb_mod_alt"}
+			}
+		},
+		{ id = "imod_sec_interact", 	type = ui_mcm.kb_mod_radio, val = 2, def = cfg.imod_sec_interact, hint = "mcm_kb_mode",
+			content = {
+				{0,"mcm_kb_mode_press"},
+				{1,"mcm_kb_mode_dtap"},
+				{2,"mcm_kb_mode_hold"}
+			}
+		},
+	}
+
+adv_menu = {
+		{ id = "menuslide_adv", type = "slide", link = "ui_mcm_dotmarks_banner_adv", size = {512,50}, spacing = 0 },
+		{ id = "headerdesc_adv", 		type = "desc", text = "ui_mcm_dotmarks_adv_desc"},
+
+		{ id = "show_item_card", 		type = "check", 	val = 1, def = cfg.show_item_card },
+		{ id = "sp_hide_junk_items", 	type = "check", 	val = 1, def = cfg.sp_hide_junk_items },
+		{ id = "sp_flag_favejunk", 		type = "check", 	val = 1, def = cfg.sp_flag_favejunk },
+		{ id = "show_item_condition", 	type = "check", 	val = 1, def = cfg.show_item_condition and not utils_catspaw_common.using_gamma_modpack},
+		{ id = "show_item_charge", 		type = "check", 	val = 1, def = cfg.show_item_charge },
+		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color },
+		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
+		{id = "keybind_bg_style", type= "list", val = 2, def = cfg.keybind_bg_style, 
+			content = {
+			   {3,"dmarks_kbstyle_worn"},
+			   {2,"dmarks_kbstyle_full"},
+			   {1,"dmarks_kbstyle_wire"},
+			   {0,"dmarks_kbstyle_none"},
+			}
+		},
+
+		{ id = "alti_show_during_anim", type = "check", 	val = 1, def = cfg.alti_show_during_anim },
+		{ id = "alti_busy_during_anim", type = "check", 	val = 1, def = cfg.alti_busy_during_anim },
+		{ id = "prompt_fade_in_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_in_time },
+		{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
+
+
+		{id = "divider", type= "line"},
+		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
+		{ id = "bodies_use_paw_patches",type = "check", 	val = 1, def = cfg.bodies_use_paw_patches },
+		{ id = "bodies_use_mpda_rules",	type = "check", 	val = 1, def = cfg.bodies_use_mpda_rules },
+		{ id = "use_skill_system", 		type = "check", 	val = 1, def = cfg.use_skill_system },
+		{ id = "skill_upd_interval", 	type = "input", 	val = 2, min = 0, max = 120000, step = 1, def = cfg.skill_upd_interval },
+		{ id = "haru_skill_name", 		type = "input", 	val = 0, def = cfg.haru_skill_name },
+		{ id = "haru_skill_coef", 		type = "input", 	val = 2, min = 0, max = 5, step = 0.01, def = cfg.haru_skill_coef },
+
+		{id = "divider", type= "line"},
+		{ id = "headerdesc_offsets",	type = "desc", text = "ui_mcm_dotmarks_offsets_desc"},
+		{ id = "pri_use_h_offset", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.pri_use_h_offset },
+		{ id = "pri_use_v_offset", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.pri_use_v_offset },
+		{ id = "sec_use_h_offset", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.sec_use_h_offset },
+		{ id = "sec_use_v_offset", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.sec_use_v_offset },
+		{ id = "fixed_screen_pos", 		type = "check", 	val = 1, def = cfg.fixed_screen_pos },
+
+		{id = "divider", type= "line"},
+		{ id = "near_scan_interval", 	type = "input", 	val = 2, min = 0, max = 10000, step = 1, def = cfg.near_scan_interval },
+		{ id = "far_scan_interval", 	type = "input", 	val = 2, min = 0, max = 30000, step = 1, def = cfg.far_scan_interval },
+		{ id = "near_scan_radius", 		type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.near_scan_radius },
+		{ id = "far_scan_radius", 		type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.far_scan_radius },
+
+		{id = "divider", type= "line"},
+		{ id = "debuglogs", 			type = "check", 	val = 1, def = ui_hud_dotmarks.debuglogs },
+		{ id = "verbose", 				type = "check", 	val = 1, def = ui_hud_dotmarks.verbose },
+
+		{id = "divider", type= "line"},
+	}
+
+-- ======================================================================
+
+function generate_objs_menu()
+	local gr = {
+		{ id = "menuslide_objs", 		type = "slide", link = "ui_mcm_dotmarks_banner_objs", size = {512,50}, spacing = 0 },
+		{ id = "headerdesc_objs1", 		type = "desc", text = "ui_mcm_dotmarks_objmenu1"},
+		{ id = "headerdesc_objs2", 		type = "desc", text = "ui_mcm_dotmarks_objmenu2"},
+		{ id = "disable_icon_box", 		type = "check", val = 1, def = cfg.disable_icon_box },
+		{ id = "disable_icon_door", 	type = "check", val = 1, def = cfg.disable_icon_door },
+		{ id = "disable_icon_talk", 	type = "check", val = 1, def = cfg.disable_icon_talk },
+		{ id = "disable_icon_services", type = "check", val = 1, def = cfg.disable_icon_services },
+		{id = "divider", type= "line"},
+	}
+	local tbl = {}
+	for k,v in pairs(cfg.scan) do
+		tbl[#tbl + 1] = k
+	end
+	table.sort(tbl)
+	for _, item_class in spairs(tbl) do
+		local enabled = cfg.scan[item_class]
+		local opt_id = "scan_" .. string.lower(item_class)
+		table.insert(gr, { id = opt_id, type= "check", val = 1, def = enabled })
+	end
+	table.insert(gr, {id = "divider", type= "line"})
+
+	return gr
+end
+
+-- ======================================================================
+
+function on_mcm_load()
+	if not cfg then return end
+	op = { id = "dotmarks", gr = {
+			{ id = "dmarkmain", sh = true, gr = main_menu },
+			{ id = "dmarkadv", sh = true, gr = adv_menu },
+			{ id = "dmarkobjs", sh = true, gr = generate_objs_menu() }
+		}
+	}
+	return op
+end
+

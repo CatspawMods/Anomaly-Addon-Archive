@@ -1,0 +1,558 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Author: Catspaw
+    Updated: 20250313
+    Translated using DeepL. Corrections or suggestions are welcome.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+	<string id="st_alti_unload_weapon">
+		<text>Выгрузите</text>
+	</string>
+
+	<string id="st_alti_eject_mag">
+		<text>Забрать магазин с</text>
+	</string>
+
+	<string id="st_alti_take">
+		<text>Поднять</text>
+	</string>
+
+	<string id="st_alti_use_booster">
+		<text>Использовать</text>
+	</string>
+
+	<string id="st_alti_takeuse">
+		<text>Поднять и используйте</text>
+	</string>
+
+	<string id="st_alti_cannot">
+		<text>Не может</text>
+	</string>
+
+	<string id="st_alti_read">
+		<text>Поднять и прочитайте</text>
+	</string>
+	
+	<string id="st_alti_search">
+		<text>Обыскать</text>
+	</string>
+
+	<string id="st_alti_consume_food">
+		<text>Употребляйте</text>
+	</string>
+
+	<string id="st_alti_speak">
+		<text>Поговорите с</text>
+	</string>
+
+	<string id="st_alti_pickup_bp">
+		<text>Возьмите свой тайник и все, что в нем находится</text>
+	</string>
+
+	<string id="st_alti_deploy_bp">
+		<text>Разместите тайник, используя</text>
+	</string>
+
+	<string id="st_alti_takeall">
+		<text>Возьмите все из</text>
+	</string>
+
+	<string id="st_alti_empty">
+		<text>(пуст)</text>
+	</string>
+
+	<string id="st_alti_from">
+		<text>из</text>
+	</string>
+
+	<string id="st_alti_now">
+		<text>сейчас</text>
+	</string>
+
+	<string id="st_alti_uses">
+		<text>части</text>
+	</string>
+
+	<string id="st_alti_nopower">
+		<text>без питания</text>
+	</string>
+
+	<string id="st_alti_hold">
+		<text>(Удерживайте) </text>
+	</string>
+
+	<string id="st_alti_busy">
+		<text>Слишком занят</text>
+	</string>
+
+	<string id="st_alti_doubletap">
+		<text>(Дважды нажмите) </text>
+	</string>
+
+	<string id="st_alti_prompt_ammo">
+		<text>%s %s (%s) %s %s</text>
+	</string>
+
+	<string id="st_alti_prompt_eatable">
+		<text>%s %s %s</text>
+	</string>
+
+	<string id="st_alti_prompt_booster">
+		<text>%s %s %s</text>
+	</string>
+
+	<string id="st_body_is_claimed">
+		<text>заявлен</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_bodies">
+		<text>Отметить трупы</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_ammo">
+		<text>Отметьте патроны</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_stashes">
+		<text>Отметьте тайники</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_weapons">
+		<text>Отметить оружие</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_grenades">
+		<text>Отметить гранаты</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_explosives">
+		<text>Отметить взрывчатку</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_outfits">
+		<text>Отметьте экипировка</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_headgear">
+		<text>Отметьте шлемы</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_artefacts">
+		<text>Отметить артефакты</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_consumables">
+		<text>Отметить расходные предметы</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_tools">
+		<text>Отметить инструменты</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_devices">
+		<text>Отметьте устройства</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_quest">
+		<text>Отметить квестовые предметы</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_campfires">
+		<text>Отмечайте костры</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_misc">
+		<text>Отметить общие объекты</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_boxes">
+		<text>Отметьте бьющиеся коробки</text>
+	</string>	
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_doors">
+		<text>Отметьте двери</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_stalkers">
+		<text>Отметить NPC</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_workshops">
+		<text>Отметить верстак</text>
+	</string>
+
+
+	<string id="ui_mcm_menu_dotmarks">
+		<text>DotMarks</text>
+	</string>
+
+	<string id="ui_mcm_menu_dmarkmain">
+		<text>Общие настройки</text>
+	</string>
+
+	<string id="ui_mcm_menu_dmarkadv">
+		<text>Расширенные настройки</text>
+	</string>	
+
+	<string id="ui_mcm_menu_dotalti">
+		<text>Альт использование</text>
+	</string>
+
+	<string id="ui_mcm_menu_dmarkobjs">
+		<text>Настройки объекта</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_mainmenu">
+		<text>Общие настройки конфигурации для Interaction Dot Marks.</text>
+	</string>
+
+
+	<string id="ui_mcm_dotmarks_adv_desc">
+		<text>Скорее всего, вам не понадобится (и не стоит) изменять большинство следующих настроек, но они приведены здесь для тех, кому это необходимо.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_objmenu1">
+		<text>Здесь можно включить или отключить точечные маркеры взаимодействия для различных типов объектов, а также настроить специфические для каждого объекта параметры.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_objmenu2">
+		<text>Если вы внесете изменения здесь, они могут не вступить в силу для уже отсканированных объектов, пока вы не отойдете от них или не перезагрузите игру.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_altmenu">
+		<text>Настройки для функции «Альтернативное использование», которая доступна при наведении на объект, отмеченный точкой, в пределах диапазона взаимодействия.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_interval">
+		<text>Интервал сканирования с близкого расстояния</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_interval_desc">
+		<text>Интервал между сканированием близлежащих объектов, в миллисекундах. При меньших значениях обновление будет происходить чаще.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_interval">
+		<text>Интервал дальнего сканирования</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_interval_desc">
+		<text>Интервал между более интенсивными сканированиями дальних объектов, в миллисекундах. При меньших значениях обновления будут происходить чаще, но это может привести к снижению производительности.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_radius">
+		<text>Радиус ближнего сканирования</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_radius_desc">
+		<text>Радиус сканирования близлежащих объектов в метрах. От этого значения зависит многое, например, расстояние, на котором исчезают маркеры и увеличивается/уменьшается масштаб. Рекомендуется не изменять это значение или делать это с очень маленьким шагом.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_radius">
+		<text>Радиус дальнего сканирования</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_radius_desc">
+		<text>Радиус сканирования дальних объектов в метрах, который используется для обнаружения объектов до того, как они попадут в зону видимости. Это также определяет расстояние, на котором система очищает маркеры, которые больше не нужны.
+		\n 
+		\nЭто значение ДОЛЖНО быть больше, чем радиус сканирования вблизи, но очень большие значения могут привести к снижению производительности, и нет никакой пользы от установки более чем на 5-10 м выше, чем радиус сканирования вблизи.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_skill_upd_interval">
+		<text>Интервал между обновлениями системы навыков</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_use_skill_system">
+		<text>Увеличение радиуса восприятия на основе системы умений</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_name">
+		<text>Название навыка, используемого для этой оценки</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_coef">
+		<text>Множитель радиуса сканирования за уровень навыка</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_coef_desc">
+		<text>Если включена интеграция системы навыков, эта настройка контролирует множитель, который применяется к радиусу ближнего сканирования за уровень навыка, и эффективно увеличивает диапазон «восприятия» игрока - в пределах которого могут появляться точечные маркеры.
+		\n 
+		\nДля 15-го уровня «Мусорщика» с множителем по умолчанию 0,5 и радиусом 3, конечный радиус ближнего сканирования составит 10,5 м.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_alti_desc">
+		<text>Альтернативное использование позволяет выполнять контекстно-зависимые действия при наведении на отмеченные объекты без необходимости их подбирать - например, извлекать патроны из оружия или потреблять пищу. Настоятельно рекомендуется FDDA Redone.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_bind_alt_interact">
+		<text>Привязка клавиш для альтернативного использования</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs">
+		<text>Включить ведение журнала отладки</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs_desc">
+		<text>Если вы сообщаете о проблеме, включите этот параметр и создайте чистый журнал, в котором будет показана проблема.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_verbose">
+		<text>Ведение отладочных журналов в режиме verbose (подробно)</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_verbose_desc">
+		<text>При сообщении о проблеме также включите эту настройку. Это позволит сохранить в журнале наиболее подробную информацию об устранении неполадок.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_interaction_dots">
+		<text>Скрыть маркеры точек взаимодействия</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_interaction_dots_desc">
+		<text>Если эта функция включена, сами точки взаимодействия будут скрыты, но альтернативное использование (если таковое имеется) будет по-прежнему доступно.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_pri_interact_ui">
+		<text>Скрыть пользовательский пользовательский интерфейс основного взаимодействия</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_pri_interact_ui_desc">
+		<text>If enabled, the custom primary interact UI added by DotMarks will not be shown. The primary vanilla "use" function and prompts will still work normally.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_sec_interact_ui">
+		<text>Скрыть пользовательский пользовательский интерфейс основного взаимодействия</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_sec_interact_ui_desc">
+		<text>Если эта опция включена, пользовательский пользовательский интерфейс альтернативных взаимодействий, добавленный DotMarks, не будет отображаться, и альтернативные взаимодействия будут недоступны.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_van_interact_ui">
+		<text>Скрыть ванильный пользовательский интерфейс взаимодействия</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_van_interact_ui_desc">
+		<text>Если эта опция включена, все ванильные интерактивные подсказки (текст в нижней части экрана) будут скрыты, если они были заменены на пользовательскую версию.
+			\n 
+			\nЭта настройка не имеет эффекта, если пользовательский основной пользовательский интерфейс взаимодействия также скрыт.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_connecting_line">
+		<text>Спрячьте соединительную белую линию</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_connecting_line_desc">
+		<text>Если эта опция включена, она скрывает белую линию, соединяющую точку с подсказкой interact.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_show_during_anim">
+		<text>Показывайте альт пользовательский интерфейс во время анимации FDDA</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_show_during_anim_desc">
+		<text>Если эта опция включена, пользовательский интерфейс альтернативного использования будет отображаться во время анимации FDDA, а следующая настройка ниже определяет, можно ли его использовать. Если вы хотите полностью скрыть подсказку во время анимации, отключите этот параметр.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_busy_during_anim">
+		<text>Альт использование отключено во время анимации FDDA</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_busy_during_anim_desc">
+		<text>Если эта опция включена, пользовательский интерфейс альтернативного использования отключается во время анимации FDDA, затемняясь и показывая сообщение «Слишком занят» до завершения текущей анимации.\n
+		\n 
+		\nОтключение этой опции позволит «отменить анимацию», пропустив текущую анимацию и немедленно начав следующую. Звуковые эффекты при этом будут воспроизводиться.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_offsets_desc">
+		<text>Эти настройки регулируют положение интерактивных подсказок. Это координаты холста, которые равны 1024x768 - не разрешение вашего экрана.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_ddmarkadv_pri_use_h_offset">
+		<text>Горизонтальное положение для основного диалога действий.</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_h_offset_desc">
+		<text>Настройка положения подсказки по горизонтали. Допустимые значения от -512 до 1024.
+			\n 
+			\nПо умолчанию: -10
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_v_offset">
+		<text>Вертикальная позиция для диалогового окна основного действия.</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_v_offset_desc">
+		<text>Настройте положение подсказки по вертикали. Допустимые значения от -384 до 768.
+			\n 
+			\nПо умолчанию: 28
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alt_use_h_offset">
+		<text>Горизонтальная позиция для диалога вторичного действия.</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_alt_use_h_offset_desc">
+		<text>Настройка положения подсказки по горизонтали. Допустимые значения от -512 до 1024.
+			\n 
+			\nПо умолчанию: -10
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alt_use_v_offset">
+		<text>Вертикальная позиция для диалога вторичного действия.</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_alt_use_v_offset_desc">
+		<text>Настройте положение подсказки по вертикали. Допустимые значения от -384 до 768.
+			\n 
+			\nПо умолчанию: 48
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_fixed_screen_pos">
+		<text>Диалоги имеют фиксированное положение на экране</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_fixed_screen_pos_desc">
+		<text>Если эта опция включена, диалоги пользовательского взаимодействия будут иметь фиксированное положение на экране, основанное на указанных выше смещениях, причем смещения измеряются относительно левого верхнего угла экрана.
+			\n 
+			\nПо умолчанию диалоги следуют за положением прикрепленной к ним точечной метки, а их смещения измеряются от положения этой точки.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_interact_drop_alpha">
+		<text>Прозрачность основной тени</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_interact_drop_alpha_desc">
+		<text>Устанавливает альфа-канал (прозрачность) для основных теней под подсказками взаимодействия или другими элементами пользовательского интерфейса. Установите нулевое значение, чтобы отключить основные тени.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_keybind_bg_style">
+		<text>Стиль иконок привязки клавиш</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_keybind_bg_style_desc">
+		<text>Устанавливает визуальный стиль для графических значков «клавиш», используемых в качестве фона для текста привязки клавиш в подсказках взаимодействия, или полностью отключает его.
+		</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_kbstyle_dist">
+		<text>Изношенный внешний вид</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_kbstyle_full">
+		<text>Черно-белый, заполненный</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_kbstyle_wire">
+		<text>Обычный белый каркас</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_kbstyle_none">
+		<text>Нет фона</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size">
+		<text>Размер маркера взаимодействия</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size_desc">
+		<text>Этот ползунок регулирует размер точечных маркеров, добавляемых к объектам в мире. При значении 1 они будут иметь размер по умолчанию, а при нулевом значении эти значки будут полностью скрыты. Другие особенности аддона, такие как текстовые метки или вторичное взаимодействие, не будут затронуты.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_hide_junk_items">
+		<text>Скрыть элементы, помеченные как хлам, в Sorting Plus</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_hide_junk_items_desc">
+		<text>Если установлен аддон Sorting Plus, и элемент был помечен как «хлам», то отметка для него не будет отображаться.
+		</text>
+	</string>
+	
+	<string id="ui_mcm_dotmarks_dmarkadv_hidden_show_prompts">
+		<text>Скрытые элементы по-прежнему отображают подсказки о взаимодействии</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hidden_show_prompts_desc">
+		<text>Если маркер скрыт с помощью вышеуказанной настройки или «Скрыть маркеры точек взаимодействия», его подсказки все равно будут отображаться.
+			\n
+			\nВНИМАНИЕ: Если эта опция не включена, скрытые маркеры вообще не будут иметь видимых подсказок взаимодействия. Это не помешает вам поднять их, если вы захотите, просто не будет показана подсказка.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_paw_patches">
+		<text>Мертвые сталкеры используют патчи фракций из аддона PAW</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_paw_patches_desc">
+		<text>Если установлен аддон Personal Adjustable Waypoint (PAW), эта опция заставит мертвых сталкеров показывать патч своей фракции вместо иконки с точечным маркером.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_disable_all_sounds">
+		<text>Отключите звуковые эффекты пользовательского интерфейса</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_disable_all_sounds_desc">
+		<text>Отключает тонкий звуковой эффект «щелчка» пользовательского интерфейса, который воспроизводится при вращении колесика мыши или во время других подобных событий.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_mpda_rules">
+		<text>На маркеры тела распространяются правила Milspec PDA</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_mpda_rules_desc">
+		<text>Если установлен аддон Milspec PDA, эта опция будет подчиняться настройкам видимости мертвых тел, которые будут показывать маркер только на тех телах, маркеры которых видны игроку на карте.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box">
+		<text>Отключение специальной иконки для разбиваемых ящиков</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box_desc">
+		<text>Если эта опция включена, разбиваемые ящики будут использовать стандартный точечный маркер вместо специального значка «разбиваемый объект».
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk">
+		<text>Отключите специальную иконку для разговора с NPC</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk_desc">
+		<text>Если эта опция включена, сталкеры будут использовать стандартный точечный маркер, а не переключаться на специальный значок «речевой пузырь», когда будет показан их основной запрос на взаимодействие.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services">
+		<text>Отключите специальную иконку для служебных NPC</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services_desc">
+		<text>Если эта опция включена, служебные NPC будут использовать стандартный точечный маркер вместо того, чтобы переключаться на иконку, характерную для службы, когда показывается их основная подсказка взаимодействия.
+		</text>
+	</string>
+
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door">
+		<text>Отключите специальный значок для дверей</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door_desc">
+		<text>Если эта опция включена, двери будут использовать стандартный точечный маркер вместо того, чтобы переключаться на специальный значок «дверь», когда отображается их основная подсказка взаимодействия.
+		</text>
+	</string>
+	
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_in_time">
+		<text>Продолжительность появления подсказки</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_in_time_desc">
+		<text>Продолжительность, в миллисекундах, эффекта появления для подсказок взаимодействия.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_out_time">
+		<text>Продолжительность исчезновения подсказки</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_out_time_desc">
+		<text>Продолжительность, в миллисекундах, эффекта исчезновения для подсказок взаимодействия.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_card">
+		<text>Показать карточку быстрой информации об элементе</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_card_desc">
+		<text>Если эта функция включена, рядом с основной подсказкой взаимодействия будет отображаться небольшой дисплей, показывающий ее вес и стоимость, а также (опционально, с помощью аддона Utjan) индикаторные точки, показывающие состояние частей оружия/брони.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_condition">
+		<text>Показать процентное соотношение состояния шестерен</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_condition_desc">
+		<text>Если включено, к названию предмета будет добавлено состояние нарядов и головных уборов.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_charge">
+		<text>Показать процент заряда батареи устройства</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_charge_desc">
+		<text>Если эта функция включена, заряд батареи устройств будет добавляться к названию элемента.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_condition_color">
+		<text>Цветная индикация состояния/ уровня заряда</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_condition_color_desc">
+		<text>Если эта функция включена, цвет текста состояния/батареи будет меняться в зависимости от значения.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_flag_favejunk">
+		<text>Показывать значок избранного/нежелательного на карточке предмета</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_flag_favejunk_desc">
+		<text>Если эта функция включена, элементы, помеченные как «Избранное» или «Хлам» с помощью функции Sorting Plus, будут отображать соответствующий значок на карточке элемента.</text>
+	</string>	
+
+</string_table>

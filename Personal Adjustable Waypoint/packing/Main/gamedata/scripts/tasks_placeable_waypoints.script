@@ -4,13 +4,13 @@
         Yes, I see what I did there, and so do you.
 -- =======================================================================
     Author: Catspaw
-    I post gameplay video on my Youtube channel, Catspaw Adventures: 
-    https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
-
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+
+    I post gameplay video on my Youtube channel, Catspaw Adventures: 
+    https://www.youtube.com/@CatspawAdventures
 -- ===================================================================--]]
-script_version          = "2.3"
-release_date            = 20240922
+script_version          = "2.3.2"
+release_date            = 20250309
 --[[======================================================================
     You may alter any part of this mod and do whatever you like with it, 
     just give credit where due.
@@ -2436,16 +2436,6 @@ function show_all_pins(onoff)
     end
 end
 
---[[
-function load_mcm(pawpath,default)
-    local val = ui_mcm and ui_mcm.get("pawsys/"..pawpath)
-    if val ~= nil then
-        return val
-    else
-        return default
-    end
-end
---]]
 
 function marker_hint_shown(wpin)
     local mode = show_marker_hint and tonumber(show_marker_hint[wpin])
@@ -2683,8 +2673,8 @@ function mcm_reload_reticle_settings()
         if did ~= nil then
             npc_ident.id_bodies = did
         end
-        npc_ident.id_speed  = tonumber(ui_mcm.get("targetID/speedID"))    or 0.3
-        npc_ident.lenience  = tonumber(ui_mcm.get("targetID/targL"))      or 0.99
+        npc_ident.id_speed  = tonumber(load_mcm("targetID/speedID", 0.3))
+        npc_ident.lenience  = tonumber(load_mcm("targetID/targL", 0.99))
     end
 end
 
@@ -4535,14 +4525,19 @@ function show_hud_waypoint()
         HUD_MT = UIPAWHUDWaypoint()
         get_hud():AddDialogToRender(HUD_MT)
     end
+
+end
+
+function shutdown_hud_waypoint()
+    if HUD_MT == nil then return end
+    get_hud():RemoveDialogToRender(HUD_MT)
+    HUD_MT = nil
 end
 
 function hide_hud_waypoint()
     if not db.actor then return end
     if (HUD_MT ~= nil) then
         HUD_MT:ShowDialog(false)
-        get_hud():RemoveDialogToRender(HUD_MT)
-        HUD_MT = nil
     end
 end
 
@@ -5373,7 +5368,7 @@ end
 
 function actor_on_net_destroy()
     script_zone_cleanup()
-    hide_hud_waypoint()
+    shutdown_hud_waypoint()
     empty_table(hud_pin_objs)
 end
 

@@ -1,0 +1,23 @@
+; RF interference from GSM-750, 810, 850, 
+; and 900 cellular signals given off by 
+; the PDAs of nearby stalkers
+;
+; If you don't want this feature, you can 
+; safely delete this file or comment it out.
+
+[rfint_gsm_noise]
+clsid 		= script_stalker
+dist 		= 50
+snd 		= func
+func 		= item_radio.sfx_gsm_noise
+freq 		= 762,810,869,915
+action 		= item_radio.new_stalker_contact
+variance 	= 15
+; The first time a stalker comes into range while
+; the player has the RF Receiver out, NERFS will 
+; assign their PDA a frequency by picking one of 
+; the comma-separated bands listed in freq, then
+; randomizing it +/- 1 to N, where N is the value
+; above in variance.
+;
+; Variance has no effect on any other signal.

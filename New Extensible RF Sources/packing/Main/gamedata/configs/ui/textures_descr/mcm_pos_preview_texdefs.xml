@@ -1,0 +1,10 @@
+<w>
+	<file name ="ui\ui_mcm_pos_preview">
+		<texture id = "ui_mcm_pospre_4_3" x="640" y="0" width="360" height="270" />
+		<texture id = "ui_mcm_pospre_16_9" x="0" y="270" width="480" height="270" />
+		<texture id = "ui_mcm_pospre_16_10" x="480" y="270" width="420" height="262" />
+		<texture id = "ui_mcm_pospre_21_9" x="0" y="0" width="640" height="270" />
+		<texture id = "ui_mcm_pospre_emptytex" x="270" y="0" width="1" height="1" />
+	</file>
+</w>
+

@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.5"
-release_date    = 20240922
+script_version 	= "1.7"
+release_date    = 20250306
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -70,15 +70,14 @@ end
 -- To use them in yours, copy the following four lines to your script,
 -- changing "logprefix" to something different that identifies your 
 -- addon (or blank) and choosing any values you wish for the others:
-debuglogs 		= false
-verbose 		= false
-logprefix 		= "[CatsyUtils] "
+debuglogs 		= true
+verbose 		= true
+logprefix 		= "[CatsyUtils] " -- gets prefixed, optional
 vprefix 		= "[V] " -- gets added to verbose log entries, optional
 -- ======================================================================
--- Then define shortcuts in your script like so, except with your 
--- script name instead of nil:
-local dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
-local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+-- Then define shortcuts in your script like so:
+local dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
 -- The syntax of dl and vl, as defined above, is identical to printf.
 -- But the output will show or not based on the debuglogs and verbose
 -- variables in the calling script, respectively, and will be prefixed 
@@ -108,10 +107,11 @@ logdiv = "~ --------------------------------------------------------------------
 engine_features = {
 	mwheel 		= { ver = 20230701, gamma = true, name = "Mouse wheel scripting"},
 	rclick 		= { ver = 20230922, gamma = true, name = "Right-click on PDA map"},
-	getstrtbl 	= { ver = 20240507, gamma = false, name = "Func get_string_table"},
+	getstrtbl 	= { ver = 20240507, gamma = true, name = "Func get_string_table"},
 	-- GAMMA is based on recent binaries, but doesn't yet support get_string_table()
 	cmcolor 	= { ver = 20240523, gamma = true, name = "Context menu colors"},
 	-- Enabling color in context menus can have undesirable side effects across the entire game
+	dxml_cache 	= { ver = 20250228, gamma = false, name = "DXML on_xml_read cacheing"},
 }
 
 local game_version  = gts("ui_st_game_version")
@@ -149,6 +149,10 @@ setup_engine_features()
 -- ======================================================================
 function valid_id(id)
 	return id and (id > 0) and (id < MAX_ID)
+end
+
+function get_obj_section(obj)
+ 	return obj and (obj.section and obj:section() or obj:section_name())
 end
 
 function var_from_str_path(str)
@@ -279,10 +283,42 @@ function dotip(tiptext, dur, src, beep, icon, snd)
     end
 end
 
-function get_mcm_or_default_val(path, default)
-	local val 	= ui_mcm and ui_mcm.get(path)
-	if val ~= nil then return val end
-	return default
+function sort_table(tbl, desc)
+	-- Basic table sort with descending option
+	if not tbl then return end
+	if desc then
+		table.sort(tbl, function(a, b) return a < b end)
+	else
+		table.sort(tbl, function(a, b) return a > b end)
+	end
+end
+
+function sort_alpha_by_subkey(tbl, key, desc)
+	-- Like sort_alpha, but to compare key values when a and b are tables
+	if not (tbl and key) then return end
+	if desc then
+		table.sort(tbl, function(a, b) return a[key] < b[key] end)
+	else
+		table.sort(tbl, function(a, b) return a[key] > b[key] end)
+	end
+end
+
+function to360(h)
+	-- Converts -180/180 angles to 0/360
+    if h < 0 then
+        h = h + 360
+    end
+    return h
+end
+
+function get_angle_for_pos(pos)
+	-- Courtesy of demonized
+    if not pos then return end
+    local dirToPos = pos:sub(device().cam_pos):normalize()
+    local dir = device().cam_dir
+    local dirToPosH = to360(-math.deg(dirToPos:getH()))
+    local dirH = to360(-math.deg(dir:getH()))
+    local degree = to360(dirH - dirToPosH)
 end
 
 -- ======================================================================
@@ -323,3 +359,15 @@ function get_stash_hint(id)
 	if not id then return end
 	return se_load_var(id, nil, "stash_hint_text")
 end
+
+
+-- ======================================================================
+-- 		SETTINGS MANAGEMENT
+-- ======================================================================
+
+function get_mcm_or_default_val(path, default)
+	local val 	= ui_mcm and ui_mcm.get(path)
+	if val ~= nil then return val end
+	return default
+end
+

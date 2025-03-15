@@ -1,0 +1,285 @@
+<!-- ====================================================================
+	Anomalous RF Signals (included with New Extensible RF Sources)
+    Author: Catspaw
+    Source: https://www.moddb.com/members/catspawmods/addons
+    Version: 1.2
+
+    Permission granted to freely translate into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+
+<string_table>
+	<string id="st_note_rf_tip_name">
+		<text>Anomalous RF Signal</text>
+	</string>
+	<string id="st_note_rf_tip_desc">
+		<text>A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.\n \n
+		%c[ui_gray_2]PROPERTIES:\n
+		%c[d_cyan] • %c[ui_gray_2] personal belongings\n
+		</text>
+	</string>
+
+	<string id="st_note_rf_tip_controller_name">
+		<text>Anomalous RF Signal: Controller</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_controller">
+		<text>Anomalous RF Signal: Controller</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_controller_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_controller_text2">
+		<text>
+			\n \n"...he said the stash would be chirping on 145 Mhz, but there was nothing. The weirdest thing happened, though. I started picking up interference on the RF receiver--once it even sounded like a voice, or tones, but nothing clear.\n \n
+			Not long after that, I started getting headaches, blurry vision, whispers, loss of color--all the usual signs that a controller is somewhere real close. And sure enough, for once I caught sight of that bastard before he saw me.\n \n
+			And that RF noise? That part I didn't hallucinate, it cut off as soon as the thing's head exploded."\n
+		</text>
+	</string>
+
+	<string id="st_note_rf_tip_poltergeist_name">
+		<text>Anomalous RF Signal: Poltergeist</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_poltergeist">
+		<text>Anomalous RF Signal: Poltergeist</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_poltergeist_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_poltergeist_text2">
+		<text>
+			\n \n"...told us we'd pick up the signal on 219 Mhz, but there was nothing. Then all of a sudden I started picking up interference on the RF receiver--once it even sounded like a voice, or tones, but nothing came through clear.\n \n
+			Not long after that, I started getting this weird ringing sound in my head and a blue tinge to my vision, shit started floating around--remember the last time that happened? It was another poltergeist, and I noped right out of there as soon as I saw it.\n \n
+			And that RF noise? Soon as I got a couple hundred meters from the building, it just stopped."\n
+		</text>
+	</string>
+
+	<string id="st_note_rf_tip_burer_name">
+		<text>Anomalous RF Signal: Burer</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_burer">
+		<text>Anomalous RF Signal: Burer</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_burer_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_burer_text2">
+		<text>
+			\n \n"...and there was nothing like what they said on 106 Mhz. Instead, I started getting all kinds of interference on my RF receiver--once it even sounded like a voice, or tones, but nothing I could make out.\n \n
+			But get this, remember when we ran into that burer up north? It was the same deal, with the weird vision tint and hallucinations, shit flying through the air. Only saw it once, but we got the hell out of there before it could spot us.\n \n
+			But that RF noise? Dropped off once we got far enough away, maybe a few hundred meters. Never heard anything like that on the scanner before, but the early warning probably saved us."\n
+		</text>
+	</string>
+
+	<string id="st_note_rf_tip_psydog_name">
+		<text>Anomalous RF Signal: Psydog</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_psydog">
+		<text>Anomalous RF Signal: Psydog</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_psydog_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_psydog_text2">
+		<text>
+			\n \n"...you know how Vanya is, I told him the stash was on 197 Mhz but the dumbass swore it was on 190, so we both pulled out our RF receivers to see who was right. That probably saved my ass, man.\n \n
+			There was a goddamn psydog, that close to camp--can you believe that shit? Right away we both got headaches, blurry vision, and started shooting at phantom dogs that weren't really there.\n \n
+			But get this--anytime one of the phantoms got close, my RF receiver started going nuts with interference. Vanya's, though? Only squealed once, when the real thing jumped at him. Poor Vanya."\n
+		</text>
+	</string>
+
+	<string id="st_note_rf_tip_af_ring_name">
+		<text>Anomalous RF Signal: Ring (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_ring">
+		<text>Anomalous RF Signal: Ring (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_ring_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_ring_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I decided to try tracking down the stash that rookie mentioned.\n \n
+			Maybe 23 Mhz was the wrong frequency, but there was no stash anywhere nearby. My luck must've been with me though, because I picked up something else--weird EM interference of some kind.\n \n
+			It was pretty localized, maybe forty-fifty meters or so, but that interference led me right to a Ring artifact! Still had to pull out my Bear once I was close enough, but I was really glad I had the RF receiver with me."\n
+		</text>
+	</string>
+
+	<string id="st_note_rf_tip_af_electra_flash_name">
+		<text>Anomalous RF Signal: Flash (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_electra_flash">
+		<text>Anomalous RF Signal: Flash (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_electra_flash_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_electra_flash_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I decided to try tracking down that stash my buddy told me about.\n \n
+			Maybe 124 Mhz was the wrong frequency, but there was no stash anywhere nearby. My luck must've been with me though, because I picked up something else--weird EM interference of some kind.\n \n
+			It was pretty localized, maybe forty-fifty meters or so, but that interference led me right to a Flash artifact! Still had to pull out my detector once I was close enough, but I was really glad I had the RF receiver with me."\n
+		</text>
+	</string> 
+
+	<string id="st_note_rf_tip_af_electra_moonlight_name">
+		<text>Anomalous RF Signal: Moonlight (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_electra_moonlight">
+		<text>Anomalous RF Signal: Moonlight (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_electra_moonlight_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_electra_moonlight_text2">
+		<text>
+			\n \n"...I figured there was nothing to find after all that, so I decided to try scanning on the old dead drop frequency.\n \n
+			Maybe 57 Mhz wasn't right, because I got no stash signals anywhere nearby. My luck must've been with me though, because I picked up something else--weird EM interference of some kind.\n \n
+			It was pretty localized, maybe forty-fifty meters or so, but that interference led me right to a Moonlight artifact! Still had to pull out my detector once I was close enough, but I was really glad I had the RF receiver with me."\n
+		</text>
+	</string> 
+
+	<string id="st_note_rf_tip_af_black_spray_name">
+		<text>Anomalous RF Signal: Black Spray (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_black_spray">
+		<text>Anomalous RF Signal: Black Spray (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_black_spray_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_black_spray_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I decided to see if the old man's lost backpack was still transmitting.\n \n
+			Maybe 89 Mhz was the wrong frequency, but there was no stash anywhere nearby. My luck must've been with me though, because I picked up something else--weird EM interference of some kind.\n \n
+			It was pretty localized, maybe forty-fifty meters or so, but that interference led me right to a Black Spray artifact! Still had to pull out my detector once I was close enough, but I was really glad I had the RF receiver with me."\n
+		</text>
+	</string> 
+
+	<string id="st_note_rf_tip_af_full_empty_name">
+		<text>Anomalous RF Signal: Full Empty (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_full_empty">
+		<text>Anomalous RF Signal: Full Empty (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_full_empty_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_full_empty_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I decided to see if I could find that lost stash we heard about.\n \n
+			Maybe 236 Mhz was the wrong frequency, but there was no stash anywhere nearby. My luck must've been with me though, because I picked up something some heavy EM interference of some sort.\n \n
+			It was pretty localized, maybe forty-fifty meters or so, but that interference led me right to a Full Empty artifact! Still had to pull out my detector once I was close enough, but I was really glad I had the RF receiver with me."\n
+		</text>
+	</string> 
+
+	<string id="st_note_rf_tip_af_ice_name">
+		<text>Anomalous RF Signal: Ice (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_ice">
+		<text>Anomalous RF Signal: Ice (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_ice_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_ice_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I went looking for that stash tip I got from the medic.\n \n
+			Maybe 178 Mhz was the wrong frequency, but there was no stash anywhere nearby. My luck must've been with me though, because I picked up something else--EM interference of some kind, dunno what.\n \n
+			It was pretty localized, maybe forty-fifty meters or so, but that interference led me right to a Ice artifact! Still had to pull out my detector once I was close enough, but I was really glad I had the RF receiver with me."\n
+		</text>
+	</string> 
+
+	<string id="st_note_rf_tip_af_soul_name">
+		<text>Anomalous RF Signal: Soul (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_soul">
+		<text>Anomalous RF Signal: Soul (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_soul_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_soul_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I decided to try finding that stash the trader told me about.\n \n
+			Maybe 302 Mhz was the wrong frequency, but there was no stash anywhere nearby. My luck must've been with me though, because I picked up something else--EM interference of some kind, just noise really.\n \n
+			It was pretty localized, maybe forty-fifty meters or so, but that interference led me right to a Soul artifact! Still had to pull out my detector once I was close enough, but I was really glad I had the RF receiver with me."\n
+		</text>
+	</string> 
+
+	<string id="st_note_rf_tip_af_compass_name">
+		<text>Anomalous RF Signal: Compass (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_compass">
+		<text>Anomalous RF Signal: Compass (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_compass_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_compass_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I decided to try tracking down that stash signal I left last time.\n \n
+			Maybe 285 Mhz was the wrong frequency, but there was no stash anywhere nearby. My luck must've been with me though, because I picked up something else--some serious EM interference, couldn't explain it.\n \n
+			It took me a while to localize it, but that interference led me right to a Compass artifact! Still had to pull out my detector once I was close enough, but the RF receiver must've picked it up a good hundred meters away."\n
+		</text>
+	</string> 
+
+	<string id="st_note_rf_tip_af_death_lamp_name">
+		<text>Anomalous RF Signal: Death Lamp (Artifact)</text>
+	</string>
+
+	<string id="encyclopedia__notes_letter_rf_tip_af_death_lamp">
+		<text>Anomalous RF Signal: Death Lamp (Artifact)</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_death_lamp_text">
+		<text>
+			A scrap of paper that looks like an excerpt from a letter or journal entry, describing an RF frequency that the author found useful.
+		</text>
+	</string>
+	<string id="encyclopedia__notes_letter_rf_tip_af_death_lamp_text2">
+		<text>
+			\n \n"...I figured the area had already been picked clean, this long after an emission, so I decided to try tracking down that stash you told me about.\n \n
+			Maybe 321 Mhz was the wrong frequency, but I couldn't pick up anything over all the interference--it was like someone was jamming the signal in a hundred-meter radius around some point.\n \n
+			I'm pretty sure the source was a Death Lamp artifact--nothing else has that sick glow. I saw the cursed thing in the middle of a nasty anomaly cluster, and my RF receiver went nuts the closer I got. I didn't have the protective gear to venture in there, but at least now I know what to scan for."\n
+		</text>
+	</string> 
+
+<!-- Added by NERFS -->
+
+
+</string_table>

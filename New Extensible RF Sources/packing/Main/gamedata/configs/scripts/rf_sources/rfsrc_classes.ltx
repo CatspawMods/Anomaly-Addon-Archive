@@ -1,0 +1,38 @@
+; Base signal source classes - don't edit this unless
+; you need to add new classes of artifact/stash box
+; that NERFS isn't recognizing. This should almost 
+; never be necessary.
+
+[class_artifact]
+exact_match = true
+match_by = section
+clsid = artefact
+dist = 50
+snd = func
+func = item_radio.sfx_random_noise
+action = item_radio.signal_active_artifact
+
+[class_script_artifact]
+exact_match = true
+match_by = section
+clsid = artefact_s
+dist = 50
+snd = func
+func = item_radio.sfx_random_noise
+action = item_radio.signal_active_artifact
+
+[class_inventory_box]
+exact_match = true
+match_by = rfid
+clsid = inventory_box
+dist = 70
+snd = rfid_beep
+action = item_radio.signal_stash_rfid
+
+[class_inventory_box_s]
+exact_match = true
+match_by = rfid
+clsid = inventory_box_s
+dist = 70
+snd = rfid_beep
+action = item_radio.signal_stash_rfid

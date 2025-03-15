@@ -1,0 +1,396 @@
+-- ======================================================================
+--[[	MCM Screen Element Position Previewer
+-- ======================================================================
+ 	Author: Catspaw (CatspawMods @ ModDB)
+
+ 	THIS IS A TOOL FOR MODDERS. IT DOES NOTHING WHATSOEVER ON ITS OWN.
+
+	The previewer translates the rendering canvas coordinates (which are 
+	1024x768) into screen coordinates for several aspect ratios, allowing 
+	you (or your users) to see a simulation of where on the screen the 
+	canvas coordinates would cause a UI element to appear, using a fake
+	screenshot background at 1/4 scale.
+
+	Call the class from a ui_hook_functor (see below) as follows:
+		GUI = pos_previewer_mcm.UIMCMPosPreview(anchor, path, args)
+			anchor:		UI static parent for the preview window
+			path: 		MCM path to watch for live option changes
+			args: 		table containing any or none of the following:
+
+		xmlfile (default: "ui_mcm_pos_preview.xml")
+			XML file containing a custom UI skin for the previewer.
+
+		xmlroot (default: "paw_mcm_pos_preview")
+			The root node of your XML file. See ui_mcm_pos_preview.xml 
+			for the structure that needs to be there.
+			
+		def_asp (default: "16_9")
+			Default aspect ratio to begin with
+
+		widget_tex 	(default: "ui_icons_mapPDA_persBig_h")
+			Game texture to use for the widget. Passing no texture lets 
+			you attach your own UI content to the widget anchor static.
+			You can get the anchor static by calling:
+			GUI:GetWidgetStatic()
+
+		size_w (default: 64)
+		size_h (default: 64)
+	  		The width and height of the widget texture, if one is used.
+	  		Note that these should be their full-scale dimensions, not the
+	  		one-quarter scale of the preview.
+
+		def_x (default: 512.5)
+		def_y (default: 385.5)
+			Default widget position in canvas coordinates
+
+		off_x (default: -32)
+		off_y (default: -32)
+			Visual offset for widget texture from its coordinates
+			To center it, usually both height and width should be reduced by
+			minus half, e.g. set this to -32 for an icon 64 pixels square
+	
+		opt_preview (default: "preview_aspect")
+		opt_changex (default: "preview_pos_x")
+		opt_changey (default: "preview_pos_y")
+			These three options tell the previewer what MCM option IDs to 
+			listen for when changes are made in the current MCM menu.
+
+		main_tex_pre (default: "ui_mcm_pospre_")
+			The string value gets suffixed with aspect ratio ("16_9" etc),
+			which is the texture used for the simulated player UI screen.
+
+		opt_debug (default: "use_debug_images")
+			The ID of the MCM option that controls whether to use the
+			plain "debug" backgrounds instead of screenshots.
+
+		use_debug (default: false)
+			Allows you to force the preview to use the debug preview
+			images, which are useful when testing, and may be preferred 
+			by some over the game screenshots.
+
+		debug_suffix (default: "_debug")
+			A string that gets suffixed to the texture names of the 
+			preview images when debug preview is active.
+			
+	For more details on Pos Previewer usage, refer to either the demo 
+	script (included with the full package) or the addon using this file.
+
+	For usage of ui_hook_functor and on_select_functor in MCM, see the 
+	comments in the header of zzzzz_monkey_paw_ui_mcm.script.
+-- ===================================================================--]]
+script_version 					= "1.4"
+release_date					= 20240605
+debuglogs 						= false
+verbose                   		= true -- does nothing without debuglogs
+use_debug_images 				= false
+local logprefix                 = "<MCMPosPreviewer> "
+local xml 						= CScriptXmlInit()
+local resetting 				= false	-- runtime flag, do not touch
+-- ======================================================================
+local default_x 				= 512.5
+local default_y 				= 385.5
+-- The default widget position, dead center in the screen
+local default_size_w 			= 64
+local default_size_h 			= 64
+local default_offset_x 			= -(default_size_w * 0.5)
+local default_offset_y 			= -(default_size_h * 0.5)
+-- Default size and screen offset
+-- Positions are measured from an object's upper-left corner: 0, 0
+-- Typically in order to center an object, you want to subtract half of
+-- its width and height, respectively, from each dimension as above
+local empty_texture 			= "ui_mcm_pospre_emptytex"
+-- Blank texture for placeholder
+local default_xml_file 			= "ui_mcm_pos_preview.xml"
+local default_xml_root 			= "mcm_wid_pos_preview"
+-- The default XML file and node for the preview's UI elements
+local default_aspect_ratio 		= "16_9"
+local default_texture_prefix	= "ui_mcm_pospre_"
+local default_debug_suffix 		= "_debug"
+-- Passing a different value for these allows you to force the preview to 
+-- use your own custom screen preview textures
+local default_mcm_opt_preview 	= "preview_aspect"
+-- The MCM menu option name that contains the screen preview itself
+local default_mcm_opt_changex 	= "preview_pos_x"
+local default_mcm_opt_changey 	= "preview_pos_y"
+-- The MCM menu options for setting the XY coordinates of the widget
+local default_mcm_opt_debug 	= "use_debug_images"
+-- ======================================================================
+
+aspects = {
+	-- Do not alter the contents of this table. It is shared by any
+	-- addons which call the previwer, and is left global only to
+	-- permit iteration.
+
+	["21_9"] = {
+		x 		= 640,
+		y 		= 270,
+		node 	= "preview_21_9",
+		scale_x = 640/1024,
+		scale_y = 270/768,
+		unratio	= round_idp((1080/2560)/0.75,4),
+		enabled = true,
+	},
+	["16_9"] = {
+		x 		= 480,
+		y 		= 270,
+		node 	= "preview_16_9",
+		scale_x = 480/1024,
+		scale_y = 270/768,
+		unratio = round_idp((1080/1920)/0.75,4),
+		enabled = true,
+	},
+	["16_10"] = {
+		x 		= 420,
+		y 		= 262,
+		node 	= "preview_16_10",
+		scale_x = 420/1024,
+		scale_y = 262/768,
+		unratio	= round_idp((1200/1920)/0.75,4),
+		enabled = true,
+	},
+	["4_3"] = {
+		x 		= 360,
+		y 		= 270,
+		node 	= "preview_4_3",
+		scale_x = 360/1024,
+		scale_y = 270/768,
+		unratio	= 1,
+		enabled = true,
+	},
+}
+
+-- ======================================================================
+
+function dl(logtext,...)
+    -- Debug logging
+    if logtext and debuglogs then 
+        printf(logprefix..logtext,...)
+    end
+end
+
+
+function vl(logtext,...)
+    -- Verbose logging, only if debuglogs is also enabled
+    if logtext and debuglogs and verbose then 
+        dl("[V] "..logtext,...)
+    end
+end
+
+function strbool(s)
+	return ((s == "true") or (s == true)) and true or false
+end
+
+-- ======================================================================
+
+class "UIMCMPosPreview" (CUIScriptWnd)
+
+function UIMCMPosPreview:__init(anchor, mcmpath, args) super()
+	vl("UIMCMPosPreview:__init(mcmpath %s | tex %s | pos %s,%s def %s,%s| aspect %s | file %s | node %s)",
+		mcmpath,	
+		args and args.widget_tex or "default",
+		args and args.size_w or "[d]",
+		args and args.size_h or "[d]",
+		args and args.def_x or "[d]",
+		args and args.def_y or "[d]",
+		args and args.def_asp or "default",
+		args and args.xmlfile or "default",
+		args and args.xmlnode or "default"
+	)
+
+    self:SetAutoDelete(true)
+    if not mcmpath then
+    	self:Destroy()
+    	return
+    end
+    self.mcmpath 		= mcmpath
+
+	self.unsquish_ratio = (device().height / device().width) / (768 / 1024)
+	self.xmlfile 		= args and args.xmlfile or default_xml_file
+	self.xmlroot 		= args and args.xmlnode or default_xml_root
+	self.use_texture	= (not (args and args.notexture)) and true or false
+	self.widget_tex		= args and args.widget_tex or empty_texture
+	self.opt_preview 	= args and args.opt_preview or default_mcm_opt_preview
+	self.opt_changex	= args and args.opt_changex or default_mcm_opt_changex
+	self.opt_changey	= args and args.opt_changey or default_mcm_opt_changey
+	self.opt_debug		= args and args.opt_debug or default_mcm_opt_debug
+	local init_asp_val 	= axr_main.config:r_value("mcm", mcmpath .. "/" .. self.opt_preview, {val=0})
+	local init_x_val 	= axr_main.config:r_value("mcm", mcmpath .. "/" .. self.opt_changex, {val=2})
+	local init_y_val 	= axr_main.config:r_value("mcm", mcmpath .. "/" .. self.opt_changey, {val=2})
+	-- MCM is being weird about this variable whenever I read it on startup
+	-- Seriously, just the below line, READING the currently-false value
+	-- in axr_options, and producing the exact same value, somehow results
+	-- in the MCM checkbox being active on startup
+	-- It's fucking bizarre, but until I can figure out why, the preview 
+	-- will always default to the original images on startup even if the
+	-- option is saved as true
+	--local init_debug 	= strbool(axr_main.config:r_value("mcm", mcmpath .. "/" .. self.opt_debug, {val=1}))
+	self.use_debug 		= args and args.use_debug or use_debug_images
+	self.debug_suffix 	= args and args.debug_suffix or default_debug_suffix
+	self.current_suffix = (self.use_debug and self.debug_suffix) or ""
+	vl("Loading initial MCM values from %s: %s = %s, %s = %s @ %s = aspect %s", mcmpath, self.opt_changex, init_x_val, self.opt_changey, init_y_val, self.opt_preview, init_asp_val)
+	self.curr_aspect 	= init_asp_val or args and args.def_asp or default_aspect_ratio
+	self.def_x 			= init_x_val or args and args.def_x or default_x
+	self.def_y 			= init_y_val or args and args.def_y or default_y
+	self.curr_x			= self.def_x
+	self.curr_y			= self.def_y
+	self.last_x 		= curr_x
+	self.last_y 		= curr_y
+	self.size_w 		= args and args.size_w or default_size_w
+	self.size_h 		= args and args.size_h or default_size_h
+	self.off_x 			= args.off_x or default_offset_x
+	self.off_y 			= args.off_y or default_offset_y
+	self.main_tex_pre	= args and args.main_tex_pre or default_texture_prefix
+	self.args 			= args
+	self.preview 		= {}
+	return self:SetupPreviewBox(anchor)
+end
+
+
+function UIMCMPosPreview:SetupPreviewBox(anchor)
+	dl("Initializing widget position preview container")
+	local usr 			= self.unsquish_ratio
+	local pr 			= self.preview
+	local aspect		= self.curr_aspect
+	local tex 			= self.widget_tex
+	pr.box 				= {}
+	pr.wid 				= {}
+    xml:ParseFile(self.xmlfile)
+
+	pr.box.wnd	= xml:InitStatic(self.xmlroot,anchor)
+	pr.box.wnd:SetWndSize(vector2():set(640 * usr,270))
+
+	for k,v in pairs (aspects) do
+		local w = self.size_w * self.unsquish_ratio * 0.25
+		local h = self.size_h * 0.25
+		local asp 		= k
+		local maintex 	= (self.main_tex_pre or default_texture_prefix) .. asp .. self.current_suffix
+		pr.box[asp] 	= xml:InitStatic(self.xmlroot..":preview_"..asp, pr.box.wnd)
+		pr.box[asp]:SetWndPos(vector2():set(10, 0))
+		pr.wid[asp]		= xml:InitStatic(self.xmlroot..":widget", pr.box[asp])
+		pr.box[asp]:InitTexture(maintex)
+		pr.box[asp]:Show(false)
+		pr.wid[asp]:InitTexture(tex)
+		pr.wid[asp]:SetWndSize(vector2():set(w, h))
+		vl("Finished generating box and widget containers for aspect ratio %s",asp)
+	end
+
+	self:ResetAspectSim()
+
+	dl("Finished init for pos preview module | aspect %s",self.curr_aspect)
+	self.preview_started = true
+	return pr
+end
+
+
+function UIMCMPosPreview:ScaleByAspect(x, y, aspect)
+	if not x and y then return 0,0 end
+	local ox,oy = x,y
+	local asp 	= aspect or self.curr_aspect
+	local rat_x = aspects[asp].scale_x
+	local rat_y = aspects[asp].scale_y
+	x 			= (x * rat_x * self.unsquish_ratio)
+	y 			= (y * rat_y)
+	vl("%s, %s scaled to %s, %s using ratios %s,%s for aspect %s",ox,oy,x,y,rat_x,rat_y,self.curr_aspect)
+	return x,y
+end
+
+
+function UIMCMPosPreview:GetWidgetStatic(aspect)
+	return self.preview.wid[aspect or self.curr_aspect]
+end
+
+
+function UIMCMPosPreview:eff_x() return self.curr_x or self.def_x or default_x end
+
+function UIMCMPosPreview:eff_y() return self.curr_y or self.def_y or default_y end
+
+function UIMCMPosPreview:adj_x(ax, ay) local x, _ = self:ScaleByAspect(self:eff_x() + (ax or 0), 1) return x end
+
+function UIMCMPosPreview:adj_y(ax, ay) local _, y = self:ScaleByAspect(1, self:eff_y() + (ay or 0)) return y end
+
+
+function UIMCMPosPreview:SetWidgetPos(x, y, aspect)
+	local aspect 	= aspect or self.curr_aspect
+	local x_adj 	= -0.5 + (self.off_x * 0.25 * self.unsquish_ratio)
+	local y_adj 	= -0.5 + (self.off_y * 0.25)
+	self.curr_x 	= x or self:eff_x()
+	self.curr_y 	= y or self:eff_y()
+	x 				= self:adj_x()
+	y 				= self:adj_y()
+	vl("UIMCMPosPreview: setting %s widget pos to %s, %s -> %s + %s, %s + %s", aspect, self.curr_x, self.curr_y, x, x_adj, y, y_adj)
+	self.preview.wid[aspect]:SetWndPos(vector2():set(x + x_adj, y + y_adj))
+end
+
+
+function UIMCMPosPreview:ResetWidgetPos(aspect)
+	self:SetWidgetPos(
+		self.def_x or default_x,
+		self.def_y or default_y,
+		aspect or self.curr_aspect or default_aspect_ratio
+	)
+end
+
+
+function UIMCMPosPreview:ResetAspectSim(aspect)
+	local asp 		= aspect or self.curr_aspect or default_aspect_ratio
+	local a 		= asp and aspects[asp]
+	if not a then return end
+	local maintex 	= (self.main_tex_pre or default_texture_prefix) .. asp .. self.current_suffix
+	self.preview.box[asp]:InitTexture(maintex)
+	self.preview.box[asp]:SetWndSize(vector2():set(a.x * self.unsquish_ratio, a.y))
+	if self.widget_tex then
+		self.preview.wid[asp]:InitTexture(self.widget_tex)
+	end
+	self:SetWidgetPos(nil,nil,asp)
+	self.preview.box[asp]:Show(true)
+	self.preview.wid[asp]:Show(true)
+end
+
+
+function UIMCMPosPreview:SetAspectRatio(aspect)
+	vl("Switching aspect ratio to %s",aspect)
+	for k,v in pairs(aspects) do
+		self.preview.box[k]:Show(false)
+	end
+	self.curr_aspect = aspect
+	self:ResetAspectSim()
+end
+
+
+function UIMCMPosPreview:CheckSelectedValue(path, opt, value)
+	if not resetting then
+		vl("UIMCMPosPreview:CheckSelectedValue: %s | %s | %s | %s", path, opt, value)
+	else
+		vl("UIMCMPosPreview:CheckSelectedValue called during MCM reset, ignoring")
+	return end
+
+	if 	(path == self.mcmpath) then
+		if (opt == self.opt_preview) and aspects[value] then
+			self:SetAspectRatio(value)
+		elseif (opt == self.opt_changex) then
+			local x 			= tonumber(value) or self.def_x or default_x
+			self:SetWidgetPos(x, nil)
+
+		elseif (opt == self.opt_changey) then
+			local y 			= tonumber(value) or self.def_y or default_y
+			self:SetWidgetPos(nil, y)
+
+		elseif (opt == self.opt_debug) then
+			self.use_debug 		= value
+			self.current_suffix = self.use_debug and self.debug_suffix or ""
+			self:ResetAspectSim()
+		end
+	end
+end
+
+
+function UIMCMPosPreview:Update()
+    CUIScriptWnd.Update(self)
+end
+
+local mcm_reset_opt = ui_mcm.UIMCM.Reset_opt
+function ui_mcm.UIMCM.Reset_opt(self, curr_tree, path, flags)
+	resetting = true
+	mcm_reset_opt(self, curr_tree, path, flags)
+	resetting = false
+end

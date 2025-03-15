@@ -1,0 +1,17 @@
+<w>
+	<file name="ui\nerfs\ui_nerfs_img">
+		<texture id="ui_mcm_nerfs_main_headerimg" x="0" y="0" width="512" height="235" />
+		<texture id="ui_mcm_nerfs_main_headerimg_new" x="512" y="0" width="512" height="235" />
+		<texture id="ui_mcm_nerfs_presets_headerimg" x="0" y="462" width="512" height="50" />
+		<texture id="ui_mcm_nerfs_widget_headerimg" x="0" y="512" width="512" height="50" />
+		<texture id ="ui_mcm_nerfs_messagebox_transbg" x="349" y="756" width="675" height="268" />
+		<texture id="encyclopedia_addons_nerfs_image" x="0" y="0" width="512" height="235" />
+	</file>
+	
+	<file name="ui\nerfs\circle">
+		<texture id="rax_circle_ind" x="0" y="0" width="256" height="256" />
+	</file>
+	<file name="ui\nerfs\pointer_ring">
+		<texture id="nerfs_pointer_ring" x="0" y="0" width="256" height="256" />
+	</file>
+</w>

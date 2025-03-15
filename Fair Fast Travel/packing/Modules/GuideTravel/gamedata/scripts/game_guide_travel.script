@@ -158,7 +158,7 @@ mlr_utils.CLT["mil_to_yant_on_heli"] 	= {28.6637,-5.93,-270.2215,78867,2198}
 -- ======================================================================
 --		GUIDE DATA
 -- ======================================================================
-local guidespots 	= {}
+guidespots 	= {}
 for k,v in pairs(CLT) do guidespots[k] = v end
 
 ranks_by_name = {
@@ -173,7 +173,7 @@ ranks_by_name = {
 }
 
 -- ======================================================================
-local guides = {	--[[
+guides = {	--[[
 -- ======================================================================
 	[section_name_of_character] = {
 	A guide may have a [cfg] child table with the following optional attributes:

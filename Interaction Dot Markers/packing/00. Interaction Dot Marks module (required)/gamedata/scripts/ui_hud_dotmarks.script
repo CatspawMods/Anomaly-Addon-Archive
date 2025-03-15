@@ -1,0 +1,3488 @@
+-- =======================================================================
+--[[    Interaction Dot Marks ("DotMarks")
+
+    PRE-RELEASE TEST BUILD - THIS IS A WORK IN PROGRESS
+
+-- ===================================================================--]]
+script_name     = "ui_hud_dotmarks"
+script_version  = "0.7-b11"
+release_date    = 20250315
+--[[======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+    I post gameplay video on my Youtube channel, Catspaw Adventures: 
+    https://www.youtube.com/@CatspawAdventures
+-- =======================================================================
+    A blatant imitation of the "interaction dot" HUD markers in Stalker 2,
+    and some of its other UI niceties such as floating prompts and 
+    secondary interactions.
+
+    Except not quite as cool, because Anomaly is jank. Hopefully this 
+    makes it a little less jank.
+
+    Also implements an "Alternate Interact" keybind with contextual 
+    actions such as unloading a weapon without having to pick it up.
+-- =======================================================================
+    Requires modded exes by demonized:
+    https://github.com/themrdemonized/xray-monolith
+
+    If your version of the modded exes is earlier than 20250306, you will
+    see this error in your log:
+
+    ![axr_main callback_set] callback actor_on_update_pickup doesn't exist!
+
+    If you are seeing that, you MUST update your version of the modded 
+    exes in order for object targeting to work properly. If you think you
+    have updated and are still seeing that error, you need to do a clean
+    reinstall of the modded exes from scratch.
+
+    If it's even older than that, some stuff may not work at all. You
+    should update your modded exes ASAP.
+-- =======================================================================
+    TODO:
+    -   Need to optimize and clean up a whole lot of WIP code
+    -   Test with EVERY distinct type of item
+
+-- ===================================================================--]]
+--      DEPENDENCIES
+-- =======================================================================
+assert(utils_catspaw_common, "\n\n"..
+    "! ui_hud_dotmarks requires utils_catspaw_common, which does not exist!\n\n"
+)
+assert(utils_catspaw_hudmarks, "\n\n"..
+    "! ui_hud_dotmarks requires utils_catspaw_hudmarks, which does not exist!\n\n"
+)
+assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
+    "! ui_hud_dotmarks requires utils_catspaw_text, which does not exist or is an older version!\n" ..
+    "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
+    "If the version is outdated, try moving this addon to the bottom of your load order."
+)
+assert(utils_catspaw_mapspots, "\n\n"..
+    "! ui_hud_dotmarks requires utils_catspaw_mapspots, which does not exist!\n\n"
+)
+--assert(false,"debug killswitch")
+-- =======================================================================
+local dl, vl, xml
+logprefix   = "[DotMarks] "
+debuglogs   = false
+verbose     = false
+debug_dump  = false
+
+function allow_local_logging(onoff)
+    -- By default, logging in this script inherits its debuglogs/verbose settings from utils_catspaw_common
+    -- This function allows anyone to temporarily switch on debug logging for this script's operations only
+    if onoff then
+        dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+    else
+        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+    end
+end
+allow_local_logging(true)
+
+function set_debug_logging(debug_en, verbose_en, dump_en)
+    if (debug_en ~= nil) then debuglogs = debug_en end
+    if (verbose_en ~= nil) then verbose = verbose_en end
+    if (dump_en ~= nil) then debug_dump = dump_en end
+end
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+-- First two values will be overridden by MCM once the game loads
+
+-- ======================================================================
+--      SHORTCUTS
+-- ======================================================================
+local get_next_check    = utils_catspaw_common.get_next_tg_interval
+local valid_id          = utils_catspaw_common.valid_id
+local get_obj_section   = utils_catspaw_common.get_obj_section
+local is_living_thing   = utils_catspaw_common.is_living_thing
+local strbool           = utils_catspaw_common.strbool
+local safeid            = utils_catspaw_common.safeid
+local get_mcm           = utils_catspaw_common.get_mcm_or_default_val
+local fade_curve        = utils_catspaw_common.easing.OutQuint
+local lerp              = utils_catspaw_common.lerp
+local dec2              = utils_catspaw_common.dec2
+local greater_of        = utils_catspaw_common.greater_of
+local get_stash_hint    = utils_catspaw_common.get_stash_hint
+local safename          = utils_catspaw_text.safename
+local bindtext          = utils_catspaw_text.bindtext
+local get_localization  = utils_catspaw_text.find_best_localization
+local parse_colors      = utils_catspaw_text.parse_color_tokens
+local set_color_token   = utils_catspaw_text.set_color_token
+local int_to_rgba       = utils_catspaw_text.int_to_rgba
+local first_lower       = utils_catspaw_text.first_lower
+local first_upper       = utils_catspaw_text.first_upper
+local get_argb          = utils_catspaw_mapspots.get_argb
+local is_already_target = utils_catspaw_hudmarks.is_object_already_targeted
+local paw               = tasks_placeable_waypoints
+local is_favorite       = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_favorite
+local is_junk           = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_junk
+local gts               = game.translate_string
+-- ======================================================================
+dotmarks_config_file    = "scripts\\dotmarks_defaults.ltx"
+targeted_id, locked_id  = nil
+cfg                     = {}
+pickup_index            = {}
+nearby_pickups          = {}
+active_anims            = {}
+-- ======================================================================
+local maingameui        = nil
+local hmm               = nil
+local scanning          = false
+local ea_enabled        = false
+local anim_playing      = false
+local in_sleep_zone     = false
+local actor_moved       = false
+local extra_carry       = nil
+-- ======================================================================
+--      HUD MARKER PRESET PATCH
+--  Set up "dotmark" preset and patch it into utils_catspaw_hudmarks
+-- ======================================================================
+utils_catspaw_hudmarks.marker_presets["dotmark"] = (
+    function(args)
+        --[[    This defines all the "default" values for any marker instantiated as
+                a "dotmark" preset by utils_catspaw_hudmarks      --]]
+        local id    = args and args.id
+        local preset_args = {
+            -- ================================================================================
+            --  Presets that need to be generated on marker create rather than static LTX defs
+            -- ================================================================================
+            id                  = id,
+            -- various attributes are based on the scan radius settings:
+            far_fade_dist       = (near_scan_radius() or 3) - 0.5,
+            far_hide_dist       = (near_scan_radius() or 3),
+            far_end_dist        = (cfg.far_scan_radius or 10) + 5,
+            scale_dist_min      = (near_scan_radius() or 3) - 1,
+            scale_dist_mid      = (near_scan_radius() or 3) - 0.5,
+            scale_dist_max      = (near_scan_radius() or 3),
+            los_check_int       = (not cfg.ignore_los) and 50 or nil, -- interval in ms to check LOS to marker object
+            los_check_range     = (near_scan_radius() or 3) + 1,
+            func_anim_take_curve= utils_catspaw_common.easing.InSine, -- easing function used for item take animation
+
+            coord_args = { -- zero out all default screen coordinate adjustments
+                near_adj = 0, 
+                far_adj = 0,
+                base_y  = 0,
+            },
+            -- ================================================================================
+            func_on_update = (
+            -- ================================================================================
+            --  Main update loop for Dot Marker objects
+            --  Runs at the start of every marker update
+            --  Determines prompt and marker visibility for most objects
+            --  Updates condition and other metadata that are visible on prompts
+            -- ================================================================================
+                function(mark, args)
+                    -- Check whether all markers are hidden
+                    local now = time_global()
+                    local id = mark and mark.id
+                    local targeted = is_current_target(id)
+                    local hide = not not (mark and mark.hidden)
+                    local _ = debug_dump and vl("[%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
+                    local obj = mark.id and get_object_by_id(mark.id)
+                    if not obj then return end
+                    if mark.is_campfire and (not get_nearby_campfire()) then
+                        -- Check for stuck campfire prompts
+                        hide = true
+                    elseif mark.is_arty and (not can_actor_see_artefact(obj)) then
+                        -- Check whether object is an artefact that is not currently visible
+                        hide = true
+                    end
+                    local sec = obj:section()
+                    local can_show = false
+                    local no_prompts = false
+                    if mark.is_stalker then
+                        if targeted then can_show = true end
+                    end
+                    -- ================================================================================
+                    -- Check whether this marker is for a junk object
+                    if (not hide) and obj and zzz_rax_sortingplus_mcm and cfg.sp_hide_junk_items then
+                        local sec = obj:section()
+                        if is_junk(sec) then
+                            hide = true
+                        end
+                    end
+                    -- ================================================================================
+                    -- Check whether any logic has shut off interaction prompts entirely
+                    if no_prompts or (hide and not cfg.hidden_show_prompts) then
+                        --printf("Aborting all prompt display")
+                        _ = mark.use_pri and mark.use_pri:ShowPrompt(false)
+                        _ = mark.alt_interact and mark.alt_interact:ShowPrompt(false)
+                    else
+                        -- ================================================================================
+                        -- Check marker display conditions and whether animations are playing
+                        local not_hidden_by_anim = (cfg.alti_show_during_anim or not anim_playing)
+                        local available_pickup = mark.pickup and cfg.available_pickup and (mark.id == cfg.available_pickup)
+                        --local active_monitor = false
+                        local dist = mark.last_dist or 999
+                        cfg.in_pickup_range[id] = mark.pickup and (dist <= 2.5) and dist or nil
+                        local in_pickup_range = cfg.in_pickup_range[id]
+                        -- ================================================================================
+                        -- Check availability of primary interact prompt
+                        if mark.use_pri then
+                            --printf("pri interact check")
+                            local _ = debug_dump and vl("Checking whether to show pri interact prompt for %s | targeted %s", mark.name, targeted)
+                            if obj and mark.is_npc then
+                                --printf("obj is NPC")
+                                if mark.is_alive and (not obj:alive()) then
+                                    -- If an NPC dies, convert it to a body marker
+                                    vl("NPC is now dead, recreating marker as body")
+                                    mark.use_pri:ShowPrompt(false)
+                                    mark:Destroy()
+                                    scan_nearby_object(obj)
+                                    return
+                                elseif (not mark.is_alive) then
+                                    --printf("obj is dead body | mpda rules: %s | empty %s", cfg.bodies_use_mpda_rules, is_empty_mutant_corpse(obj))
+                                    local tracked = true
+                                    if is_empty_mutant_corpse(obj) then
+                                        --printf("mutant corpse is empty, destroying")
+                                        mark:Destroy()
+                                        return
+                                    elseif cfg.bodies_use_mpda_rules then
+                                        -- Hide bodies that Milspec PDA won't show
+                                        tracked = (ish_kill_tracker and ish_kill_tracker.tracked_kill and ish_kill_tracker.tracked_kill(id))
+                                        if not tracked then
+                                            hide = true
+                                        end
+                                        --printf("Using MPDA rules, body is tracked: %s", tracked)
+                                    else
+                                        --printf("dead corpse checks out")
+                                    end
+                                elseif (mark.is_stalker) and not obj:is_talk_enabled() then
+                                    -- Actor can't talk to living NPC
+                                    if (not mark.use_pri.disabled) then
+                                        mark.use_pri:ShowPrompt(false)
+                                    end
+                                    return
+                                end
+                            end
+                            local is_inv_container = mark.is_stash or (mark.is_stalker and not mark.is_alive)
+                            if is_inv_container and (not hide) and (not mark.is_display) then
+                                -- Update contents of inventory containers
+                                mark.has_items = not obj:is_inv_box_empty()
+                                local text = nil
+                                if mark.has_items and (not cfg.invboxes[id]) then
+                                    cfg.invboxes[id] = get_inventory_table(obj, id)
+                                end
+                                if mark.has_items and cfg.invboxes[id] and (not is_empty(cfg.invboxes[id])) then
+                                    mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id])
+                                    local wc = mark.weight and actor_weight_class(mark.weight)
+                                    local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
+                                    mark.use_pri.parse_text_colors = true
+                                    text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, gts("st_kg"))
+                                else
+                                    text = " " .. gts("st_alti_empty")
+                                end
+                                mark.use_pri:SetPrompt(nil, nil, text or "")
+                            end
+
+                            if mark.pickup and (not hide) then
+                                -- Mark is an item pickup
+                                can_show = targeted
+                                if cfg.show_item_card then
+                                    mark.use_pri:UpdateWeightColor()
+                                end
+                            elseif (not can_show) then
+                                -- If nothing else has allowed visibility yet, final checks
+                                can_show = (
+                                    (locked_id and targeted) or
+                                    (available_pickup and not locked_id) or
+                                    ((not mark.pickup) and (targeted)) and
+                                    (dist < 5) and
+                                    not_hidden_by_anim
+                                ) 
+                            end
+
+                            if mark.condition and (not hide) then
+                                -- Update condition for degradable objects
+                                local cond = obj:condition()
+                                if cond ~= mark.condition then
+                                    mark.condition = cond
+                                    mark.use_pri:SetConditionText(sec, cond)
+                                    mark.use_pri:SetPrompt()
+                                end
+                            end
+                            --vl("can_show %s (%s): %s", mark.name, mark.id, can_show)
+                            mark.use_pri:ShowPrompt(can_show)
+                        end
+                        -- ================================================================================
+                        -- Check availability of secondary interact prompt
+                        if mark.alt_interact then
+                            if mark.ammo_count and (mark.ammo_count == 0) then
+                                can_show = false
+                            elseif mark.has_battery and mark.condition and (mark.condition < 0.01) then
+                                can_show = false
+                            elseif mark.is_stash or (mark.is_npc and not mark.is_alive) then
+                                can_show = can_show and mark.has_items
+                            end
+                            local _ = debug_dump and vl("Checking whether to show alt interact prompt for %s | can_show %s | targeted %s | not unbound %s", mark.name, can_show, targeted, (not mark.alt_interact.unbound))
+                            mark.alt_interact:ShowPrompt(can_show and (not mark.alt_interact.unbound))
+                        end
+                    end
+                    -- ================================================================================
+                    -- Set blank or special textures for markers
+                    local texture = mark.texture or cfg.marker_dotmark
+                    if not mark.base_w then mark.base_w = mark.args.width end
+                    if not mark.base_h then mark.base_h = mark.args.height end
+
+                    if (mark.use_pri and mark.active_swap) and (not hide) then
+                        for k,v in pairs(mark.active_swap) do
+                            if can_show then
+                                mark[k] = v
+                                mark.use_pri.args[k] = v
+                            else
+                                mark[k] = mark.args[k]
+                                mark.use_pri.args[k] = mark.args[k]
+                            end
+                            mark.base_w = mark.width
+                            mark.base_h = mark.height
+                        end
+                        texture = mark.texture     
+                        mark.use_pri:SetupConnectingLine()
+                    end
+
+                    if (hide or cfg.hide_interaction_dots) then
+                        --printf("Hiding marker")
+                        -- Clear texture for hidden markers
+                        texture = ""
+                    else
+                        mark.width = mark.base_w * (cfg.dot_marker_size or 1)
+                        mark.height = mark.base_h * (cfg.dot_marker_size or 1)
+                    end
+                    mark.marker:InitTexture(texture)
+
+                end
+            ),
+            -- ================================================================================
+            func_los_check = (
+            -- ================================================================================
+            --  Runs during the LOS check phase of every marker update
+            --  Force LOS check to succeed if the marked object is the current interact target
+            -- ================================================================================
+                function(mark, args)
+                    if not (mark.pickup or mark.is_stalker) then return end
+                    local pri_shown = (mark and mark.use_pri and mark.use_pri.wnd and mark.use_pri.wnd:IsShown())
+                    --printf("Overriding LOS check while primary prompt is shown")
+                    return pri_shown and true or nil
+                end
+            ),
+            -- ================================================================================
+            --  When any marker is destroyed, unregister that ID and clear its metadata
+            func_on_destroy = (
+                function(mark) this.unregister_scanned_entity(mark and mark.id) end
+            ),
+        }
+        -- Most static values are loaded from the cfg.dotmark_preset table, thus loaded from the config file
+        for k,v in pairs(cfg.dotmark_preset) do
+            preset_args[k] = v
+        end
+        return preset_args
+    end
+)
+
+
+-- =======================================================================
+--[[      ITEM PICKUP CONTROL - FDDA AND FDDA REDONE MONKEYPATCHES
+    Intercepts primary-use keybind and checks for correct target, altering
+    the passed object if necessary.
+-- =====================================================================]]
+
+function can_actor_see_artefact(obj)
+    local arty  = obj and obj:cast_Artefact()
+    local vstate= arty and arty.getVisible and arty:getVisible() or 0
+    return (vstate == 1) and true or false
+end
+
+function get_bones_for_obj(obj)
+    local bones = obj and obj.list_bones and obj:list_bones()
+    --printf("bones for %s", obj:name())
+    --for k,v in pairs(bones) do
+        --printf("[%s] = %s", k, v)
+    --end
+    return bones
+end
+
+function item_pickup_intercept(obj, flags)
+    -- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
+    local taken_obj
+    vl("[item_pickup_intercept] Actor tried to take item %s (%s)", obj and obj:name(), obj and obj:id())
+    local curr_target = get_current_target()
+    --vl("Current target: %s", curr_target)
+    taken_obj = curr_target and get_object_by_id(curr_target)
+    if taken_obj then
+        vl("Forcing actor to take %s (%s) instead", taken_obj:name(), taken_obj:id())
+        flags.ret_value = false
+        db.actor:take_item(taken_obj)
+    end
+    return taken_obj
+end
+
+local fddar_on_item_callback = liz_fdda_redone_item_pickup and liz_fdda_redone_item_pickup.actor_on_item_before_pickup
+local fdda_on_item_callback = take_item_anim and take_item_anim.actor_on_item_before_pickup
+
+if fddar_on_item_callback then
+    liz_fdda_redone_item_pickup.actor_on_item_before_pickup = (
+        function(obj, flags)
+            --vl("FDDA Redone detected, patching liz_fdda_redone_item_pickups.actor_on_item_before_pickup")
+            local taken_obj = item_pickup_intercept(obj, flags)
+            flags.ret_value = false
+            fddar_on_item_callback(taken_obj or obj, flags)
+        end
+    )
+elseif fdda_on_item_callback then
+    take_item_anim.actor_on_item_before_pickup = (
+        function(obj, flags)
+            --vl("FDDA detected, patching take_item_anim.actor_on_item_before_pickup")
+            local taken_obj = item_pickup_intercept(obj, flags)
+            flags.ret_value = false
+            fdda_on_item_callback(taken_obj or obj, flags)
+        end
+    )
+end
+
+-- =======================================================================
+--      MAIN CONFIG TABLE
+--  Most values are loaded from configs\scripts\dotmarks_defaults.ltx
+-- =======================================================================
+cfg = {
+-- =======================================================================
+--  [cfg.is_item]: table of functors to test if an object matches a type
+-- =======================================================================
+    is_item = {
+        Stalkers = (
+            function(obj) 
+                local comm = obj and get_object_community(obj)
+                local is_enemy = comm and game_relations.is_factions_enemies(get_actor_true_community(), comm)
+                return obj and (
+                    (IsStalker(nil, obj:clsid()) and obj:alive() and not is_enemy) or
+                    (obj:clsid() == clsid.script_trader)
+                )
+            end
+        ),
+        Bodies = (
+            function(obj) return obj and (is_living_thing(obj) and not obj:alive()) end
+        ),
+        Stashes = (
+            function(obj) return obj and IsInvbox(nil, obj:clsid()) end
+        ),
+        Ammo = (
+            function(obj) 
+                local cls = obj and obj:clsid()
+                if not cls then return end
+                return IsAmmo(nil, cls) or (cfg.grenade_ammo_clsids and cfg.grenade_ammo_clsids[cls])
+            end
+        ),
+        Weapons = (
+            function(obj) return obj and (IsWeapon(nil, obj:clsid()) or (obj:clsid() == clsid.wpn_binocular_s)) end -- also catches binocs
+        ),
+        Grenades = (
+            function(obj) return obj and IsGrenade(nil, obj:clsid()) end
+        ),
+        Explosives = (
+            function(obj) return obj and IsExplosive(nil, obj:clsid()) end
+        ),
+        Outfits = (
+            function(obj) return obj and IsOutfit(nil, obj:clsid()) end
+        ),
+        Headgear = (
+            function(obj) return obj and IsHeadgear(nil, obj:clsid()) end
+        ),
+        Artefacts = (
+            function(obj) return obj and IsArtefact(nil, obj:clsid()) end
+        ),
+        Consumables = (
+            function(obj) 
+                local cls = obj and obj:clsid()
+                if (cls and (cls == clsid.obj_food)) then
+                    return true
+                end
+                local section = obj and obj:section()
+                return 
+                    (section and 
+                        (IsItem("eatable", section)) or
+                        (ini_sys:r_string_ex(section, "kind") == "i_medical")
+                    )
+            end
+        ),
+        Tools = (
+            function(obj) return obj and IsItem("tool", obj:section()) end
+        ),
+        Devices = (
+            function(obj) return obj and IsItem("device", obj:section()) end
+        ),
+        Quest = (
+            function(obj) return obj and IsItem("quest", obj:section()) end
+        ),
+        Campfires = (
+            function(obj) return obj and (obj:clsid() == clsid.zone_campfire) end
+        ),
+        Doors = (
+            function(obj) 
+                local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
+                return (scheme == "ph_door")
+            end
+        ),
+        Boxes = (
+            function(obj)
+                local cls = obj and obj:clsid()
+                if not (cls and (cls == clsid.obj_phys_destroyable)) then return end
+                local visual = obj:get_visual_name()
+                return visual and cfg.breakable_box_visuals[visual]
+            end
+        ),
+        Misc = (
+            function(obj) 
+                return obj and (
+                    (obj:clsid() == clsid.obj_attachable) or
+                    (obj:clsid() == clsid.equ_backpack)
+                )
+            end
+        ),
+        Workshops = (
+            function(obj)
+                return obj and (obj:clsid() == clsid.obj_physic) and string.match(obj:name(), "awr_tiski") end
+        ),
+
+
+    },
+-- =======================================================================
+--  [cfg.args]: required, returns a table of parameters for a mark type
+--  At a minimum, this must include args.texture, which must be the name 
+--  of a valid texture (even a blank one)
+-- =======================================================================    
+    args = {
+    -- Whenever an object matches one of the is_item functions above, the next
+    -- step is to get its base args (flags and metadata) for passing along to
+    -- the HUD Marker Manager in utils_catspaw_hudmarks
+    -- =======================================================================    
+        Stalkers = (
+            function(obj)
+                if not obj then return end
+                local id            = obj:id()
+                local cls           = obj:clsid()
+                if not cls then return end
+                local sec           = obj:section()
+                local args          = {
+                    logged_type    = "stalker (alive)",
+                    -- logged_type is purely informational for logging
+                    is_npc         = true, -- these three flags should be obvious
+                    is_alive       = true, -- utilized during main loop to speed up checks
+                    is_stalker     = true, -- passed through via args to the interaction prompts
+                    bone           = "bip01_spine1",
+                    -- causes marker position to be based on this bone
+                    pos_adjust     = vector():set(0, 0.1, 0),
+                    -- adjust final marker world pos additively by this value
+                    texture        = get_cfg_for_type("tex", "Stalkers") or cfg.marker_dotmark,
+                    -- The get_cfg_for_type call for the "tex" type returns the contents of
+                    -- the cfg.tex table for the specified object class.
+                    hint_filters = {["character_use"] = "character_use"},
+                    -- Hint filters specify strings that this marker's primary interaction prompt
+                    -- should watch for and erase from the QuickHelp static, and optionally 
+                    -- specify a replacement localization string to use.
+                }
+
+                local service_icon
+                if cfg.vendors[sec] then
+                    --vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
+                    args.service_type   = cfg.vendors[sec]
+                    local enabled       = not cfg.disable_icon_services
+                    service_icon        = enabled and cfg.service_icons[args.service_type] or nil
+                    -- Service NPCs (e.g. traders, mechancis) show a special icon instead of
+                    -- the dot marker when they are targeted for interaction.
+                    -- killswitched by cfg.disable_icon_services
+                end
+                if service_icon then
+                    vl("Found NPC service icon %s, enabling active swap")
+                    -- The active_swap arg specifies a list of args that are swapped in
+                    -- whenever the marker becomes the current active target.
+                    -- The original values are restored when it is no longer targeted.
+                    args.active_swap = {
+                        texture     = service_icon,
+                        width       = 16,   -- marker width
+                        height      = 16,   -- marker height
+                        line_adj_x  = 4,    -- x position of the white line
+                        line_adj_y  = 11,   -- y position of the white line
+                        line_adj_h  = -11,  -- height of the white line
+                    }
+                elseif not cfg.disable_icon_talk then
+                    vl("Stalker talk icon %s enabled for active swap")
+                    args.active_swap = {
+                        texture     = "ui_catsy_marker_talk",
+                        width       = 16,
+                        height      = 16,
+                        line_adj_x  = 4,
+                        line_adj_h  = -11,
+                        line_adj_y  = 11,
+                    }
+                end
+
+                return args
+            end
+        ),
+    -- =======================================================================    
+        Bodies = (
+            function(obj)
+                if not obj then return end
+                if is_empty_mutant_corpse(obj) then return end
+                local id            = obj:id()
+                local cls           = obj:clsid()
+                if not (id and cls) then return end
+                local args = {
+                    is_npc          = true,
+                    comm            = get_object_community(obj) or nil,
+                    section         = obj:section(),
+                    bone            = "bip01_spine1",
+                    hint_filters = {
+                        ["dead_character_use"]          = "dead_character_use",
+                        ["dead_character_use_or_drag"]  = "dead_character_use_or_drag",
+                        ["st_body_loot"]                = "st_body_loot",
+                        ["st_body_knife_bad"]           = "st_body_knife_bad",
+                        ["st_body_knife_needed"]        = "st_body_knife_needed",
+                        ["st_body_knife_weak"]          = "st_body_knife_weak",
+                    },
+                }
+                
+                if IsStalker(nil, cls) then
+                    args.is_stalker = true
+                elseif IsMonster(nil, cls) then
+                    args.is_mutant = true
+                end
+
+                args.logged_type    = "dead " .. (args.is_stalker and "stalker" or "mutant")
+                if paw and cfg.bodies_use_paw_patches then
+                    args.is_stalker = args.is_stalker and (args.comm ~= "zombied")
+                    args.texture    = (args.is_stalker and ("ui_icons_paw_badge_uhr_" .. args.comm)) or cfg.marker_dotmark
+                    if args.is_stalker then
+                        args.width      = 16
+                        args.height     = 16
+                        args.line_adj_x = 4
+                        args.line_adj_h = -10
+                        args.line_adj_y = 10
+                    end
+                else
+                    args.texture    = get_cfg_for_type("tex", "Bodies", obj) or cfg.marker_dotmark
+                end
+                if is_body_claimed(id) then
+                    args.name       = safename(id) .. " (" .. gts("st_body_is_claimed") .. ")"
+                end
+                if args.is_stalker then
+                    args.has_items  = not obj:is_inv_box_empty()
+                end
+
+                return args
+            end
+        ),
+    -- =======================================================================    
+        Stashes = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                local sec = obj and obj:section()
+                return obj and {
+                    logged_type     = "a stash",
+                    is_stash        = true,
+                    is_backpack     = (sec == "inv_backpack"),
+                    is_display      = cfg.display_cases[sec] or nil,
+                    has_items       = obj and not obj:is_inv_box_empty(),
+                    texture         = get_cfg_for_type("tex", "Stashes") or cfg.marker_dotmark,
+                    los_pos_adjust  = vector():set(0, 0.5, 0),
+                    --pos_adjust      = vector():set(0, 0.4, 0),
+                    hint_filters   = {
+                        ["inventory_box_use"]       = "inventory_box_use",
+                        ["actor_inventory_box_use"] = "actor_inventory_box_use",
+                        ["st_search_treasure"]      = "st_search_treasure",
+                    },
+                }
+            end
+        ),
+    -- =======================================================================    
+        Ammo = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                return obj and {
+                    logged_type     = "ammo",
+                    bone            = "link",
+                    pickup          = true,     -- object is a gettable inventory item
+                    texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Weapons = (
+            function(obj)
+                if weapon_showcase and not is_empty(weapon_showcase.weapon_displays) then
+                    local id = obj and obj:id()
+                    for case_id, case_guns in pairs(weapon_showcase.weapon_displays) do
+                        for item_id, world_id in pairs(case_guns) do
+                            if (id == item_id) or (id == world_id) then
+                                cfg.racked_items[world_id] = case_id
+                                --printf("%s: case %s | item_id %s | world_id %s", obj:name(), case_id, item_id, world_id)
+                                -- Ignore weapons in Hideout Furniture display cases
+                                return nil
+                            end
+                        end
+                    end
+                end
+
+                local count = obj and obj:get_ammo_in_magazine()
+                return obj and {
+                    logged_type     = "a weapon",
+                    has_parts       = true,
+                    pickup          = true,
+                    texture         = get_cfg_for_type("tex", "Weapons") or cfg.marker_dotmark,
+                    --pos_adjust      = vector():set(0, 0.15, 0),
+                    -- adjusts world coordinates of the marker itself
+                    bone            = "wpn_body",
+                    ammo_count      = count,
+                    -- if ammo_count and ammo_count > 0, unload-ammo secondary action will be shown
+                    clsid           = obj:clsid(),
+                    section         = obj:section(),
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Grenades = (
+            function(obj)
+                get_bones_for_obj(obj)
+
+                return {
+                    logged_type     = "a grenade",
+                    pickup          = true,
+                    texture         = get_cfg_for_type("tex", "Grenades") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Explosives = (
+            function()
+                return {
+                    logged_type     = "an explosive",
+                    pickup          = true,
+                    texture         = get_cfg_for_type("tex", "Explosives") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Outfits = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                return obj and {
+                    logged_type     = "an outfit",
+                    pickup          = true,
+                    has_parts       = true, -- Item has component parts with condition
+                    bone            = "joint1",
+                    texture         = get_cfg_for_type("tex", "Outfits") or cfg.marker_dotmark,
+                    clsid           = obj:clsid(),
+                    section         = obj:section(),
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Headgear = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                return obj and {
+                    logged_type     = "headgear",
+                    pickup          = true,
+                    has_parts       = true,
+                    bone            = "joint1",
+                    clsid           = obj:clsid(),
+                    section         = obj:section(),
+                    texture         = get_cfg_for_type("tex", "Headgear") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Artefacts = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                return obj and {
+                    logged_type     = "an artefact",
+                    pickup          = true,
+                    is_arty         = true,
+                    texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Consumables = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                local section       = obj and obj:section()
+                local multi_uses    = nil
+                if section and IsItem("multiuse", section, obj) then
+                    multi_uses = obj:get_remaining_uses()
+                end
+                return obj and {
+                    logged_type     = "food, drugs, or drink",
+                    pickup          = true,
+                    --bone            = "bone01",
+                    multi_uses      = multi_uses,
+                    -- if multi_uses and multi_uses > 1, the number of uses will be suffixed to the prompt
+                    section         = section,
+                    texture         = get_cfg_for_type("tex", "Consumables") or cfg.marker_dotmark,
+                    hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Tools = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                local section       = obj and obj:section()
+                local multi_uses    = nil
+                if section and IsItem("multiuse", section, obj) then
+                    multi_uses = obj:get_remaining_uses()
+                end
+                return obj and {
+                    logged_type     = "a tool",
+                    pickup          = true,
+                    multi_uses      = multi_uses,
+                    section         = section,
+                    texture         = get_cfg_for_type("tex", "Tools") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Devices = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                return obj and {
+                    logged_type     = "a device",
+                    pickup          = true,
+                    has_battery     = true,
+                    bone            = "wpn_body",
+                    clsid           = obj:clsid(),
+                    section         = obj:section(),
+                    texture         = get_cfg_for_type("tex", "Devices") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Quest = (
+            function(obj)
+                return obj and {
+                    logged_type     = "a quest item",
+                    pickup          = true,
+                    section         = obj:section(),
+                    texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================
+        Campfires = (
+            function(obj)
+                return obj and {
+                    logged_type     = "a campfire",
+                    texture         = cfg.marker_dotmark,
+                    is_campfire     = true,
+                    name            = gts("st_itm_campfire"),
+                    --los_pos_adjust  = vector():set(0, 0, 0),
+                    -- Changes the world coordinates used for LOS checks
+                    pos_adjust      = vector():set(0, 0.25, 0),
+                    no_pri          = true, -- Do not display a primary interaction prompt
+                    -- This is because campfire interactions are shown via the
+                    -- tutorial system, and are handled as a fixed-position
+                    -- screen prompt
+                }
+            end
+        ),
+    -- =======================================================================    
+        Doors = (
+            function(obj)
+                if not obj then return end
+                local visual    = obj:get_visual_name()
+                local id        = obj:id()
+                local ph_door   = id and db.storage[id]["ph_door"]
+                local vadjust   = visual and cfg.door_visuals and cfg.door_visuals[visual] or 0.25
+
+                local args = {
+                    logged_type         = "a door",
+                    texture             = get_cfg_for_type("tex", "Doors") or cfg.marker_dotmark,
+                    is_door             = true,
+                    bone                = "lock",
+                    pos_adjust          = vector():set(0, vadjust, 0),
+                    scheme              = ph_door,
+                    -- The scheme is used for getting direct access to the door handlers and data
+                    visual              = visual,
+                    -- The name of the 3D model visual used for the object
+                    interact_dist       = 4,
+                    -- Doors can be interacted with from a greater than normal distance
+                }
+                if (not cfg.disable_icon_door) then
+                    args.active_swap = {
+                        texture     = "ui_catsy_marker_door",
+                        width       = 20,
+                        height      = 20,
+                        line_adj_x  = 4,
+                        line_adj_h  = -12,
+                        line_adj_y  = 12,
+                    }
+                end
+                return args
+            end
+        ),
+    -- =======================================================================    
+        Boxes = (
+            function(obj)
+                --get_bones_for_obj(obj)
+
+                if not obj then return end
+                local visual = obj:get_visual_name()
+                return {
+                    logged_type     = "a breakable box",
+                    texture         = (not cfg.disable_icon_box) and get_cfg_for_type("tex", "Boxes") or cfg.marker_dotmark,
+                    visual          = visual,
+                    no_pri          = true,
+                    line_adj_x      = 2,
+                    line_adj_h      = -8,
+                    line_adj_y      = 8,
+                    width           = 10,
+                    height          = 10,
+                }
+            end
+        ),
+    -- =======================================================================    
+        Misc = (
+            function(obj)
+                if not obj then return end
+                --get_bones_for_obj(obj)
+                local name = obj:name()
+                local section = obj:section()
+                local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
+                return {
+                    kind            = kind,
+                    -- Used for further object type detection
+                    pickup          = true,
+                    --bone            = name:find("patch" and "joint1" or "link"),
+                    section         = section,
+                    is_readable     = kind and (kind == "i_letter") or nil,
+                    -- Book or letter that can be picked up and read as a secondary action
+                    is_backpack     = (obj:clsid() == clsid.equ_backpack),
+                    logged_type     = "miscellaneous loot",
+                    texture         = get_cfg_for_type("tex", "Misc") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Tutorials = (
+            -- Tutorials are a class of on-screen prompt that is displayed by the game engine
+            -- according to some fairly arcane functionality in the game_tutorials.xml file.
+            -- Most are not actually "tutorials" as such, but instead use the engine's tutorial
+            -- system as a way of displaying custom interaction prompts to the player.
+            
+            -- These include campfire interactions, sleep zones, and many quest-specific
+            -- one-off interaction prompts. All are displayed by DotMarks as fixed-position
+            -- screen prompts, as most are not actually attached to any world object.
+
+            -- There was no existing way to capture these tutorial events, so I created the
+            -- modxml_tutorial_hooks script to set up on/off flags for the states of all such
+            -- tutorial-interactions.
+            function()
+                local x,y               = get_fixed_screen_pos()
+                return {
+                    logged_type         = "game_tutorials.xml pop-up",
+                    texture             = "",
+                    fixed               = true,
+                    los_check_int       = -1,
+                    locked_screen_pos   = vector2():set(x, y),
+                }
+            end
+        ),
+        Workshops = (
+            function(obj)
+                if not obj then return end
+                local visual = obj:get_visual_name()
+
+                return {
+                    logged_type         = "a workshop bench",
+                    texture             = get_cfg_for_type("tex", "Workshops") or cfg.marker_dotmark,
+                    visual              = visual,
+                    section             = obj:section(),
+                    interact_dist       = 1.5,
+                    refresh_text        = true,
+                    -- Forces the prompt text to check for changes on every update
+                    hint_filters       = {
+                        ["st_tiski_no_info"]= "st_tiski_no_info",
+                        ["st_tiski"]        = "st_tiski",
+                        ["st_awr_tiski"]    = "st_awr_tiski",
+                    },
+                }
+            end
+        ),        
+    },
+-- =======================================================================    
+--  [cfg.state_conds]: a set of extra checks for tutorial-based prompts 
+--  that must also be true (in addition to the tutorial state) in order 
+--  for this script to trigger the tutorial prompt.
+-- =======================================================================    
+    state_conds = {
+        ["sleep_zone_tip"]              = ( function() return in_sleep_zone end ),
+        -- Check whether actor is actually in the sleep zone - the tutorial fires sooner
+        ["tutorial_campfire_ignite"]    = ( 
+            function()
+                return not is_nearest_campfire_lit()
+                --local fire = bind_campfire.get_nearby_campfire(2.5, true)
+                --if type(fire) == "boolean" then return not fire end
+                --return fire and not fire:is_on()
+            end
+        ),
+        -- Check whether campfire is authoritatively on or off
+        ["tutorial_campfire_extinguish"]= ( 
+            function() 
+                return is_nearest_campfire_lit()
+                --local fire = bind_campfire.get_nearby_campfire(2.5, true)
+                --if type(fire) == "boolean" then return fire end
+                --return fire and fire:is_on()
+            end 
+        ),
+    },
+}
+-- =======================================================================    
+
+function get_nearby_campfire(dist)
+    return bind_campfire.get_nearby_campfire(dist or 2.5, true)
+end
+
+function is_nearest_campfire_lit()
+    local fire = get_nearby_campfire()
+    if type(fire) == "boolean" then return fire end
+    -- bind_campfire is fucking stupid, and returns different data types
+    -- so we have to trap that to avoid a dumb crash
+    return fire and fire:is_on()
+end
+
+local ini_parts = itms_manager.ini_parts
+function has_parts(obj)
+    if not obj then return end
+    local sec = SYS_GetParam(0, obj:section(), "parent_section") or obj:section()
+    local parts = ini_parts:r_string_ex("con_parts_list", sec)
+    return parts ~= nil
+end
+
+function is_door_open(obj, id)
+    id = id or (obj and obj:id())
+    obj = obj or (id and get_object_by_id(id))
+    if not id then return end
+    local door = id and db.storage[id]["ph_door"] and db.storage[id]["ph_door"].door_action
+    local is_open = door:is_open()
+    vl("Door %s is open: %s", obj and obj:name(), is_open)
+end
+
+function is_vanilla_ui_hidden()
+    return (cfg.hide_van_interact_ui and not cfg.hide_pri_interact_ui)
+end
+
+function trimmed_prompt(txt)
+    local pos = txt and txt:find("%(")
+    return pos and txt:sub(1, pos - 2) or txt or ""
+end
+
+function interact_vert_offset(ui_interact)
+    local args = ui_interact and ui_interact.args
+    return args and (not args.pri) and (not cfg.hide_pri_interact_ui) and cfg.sec_use_v_offset or cfg.pri_use_v_offset
+end
+
+function csv_argb_to_tbl(csv)
+    local c = csv and str_explode(csv, ",")
+    return c and {
+        a = c[1] or 255,
+        r = c[2] or 255,
+        g = c[3] or 255,
+        b = c[4] or 255,
+        v = c[5] or nil -- threshold value for internal use
+    } or nil
+end
+
+function clr_tbl(a, r, g, b, v)
+    return {
+        a = a,
+        r = r,
+        g = g,
+        b = b,
+        v = v
+    }
+end
+
+function clr_tbl_to_index(clr_tbl, tval)
+    return {
+        clr_tbl.a or 255,
+        clr_tbl.r or 255,
+        clr_tbl.g or 255,
+        clr_tbl.b or 255,
+        clr_tbl.v or tval or 0
+    }
+end
+
+function getargb(clr_tbl)
+    return get_argb( clr_tbl.a, clr_tbl.r, clr_tbl.g, clr_tbl.b )
+end
+
+function lerp_color(val, mi, md, mx)
+    --printf("lerp_color: %s, %s, %s, %s", val, mi, md, mx)
+    -- like in utils_xml, except returning a table I can do something with instead of ARGB
+    local m1,m2
+    if (val >= mi[5]) and (val < md[5]) then
+        m1 = mi
+        m2 = md
+    elseif (val >= md[5]) and (val <= mx[5]) then
+        m1 = md
+        m2 = mx
+    end
+    if not (m1 and m2) then
+        return clr_tbl(255,255,255,255)
+    end
+    
+    local t = {}
+    for i=1,4 do
+        if m1[i] == m2[i] then
+            t[i] = m1[i]
+        else
+            t[i] = math.floor( m1[i] + ((m2[i] - m1[i]) * normalize(val, m1[5], m2[5])) )
+            --printf(" [%s] %s = %s [ %s , %s ] | diff: %s - normalize: %s", self.section, i, t[i], m1[i], m2[i], (m2[i] - m1[i]), 1 - normalize(val, m1[5], m2[5]))
+        end
+    end
+    return clr_tbl(t[1], t[2], t[3], t[4])
+end
+
+function get_fixed_screen_pos()
+    local x = cfg.tutorial_prompt_x or (cfg.fixed_screen_pos and cfg.pri_use_h_offset) or 512
+    local y = cfg.tutorial_prompt_y or (cfg.fixed_screen_pos and cfg.pri_use_v_offset) or 600
+    return x,y
+end
+
+function is_already_target(id)
+    local is_xhair  = hmm and hmm.current_pickup and (id == hmm.current_crosshair)
+    local is_pickup = hmm and hmm.current_pickup and (id == hmm.current_pickup)
+    local is_target = hmm and hmm.current_target and (id == hmm.current_target)
+    local result = is_pickup or is_target or is_xhair
+    --vl("is_already_target(%s): %s | pickup: %s | look_target: %s | crosshair: %s", id, result, is_pickup, is_target, is_xhair)
+    return result
+end
+
+function get_condition_color(condition, section)
+    if not condition then return end
+    local c = cfg.colors
+    local critical = section and item_device.dev_critical[section]
+    if critical then
+        if (condition * 0.01) < critical then
+            return c.clr_wpo_red
+        else
+            return c.clr_battery
+        end
+    end
+    local cc = {
+        min = c.clr_cnd_min,
+        mid = c.clr_cnd_mid,
+        max = c.clr_cnd_max,
+        grn = c.clr_wpo_grn,
+        yel = c.clr_wpo_yel,
+        orn = c.clr_wpo_orn,
+        red = c.clr_wpo_red
+    }
+    local color
+    if cfg.parts_wpo_colors then
+        -- Weapon Parts Overhaul color thresholds
+        color = cfg.colors.clr_missing
+        if condition >= (cfg.parts_wpo_grn or 85) then color = cc.grn
+        elseif condition >= (cfg.parts_wpo_yel or 60) then color = cc.yel
+        elseif condition >= (cfg.parts_wpo_orn or 20) then color = cc.orn
+        elseif condition > -1 then color = cc.red end
+    else
+        -- Vanilla gradient lerp
+        if condition >= 0 then
+            local cond = clamp(condition / 99, 0, 1)
+            color = lerp_color(cond, cc.min , cc.mid , cc.max)
+        else
+            color = c.clr_missing
+        end
+    end
+    return color
+end
+
+-- =======================================================================
+--[[    Custom interaction prompt
+    Anyone could probably reuse this with some adjustments to remove the
+    stuff specific to DotMarks.
+
+    It takes the following args (among others I need to document):
+        event       ::  String ID for the event, used to construct internal UID
+        func        ::  Required, the function to execute when the interaction is activated
+        text        ::  The descriptive text for the interaction
+        bind        ::  The text to display inside the keybind icon
+        long        ::  Whether to display a progress indicator for a long press, autodetected from mode
+        key         ::  The DIK code of the bound key for the interact
+        mod         ::  The modifier key code (alt, shift, ctrl)
+        mode        ::  The input mode of the interaction (0=simple, 1=doubletap, 2=longpress/hold)
+        hoffset     ::  Horizontal pos offset
+        voffset     ::  Vertical pos offset
+        act         ::  Action text to display as a prefix to the prompt text, usually handled automatically
+        argb_light  ::  Index of four values used as the ARGB for light-colored text
+        argb_light  ::  Index of four values used as the ARGB for dark-colored text
+        argb_busy   ::  Index of four values used as the ARGB for text when the interact is visible but disabled
+
+    Need to trim the fat off of this after DotMarks is done and I know what isn't needed.
+-- =====================================================================]]
+
+
+class "InteractPrompt" (CUIScriptWnd)
+
+function InteractPrompt:__init(anchor, args) super()
+    vl("InteractPrompt:__init | event %s | name %s | tutorial %s", args and args.event, args and args.name, args and args.tutorial)
+    self:SetAutoDelete(true)
+    self.elements = {
+        ["wnd"]         = true,
+        ["prompt"]      = false,
+        ["prompt_l"]    = false,
+        ["prompt_c"]    = false,
+        ["prompt_r"]    = false,
+        ["bind"]        = true,
+        ["bind_sh"]     = true,
+        ["label"]       = true,
+        ["label_sh"]    = true,
+        ["line"]        = false,
+        ["longpress"]   = false,
+    }   -- bool is whether to scale alpha
+    self.xml    = CScriptXmlInit()
+    self.uid    = "dotmarks_" .. args.event
+    args        = args or {}
+    args.func   = args.func or (function() end)
+    args.event  = self:Event(args.event)
+    args.key    = self:BindKey(args.key)
+    args.mod    = self:ModKey(args.mod)
+    args.mode   = self:InputMode(args.mode)
+    args.bind   = args.bind or bindtext(key, mod)
+    args.long   = args.long or (args.mode == 2)
+    args.hoffset= args.hoffset or (args.pri and cfg.pri_use_h_offset or cfg.sec_use_h_offset) or 0
+    args.voffset= args.voffset or (args.pri and cfg.pri_use_v_offset or cfg.sec_use_v_offset) or 0
+    args.act    = args.act or ""
+    args.name   = args.name or ""
+    args.fixed  = ((args.fixed ~= nil) and args.fixed) or cfg.fixed_screen_pos
+    self.anchor = args.fixed and maingameui or anchor or maingameui
+    if args.fixed then
+        local x,y   = get_fixed_screen_pos()
+        args.locked_screen_pos = vector2():set(x, y)
+    end
+    if args.mark_id then
+        self.mark   = hmm:GetMarker(args.mark_id)
+    end
+    if args.scheme and args.scheme.door_action then
+        self:SetupDoorHandlers(args)
+    end
+
+    if debug_dump then
+        printf("[InteractPrompt] Passed args:")
+        for k,v in pairs(args) do printf("|| %s = %s", k, v) end
+    end
+    if args.hint_filters then
+        local mon = {}
+        for k,v in pairs(args.hint_filters) do
+            mon[gts(k)]     = trimmed_prompt(gts(v))
+        end
+        args.hint_filters   = args.pri and mon or nil
+    end
+
+    local color             = cfg.colors
+    local csv2clr           = csv_argb_to_tbl
+    self.text_color_default = clr_tbl(255, 255, 255, 255)
+    self.text_hidden        = clr_tbl(0, 0, 0, 0)
+    self.text_color_busy    = csv2clr(args.argb_busy)   or color.clr_text_busy  or self.text_color_default
+    self.text_color_light   = csv2clr(args.argb_light)  or color.clr_text_light or self.text_color_default
+    self.text_color_dark    = csv2clr(args.argb_dark)   or color.clr_text_dark  or self.text_color_default
+    self.progress_color     = csv2clr(args.argb_prog)   or color.clr_key_hold  or get_argb(255,255,215,0)
+
+    self.active_prefix      = args.active_prefix or args.act    or ""
+    self.active_prompt      = args.active_prompt or args.text   or (args.tutorial and trimmed_prompt(gts(args.tutorial))) or ""
+    self.active_suffix      = args.active_suffix or args.suffix or ""
+    self.args               = args
+
+
+
+    self.last_state         = false
+    self:on_option_change()
+    self:BusyState(false)
+    self:ShowPrompt(false)
+
+    RegisterScriptCallback("on_option_change", self)
+    RegisterScriptCallback("actor_on_update", self)
+
+    self.init_done = true
+    vl("[InteractPrompt] Completed setup for prompt: %s", self:GetFullPrompt())
+end
+
+
+function InteractPrompt:SetupDoorHandlers(args)
+    self.door = {
+        data = args.scheme,
+        ctrl = args.scheme.door_action
+    }
+    local door = self.door
+    if not door.ctrl then return end
+
+    door.lo, door.hi = door.ctrl.joint:get_limits(0, 0, 0)
+    door.mid = (door.lo + door.hi) * 0.5
+    door.deadzone = 0.1
+    door.is_open = (
+        function()
+            return self.door.ctrl and self.door.ctrl.is_open and self.door.ctrl:is_open()
+        end
+    )
+    door.tips = {
+        close   = self.door.data and self.door.data.tip_close,
+        open    = self.door.data and self.door.data.tip_open,
+        unlock  = self.door.data and self.door.data.tip_unlock,
+    }
+    door.joint_pos = (
+        function()
+            return self.door.ctrl and
+                self.door.ctrl.joint and
+                self.door.ctrl.joint.get_axis_angle and
+                self.door.ctrl.joint:get_axis_angle(0)
+        end
+    )
+    door.tip = (
+        function()
+            local locked = self.door.data and self.door.data.locked
+            local tips = self.door.tips
+            local msg = locked and tips.unlock or self.door.is_open() and tips.close or tips.open
+            --printf("door %s is open: %s | locked %s | returning msg %s", args.name, self.door.ctrl:is_open(), locked, msg)
+            return msg
+        end
+    )
+    args.text = gts(self.door.tip())
+end
+
+function InteractPrompt:SetupConnectingLine()
+    -- White line
+    if not self.line then
+        self.line = self.xml:InitProgressBar("prog_dotpointer", self.anchor)
+    end
+
+    if self.args.pri then
+        self.line:SetWndPos(vector2():set((self.args.line_adj_x or 0) + -3.5, (self.args.line_adj_y or 0) + 3))
+        self.line:SetWndSize(vector2():set(5 + (self.args.line_adj_w or 0), 26 + (self.args.line_adj_h or 0)))
+    else
+        self.line:Show(false)
+    end
+end
+
+function InteractPrompt:BuildUI()
+    vl("InteractPrompt:BuildUI | %s", self.args.name or self.args.text or self.args.tutorial or self.args.event)
+    if self.wnd then
+        for k,_ in pairs(self.elements) do
+            self[k] = nil
+        end
+    end
+
+    local xml           = self.xml
+    xml:ParseFile(cfg.interact_uifile)
+    local args          = self.args
+    local boxlen        = #args.bind * 5.825
+    local boxpos        = -(boxlen - 4)
+    self.args.style     = cfg.keybind_bg_style or 0
+    vl("Keybind icon style is %s", self.args.style)
+    self.black_text     = (self.args.style == 2) or (self.args.style == 3)
+    local stretch_adj   = 0
+    self.wnd            = xml:InitStatic("alt_interact", self.anchor)
+    if self.args.locked_screen_pos then
+        self.wnd:SetWndPos(self.args.locked_screen_pos)
+    else
+        local x             = args.hoffset
+        local y             = args.voffset
+        self.wnd:SetWndPos(vector2():set(x, y))
+    end
+
+    self.drop           = xml:InitStatic("box", self.wnd)
+    self.drop:SetWndPos(vector2():set(-boxlen, -1))
+    self.drop:InitTexture(cfg.main_drop_texture)
+    self.drop:SetTextureColor(get_argb(clamp(cfg.interact_drop_alpha * 255, 0, 255), 255, 255, 255))
+    self:SetupConnectingLine()
+
+    local one_char = (#args.bind == 1)
+    if one_char then
+        self.prompt     = xml:InitStatic("alt_interact:prompt", self.wnd)
+        self.prompt:InitTexture("ui_catsy_keybind_bg_single_v" .. self.args.style)
+    else
+        self.prompt     = xml:InitStatic("box", self.wnd)
+        
+        self.prompt_l   = xml:InitStatic("alt_interact:prompt_l", self.prompt)
+        self.prompt_c   = xml:InitStatic("alt_interact:prompt_c", self.prompt)
+        self.prompt_r   = xml:InitStatic("alt_interact:prompt_r", self.prompt)
+        self.prompt_l:InitTexture("ui_catsy_keybind_bg_left_v" .. args.style)
+        self.prompt_c:InitTexture("ui_catsy_keybind_bg_center_v" .. args.style)
+        self.prompt_r:InitTexture("ui_catsy_keybind_bg_right_v" .. args.style)
+
+        stretch_adj     = 2
+        self.prompt_c:SetWndSize(vector2():set(boxlen, 20))
+        self.prompt_l:SetWndPos(vector2():set(0, 0))
+        self.prompt_c:SetWndPos(vector2():set(5.3125, 0))
+        self.prompt_r:SetWndPos(vector2():set(5 + boxlen, 0))
+    end
+    self.prompt:SetWndPos(vector2():set(boxpos or 0, 0))
+
+    -- Set up long press progress indicator
+    if args.long then
+        self.longpress  = xml:InitProgressBar("prog_longpress", self.prompt)
+        self.longpress:SetColor(get_argb(self.progress_color))
+        self.longpress:SetProgressPos(0)
+    end
+
+    -- Set up text drop shadows
+    self.bind_sh        = xml:InitStatic("alt_interact:label", self.prompt)
+    self.label_sh       = xml:InitStatic("alt_interact:label", self.wnd)
+    self.bind_sh:SetWndSize(vector2():set((boxlen or 0) + 15, 20))
+    self.bind_sh:SetWndPos(vector2():set(stretch_adj + 4.5, 3.25))
+    self.label_sh:SetWndPos(vector2():set(24.5, 3.25))
+
+    -- Keybind text indicator
+    self.bind           = xml:InitStatic("alt_interact:label", self.prompt)
+    self:eleSetBaseColorScheme(self.bind, self.black_text and self.text_color_dark or self.text_color_light)
+
+    self:SetBindText(bindtext(self:BindKey(), self:ModKey()))
+
+    self.bind:SetWndSize(vector2():set((boxlen or 0) + 15, 20))
+    if one_char then
+        self.bind:SetWndPos(vector2():set(stretch_adj + 4.5, 2.5))
+    else
+        self.bind:SetWndPos(vector2():set(stretch_adj + 3, 2.5))
+    end
+
+    -- Width reference static
+    self.lref      = xml:InitStatic("box", self.wnd)
+    self.lref:Show(false)
+
+    -- Prompt text label
+    self.label          = xml:InitStatic("alt_interact:label", self.wnd)
+    self:eleSetBaseColorScheme(self.label, self.text_color_light)
+    self.label:SetWndPos(vector2():set(24, 3.5))
+
+    self:eleSetBaseColorScheme(self.bind_sh, self.text_color_dark)
+    if self.black_text then
+        self.bind_sh:Show(false)
+    end
+    self:eleSetBaseColorScheme(self.label_sh, self.text_color_dark)
+
+    local obj = self.args.id and get_object_by_id(self.args.id)
+    self:SetupConditionSuffix(obj)
+    self:SetPrompt()
+
+    if obj and self.args.pri then
+        self:SetupItemCard(self.wnd, obj)
+        self:SetupUtjanPartDots(self.itemcard)
+    end
+    vl("Completed %sbuilding interact UI: %s", self.init_done and "re" or "", self.active_prompt)
+    self:actor_on_update()
+end
+
+function InteractPrompt:SetupConditionSuffix(obj)
+    obj             = obj or (self.args.id and get_object_by_id(self.args.id))
+    if (not obj) or not (cfg.show_item_condition or cfg.show_item_charge) then return end
+
+    local sec       = self.args.section or obj:section()
+    local cls       = self.args.clsid or obj:clsid()
+    local has_cond  = (sec and cls) and (utils_item.is_degradable(nil, sec) or IsWeapon(nil, cls) or IsOutfit(nil, cls) or IsHeadgear(nil, cls))
+    local is_mag    = magazine_binder and sec and magazine_binder.is_magazine(sec)
+    local gear_cnd  = (self.args.has_parts and cfg.show_item_condition)
+    local batt_cnd  = (self.args.has_battery and cfg.show_item_charge)
+
+    if self.args.multi_uses then
+        -- Setup suffix text for multiuse items
+        if cfg.show_multi_uses and (self.args.multi_uses > 1) then
+            self.active_suffix = string.format(" (%s %s)", self.args.multi_uses, gts("st_alti_uses"))
+        else
+            self.active_suffix = ""
+        end
+    elseif has_cond and (gear_cnd or batt_cnd) and (not is_mag) then
+        -- Setup suffix text for degradable items
+        vl("setting up condition label")
+        local cond = obj and obj:condition()
+        self:SetConditionText(sec, cond)
+    else
+        self.active_suffix = ""
+    end
+end
+
+
+function InteractPrompt:SetConditionText(sec, cond)
+     if (cond and sec) then
+        cond = math.floor(cond * 100)
+        local c = get_condition_color(cond, sec)
+        local key = "cond_" .. cond
+        local str   = string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
+        set_color_token(key, str)
+        self.parse_text_colors = true
+        if (cond < 0.01) and self.args.has_battery then
+            self.active_suffix = string.format(" ($%s%s$clr_def)", key, gts("st_alti_nopower"))
+        else
+            self.active_suffix = string.format(" ($%s%s%%$clr_def)", key, cond)
+        end
+    else
+        self.active_suffix = ""
+    end
+end
+
+
+function InteractPrompt:UpdatePromptLength()
+    local len           = self.prompt_length
+    self.prompt_length  = self.lref:GetWidth() + 25
+    --printf("prompt length was %s, is now %s", len, self.prompt_length)
+    if len == self.prompt_length then return self.prompt_length end
+    if self.itemcard then
+        self.itemcard:SetWndPos(vector2():set(cfg.item_card_pos_x + self.prompt_length, cfg.item_card_pos_y or 0))
+    end
+    return self.prompt_length
+end
+
+function InteractPrompt:UpdateWeightColor()
+    if not (self.card_wgt_icon and self.card_wgt_text) then return end
+    local c = get_color_for_weight(self.weight or 0)
+    --printf("Weight of %s is %s | color %s,%s,%s,%s ", self.args.name, self.weight, c.a, c.r, c.b, c.g)
+    local color = getargb(c)
+    self.card_wgt_icon:SetTextureColor(color)
+    self.card_wgt_text:TextControl():SetTextColor(color)
+end
+
+function InteractPrompt:SetupItemCard(anchor, obj)
+    if (not cfg.show_item_card) or (not self.args.pickup) then return end
+    if self.itemcard then self.itemcard:Show(false) end
+    obj = obj or (self.args.id and get_object_by_id(self.args.id))
+    sec = obj and obj:section()
+    if not sec then return end
+
+    self.weight     = dec2(ini_sys:r_float_ex(sec,"inv_weight") or 0)
+    local value     = dec2(ini_sys:r_float_ex(sec,"cost") or 0)
+
+    --printf("setting up item card | weight %s | w %s f %s | value %s", weight, whole, frac, value)
+    xml:ParseFile(cfg.interact_uifile)
+    local offset    = self:UpdatePromptLength()
+    self.itemcard   = self.xml:InitStatic("box", anchor or self.wnd)
+
+    local icon_sz   = cfg.item_card_icon_sz
+    local wnd_x     = cfg.item_card_pos_x
+    local wnd_y     = cfg.item_card_pos_y
+    local text_y    = cfg.item_card_text_y
+    local elem_x    = cfg.item_card_elem_x
+    local elem_y    = cfg.item_card_elem_y
+    local elem_h    = cfg.item_card_elem_h
+    local icon_x    = cfg.item_card_icon_x
+    local icon_y    = cfg.item_card_icon_y
+
+    self.itemcard:SetWndPos(vector2():set(wnd_x + offset, wnd_y))
+
+    self.card_wgt = self.xml:InitStatic("box", self.itemcard)
+    self.card_wgt:SetWndPos(vector2():set(elem_x, elem_y))
+    self.card_wgt_icon = self.xml:InitStatic("box", self.card_wgt)
+    self.card_wgt_icon:SetWndSize(vector2():set(icon_sz * cfg.unsquish_ratio, icon_sz))
+    self.card_wgt_icon:SetWndPos(vector2():set(icon_x, icon_y))
+    self.card_wgt_icon:InitTexture(cfg.item_card_icon_weight)
+    self.card_wgt_icon:Show(true)
+
+    offset = elem_x + self.card_wgt_icon:GetWidth()
+    self.card_wgt_text = self.xml:InitStatic("box", self.card_wgt)
+    self.card_wgt_text:SetWndSize(vector2():set(0, elem_h))
+    self.card_wgt_text:SetWndPos(vector2():set(offset, text_y))
+    self.card_wgt_text:TextControl():SetFont(GetFontSmall())
+    self.card_wgt_text:TextControl():SetText(self.weight)
+    self.card_wgt_text:AdjustWidthToText()
+    self.card_wgt_text:Show(true)
+    self:UpdateWeightColor()
+
+    local weight_w = offset + self.card_wgt_text:GetWidth()
+    self.card_wgt:SetWndSize(vector2():set(weight_w + 6, elem_h))
+    self.card_wgt:InitTexture("ui_catsy_card_drop")
+    self.card_wgt:SetTextureColor(getargb( cfg.colors.clr_card_drop ))
+
+    offset = elem_x
+    self.card_val = self.xml:InitStatic("box", self.itemcard)
+    self.card_val:SetWndPos(vector2():set(offset, elem_y + elem_h))
+    self.card_val_icon = self.xml:InitStatic("box", self.card_val)
+    self.card_val_icon:SetWndSize(vector2():set(icon_sz * cfg.unsquish_ratio, icon_sz))
+    self.card_val_icon:SetWndPos(vector2():set(icon_x, icon_y))
+    self.card_val_icon:InitTexture(cfg.item_card_icon_value)
+    self.card_val_icon:SetTextureColor(getargb( cfg.colors.clr_text_light ))
+    self.card_val_icon:Show(true)
+
+    offset = elem_x + self.card_val_icon:GetWidth()
+    self.card_val_text = self.xml:InitStatic("box", self.card_val)
+    self.card_val_text:SetWndSize(vector2():set(0, elem_h))
+    self.card_val_text:SetWndPos(vector2():set(offset, text_y - 0.5))
+    self.card_val_text:TextControl():SetFont(GetFontSmall())
+    self.card_val_text:TextControl():SetText(value)
+    self.card_val_text:TextControl():SetTextColor(getargb( cfg.colors.clr_text_light )) 
+    self.card_val_text:AdjustWidthToText()
+    self.card_val_text:Show(true)
+    local value_w = offset + self.card_val_text:GetWidth()
+    self.card_val:SetWndSize(vector2():set(value_w + 6, elem_h))
+    self.card_val:InitTexture("ui_catsy_card_drop")
+    self.card_val:SetTextureColor(getargb( cfg.colors.clr_card_drop ))
+    self.card_sp_icon = self.xml:InitStatic("box", self.itemcard)
+    self.longest_card = greater_of(weight_w, value_w)
+
+    self:UpdateFaveJunkIcon()
+
+    self.itemcard:Show(true)
+end
+
+function InteractPrompt:UpdateFaveJunkIcon()
+    if not (zzz_rax_sortingplus_mcm and cfg.sp_flag_favejunk) then return end
+    if not self.card_sp_icon then return end
+
+    local texture = (is_favorite(self.args.section) and cfg.icon_sp_fave_texture) or
+                    (is_junk(self.args.section) and cfg.icon_sp_junk_texture) or
+                    ""
+    self.card_sp_icon:InitTexture(texture)
+    local has_icon = (texture ~= "")
+    self.card_sp_icon:Show(has_icon)
+    if not has_icon then return end
+
+    self.card_sp_icon:SetWndPos(vector2():set(self.longest_card + (cfg.sp_icon_pos_x or 0), (cfg.sp_icon_pos_y or 0)))
+    self.card_sp_icon:SetWndSize(vector2():set(16 * cfg.unsquish_ratio, 16))    
+end
+
+function InteractPrompt:SetupUtjanPartDots(anchor, obj)
+    -- Adapted from z_item_icon_info in Utjan's Item UI
+    if not cfg.show_part_condition then return end
+    if not item_icon_info_mcm then return end
+    if self.parts_indicators then
+        for k,v in pairs(self.parts_indicators) do
+            self.parts_indicators[k]:Show(false)
+        end
+    end
+
+    obj = obj or (self.args.id and get_object_by_id(self.args.id))
+    sec = obj and obj:section()
+    cls = obj and obj:clsid()
+
+    if not (obj and has_parts(obj)) then return end
+    if (not cfg.show_parts_weapons) and IsWeapon(nil, cls) then return end
+    if (not cfg.show_parts_armor) and (IsHeadgear(nil, cls) or IsOutfit(nil, cls)) then return end
+
+    local se_parts = item_parts.get_parts_con(obj, nil, true)
+    if is_empty(se_parts) then return end
+    local parts = dup_table(se_parts)
+
+    local sep = (cfg.parts_dot_sep_width or 2)
+    local base_x = (cfg.parts_dot_pos_x or 0)
+    self.parts_container = self.xml:InitStatic("box", anchor or self.wnd)
+    self.parts_container:SetWndPos(vector2():set(base_x, cfg.parts_dot_pos_y or 0))
+    self.parts_indicators = self.parts_indicators or {}
+
+    self.xml:ParseFile("ui_utjan_icon_info.xml")
+    for part, v in pairs(parts) do
+        if SYS_GetParam(1, part, "cond_part") then
+            self.parts_indicators[part] = self.parts_indicators[part] or self.xml:InitStatic("cond_dot", self.parts_container)
+        else
+            parts[part] = nil
+        end
+    end
+
+    local i = 0
+    local size = 0
+    for part, condition in spairs(parts, parts_sort) do
+        local cond_dot_h = 4
+        local cond_dot_w = cond_dot_h * cfg.unsquish_ratio
+        cond_dot_h = cond_dot_h * 1
+        cond_dot_w = cond_dot_w * 1
+
+        self.parts_indicators[part]:SetWndRect(Frect():set(0, 0, cond_dot_w, cond_dot_h))
+        
+        local x = base_x + 1 + (cond_dot_w + sep) * i
+        local y = 0
+        self.parts_indicators[part]:SetWndPos(vector2():set(x, y))
+
+        local c = get_condition_color(condition)
+        local color = get_argb(c.a, c.r, c.g, c.b)
+
+        if color then
+            self.parts_indicators[part]:SetTextureColor( color )
+        end
+        self.parts_indicators[part]:Show(true)
+        size = x + cond_dot_w + sep
+        i = i + 1
+    end
+    self.parts_container:SetWndSize(vector2():set(size, 0))
+    self.parts_container:InitTexture(cfg.main_drop_texture)
+end
+
+
+
+function InteractPrompt:eleSetCurrentColor(element, a, r, g, b)
+    --printf("[InteractPrompt:eleSetCurrentColor] %s | %s | %s | %s", a, r, g, b)
+    if not element then return end
+    local argb = get_argb(a, r, g, b)
+    if element.SetTextureColor  then element:SetTextureColor(argb) end
+    if element.TextControl      then element:TextControl():SetTextColor(argb) end
+    element.currcolor = {
+        a = tonumber(a) or 255,
+        r = tonumber(r) or 255,
+        g = tonumber(g) or 255,
+        b = tonumber(b) or 255
+    }
+    --printf("Current colors set to %s,%s,%s,%s", element.currcolor.a, element.currcolor.r, element.currcolor.g, element.currcolor.b)
+end
+
+function InteractPrompt:eleSetCurrentColorScheme(element, c)
+    c = c or element.basecolor or self.text_color_default
+    self:eleSetCurrentColor(element, c.a, c.r, c.g, c.b)
+end
+
+function InteractPrompt:eleSetBaseColorScheme(element, c)
+    element.basecolor = c or self.text_color_default
+    self:eleSetCurrentColorScheme(element, c)
+end
+
+function InteractPrompt:GetARGB(clr_tbl)
+    return clr_tbl and get_argb({
+        a = clr_tbl.a,
+        r = clr_tbl.r,
+        g = clr_tbl.g,
+        b = clr_tbl.b
+    })
+
+end
+
+function InteractPrompt:Event(set)
+    if set and self.args then self.args.event = set end
+    return set or (self.args and self.args.event) or "sec_interact"
+end
+
+function InteractPrompt:BindKey(set)
+    if set and self.args then self.args.key = set end
+    return set or (self.args and self.args.key) or cfg["bind_" .. self:Event()] or 0
+end
+
+function InteractPrompt:ModKey(set)
+    if set and self.args then self.args.mod = set end
+    return set or (self.args and self.args.mod) or cfg["modk_" .. self:Event()] or 0 
+end
+
+function InteractPrompt:InputMode(set)
+    if set and self.args then self.args.imod = set end
+    return set or (self.args and self.args.mod) or 0 
+end
+
+function InteractPrompt:SetBindText(text)
+    text = text or (self.args and self.args.bind) or ""
+    self.bind:TextControl():SetText(text)
+    self.bind_sh:TextControl():SetText(text)
+end
+
+
+function InteractPrompt:on_key_hold(key)
+    if (self.disabled or self.destroyed) then return end
+    
+    if ui_mcm and (key == self.args.key) and (self.args.mode == 2) and ui_mcm.get_mod_key(self.args.mod) then
+        if ui_mcm.key_hold(self.uid, key, 5) then
+            local tid = get_current_target()
+            local obj = tid and get_object_by_id(tid) or nil
+            cfg.held_key    = nil
+            cfg.held_mod    = nil
+            cfg.held_time   = nil
+            self.longpress:SetProgressPos(0)
+            self.args.func(obj, self.args.mark)
+            return
+        end
+        cfg.held_key    = key
+        cfg.held_mod    = self.args.mod
+        cfg.held_time   = ui_mcm and ui_mcm.hold[key] and ui_mcm.hold[key][self.uid]
+    end
+end
+
+
+function InteractPrompt:on_key_press(key, flags)
+    if (self.disabled or self.destroyed) then return end
+
+    if (key == self.args.key) then
+        if not ui_mcm then
+            self.args.func()
+            return
+        end
+
+        if mode == 0 then
+            ui_mcm.simple_press(self.uid, key, self.args.func)
+        end
+    
+        if mode == 1 and ui_mcm.get_mod_key(self.args.mod) and ui_mcm.double_tap(self.uid, key) then
+            self.args.func()
+            return
+        end
+    end    
+end
+
+
+function InteractPrompt:on_option_change()
+    if self.args.pri then
+        self.args.key   = self.args.key or bind_to_dik(key_bindings.kUSE)
+    else
+        local sec       = cfg.bind_sec_interact
+        local tap_time  = self.args.tap_time or ui_mcm.get("mcm/mcm_kb/mcm_kb_main/dtaptime2")
+        self.hold_time  = (self.args.hold_time or ui_mcm.get("mcm/mcm_kb/mcm_kb_main/presstime")) * tap_time
+        self.unbound    = (not sec) or (sec == -1)
+        self.args.key   = cfg["bind_" .. (self.args.event or "")] or sec or 0
+        self.args.mod   = cfg["modk_" .. (self.args.event or "")] or sec or 0 
+        self.args.mode  = cfg["imod_" .. (self.args.event or "")] or sec or 0
+    end
+
+    self:BuildUI()
+
+    self.bind_sh:Show((not self.black_text) and (not cfg.hide_drop_shadow))
+    self.label_sh:Show(not cfg.hide_drop_shadow)
+end
+
+
+function InteractPrompt:BusyState(tf, prefix, force_update)
+    local last_state = self.busystate
+    self.busystate = not not tf
+    if force_update or ((tf ~= nil) and (self.busystate ~= last_state)) then
+        vl("InteractPrompt:BusyState has changed to %s, updating prompt visuals", self.busystate)
+        if self.busystate then
+            self.active_prefix  = (prefix or gts("st_alti_busy")) .. " "
+            self.active_prompt  = first_lower(self.active_prompt)
+            if self.text_color_busy then
+                self:eleSetCurrentColorScheme(self.label, self.text_color_busy)
+                self:eleSetCurrentColorScheme(self.bind, self.text_color_busy)
+            end
+        else
+            self.active_prefix = self.args.act
+            self:eleSetCurrentColorScheme(self.label, self.text_color_light)
+            self:eleSetCurrentColorScheme(self.bind, self.black_text and self.text_color_dark or self.text_color_light)
+            self.active_prompt  = first_upper(self.active_prompt)
+        end
+        if self.itemcard and cfg.show_item_card then
+            self.itemcard:Show(not tf)
+        end
+        if self.parts_container and cfg.show_item_card then
+            self.parts_container:Show(not tf)
+        end
+        self:SetPrompt()
+    end
+    return self.busystate
+end
+
+function InteractPrompt:AbortFadeIn() return self.fading_out or not self.fading_in end
+function InteractPrompt:AbortFadeOut() return self.fading_in or not self.fading_out end
+
+function InteractPrompt:SetAlpha(element_name, alpha, text_also)
+    coef = coef or 1
+    alpha = clamp(alpha, 0, 255)
+    if self[element_name] then
+        local ele = self[element_name]
+        local c = {}
+        if ele.GetTextureColor then
+            local i = ele:GetTextureColor()
+            c.r,c.g,c.b,c.a = i and int_to_rgba(i)
+            c.a = alpha or c.a
+            ele:SetTextureColor(get_argb(c.a,c.r,c.g,c.b))
+        end
+        if text_also then
+            c = ele.currcolor or ele.basecolor or {}
+            c.a = alpha or c.a
+            c.r = c.r or 255
+            c.g = c.g or 255
+            c.b = c.b or 255
+            ele.currcolor = c
+            ele:TextControl():SetTextColor(get_argb(c.a,c.r,c.g,c.b))
+        end
+    end
+end
+
+function InteractPrompt:ManageFadeAnim(
+        alpha_start, alpha_end, 
+        duration, event_id, instanced, 
+        r, g, b, 
+        anim_curve_modifier_func, on_finish_func, abort_func
+    )
+    local fade_dir = (alpha_start > alpha_end) and "out" or "in"
+    --printf("Initializing fade %s at %s", fade_dir, time_global())
+    if (event_id == nil) then event_id = "anim_fade" end
+    local anim_id = event_id.."_"..tostring(time_global())
+    r = r or 255
+    g = g or 255
+    b = b or 255
+
+    if active_anims[event_id] then
+        alpha_start = active_anims[event_id].a
+        -- Repeat invocation of non-instanced fade event, aborting fade and starting anew
+        active_anims[event_id] = nil
+        if on_finish_func then on_finish_func(self) end
+    end
+
+    --printf("anim_fade: start %s end %s dur %s | event_id %s | instanced %s ",alpha_start,alpha_end, duration,event_id,instanced)
+
+    local anim_state = 0
+    local start_time= time_global()
+    local end_time  = time_global() + duration
+    local anim_curve_modifier_func = anim_curve_modifier_func or function(x) return x end
+    active_anims[event_id] = {
+        instanced   = instanced and true or false,
+        anim_id     = anim_id,
+        start_time  = start_time,
+        end_time    = end_time,
+        active      = true,
+        a_start     = alpha_start,
+        a_end       = alpha_end,
+        a           = alpha_start,
+        r           = r,
+        g           = g,
+        b           = b,
+    }
+    
+    --vl("Creating fade-%s time event %s | %s",fade_dir,event_id,anim_id)
+    CreateTimeEvent("animate_fade"..event_id..anim_id, time_global(), 0, 
+        function()
+            local abort = abort_func and abort_func(self)
+            if abort then
+                --printf("Received abort for %s",event_id)
+                anim_state = 1
+            else
+                local anim = active_anims[event_id]
+                if anim then
+                    local x = anim_curve_modifier_func(anim_state)
+                    local alpha = lerp(alpha_start, alpha_end, x)
+                    self.curr_alpha = alpha
+                    for k,v in pairs(self.elements) do
+                        self:SetAlpha(k, alpha, v)
+                    end
+                    --printf("Fade-%s time event: setting transparency for %s to %s at time %s",fade_dir,event_id,alpha,time_global())
+                else
+                    --printf("Event data for %s has cleared, aborting",event_id)
+                    anim_state = 1
+                end
+            end
+
+            if (anim_state == 1) then
+                --printf("Fade-%s animation %s completed at %s",fade_dir,event_id,time_global())
+                if on_finish_func then on_finish_func(self) end
+                return true
+            end
+            anim_state = math.min(1, normalize(time_global(), start_time, end_time))
+        end
+    )
+end
+
+function InteractPrompt:AnimateFade(inout)
+    --printf("[InteractPrompt:AnimateFade] %s", inout)
+    if inout and self.fading_in then return end
+    if (not inout) and self.fading_out then return end
+
+
+    local uid = "prompt_fade" .. self.args.event
+    if not self.curr_alpha then
+        self.curr_alpha = 0
+    end
+    --printf("curr alpha: %s", self.curr_alpha)
+    if inout then
+        if self.fading_out then
+            --printf("flagging fadeout cancel")
+            self.fading_out = false
+        end
+        if (self.curr_alpha ~= 255) and (cfg.prompt_fade_in_time and (cfg.prompt_fade_in_time > 0)) then
+            vl("Beginning new fade-in effect over %sms from alpha %s to 255 at %s", cfg.prompt_fade_in_time, self.curr_alpha, time_global())
+            self.fading_in = true
+            self:ManageFadeAnim(
+                self.curr_alpha, 255, cfg.prompt_fade_in_time, uid .. "in", false, nil, nil, nil, 
+                nil,--fade_curve,
+                nil, self.AbortFadeIn
+            )
+        end
+    else
+        if self.fading_in then
+            --printf("flagging fadein cancel")
+            self.fading_in = false
+        end
+        if (self.curr_alpha ~= 0) and (cfg.prompt_fade_out_time and (cfg.prompt_fade_out_time > 0)) then
+            vl("Beginning new fade-out effect over %sms from alpha %s to 0 at %s", cfg.prompt_fade_out_time, self.curr_alpha, time_global())
+            self.fading_out = true
+            self:ManageFadeAnim(
+                self.curr_alpha, 0, cfg.prompt_fade_out_time, uid .. "out", false, nil, nil, nil, 
+                nil,--fade_curve,
+                self.UpdatePromptVisibility, self.AbortFadeOut
+            )
+        end
+    end
+end
+        
+function InteractPrompt:UpdatePromptVisibility(tf)
+    self.wnd:Show(tf)
+end
+
+function InteractPrompt:ShowPrompt(tf)
+    if (tf and self.destroyed) then return end
+    tf = not not tf
+    local _ = debug_dump and vl("ShowPrompt %s: %s", self.active_prompt, tf)
+    --printf("[%s][InteractPrompt:ShowPrompt] %s: %s", self.args.id, self.active_prompt, tf)
+    self.line:SetProgressPos(tf and (not cfg.hide_connecting_line) and 1 or 0)
+    if self.longpress and not tf then
+        self.longpress:SetProgressPos(0)
+    end
+    if self.callbacks_set and not tf then
+        UnregisterScriptCallback("on_key_hold", self)
+        UnregisterScriptCallback("on_key_press", self)
+    elseif tf and not self.callbacks_set then
+        RegisterScriptCallback("on_key_hold", self)
+        RegisterScriptCallback("on_key_press", self)
+    end
+    self.disabled = not tf
+    self.last_state = (not self.disabled)
+    self.callbacks_set = tf
+    self:AnimateFade(tf)
+    if not self.fading_out then
+        self:UpdatePromptVisibility(tf)
+    end
+end
+
+function InteractPrompt:Prefix(set)
+    if set then self.active_prefix = set end
+    return (set or self.active_prefix or (self.args and self.args.act) or "")
+end
+
+function InteractPrompt:Prompt(set)
+    if set then self.active_prompt = set end
+    return (set or self.active_prompt or (self.args and self.args.text) or "")
+end
+
+function InteractPrompt:Suffix(set)
+    if set then self.active_suffix = set end
+    return (set or self.active_suffix or (self.args and self.args.suffix) or "")
+end
+
+function InteractPrompt:GetFullPrompt(prefix, prompt, suffix)
+    return self:Prefix(prefix) .. self:Prompt(prompt) .. self:Suffix(suffix)
+end
+
+function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
+    local new_text  = self:GetFullPrompt(new_prefix, new_prompt, new_suffix)
+    local color_text, plain_text
+
+    if self.parse_text_colors then
+        color_text = parse_colors(new_text, nil, true)
+        plain_text = parse_colors(new_text, nil, false)
+    end
+    local _ = debug_dump and vl("InteractPrompt:SetPrompt(%s, %s, %s) | %s", new_prefix, new_prompt, new_suffix, new_text)
+    --printf("[%s][%s][InteractPrompt:SetPrompt](%s, %s, %s) | %s", self.args.id, self.args.event, new_prefix, new_prompt, new_suffix, new_text)
+    self.label:TextControl():SetText(color_text or new_text)
+    self.label_sh:TextControl():SetText(plain_text or new_text)
+    self.lref:TextControl():SetText(plain_text or new_text)
+    self.lref:AdjustWidthToText()
+    --local pos = self.lref:GetWidth()
+    local pos = self:UpdatePromptLength()
+    self.drop:SetWndSize(vector2():set(pos + 55, 22))
+end
+
+function InteractPrompt:GetQuickHelp()
+    local hint = maingameui.UIStaticQuickHelp:GetText()
+    if (hint == "") or (hint == " ") then hint = nil end
+    --printf("Contents of QuickHelp static: \"%s\"", hint)
+    --return hint or (self.args.is_door and self.door_cache) or nil
+    return hint or nil
+end
+
+function InteractPrompt:SetQuickHelp(text)
+    maingameui.UIStaticQuickHelp:SetText(text)
+end
+
+function InteractPrompt:UpdateLongPress()
+    if self.longpress then
+        if (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
+            --printf("cfgkey %s | argskey %s | cfgmod %s | argsmod %s", cfg.held_key, self.args.key, cfg.held_mod, self.args.mod)
+            local held = time_continual() - (cfg.held_time or 0)
+            local prog = (held / self.hold_time)
+            self.longpress:SetProgressPos(prog)
+            CUIScriptWnd.Update(self)
+        else
+            self.longpress:SetProgressPos(0)
+        end
+    end
+end
+
+function InteractPrompt:UpdateFilteredHints(hint)
+    --printf("[InteractPrompt:UpdateFilteredHints][%s][%s][%s]", self.args.id, self.args.event, self.args.name)
+    self.last_hint_match = nil
+    if not (self.args.is_door or is_already_target(self.args.id)) then return end
+    hint = hint or self:GetQuickHelp()
+    
+    if not hint then return end
+    -- QuickHelp static is empty, nothing to filter
+
+    if not self.args.hint_filters then return end
+    -- No filters to process
+    
+    local filters = self.args.hint_filters
+
+    for k,v in pairs(filters) do
+        if (hint == k) then
+            self.last_hint_match = hint
+            if is_vanilla_ui_hidden() then
+                local _ = debug_dump and vl("Filter match %s found, hiding QuickHelp static contents", hint)
+                self:SetQuickHelp("")
+            end
+            if self.args.refresh_text then
+                self.args.text = v
+                self:SetPrompt(self.args.text)
+                return
+            end
+        end
+    end
+    return hint
+end
+
+function InteractPrompt:UpdateDoorState()
+    local hint  = self:GetQuickHelp()
+    if self.door and self.door.tip then
+        --printf("Handling door")
+        local tip   = self.door.tip()
+        local msg   = tip and gts(tip)
+        --printf("InteractPrompt:DoorStateUpdates: msg %s | hint %s", msg, hint)
+        if hint and msg and (hint == msg) then
+            if is_vanilla_ui_hidden() then
+                --printf("Hiding vanilla hint")
+                self:SetQuickHelp("")
+            end
+            hint = msg
+        end
+    else
+        hint = self:GetQuickHelp()
+    end
+    return hint and trimmed_prompt(hint)
+end
+
+function InteractPrompt:actor_on_update()
+    if self.destroyed then return end
+    local _ = debug_dump and vl("[%s][%s]InteractPrompt:actor_on_update | %s%s", self.args.id, self.args.event, self.init_done and "" or "first run at ", time_global())
+    local hint
+
+    if self.args.hint_filters then
+        hint = self:UpdateFilteredHints(hint)
+    end
+
+    if (self.args.tutorial or self.args.is_stalker) then
+        _ = (not self.init_done) and vl("Updates for this prompt are handled in main loop", self.args.tutorial)
+        return
+    end
+
+    if self.disabled then return end
+
+    if self.args.pri then
+        if (
+            self.door or
+            (not self.args.text) or
+            (self.args.text == "")
+        ) then
+            hint = self:UpdateDoorState()
+            self:SetPrompt(nil, hint or self.args.text or "")
+        end
+        self:UpdateFaveJunkIcon()
+    else
+        self:UpdateLongPress()
+    end
+    
+    if is_dead_mutant(self.args) and self.args.section then
+        local can_loot, loot_msg = can_chop_body(self.args.section)
+        local changed = (loot_msg ~= self.last_loot_msg)
+        self.last_loot_msg = loot_msg
+        local prefix = (not can_loot) and gts("st_alti_cannot") or nil
+        self:Suffix(can_loot and "" or (loot_msg and (": " .. gts(loot_msg))) or "")
+        self:BusyState(not can_loot, prefix, changed)
+    end
+
+    if ea_enabled and cfg.alti_busy_during_anim and not self.busy_locked then
+        self:BusyState(anim_playing)
+    end
+end
+
+function InteractPrompt:Destroy()
+    self:ShowPrompt(false)
+    self.hint_filters = nil
+    self.tutorial = nil
+    UnregisterScriptCallback("on_option_change", self)
+    UnregisterScriptCallback("actor_on_update", self)
+    UnregisterScriptCallback("on_key_hold", self)
+    UnregisterScriptCallback("on_key_press", self)
+    self.destroyed = true
+end
+
+-- =======================================================================
+--      MAIN LOGIC
+-- =======================================================================
+
+function is_dead_body(args)
+    return args.is_npc and not args.is_alive
+end
+
+function is_dead_mutant(args)
+    return args.is_mutant and not args.is_alive
+end
+
+function can_chop_body(section)
+    if not section then return end
+    local result, tip
+    if (item_knife.is_equipped()) then
+        -- knife equipped
+        if (item_knife.get_condition() < 0.15) then
+            -- bad condition
+            tip = "st_body_knife_bad"
+        elseif (not item_knife.can_loot(section)) then
+            -- weak knife
+            tip = "st_body_knife_weak"
+        else
+            result = true
+            tip = "st_body_loot"
+        end
+    else
+        -- no knife
+        tip = "st_body_knife_needed"
+    end
+    --printf("can_chop_body: %s | %s", result, tip)
+    return result, tip
+end
+
+
+function is_empty_mutant_corpse(obj)
+    if not (obj and IsMonster(obj)) then return end
+    local id = safeid(obj)
+    local looted = se_load_var(id,obj:name(),"looted")
+    local st = db.storage[id]
+    local decayed = (st and st.death_time and game.get_game_time():diffSec(st.death_time) > cfg.mutant_decay_time)
+    return looted or decayed
+end
+
+function is_actor_in_sleep_zone()
+    for k,v in pairs(ui_sleep_dialog.sleep_zones) do
+        if utils_obj.npc_in_zone(db.actor, v) then
+            return true
+        end
+    end
+end
+
+function get_current_target()
+    --printf("current target: %s | L %s | T %s", locked_id or targeted_id, locked_id, targeted_id)
+    return locked_id or targeted_id or nil
+end
+
+function is_current_target(id)
+    if not id then return end
+    local curr_target = get_current_target()
+    --printf("id %s is %sthe current target", id, curr_target and (id == curr_target) and "" or "not ")
+    return curr_target and (id == curr_target)
+end
+
+function state_monitor(tid)
+    local state = tid and modxml_tutorial_hooks and modxml_tutorial_hooks.monitors and modxml_tutorial_hooks.monitors[tid] and modxml_tutorial_hooks.monitors[tid].state
+    local conds = state and cfg.state_conds and cfg.state_conds[tid] or nil
+    local cond  = true
+    if state and (conds ~= nil) then
+        cond = cfg.state_conds[tid](tid)
+    end
+    --printf("state_monitor check for %s: state %s | conditions %s", tid, state, cond)
+    cfg.monitors[tid] = state and cond or false
+    return cfg.monitors[tid]
+end
+
+function show_interaction_dots(tf)
+    cfg.hide_interaction_dots = not tf
+end
+
+function actor_on_first_update()
+    hmm = utils_catspaw_hudmarks and utils_catspaw_hudmarks.get_hud_mark_manager()
+    assert(hmm, "\n\n"..
+        "! ERROR: The Hud Mark Manager could not be found! Something must be seriously wrong with utils_catspaw_hudmarks!\n\n"
+    )
+    if not cfg.markers then cfg.markers = {} end
+    if not db.actor.get_actor_object_looking_at then
+        printf("! WARNING: The function 'db.actor.get_actor_object_looking_at' does not exist, falling back to old targeting method. You should update your modded exes to 20250306 or newer.")
+    end
+    maingameui = ActorMenu.get_maingame()
+    xml = CScriptXmlInit()
+    CreateTimeEvent("dotmark_scan_delay", time_global(), cfg.scan_start_delay, start_scanning)
+end
+
+function start_scanning()
+    scanning = true
+    return true
+end
+
+function stop_scanning()
+    scanning = false
+    return true
+end
+
+function near_scan_radius()
+    return cfg.near_scan_radius + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
+end
+
+function get_val_or_funcval(val_or_func, ...)
+    if not val_or_func then return end
+    if type(val_or_func) == "function" then
+        return val_or_func(...)
+    else
+        return val_or_func
+    end
+end
+
+function get_cfg_for_type(cfg_type, obj_type, ...)
+    return cfg and cfg_type and obj_type and cfg[cfg_type] and get_val_or_funcval(cfg[cfg_type][obj_type], ...)
+end
+
+function is_blacklisted(id, cls, sec)
+    return (cls and cfg.blacklisted_clsids and cfg.blacklisted_clsids[cls]) or
+            (id and cfg.blacklisted_ids and cfg.blacklisted_ids[id]) or
+            (sec and cfg.blacklisted_sections and cfg.blacklisted_sections[sec])
+end
+
+function get_args_for_valid_objects(obj)
+    if not obj then return end
+    local id = obj:id()
+    local cls = obj:clsid()
+    local sec = obj:section()
+    --vl("get_args_for_valid_objects: %s (%s) - clsid %s", obj:name(), id, cls)
+    if is_blacklisted(id, cls, sec) then return end
+
+    local args = { logged_type = "something else", section = sec, clsid = cls }
+
+    for item_class, enabled in pairs(cfg.scan) do
+--[[
+        if enabled then
+            --vl("Checking %s against category %s", obj:name(), item_class)
+            if cfg.is_item[item_class](obj) then
+                args = get_cfg_for_type("args", item_class, obj) or {}
+                args.id = id
+                args.clsid = cls
+            end
+        end
+--]]
+        --vl("Checking %s against category %s", obj:name(), item_class)
+        if cfg.is_item[item_class](obj) then
+            args = get_cfg_for_type("args", item_class, obj) or {}
+            args.id = id
+            args.clsid = cls
+            args.hidden = (not enabled) or nil
+        end
+    end
+
+    if not args.texture then return end
+    vl("get_args_for_valid_objects: %s (%s) is %s", obj:name(), obj:id(), args.logged_type)
+    return args
+end
+
+-- =======================================================================
+
+function handle_primary_interact()
+    -- no additional logic at this time, just need a stub function here
+end
+
+
+function setup_pri_interact_prompt(mark, args)
+    vl("[%s] setup_pri_interact_prompt for %s", mark.mark_id or "fixed interaction", args and (args.name or args.logged_type) or "unknown type with no passed args")
+    if not mark then return end
+    if mark.use_pri then
+        mark.use_pri:Destroy()
+        mark.use_pri = nil
+    end
+    args            = args or {}
+    local anchor    = mark.marker or args.anchor
+    --local obj       = mark.id and get_object_by_id(mark.id)
+    local key       = bind_to_dik(key_bindings.kUSE)
+    local bind_text = bindtext(key, 0)
+    local int_text  = trimmed_prompt(maingameui.UIStaticQuickHelp:GetText())
+
+    if mark.pickup then
+        int_text = gts("st_alti_take") .. " " .. mark.name
+    elseif mark and mark.is_stalker and mark.is_alive then
+        int_text = gts("st_alti_speak") .. " " .. mark.name
+    elseif mark and mark.is_door then
+        int_text = int_text or trimmed_prompt(cfg.prompts.open_door)
+    elseif mark and (mark.is_stash or (mark.is_stalker and not mark.is_alive)) then
+        int_text = gts("st_alti_search") .. " " .. mark.name
+    elseif mark and (mark.is_npc and not mark.is_alive) then
+        int_text = gts("st_body_loot")
+    end
+
+    local passed_args = {
+        pri     = true,
+        --mark    = mark,
+        name        = mark.name or args.name or nil,
+        text        = int_text,
+        bind        = bind_text,
+        key         = key,
+        section     = section,
+        func        = args and args.pri_handler_func or handle_primary_interact,
+        event       = "pri_interact",
+        monitors    = mark.monitors,
+    }
+    if args and not is_empty(args) then for k,v in pairs(args) do passed_args[k] = v end end
+
+    mark.use_pri = InteractPrompt(anchor or maingameui, passed_args)
+    return mark.use_pri
+end
+
+
+function setup_sec_interact_prompt(mark)
+    if not mark then return end
+    if mark.alt_interact then return end
+    local id        = mark.id
+    vl("[%s][%s] setup_sec_interact_prompt for %s", id, mark.mark_id, mark.name)
+    local anchor    = mark.marker
+    local obj       = id and get_object_by_id(id)
+    local section   = obj and obj:section()
+    local mode      = cfg.imod_sec_interact
+    local act_text  = (mode == 2) and gts("st_alti_hold").." " or (mode == 1) and gts("st_alti_doubletap").." " or ""
+    local bind_text = bindtext(cfg.bind_sec_interact, cfg.modk_sec_interact)
+    local int_text  = ""
+    local func      = handle_secondary_interact
+
+    if obj and IsWeapon(obj) then
+        local atype     = obj:get_ammo_type() + 1
+        local ammos     = parse_list(ini_sys, obj:section(), "ammo_class")
+        local sec       = ammos and atype and ammos[atype]
+        local ammo      = get_localization(nil, nil, sec)
+        int_text        = string.format(gts("st_alti_prompt_ammo"),
+            mag_installed and gts("st_alti_eject_mag") or gts("st_alti_unload_weapon"),
+            ammo,
+            mark.ammo_count,
+            gts("st_alti_from"),
+            mark.name
+        )
+        func = unload_and_take_ammo
+    elseif IsInvbox(nil, mark.clsid) then
+        -- Inventory box or stash
+        local weight = nil
+        if not obj:is_inv_box_empty() then
+            local tbl = axr_companions.get_inventory_table(obj, id, 1)
+            weight = axr_companions.get_inventory_weight(tbl)
+        end
+        if (section == "inv_backpack") then
+            -- Pick up backpack and everything in it
+            int_text = first_upper(gts("st_alti_pickup_bp"))
+            func = pick_up_backpack
+        else
+            -- Take everything from box
+            int_text = string.format("%s %s",
+                first_upper(gts("st_alti_takeall")),
+                mark.name
+            )
+            func = take_all_from_box
+        end
+    elseif section and (IsItem("eatable", section)) then
+        -- Consumable
+        int_text        = string.format(gts("st_alti_prompt_eatable"),
+            gts("st_alti_consume_food"),
+            mark.name,
+            gts("st_alti_now")
+        )
+    elseif (mark.kind == "i_letter") then
+        -- Readable
+        int_text        = string.format(gts("st_alti_prompt_eatable"),
+            gts("st_alti_read"),
+            mark.name,
+            gts("st_alti_now")
+        )
+        func = take_and_read
+    elseif section and IsItem("device", section) then
+        -- Device with battery power
+        --printf("setting up secondary interact for device")
+        int_text        = string.format(gts("st_alti_prompt_eatable"),
+            first_upper(gts("st_item_unpack_battery")),
+            gts("st_alti_from"),
+            mark.name
+        ) 
+        func = unpack_batteries
+    elseif (mark.clsid == clsid.equ_backpack) then
+        -- Backpack inventory item
+        --printf("setting up secondary interact for backpack item")
+        int_text        = string.format("%s %s",
+            first_upper(gts("st_alti_deploy_bp")),
+            mark.name
+        )
+        func = deploy_backpack
+    else
+        -- Fallback to generic "use" prompt
+        int_text        = string.format(gts("st_alti_prompt_booster"),
+            gts("st_alti_takeuse"),
+            mark.name,
+            gts("st_alti_now")
+        )
+    end
+
+    local args = {
+        mark    = mark,
+        name    = mark.name,
+        text    = int_text,
+        act     = act_text,
+        bind    = bind_text,
+        long    = (mode == 2),
+        func    = func,
+        id      = id,
+        event   = "sec_interact",
+    }
+
+    mark.alt_interact = InteractPrompt(anchor or maingameui, args)
+end
+
+-- =======================================================================
+
+local scanned = {}
+
+function unregister_scanned_entity(id)
+    if not id then return end
+    local name = scanned[id]
+    local ind = pickup_index[id]
+    if ind then
+        nearby_pickups[ind] = nil
+    end
+    pickup_index[id] = nil
+    cfg.in_pickup_range[id] = nil
+    if cfg.markers[id] then
+        local mark = cfg.markers[id]
+        if mark.use_pri then
+            mark.use_pri:Destroy()
+        end
+        if mark.alt_interact then
+            mark.alt_interact:Destroy()
+        end
+        mark:Destroy()
+        cfg.markers[id] = nil
+    end
+    scanned[id] = nil
+
+    vl("Unregistering scanned entity for %s (%s) and nulling all pointers to it", name, id)
+end
+
+
+function marked_obj_has_ammo(id)
+    return id and cfg.markers[id] and (cfg.markers[id].ammo_count and cfg.markers[id].ammo_count > 0)
+end
+
+
+function obj_has_available_sec_interact(obj, id, mark)
+    if not (obj or id) then return end
+    if mark and (mark.no_sec or mark.is_display) then return false end
+
+    id = id or (obj and safeid(obj))
+    obj = obj or (id and get_object_by_id(id))
+    local cls = obj:clsid()
+    if not cls then return end
+    if cfg.useless_shit[obj:section()] then return end
+
+    local has_ammo = marked_obj_has_ammo(id)
+    local is_melee = IsMelee(nil, cls)
+    local is_consumable = cfg.is_item.Consumables(obj)
+    local is_readable   = mark and mark.is_readable
+    local has_batteries = mark and mark.has_battery
+    local is_backpack   = mark and mark.is_backpack
+    local is_invbox     = IsInvbox(nil, cls) or is_backpack
+
+    local has_interact = (
+        (has_ammo and not is_melee) or
+        has_batteries or
+        is_consumable or
+        is_readable or
+        is_invbox
+    )
+
+    vl("obj_has_available_sec_interact: %s | %s (%s) | ammo %s | eatable %s | readable %s",
+        has_interact,
+        obj and obj:name(),
+        id,
+        has_ammo,
+        is_consumable,
+        is_readable
+    )
+    return has_interact
+end
+
+
+function scan_nearby_object(obj)
+    local id  = obj and obj:id()
+    if not valid_id(id) then return end
+    local name = obj and obj:name()
+
+    if scanned[id] then
+        -- Skip previously-scanned IDs if their name matches, otherwise clear the table entry assuming it's a reused ID
+        if scanned[id] == name then
+            --vl("%s (%s) has already been scanned, skipping", name, id)
+        return end
+        vl("%s has a new name, assuming the ID has been reused and clearing entry", id)
+        scanned[id] = nil
+    end
+
+    --printf("scanning %s (%s)", name, id)
+
+    local m_id  = "dotmark_" .. tostring(id)
+    hmm = hmm or utils_catspaw_hudmarks.get_hud_mark_manager()
+    if not hmm then return end
+
+    local cls = obj:clsid()
+    local sec = obj:section()
+
+    if hmm:GetMarker(m_id) then
+        --vl("[ID %s] Existing marker found for mark_id %s, skipping", id, m_id)
+    else
+        scanned[id] = name
+        vl("scanning unmarked object %s (%s) | cls %s | dist %s", name, id, cls)
+        local args  = get_args_for_valid_objects(obj)
+        if not args then return end
+
+        vl("Trying to add dotmark marker for %s (%s)", obj:name(), id)
+        args            = args or {}
+        args.id         = id
+        args.mark_id    = m_id
+        args.name       = get_localization(obj, nil, sec) or nil
+        args.preset     = "dotmark"
+
+        if debug_dump then
+            vl("Passing the following args to utils_catspaw_hudmarks:")
+            for k,v in pairs(args) do
+                vl("%s = %s", k, v)
+            end
+        end
+
+        if not cfg.markers then cfg.markers = {} end
+        cfg.markers[id] = hmm:AddMarker(args)
+        local mark = cfg.markers[id]
+
+        if (not cfg.hide_pri_interact_ui) and not (args.no_pri) then
+            setup_pri_interact_prompt(mark, args)
+        end
+        if obj_has_available_sec_interact(obj, id, mark) and not (args.no_sec) then
+            setup_sec_interact_prompt(mark)
+        end
+        if not mark.active_swap then
+            mark.active_swap = {
+                texture     = "ui_catsy_marker_dotactive",
+                width       = 10,
+                height      = 10,
+                line_adj_x  = 2,
+                line_adj_h  = -6,
+                line_adj_y  = 6,
+            }
+        end
+        
+        has_cond = (sec and cls) and (utils_item.is_degradable(nil, sec) or IsWeapon(nil, cls) or IsOutfit(nil, cls) or IsHeadgear(nil, cls))
+        local is_mag = magazine_binder and sec and magazine_binder.is_magazine(sec)
+        if has_cond and not is_mag then
+            mark.condition = obj and obj:condition()
+        end
+    end
+end
+
+
+function scan_nearby_entities(scan_radius)
+    local pos = db.actor and db.actor:center()
+    if not pos then return end
+    level.iterate_nearest(pos, scan_radius, scan_nearby_object)
+end
+
+
+function dot_eye(position)
+    -- Taken from Crook's Faction ID
+    local toPoint = vector():set(position):sub(device().cam_pos):normalize()
+    local toEye = device().cam_dir
+    local dot = toPoint:dotproduct(toEye)
+    
+    return dot
+end
+
+
+function play_sfx(snd)
+    -- Play sound effect unless disable_all_sounds is true
+    if cfg.disable_all_sounds or not snd then return end
+    snd:play(db.actor, 0, sound_object.s2d)
+end
+
+function play_snd_path(snd_path)
+    play_sfx(snd_path and xr_sound.get_safe_sound_object(snd_path))
+end
+
+function update_targeted_object()
+    --vl("update_targeted_object: %s", time_global())
+    local target
+    if cfg.available_pickup then
+        target = get_object_by_id(cfg.available_pickup)
+        -- 20250306 modded exes required for pickup callback
+    elseif db.actor.get_actor_object_looking_at then
+        -- 20250225 modded exes required for this method
+        target = db.actor:get_actor_object_looking_at()
+        --printf("update_targeted_object: get_actor_object_looking_at is %s", target and target:id())
+    else
+        -- No exes support for doing this the clean, efficient way
+        -- Fall back to old, janky, inaccurate method of getting current target
+        -- Seriously conisider deprecating this, it's just adding bloat
+        target = level.get_target_obj()
+        if targeted_id and not target then
+            local obj = get_object_by_id(targeted_id)
+            local pos = obj and obj:center()
+            local dot = pos and dot_eye(pos) or 0
+            if dot < cfg.target_lenience then
+                targeted_id = nil
+            else
+                return
+            end
+        end
+    end
+    local id = target and target:id()
+    if cfg.racked_items[id] then
+        targeted_id = cfg.racked_items[id]
+    else
+        targeted_id = id
+    end
+
+    if debug_dump and targeted_id then
+        target = get_object_by_id(targeted_id)
+        vl("update_targeted_object: targeted_id is now %s (%s)", targeted_id, target and target:name())
+    end
+end
+
+
+function actor_on_net_destroy()
+    stop_scanning()
+end
+
+
+function is_body_claimed(id)
+    if grok_loot_claim then
+        local claimed   = grok_loot_claim.claimed
+        local k_id      = claimed and id and claimed[id]
+        local k_obj     = k_id and get_object_by_id(k_id)
+        local k_alive   = k_obj and is_living_thing(k_obj) and k_obj:alive()
+        return not not (k_alive and (k_id ~= AC_ID))
+    end
+    return false
+end
+
+function update_actor_extra_weight()
+    local w = 0
+    local function itr(npc,itm)
+        if (npc:is_on_belt(itm)) then
+            w = w + (itm and ((ini_sys:r_float_ex(itm:section(),"additional_inventory_weight") or 0) * itm:condition()) or 0)
+        end
+    end
+
+    db.actor:iterate_inventory(itr,db.actor)
+    local bkpk = db.actor:item_in_slot(13)
+    w = w + (bkpk and ini_sys:r_float_ex(bkpk:section(),"additional_inventory_weight") or 0)
+    extra_carry = w
+
+    return extra_carry
+end
+
+function get_actor_max_weight()
+    if not db.actor then return end
+    local outfit = db.actor:item_in_slot(7)
+    local backpack = db.actor:item_in_slot(13)
+    
+    local max_weight = db.actor:get_actor_max_weight()
+
+    -- Additional weight - Outfit
+    max_weight = max_weight + (outfit and outfit:get_additional_max_weight() or 0)
+    
+    -- Additional weight - Backpack
+    max_weight = max_weight + (backpack and backpack:get_additional_max_weight() or 0)
+    
+    -- Additional weight - Artefacts
+    db.actor:iterate_belt( function(owner, obj)
+        local c_arty = obj:cast_Artefact()
+        max_weight = max_weight + (c_arty and c_arty:AdditionalInventoryWeight() or 0)
+    end)
+    
+    -- Additional weight - Booster
+    db.actor:cast_Actor():conditions():BoosterForEach( 
+        function(booster_type, booster_time, booster_value)
+            if (booster_type == 4) then --eBoostMaxWeight
+                max_weight = max_weight + booster_value
+            end
+        end
+    )
+    return max_weight
+end
+
+function actor_weight_class(comp_weight)
+    if not db.actor then return end
+
+    local max_weight = get_actor_max_weight()
+    local curr_weight = db.actor:get_total_weight()
+    local current = (comp_weight or curr_weight)
+    local threshold = comp_weight and (max_weight - curr_weight) or max_weight
+    local wclass = ((current > threshold) and 2)  or ((current + 10 > threshold) and 1) or 0
+    --printf("actor_weight_class: %s | max %s | curr %s | comp %s | threshold %s", wclass, max_weight, curr_weight, comp_weight, threshold)
+
+    return wclass, curr_weight, max_weight
+end
+
+function get_color_for_weight(weight)
+    local wc, wa, wm= (weight and actor_weight_class(weight))
+    local clr_key   = wc and cfg.weight_colors[wc] or ""
+    local color_wgt = cfg.colors[clr_key] or cfg.colors.clr_weight_ok
+    return color_wgt, wa, wm
+end
+
+function get_inventory_table(box, id)
+    -- Streamlined version of the one in axr_companions
+    box = box or (id and get_object_by_id(id))
+    local t = {}
+    if box then
+        --printf("Trying to iterate inventory for %s", box:name())
+        id = id or box:id()
+        local function iterate(owner, item)
+            local item_id = item:id()
+            local item_sec = item:section()
+            t[item_id] = item_sec
+        end
+        iterate_any_inventory(box, iterate)
+    end
+    return t
+end
+
+function deploy_backpack(backpack)
+    --printf("Trying to deploy stash with %s", backpack and backpack:name())
+    local pos = backpack and backpack:position()
+    if not pos then return end
+    local actor = db.actor
+    local se_obj = actor and alife_create("inv_backpack", pos, actor:level_vertex_id(), actor:game_vertex_id())
+    local section = backpack:section()
+    if (se_obj and section) then
+        local txt = string.format(gts("st_itm_stash_of_character"), db.actor:character_name())
+        level.map_add_object_spot_ser(se_obj.id, "treasure", txt)
+        actor_menu.set_msg(1, gts("st_stash_created"),4)
+        
+        local m_data = alife_storage_manager.get_state()
+        if not (m_data.player_created_stashes) then 
+            m_data.player_created_stashes = {}
+        end
+        
+        m_data.player_created_stashes[se_obj.id] = section
+        
+        alife_release(backpack)
+    end
+end
+
+
+function remove_placed_backpack(id)
+    if not id then return end
+    level.map_remove_object_spot(id, "treasure")
+    local se_obj = alife_object(id)
+
+    if se_obj then
+        alife_release(se_obj)
+    end
+    
+    local m_data = alife_storage_manager.get_state()
+    if (m_data.player_created_stashes and m_data.player_created_stashes[id]) then 
+        local section = m_data.player_created_stashes[id]
+        alife_create_item(section, db.actor)
+        m_data.player_created_stashes[id] = nil
+    end
+    return true
+end
+
+function iterate_any_inventory(box, func)
+    if not (box and func) then return end
+    if IsInvbox(nil, box:clsid()) then
+        box:iterate_inventory_box(func)
+    else
+        box:iterate_inventory(func)
+    end
+end
+
+function take_all_from_box(box)
+    if not box then return end
+    local function itr_inv(temp, item)
+        box:transfer_item(item, db.actor)
+    end
+    iterate_any_inventory(box, itr_inv)
+    utils_obj.play_sound("interface\\items\\inv_items_take_all")
+    return true
+end
+
+
+function pick_up_backpack(obj)
+    local id = obj and obj:id()
+    if not id then return end
+
+    local data = {
+        stash_id = id,
+        cancel = false,
+    }
+    SendScriptCallback("actor_on_stash_remove",data)
+    if data.cancel then
+        return
+    end
+
+    if not obj:is_inv_box_empty() then
+        take_all_from_box(obj)
+    end
+    
+    CreateTimeEvent("bp_take_all", 0, 0.05, remove_placed_backpack, id)
+end
+
+
+function eject_mag_from_ground(wpn)
+    -- Largely adapted from the similar eject function in Mags Redux
+    if not mags_installed then return end
+    if wpn:weapon_in_grenade_mode() or not magazine_binder.is_supported_weapon(wpn) then return end
+    local id = wpn:id()
+
+    magazine_binder.validate_wep(id)
+    
+    local mag_data = magazine_binder.get_mag_loaded(id)
+    
+    if mag_data then
+        wpn:force_unload_magazine(false)
+        wpn:unload_magazine()
+        if magazines.retain_round(wpn) and #mag_data.loaded > 0 then
+            print_dbg("retaining round of type %s in chamber", stack.peek(mag_data.loaded))
+            stack.pop(mag_data.loaded)
+            wpn:set_ammo_elapsed(1)
+        else
+            wpn:set_ammo_elapsed(0)
+        end
+        
+        se_mag = alife_create_item(mag_data.section, db.actor)
+        if se_mag then
+            magazines.create_time_event("mag_redux", "timer_eject_"..id, 0, magazines.timer_eject_magazine, id, se_mag.id, mag_data)
+        else
+            print_dbg("Could not create magazine %s", mag_data.section)
+        end
+        magazine_binder.set_data(id, {
+            section     = "no_mag",
+            loaded      = {},
+            is_weapon   = true,
+        })
+        magazine_binder.dump_data(mag_data)
+        return se_mag.id
+    end
+end
+
+function unload_and_take_ammo(wpn)
+    wpn = wpn or level.get_target_obj()
+    if not (wpn and IsWeapon(wpn)) then return end
+    local count = wpn:get_ammo_in_magazine()
+    if count < 1 then return end
+    local atype = wpn:get_ammo_type() + 1
+    local ammos = parse_list(ini_sys, wpn:section(), "ammo_class")
+    local sec   = ammos and atype and ammos[atype]
+    
+    if mags_installed then
+        vl("Ejecting magazine with %s rounds of %s from %s and giving the mag to actor", count, sec, wpn:name())
+        eject_mag_from_ground(wpn)
+    else
+        vl("Unloading %s rounds of %s from %s and giving the ammo to actor", count, sec, wpn:name())
+        alife_create_item(sec, db.actor, {ammo = count})
+        wpn:unload_magazine()
+    end
+
+    local id = wpn:id()
+    cfg.markers[id].ammo_count = 0
+    --cfg.markers[id].alt_interact:Destroy()
+    --cfg.markers[id].alt_interact = nil
+end
+
+function unpack_batteries(obj)
+    -- like in item_device.func_battery, except without the parent check
+    local sec   = obj:section()
+    local con   = obj:condition()
+    local batt  = item_device.device_battery
+    local id    = obj:id()
+    local dead  = 0.0001
+    --printf("unpacking battery %s from %s with %s%% charge", batt, sec, con * 100)
+    if ini_sys:section_exist(batt) then
+        --printf("Creating new battery for actor and processing old one")
+        alife_create_item(batt, db.actor, {cond = con})
+        alife_process_item(sec, id, {cond = dead})
+        actor_effects.play_item_fx(batt)
+        utils_obj.play_sound("interface\\inv_batt")
+    end
+    local mark = id and cfg.markers[id]
+    if not (mark and mark.use_pri) then return end
+    --printf("Updating charge display")
+    mark.condition = dead
+    mark.use_pri:SetConditionText(sec, dead)
+    mark.use_pri:SetPrompt()
+end
+
+function is_obj_interact_dist(obj)
+    if not (obj and db.actor) then return end
+    local pos = obj:center()
+    return pos and (pos:distance_to(db.actor:center()) <= (cfg.sec_interact_dist or 2.5))
+end
+
+
+function is_busy_with_anim()
+    if (not anim_playing) or (not ea_enabled) then
+        return false
+    end
+    return not cfg.alti_busy_during_anim
+end
+
+function delay_consume_action(id)
+    local obj = id and get_object_by_id(id)
+    vl("delay_consume_action: %s (%s)", obj and obj:name(), id)
+    --if obj and IsItem("multiuse", obj:section(), obj) then
+        --obj:set_remaining_uses(1)
+    --end
+    if enhanced_animations and ea_enabled then
+        SendScriptCallback("actor_on_item_before_use", obj, {ret_value = true})
+    else
+        db.actor:eat(obj)
+    end
+    return true
+end
+
+function take_and_use(obj)
+    if not (obj and db.actor) then return end
+    db.actor:take_item(obj)
+    local id = obj:id()
+    if id then
+        CreateTimeEvent("delayed_actor_use", time_global(), cfg.item_use_delay, delay_consume_action, id)
+    end
+end
+
+
+function delay_read_action(id)
+    local obj = id and get_object_by_id(id)
+    vl("delay_read_action: %s (%s)", obj and obj:name(), id)
+    item_recipe.func_recipe(obj)
+    return true
+end
+
+
+function take_and_read(obj)
+    local id = obj and obj:id()
+    if id then
+        CreateTimeEvent("delayed_actor_use", time_global(), cfg.item_use_delay, delay_read_action, id)
+    end
+end
+
+function handle_secondary_interact(obj)
+    if is_busy_with_anim() then
+        vl("Actor tried to interact but is busy with another item animation")
+    return end
+
+    -- Get target object and do validation checks
+    local tid = get_current_target()
+    local obj = obj or (tid and get_object_by_id(tid))
+    if not is_obj_interact_dist(obj) then return end
+    vl("handle_secondary_interact: %s is within alti distance", obj and obj:name())
+    -- Passed validation - identify handler, if any
+    if IsWeapon(obj) then
+        unload_and_take_ammo(obj)
+    elseif (IsItem("eatable", obj:section())) then
+        --vl("forcing actor to eat target food")
+        take_and_use(obj)    
+    else
+        --vl("forcing actor to use booster item")
+        take_and_use(obj)    
+    end
+end
+
+function on_key_release(key)
+    if key == cfg.held_key then cfg.held_key = nil end
+    if key == cfg.held_mod then cfg.held_mod = nil end
+end
+
+function on_option_change()
+    local _ = debug_dump and vl("on_option_change() triggered at %s", time_global())
+    dl("Iterating through settings and looking for MCM overrides\n" ..
+        "+ You may see a burst of MCM warnings about bad paths during this process. These are completely harmless and should be ignored."
+    )
+    vl("Loading config tables")
+
+    for k,v in pairs(cfg) do
+        if type(v) ~= "table" then
+            local mcm_path = cfg.mcm_paths[k]
+            if mcm_path and (#mcm_path < 20) then
+                mcm_path = mcm_path .. k
+            end
+            if mcm_path then
+                if reset then
+                    _ = debug_dump and vl("Defaulting %s = %s (was %s)", k, v, get_mcm(mcm_path, cfg[k]))
+                    ui_mcm.set(mcm_path, v)
+                else
+                    cfg[k] = get_mcm(mcm_path, cfg[k])
+                    _ = debug_dump and vl("Loading %s = %s", k, v)
+                end
+            else
+                _ = debug_dump and vl("No MCM path found for %s, skipping", k)
+            end
+        end
+    end
+    for k,v in pairs(cfg.scan) do
+        cfg.scan[k] = get_mcm("dotmarks/dmarkobjs/scan_" .. string.lower(k), cfg.scan[k])
+        _ = debug_dump and vl("Scanning %s = %s", k, v)
+    end
+    debuglogs       = get_mcm("dotmarks/dmarkadv/debuglogs", debuglogs)
+    verbose         = get_mcm("dotmarks/dmarkadv/verbose", verbose)
+    dl("Debug logging enabled | verbose %s | debug_dump %s", debuglogs, verbose, debug_dump)
+    ea_enabled  = ea_callbacks and get_mcm("EA_settings/enable_animations", ea_enabled)
+    scanned     = {}
+    if cfg.markers and not is_empty(cfg.markers) then
+        for k,v in pairs(cfg.markers) do
+            cfg.markers[k]:Destroy()
+        end
+    end
+end
+
+function ea_on_item_use()
+    anim_playing = true
+end
+
+function ea_on_item_anim_stop()
+    anim_playing = false
+end
+
+
+local next_skill_upd    = 0
+local next_near_scan    = 0
+local next_far_scan     = 0
+local next_tut_check    = 0
+
+function dump_monitor_states()
+    for k,v in pairs(cfg.monitors) do
+        printf("State monitor for %s: %s", k, state_monitor(k))
+    end
+end
+
+function cycle_targeted_pickup(dir)
+    dl("cycle_targeted_pickup: %s | locked %s | target %s", dir and (dir > 0) and "next" or "previous", locked_id, targeted_id)
+    if not (dir and get_current_target()) then return end
+    local max       = size_table(nearby_pickups)
+    vl("max %s | in_pickup_range %s", max, size_table(cfg.in_pickup_range))
+    if (max < 2) or is_empty(cfg.in_pickup_range) then return end
+    local id_curr   = get_current_target()
+    local ind_curr  = pickup_index[id_curr] or 1
+    local ind_new
+    if (dir > 0) then
+        ind_new     = (ind_curr < max) and (ind_curr + 1) or 1
+    else
+        ind_new     = (ind_curr > 1) and (ind_curr - 1) or max
+    end
+    locked_id       = nearby_pickups[ind_new]
+    local _         = ind_new and (ind_new ~= ind_curr) and play_snd_path(cfg.snd_path_blip)
+    vl("Pickup cycled | prev ind %s id %s | new ind %s id %s", ind_curr, nearby_pickups[ind_curr], ind_new, locked_id)
+end
+
+function reset_nearby_item_tables()
+    --printf("reset_nearby_item_tables")
+    locked_id = nil
+    actor_moved = true
+    cfg.last_pickup = nil
+    nearby_pickups = {}
+    pickup_index = {}
+end
+
+function update_nearby_pickups()
+    if is_empty(cfg.in_pickup_range) then return end
+    local actor_moving = (level.actor_moving_state() > 0)
+    if actor_moving then
+        -- actor is moving
+        reset_nearby_item_tables()
+        return true
+    end
+    cfg.last_pickup = cfg.available_pickup
+    -- actor isn't moving
+    if not is_empty(nearby_pickups) then return end
+    -- pickup tables haven't been updated since actor stopped moving
+
+    local i = 1
+    --printf("Updating %s nearby pickups", size_table(cfg.in_pickup_range))
+    for k,v in spairs(cfg.in_pickup_range) do
+        nearby_pickups[i] = k
+        pickup_index[k] = i
+        --printf("pickup: ID %s ind %s | nearby_pickups[%s]: %s | pickup_index[%s]: %s", k, i, i, nearby_pickups[i], k, pickup_index[k])
+        i = i + 1
+    end
+    actor_moved = false
+end
+
+function actor_on_update()
+    if not scanning then return end
+    --if debug_dump then dump_monitor_states() end
+    in_sleep_zone = is_actor_in_sleep_zone()
+    if cfg.tut_check_interval then
+        if (next_tut_check <= time_global()) then
+            next_tut_check   = get_next_check(cfg.tut_check_interval)
+            --printf("game.has_active_tutorial(): %s", game.has_active_tutorial())
+            if cfg.tutorial_hints and is_not_empty(cfg.tutorial_hints) then
+                cfg.tutorials_cleared = false
+                if game.has_active_tutorial() then
+                    if not cfg.monitors then cfg.monitors = {} end
+                    for k,v in pairs(cfg.tutorial_hints) do
+                        local last_state = cfg.monitors[k]
+                        cfg.monitors[k] = state_monitor(k)
+                        --printf("checking state for tutorial %s: %s", k, cfg.monitors[k])
+                        if cfg.monitors[k] then
+                            if cfg.markers[k] then
+                                --printf("Tutorial %s is active, showing its prompt", k)
+                                cfg.markers[k]:ShowPrompt(true)
+                           else
+                                --printf("Need to set up a new interact UI for tutorial %s", k)
+                                local args = get_cfg_for_type("args", "Tutorials", obj) or {}
+                                args.preset         = "dotmark"
+                                args.tutorial       = k
+                                args.fixed          = true
+                                args.anchor         = maingameui
+                                args.active_prompt  = trimmed_prompt(gts(cfg.tutorial_hints[k]))
+                                args.logged_type    = "tutorial prompt"
+                                cfg.markers[k]      = setup_pri_interact_prompt(maingameui, args)
+                            end
+                        elseif cfg.markers[k] then
+                            --printf("Tutorial %s is not active, hiding its prompt", k)
+                            cfg.markers[k]:ShowPrompt(false)
+                        end
+                    end
+                elseif (not cfg.tutorials_cleared) then
+                    --printf("No active tutorial, hiding all tutorial prompts")
+                    for k,v in pairs(cfg.tutorial_hints) do
+                        if cfg.markers[k] then cfg.markers[k]:ShowPrompt(false) end
+                    end
+                    cfg.tutorials_cleared = true
+                end
+            end
+        end
+    end
+    
+    update_nearby_pickups()
+    if locked_id then
+        local _ = debug_dump and vl("locked_id is %s, skipping target updates and target scans", locked_id)
+        return
+    end
+    update_targeted_object()
+
+    if cfg.skill_upd_interval then
+        if (next_skill_upd <= time_global()) then
+            next_skill_upd  = get_next_check(cfg.skill_upd_interval)
+            local skill = haru_skills and cfg.haru_skill_name and haru_skills.skills_levels[cfg.haru_skill_name]
+            local sklev = skill and skill.current_level or 0
+            cfg.skill_bonus_range = sklev * (cfg.haru_skill_coef or 0)
+        end
+    end
+    if cfg.near_scan_interval then
+        if (next_near_scan <= time_global()) then
+            next_near_scan   = get_next_check(cfg.near_scan_interval)
+            scan_nearby_entities(near_scan_radius())
+        end
+    end
+    if cfg.far_scan_interval then
+        if (next_far_scan <= time_global()) then
+            next_far_scan   = get_next_check(cfg.far_scan_interval)
+            scan_nearby_entities(near_scan_radius())
+        end
+    end
+end
+
+function actor_on_update_pickup(obj)
+    cfg.last_pickup = cfg.available_pickup
+    cfg.available_pickup = obj and obj:id() or nil
+    if cfg.last_pickup and cfg.available_pickup and (cfg.last_pickup ~= cfg.available_pickup) then
+        reset_nearby_item_tables()
+    end
+end
+
+function actor_on_item_take(obj)
+    local id = obj and obj:id()
+    if cfg.markers[id] then
+        cfg.markers[id]:Show(false)
+        unregister_scanned_entity(id)
+    end
+end
+
+function load_file_data(ini_name, cfg_table)
+    -- Parameterizing this to turn it into a reusable module
+    local def_ini = ini_name and ini_file_ex(ini_name)
+    if not def_ini then return false end
+
+    dl("Loading file data and populating tables")
+    local function load_table_values(from_tbl, to_tbl)
+        if not to_tbl then to_tbl = {} end
+        for k,v in pairs(from_tbl) do
+            local template = false
+            if tonumber(v) then
+                to_tbl[k] = tonumber(v)
+            elseif (v == "true") or (v == "false") then
+                to_tbl[k] = strbool(v)
+            else
+                if (type(v) == "string") and v:find("template") then
+                    vl("Loading values for %s from template table %s", k, v)
+                    to_tbl[k] = {}
+                    load_table_values(cfg_table[v], to_tbl[k])
+                    template = true
+                else
+                    to_tbl[k] = v
+                end
+            end
+            if (debug_dump and not template) then vl("* Loaded: %s = %s", k, v) end
+        end
+    end
+    local function load_config_tables(from_tbl)
+        if not from_tbl then return end
+        for k,v in pairs(from_tbl) do
+            vl("Initializing new config subtable %s", k)
+            if not cfg_table[k] then cfg_table[k] = {} end
+            local tbl_ltx = def_ini:collect_section(k)
+            if tbl_ltx then
+                local tbl = {}
+                if k:find("clsid") then
+                    for k1, v1 in pairs(tbl_ltx) do
+                        local i = tonumber(k1) or clsid[k1] or k1
+                        tbl[i] = v1
+                    end
+                else
+                    tbl = tbl_ltx
+                end
+                vl("Populating values for config subtable %s", k)
+                load_table_values(tbl, cfg_table[k])
+            end
+        end
+    end
+
+    vl("Populating default settings")
+    if not cfg_table then cfg_table = {} end
+    local def_ltx       = def_ini and def_ini:get_sections(true)
+    local dts_ltx       = def_ini:collect_section("default_settings")
+    load_table_values(dts_ltx, cfg_table)
+    load_config_tables(def_ini:collect_section("template_tables"))
+    load_config_tables(def_ini:collect_section("setting_tables"))
+
+    return true
+end
+
+function remove_obj_from_box_table(box, item)
+    if not (box and item) then return end
+    local b_id = box:id()
+    if not cfg.invboxes[b_id] then return end
+    local i_id = item:id()
+    --printf("Removing ID %s (%s) from table for invbox %s", i_id, cfg.invboxes[b_id][i_id], b_id)
+    cfg.invboxes[b_id][i_id] = nil
+end
+
+function add_obj_to_box_table(box, item)
+    if not (box and item) then return end
+    if not (box and item) then return end
+    local b_id = box:id()
+    if not cfg.invboxes[b_id] then return end
+    local i_id = item:id()
+    local sec = item:section()
+    cfg.invboxes[b_id][i_id] = sec
+    --printf("Adding ID %s (%s) to table for invbox %s", i_id, sec, b_id)
+end
+
+function on_mouse_wheel(scroll_dir, flags)
+    if not get_current_target() then return end
+    if actor_menu.inventory_opened() then return end
+    if item_device and item_device.is_pda_active() then return end
+    if ui_workshop.GUI and ui_workshop.GUI:IsShown() then return end
+
+    local direction         = (scroll_dir > 0) and 1 or -1
+    vl("on_mouse_wheel: %s | direction: %s", scroll_dir, direction)
+    cycle_targeted_pickup(direction)
+    flags.ret_value         = false
+end
+
+function parse_file_data()
+    if cfg.prompts then
+        for k,v in pairs(cfg.prompts) do
+            cfg.prompts[k] = gts(v)
+        end
+    end
+    if cfg.colors then
+        for k,v in pairs(cfg.colors) do
+            if k:find("clr_") then
+                local c         = csv_argb_to_tbl(v)
+                --printf("parsing color %s: %s | %s,%s,%s,%s", k,v, c.a, c.r, c.g, c.b)
+                cfg.colors[k]   = c
+                local str       = string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
+                set_color_token(k, str)
+            else
+                cfg.colors[k]   = nil
+            end
+        end
+    end
+    cfg.weight_colors = {
+        [0] = "clr_weight_ok",
+        [1] = "clr_weight_high",
+        [2] = "clr_weight_over"
+    }
+
+    cfg.show_part_condition     = (cfg.show_parts_weapons or cfg.show_parts_armor)
+    cfg.color_icon_itemcard     = clr_tbl(cfg.color_icon_itemcard)
+    cfg.unsquish_ratio          = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
+    local ini_mutant            = ini_file("items\\settings\\mutant_loot.ltx")
+    cfg.mutant_decay_time       = ini_mutant:r_float_ex("mutant_loot_mod","decay_time") or 7200
+    local factions      = game_relations.factions_table
+    local ini_fac       = ini_file_ex("plugins\\faction_profile.ltx")
+    cfg.notable_npcs    = {}
+    cfg.vendors         = {}
+    for _,fac in pairs(factions) do
+        local fd = ini_fac:collect_section(fac)
+        cfg.notable_npcs[fac] = {
+            leader      = fd.leader,
+            trader      = fd.trader,
+            mechanic    = fd.mechanic,
+            medic       = fd.medic,
+            barman      = fd.barman,
+            guide       = fd.guide
+        }
+        if fd.leader then   cfg.vendors[fd.leader]    = "leader" end
+        if fd.trader then   cfg.vendors[fd.trader]    = "trader" end
+        if fd.mechanic then cfg.vendors[fd.mechanic]  = "mechanic" end
+        if fd.medic then    cfg.vendors[fd.medic]     = "medic" end
+        if fd.barman then   cfg.vendors[fd.barman]    = "barman" end
+        if fd.guide then    cfg.vendors[fd.guide]     = "guide" end
+    end    
+end
+
+function on_game_start()
+    mags_installed = (magazines and magazine_binder)
+    if load_file_data(dotmarks_config_file, this.cfg) then
+        parse_file_data()
+        RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+        if not (fddar_on_item_callback or fdda_on_item_callback) then
+            vl("No form of FDDA installed, registering internal pickup callback")
+            RegisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
+        end
+        RegisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
+        RegisterScriptCallback("actor_on_update", actor_on_update)
+        RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
+        RegisterScriptCallback("actor_on_net_destroy", actor_on_net_destroy)
+        RegisterScriptCallback("on_key_release", on_key_release)
+        RegisterScriptCallback("on_option_change", on_option_change)
+        RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
+        RegisterScriptCallback("actor_on_item_take_from_box", remove_obj_from_box_table)
+        RegisterScriptCallback("actor_on_item_put_in_box", add_obj_to_box_table)
+
+        local last_en = ea_enabled
+        on_option_change()
+        if ea_callbacks and (ea_enabled ~= last_en) then
+            if ea_enabled then
+                vl("Registering item animation callbacks")
+                ea_callbacks.EA_RegisterScriptCallback("ea_on_item_use", ea_on_item_use)
+                ea_callbacks.EA_RegisterScriptCallback("ea_on_item_anim_stop", ea_on_item_anim_stop)
+            else
+                vl("Unregistering item animation callbacks")
+                ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_use", ea_on_item_use)
+                ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_anim_stop", ea_on_item_anim_stop)
+            end
+        end
+    else
+        printf("%s could not find config file %s\n" ..
+                "! ERROR: %sstartup aborted, no callbacks will be registered", script_name, logprefix, dotmarks_config_file)
+    end
+end

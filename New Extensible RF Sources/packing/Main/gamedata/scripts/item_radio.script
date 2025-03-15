@@ -1,0 +1,1465 @@
+-- =======================================================================
+--[[    New Extensible RF Sources
+-- =======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    https://www.youtube.com/@CatspawAdventures
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/new-extensible-rf-sources/
+-- ===================================================================--]]
+script_version 				= "1.7.2"
+release_date            	= 20250314
+-- =======================================================================
+--[[	Includes optional support for:
+		TB's RF Tasks (integrated)
+		Reworked RF Receiver (integrated, with MCM options)
+		Remote-Controlled Explosives (integrated)
+		Bizarre Interference (installation option)
+
+    Credits: Tronex, RavenAscendant, Coverdrave, Tweeki Breeki, demonized
+
+    Based on the vanilla Anomaly radio script created by Tronex
+    	Created: 2018/10/15 by Tronex
+		RF Receiver and sources management
+		2020/4/26: Added 3D UI to the detector
+-- ===================================================================--]]
+assert(utils_catspaw_common, "\n! ERROR: NERFS requires utils_catspaw_common, which does not exist!\n")
+
+debuglogs 					= false -- change to false before release
+verbose 					= true
+logprefix 					= "[NERFS] "
+local dl 					= function(logtext, ...) utils_catspaw_common.dlog(item_radio, logtext, ...) end
+local vl 					= function(logtext, ...) utils_catspaw_common.vlog(item_radio, logtext, ...) end
+
+function set_debug_logging(debug_en, verbose_en)
+	if (debug_en ~= nil) then debuglogs = debug_en end
+	if (verbose_en ~= nil) then verbose = verbose_en end
+end
+
+function enable_all_logging() set_debug_logging(true, true) end
+function disable_all_logging() set_debug_logging(false, false) end
+-- ===================================================================--]]
+local dotip 				= function(tiptext, dur, src, beep, icon, snd) utils_catspaw_common.dotip(tiptext, dur, src or "RF Receiver", beep, icon or "ui_inGame2_Radiopomehi", snd) end
+local mwheel_avail 			= utils_catspaw_common.exe_mwheel_support and utils_catspaw_common.exe_mwheel_support()
+local strbool 				= utils_catspaw_common.strbool
+local exec 					= utils_catspaw_common.exec
+local valid_id 				= utils_catspaw_common.valid_id
+local rand 					= math.random
+local sfind 				= string.find
+local ssub 					= string.sub
+local gts 					= game.translate_string
+local signal_pulse_length 	= 1
+local mwheel_enabled 		= false
+local enable_debug 			= false
+enable_acc_widget 			= false
+enable_wid_pointer 			= false
+emission_functor 			= nil
+bgnoise_functor 			= nil
+local rfsrc_ini 			= ini_file_ex("scripts\\rf_sources\\signal_sources.ltx")
+local rfcfg_ini 			= ini_file_ex("scripts\\rf_sources\\rf_config.ltx")
+local rfcfg 				= rfcfg_ini:collect_section("config_defaults")
+
+for k,v in pairs(rfcfg) do
+	if tonumber(v) then
+		this[k] = tonumber(v)
+	elseif (v == "true") or (v == "false") then
+		this[k] = strbool(v)
+	else
+		this[k] = v
+	end
+end
+
+wid_pos 					= {x=491,y=670}
+-- == Addon Compatibility settings =======================================
+local tg_beep 				= 0
+local beep_gap 				= 0
+local tg_cache 				= 0
+local flash_time 			= 0
+local tg_tb_flash 			= 0
+tb_flash_time 				= 0
+tb_in_range 				= false
+tb_sound_object 			= false
+
+--[[=====================================================================
+	-Receiver bands-
+	The below table exists in vanilla, but is almost entirely unused. The
+	receiver is hardcoded into VHF with its 30/300 Mhz bounds. There's no 
+	way to change it in-game. However, some of the vanilla monsters and 
+	artifacts have frequencies outside of these bounds. 
+	
+	I've set the min and max to utilize the entire three-digit range. It 
+	spans several different bands, but they're arbitrary categories 
+	anyway. You can change this value in MCM.
+
+	I've left _band in just in case any addon tries to reference it, but
+	vanilla never does.
+
+	The task/reward scripts do reference _min and _max via functions, so 
+	they should automatically pick up this change and assign stashes in
+	the new range.
+-- ==================================================================--]]
+bands = {
+	["ELF"] = { _min = 3		, _max = 30 		, _unit = game.translate_string("st_hz") 		},
+	["SLF"] = { _min = 30		, _max = 300 		, _unit = game.translate_string("st_hz") 		},
+	["ULF"] = { _min = 300		, _max = 3000 		, _unit = game.translate_string("st_hz") 		},
+	["VLF"] = { _min = 3		, _max = 30 		, _unit = game.translate_string("st_khz")		},
+	["LF"]  = { _min = 30		, _max = 300 		, _unit = game.translate_string("st_khz")		},
+	["MF"]  = { _min = 300		, _max = 3000 		, _unit = game.translate_string("st_khz")		},
+	["HF"]  = { _min = 3		, _max = 30 		, _unit = game.translate_string("st_mhz")		},
+	["VHF"] = { _min = 30		, _max = 300 		, _unit = game.translate_string("st_mhz")		},
+	["UHF"] = { _min = 300		, _max = 3000 		, _unit = game.translate_string("st_mhz")		},
+	["SHF"] = { _min = 3		, _max = 30			, _unit = game.translate_string("st_ghz")		},
+	["EHF"] = { _min = 30		, _max = 300		, _unit = game.translate_string("st_ghz")		},
+	["THF"] = { _min = 300		, _max = 3000		, _unit = game.translate_string("st_ghz")		},
+}
+
+local _band 	= bands["VHF"]
+local _min 		= 1
+local _max 		= tonumber(max_freq) or 999 -- configurable in MCM
+local _unit 	= _band._unit
+local _range 	= 2
+local _freq 	= math.random(_min,_max)
+
+local _device 	= "detector_radio"
+local clamp 	= clamp
+-- ======================================================================
+--[[    Sound Effects and Signal Sources
+		Most SFX are now loaded dynamically from rfcfg_*.ltx
+
+	If your addon needs to modify any of the RF Receiver's vanilla sound 
+	effects, check those files first to see if a simple LTX change will 
+	help avoid conflicts.
+
+	If you want to add or change sound effects, there is no need to 
+	modify the script--just add a new rfcfg_youraddon.ltx file that 
+	contains the necessary path and filename info. These will all be 
+	loaded into snd_path_table. See the existing files for examples.
+
+	You can also dynamically manage sound data in snd_path_table using 
+	API hooks such as the get_signal_sound() and set_signal_sound() 
+	functions later in this script. Search in this script for the text:
+						"EXTERNAL HOOKS"
+
+	For special cases such as background or emission noise, these each
+	have their own functors which can be monkeypatched or redirected to
+	a different script.
+-- ====================================================================]]
+stalker_pda_frequencies = {} -- PDA frequencies of known stalkers
+local signal_sources 	= {}
+local active_sources 	= {} -- all online RF sources 
+local RF 				= {} -- sources to process
+RF_stashes 				= {} -- stored stashes with RF source
+RF_targets 				= {} -- stored specific targets with RF source
+local exclude 			= {}
+local presets 			= {}
+local num_presets 		= 9
+local last_preset 		= 1
+for i=1,num_presets do presets[i] = {kb=-1,mk=0,f=1} end
+action_defs 			= {}
+snd_emission 			= {}
+snd_random 				= {}
+snd_talk 				= {}
+snd_silence 			= xr_sound.get_safe_sound_object(path_silence)
+snd_on 					= xr_sound.get_safe_sound_object(path_sound_on)
+snd_off 				= xr_sound.get_safe_sound_object(path_sound_off)
+snd_beep 				= sound_object(path_default_beep)
+snd_noise 				= xr_sound.get_safe_sound_object(path_default_noise)
+
+local snd_path_table = {
+	silence 	= path_silence,
+	noise 		= path_default_noise,
+	white_noise = path_default_noise,
+	rfid_beep 	= path_default_beep,
+	quest_beep 	= path_default_beep,
+	-- For compatibility with TB's RF tasks:
+	tb_beep 	= rfcfg.tb_beep,
+	random 		= {},
+	emission 	= {},
+	chatter 	= {},
+	gsm 		= {},
+	psy 		= {},
+}
+
+--[[=====================================================================
+	All RF device or signal source sound effects should only be played
+	using these functions. They will obey the following global flags,
+	which allow other scripts to throttle the sounds as needed:
+		disable_all_sounds
+		disable_rf_sounds
+		disable_ui_sounds
+
+--]]
+function play_sfx(snd)
+	-- Play sound effect unless disable_all_sounds is true
+	if disable_all_sounds then return end
+	snd:play(db.actor, 0, sound_object.s2d)
+end
+
+function play_rf_sfx(snd)
+	-- Play RF source sound effect unless disable_rf_sounds or disable_all_sounds is true
+	if disable_rf_sounds then return end
+	play_sfx(snd)
+end
+
+function play_ui_sfx(snd)
+	-- Play device UI sound effect unless disable_ui_sounds or disable_all_sounds is true
+	if disable_ui_sounds then return end
+	play_sfx(snd)
+end
+
+-- ======================================================================
+
+function get_random_freq()
+	return math.random(_min,_max)
+end
+
+function get_freq()
+	return _freq
+end
+
+function change_freq(num,force_set)
+	vl("change_freq(%s) | currently %s",num,_freq)
+	local hud = actor_menu.get_last_mode()
+	if (hud ~= 0) or item_device.is_pda_active() then
+		return
+	end
+	num 		= tonumber(num) or 1
+	local oldf 	= _freq
+	local newf 	= clamp(_freq + num, _min, _max)
+	if force_set then
+		newf = clamp(num, _min, _max)
+	end
+	_freq = newf
+	
+	if enable_rrfr and rrfr_update_sources then
+		scan_online_sources()
+	end
+
+	SendScriptCallback("actor_on_frequency_change", oldf, newf)
+end
+
+-- ======================================================================
+
+function is_in_range(freq)
+	if type(freq) == "number" then
+		local a = math.abs(freq - _freq)
+		if (a < _range) then
+			--vl("Freq %s is in range (%s/%s)",freq,a,_range)
+			return true
+		end
+	elseif type(freq) == "table" then
+		for i = 1,#freq do
+			local inr = is_in_range(freq[i])
+			if inr then return true end
+		end
+	end
+	return false
+end
+
+function get_vol_range(freq)
+	local nearest
+	if type(freq) == "number" then
+		local a = math.abs(freq - _freq)
+		if (a < _range) then
+			return (1 - a/_range)
+		end
+	elseif type(freq) == "table" then
+		for i = 1,#freq do
+			local a = get_vol_range(freq[i])
+			if (not nearest) or (a < nearest) then nearest = a end
+		end
+		return (1 - nearest/_range)
+	end
+	return 0
+end
+
+function add_stash(lvl,id, freq)
+	if lvl and RF_stashes[lvl] then
+		RF_stashes[lvl][id] = freq or get_random_freq()
+	end
+end
+
+function clear_stash(lvl,id)
+	if lvl and RF_stashes[lvl] then
+		RF_stashes[lvl][id] = nil
+	end
+end
+
+function add_target(id, freq, dist, snd)
+	local called_by_tb = (debug.getinfo(2, 'n').name == "tb_radio_thing")
+	snd = (called_by_tb and snd_path_table.tb_beep) or snd
+	-- for compatibility with TB's RF tasks
+	freq = freq or get_random_freq()
+	dist = dist or 200
+	RF_targets[id] = { freq = freq , dist = dist , snd = snd}
+end
+
+function clear_target(id)
+	if id then
+		RF_targets[id] = nil
+	end
+end
+
+function create_rf_table(id, cls, dist_pos, freq, dist, snd, sec, srcdef)
+	local rft = {
+		id       = id,
+		clsid    = cls,
+		dist_pos = dist_pos,
+		freq     = freq,
+		dist     = dist,
+		snd 	 = snd,
+		sec      = sec
+	}
+	if snd == "func" then rft.snd = get_sfx_for_signal(rft,srcdef and srcdef.func) end
+	return rft
+end
+
+function validate_RF_targets() -- Clear non-existing RF targets
+	for k,v in pairs(RF_targets) do
+		local se = alife_object(k)
+		if (not se) then
+			RF_targets[k] = nil
+		end
+	end
+	for k,v in pairs(stalker_pda_frequencies) do
+		local se = alife_object(k)
+		if (not se) or ((se and se:name()) ~= v.name) then
+			stalker_pda_frequencies[k] = nil
+		end
+	end
+end
+
+function init_new_active_source(id,cls,sec,dist_pos,freq,dist,snd,srcdef)
+	vl("init_new_active_source: id: %s | cls: %s | sec: %s | dist_pos %s | freq %s | dist %s | snd %s",id,cls,sec,dist_pos,(srcdef and srcdef.freqs) or freq,dist,snd)
+	active_sources[#active_sources + 1] = create_rf_table(id,cls,dist_pos,freq,dist,snd,sec,srcdef)
+end
+
+function debug_print_stalker_pdas()
+	if not (debuglogs and verbose) then return end
+	local spf = stalker_pda_frequencies
+	if spf and not is_empty(spf) then
+		local dump = "**** Current known stalker PDAs:"
+		for k,v in pairs (spf) do
+			local obj = v and v.id and alife_object(v.id)
+			dump = dump..string.format("\n | %s (%s) : %s Mhz |",v.name,v.id,v.freq)
+		end
+		vl(dump)
+	end
+end
+
+function get_rnd_freq_from_tbl(freqtbl)
+	if not (freqtbl and #freqtbl) then end
+	return freqtbl[rand(#freqtbl)]
+end
+
+function get_random_pda_freq(defs)
+	-- Every stalker's PDA has its own unique frequency that 
+	-- is somewhere within the range of one of the defined
+	-- GSM bands (in rfsrc_cellnoise.ltx)
+	local posneg = {[1]=1,[2]=-1}
+	local variance = defs and defs.variance or 15
+	local base_freq = get_rnd_freq_from_tbl(defs.freq) or 915
+	local freq = clamp(tonumber(base_freq + (rand(1,variance) * posneg[rand(2)])),1,999)
+	dl("get_random_pda_freq for id %s: base_freq %s | variance %s | final %s",defs and defs.id,base_freq,variance,freq)
+	debug_print_stalker_pdas()
+	return freq
+end
+
+function init_or_get_stalker_pda_freq(id, action_defs)
+	if not valid_id(id) then return end
+	if not stalker_pda_frequencies then
+		stalker_pda_frequencies = {}
+	end
+	local spf = stalker_pda_frequencies
+	local se_obj = alife_object(id)
+	if not se_obj then
+		dl("invalid se_obj for id %s, aborting",id)
+		stalker_pda_frequencies[id] = nil
+		return
+	end
+
+	local freq = spf and spf[id] and tonumber(spf[id].freq)
+	if not freq then
+		local defs = action_defs or get_signal_source(clsid.script_stalker)
+		vl("id %s not found in stalker_pda_frequencies, generating new freq",id)
+		freq = get_random_pda_freq(defs)
+		spf[id] = freq and {
+			freq = freq,
+			id = id,
+			name = se_obj:name(),
+		}
+	end
+	return freq
+end
+
+function new_stalker_contact(obj,action_defs)
+	if not (obj and action_defs) then return end
+	local defs = action_defs
+	local id = defs.id
+	local freq = init_or_get_stalker_pda_freq(id, defs)
+	
+	if freq then
+		init_new_active_source(
+			id,
+			defs.cls,
+			defs.sec,
+			defs.dist_pos,
+			freq,
+			defs.srcdef.dist,
+			defs.srcdef.snd,
+			defs.srcdef
+		)
+	end
+	return true
+end
+
+function signal_active_artifact(obj,action_defs)
+	if not (obj and action_defs) then return end
+	local defs = action_defs
+	local srcdef = defs.srcdef
+	local sec = defs.sec
+	local cls = defs.cls
+	local snd = signal_sources[sec].snd or signal_sources[cls].snd
+	vl("initializing new artifact signal: %s | snd %s | func %s",sec,snd,func)
+	init_new_active_source(
+		defs.id,
+		cls,
+		sec,
+		defs.dist_pos,
+		signal_sources[sec].freq or signal_sources[cls].freq,
+		signal_sources[sec].dist or signal_sources[cls].dist,
+		snd,
+		srcdef
+	)
+end
+
+function signal_stash_rfid(obj,action_defs)
+	if not (obj and action_defs) then return end
+	local defs = action_defs
+	local id = defs.id
+	--vl("initializing new rfid signal: stash id %s",id)
+	local cls = defs.cls
+	init_new_active_source(
+		id,
+		cls,
+		defs.sec,
+		defs.dist_pos,
+		defs.freq,
+		defs.srcdef.dist,
+		defs.srcdef.snd,
+		defs.srcdef
+	)
+end
+
+
+function scan_online_sources()
+	--vl("scan_online_sources")
+	local pos = db.actor:position()
+	local st = db.storage
+	
+	-- Search
+	empty_table(active_sources)
+	for i=1,65534 do
+		local obj = st[i] and st[i].object or level.object_by_id(i)
+		if obj then
+			local matched 	= false
+			local cls 		= obj:clsid()
+			local id 			= obj:id()
+			local dist_pos 		= pos:distance_to(obj:position())
+			local src_cls 	= signal_sources[cls]
+			local rfid_target = (RF_targets[id] and (dist_pos < RF_targets[id].dist))
+			if src_cls or rfid_target then
+				local is_invbox		= (cls == clsid.inventory_box) or (cls == clsid.inventory_box_s)
+				local sec 			= obj:section()
+				local _level 		= level.name()
+				local dist 			= (src_cls and src_cls.dist) or (RF_targets[id] and RF_targets[id].dist) or -1
+				local src_sec 		= signal_sources[sec]
+				local rft_def 		= RF_targets[id]
+				local rfs_def 		= RF_stashes[_level] and RF_stashes[_level][id]
+				local strict_match 	= src_cls and src_cls.exact_match
+				local bysec,srcdef,freq,other_target,rfid_stash
+				if strict_match then
+					local mb = src_cls.match_by
+					local rfs =  is_invbox and (mb == "rfid") and rfs_def
+					bysec = (mb == "section") and src_sec
+					if rfs and dist and (dist_pos < dist) then
+						--vl("stash strict match by freq: %s",rfs_def)
+						freq = rfs_def
+						srcdef = src_cls
+						rfid_stash = true
+					elseif bysec then
+						vl("strict match by section: %s",sec)
+						srcdef = src_sec
+						other_target = true
+					end
+				else
+					srcdef = src_cls
+					other_target = (dist_pos < dist)
+					--vl("other target: %s",other_target)
+				end
+
+				if rfid_target then
+					--vl("rfid target")
+					freq = rft_def.freq
+					snd = rft_def.snd or snd_path_table.quest_beep or path_default_beep
+					init_new_active_source(id,cls,sec,dist_pos,freq,dist,snd)
+				elseif rfid_stash or other_target then
+					--vl("cls %s | sec %s | rfid_target %s | other_target %s",cls,sec,rfid_target,other_target)
+					freq = srcdef and srcdef.freq or freq
+					local snd = srcdef and srcdef.snd or path_default_beep
+					if not freq then freq = get_random_freq() end
+					--vl("final signal source values for id %s: cls %s | sec %s | dist %s of %sm | freq %s | snd %s",id,cls,sec,dist_pos,dist,freq,snd)
+					local action = srcdef.action
+					if action then
+						action_defs = {
+							obj 		= obj,
+							id 			= id,
+							cls 		= cls,
+							sec 		= sec,
+							freq 		= freq,
+							dist_pos	= dist_pos,
+							srcdef		= srcdef,
+							snd 		= snd,
+							func 		= srcdef.func,
+						}
+						vl("action found for %s, calling functor %s",sec,action)
+						exec(action,obj,action_defs)
+						if action_defs.ret_functor then
+							exec(ret_functor,action_defs.ret_args)
+						end
+					else
+						init_new_active_source(id,cls,sec,dist_pos,freq,dist,snd,srcdef)
+					end
+				end
+				--debug_print_stalker_pdas()
+			end
+		end
+	end
+	
+	-- store closest 3 sources 
+	empty_table(RF)
+	empty_table(exclude)
+	for j=1,3 do
+		local smallest_distance = 200
+		local last_id = nil
+		for i=1,#active_sources do
+			if (not exclude[i]) and is_in_range(active_sources[i].freq) and (active_sources[i].dist_pos < smallest_distance) then
+				smallest_distance = active_sources[i].dist_pos
+				last_id = i
+			end
+		end
+		if (last_id ~= nil) and (not exclude[last_id]) then
+			RF[#RF+1] = active_sources[last_id] -- fill
+			exclude[last_id] = true
+		end
+	end
+	if (#RF > 0) then
+		refresh = true -- require sounds update
+	end
+	dl("active_sources: %s | RF: %s", #active_sources, #RF)
+end
+
+local d_state = false
+local vol_n = 0
+function sound_trigger(state)
+	if state and (not d_state) then
+		play_ui_sfx(snd_on)
+		d_state = true
+		vol_n = 0.7
+		snd_noise.volume = vol_n
+	elseif (not state) and d_state then
+		play_ui_sfx(snd_off)
+		d_state = false
+		vol_n = 0
+		snd_noise.volume = vol_n
+	end
+end
+
+--[[=====================================================================
+	EXTERNAL HOOKS
+	The following functions provide a way for addons or other external 
+	scripts to modify the table of signals and source sounds at
+	runtime.
+--===================================================================--]]
+
+function get_sound_table()
+	-- Gets the entire sound table at once, for iteration
+	return snd_path_table
+end
+
+function get_signal_sound(snd_id)
+	--[[	Where snd_id is any valid key in snd_path_table.
+			Examples:
+
+		silence 			= no sound at all
+		noise, white_noise	= radio static and garbled signals
+		quest_beep 			= beep played when RFID signal is near
+		tb_beep 			= TB's RF tasks beep
+		random 				= random radio interference from source
+		emission 			= random emission radio noise
+		chatter 			= random NPC chatter, cut legacy content
+		gsm 				= GSM cellular interference from PDAs
+		psy 				= interference from a psy source 		
+	--]]
+
+	return snd_path_table and snd_path_table[snd_id]
+end
+
+function set_signal_sound(snd_id,snd_data)
+	-- snd_data can be either a string path, or a numeric 
+	-- index of such paths that will be shuffled randomly
+	if not snd_id then return end
+	snd_path_table[snd_id] = snd_data
+	return true
+end
+
+function get_signal_source(ssrc_id)
+	if not (signal_sources and ssrc_id) then return end
+	return signal_sources[ssrc_id]
+end
+
+function set_signal_source(ssrc_id,dist,snd,clsid,section,freq,func)
+	--[[ 	Creates or overwrites a potential source of RF noise.
+		ssrc_id 		= unique ID for this source
+		dist 			= the max distance at which it can be detected
+		freq 			= frequency on which source can be detected
+		snd 			= sound played, or "func" if using a functor
+		func 			= if snd is "func", the functor called for the sound
+		clsid 			= the clsid of the object that emits this signal
+		section 		= the specific section name, if needed
+
+		These are documented in much greater detail in the LTX config 
+		files for the signal sources.
+	--]]
+	if not (ssrc_id and dist and snd and (clsid or section)) then return end
+	signal_sources[ssrc_id] = {
+		dist 	= dist,
+		snd 	= snd,
+		clsid 	= clsid,
+		section = section,
+		freq 	= freq,
+		func 	= func,
+	}
+	return true
+end
+
+function del_signal_source(ssrc_id)
+	-- nulls out a signal source, removing it from the table
+	if not ssrc_id and signal_sources and signal_sources[ssrc_id] then return end
+	signal_sources[ssrc_id] = nil
+	return true
+end
+
+function inject_signal_source(ssrc_id,raw_table)
+	-- For those who understand the table structure and want
+	-- a bit more control over changes to the signal sources
+	-- This basically just lets you insert the entire source at once
+	if not (ssrc_id and raw_table and (type(raw_table) == "table")) then return end
+	signal_sources[ssrc_id] = raw_table
+	return true
+end
+
+function get_active_signal_sources()
+	-- Returns a snapshot of the entire active signal table
+	return active_sources
+end
+
+function get_active_signal_source(a_sid)
+	-- Returns a specific active signal
+	-- Note that this is intended only for reading - the table is
+	-- automatically refreshed every time it ticks
+	return active_sources and a_sid and active_sources[a_sid]
+end
+
+----------------------------------------------------------------------
+-- UI
+----------------------------------------------------------------------
+local detector_rf_ui = nil
+local tg_led = 0
+local tg_emission = 0
+
+class "UI3D_RF" (CUIScriptWnd)
+function UI3D_RF:__init() super()
+	self:Show					(true)
+	self:Enable					(true)
+	self.freq					= nil
+
+	local xml					= CScriptXmlInit()
+	self.xml = xml
+	xml:ParseFile				("ui_detector_rf.xml")
+	xml:InitWindow				("detector_rfproxy", 0, self)
+
+	--self.m_area_b				= xml:InitStatic("detector_rfproxy:area_b", self)
+	self.m_area_r				= xml:InitStatic("detector_rfproxy:area_r", self)
+	
+	self.m_seg1					= xml:InitStatic("detector_rfproxy:seg1", self)
+	self.m_seg2					= xml:InitStatic("detector_rfproxy:seg2", self)
+	self.m_seg3					= xml:InitStatic("detector_rfproxy:seg3", self)
+	
+	self.m_led					= xml:InitStatic("detector_rfproxy:led", self)
+end
+
+function UI3D_RF:__finalize() 
+	detector_rf_ui = nil
+end
+
+function UI3D_RF:Update()
+	
+	CUIScriptWnd.Update(self)
+	
+	local tg = time_global()
+	
+	-- LED flashing
+	if (not enable_rrfr) and (tg > tg_led + 1000) then
+		tg_led = tg
+		self.m_led:Show(not self.m_led:IsShown())
+	end
+	
+	-- Emissions
+	if GetEvent("surge", "state") or GetEvent("psi_storm", "state") then
+		if (tg > tg_emission + 200) then
+			tg_emission = tg
+			
+			self.m_led:Show((math.random(1,100) < 50) and true or false)
+			_freq = math.random(_min,_max)
+		else
+			return
+		end
+		
+	-- Normal readings
+	else
+		if (not enable_rrfr) and (self.freq == _freq) then
+			return
+		end
+		self.freq = _freq
+		
+		local tg = time_global()
+
+		if not explosive_triggered then -- RCE compatibility
+			if enable_rrfr then
+				-- If RRFR is enabled, LED light now only flashes for quest beeps or TB's packages
+				if tb_in_range then
+					
+					if tg > tg_tb_flash and tb_sound_object and tb_sound_object:playing() and not self.m_led:IsShown() then
+						tg_tb_flash = tg + tb_flash_time
+						self.m_led:Show(true)
+					elseif tg > tg_tb_flash and self.m_led:IsShown() then
+						self.m_led:Show(false)
+					end
+				else
+					--local tg = time_global()
+					
+					if (tg > tg_led) and snd_beep:playing() and not self.m_led:IsShown() then
+						tg_led = tg + beep_gap
+						tg_cache = tg
+						self.m_led:Show(true)
+					elseif (tg > tg_cache + flash_time) and self.m_led:IsShown() then
+						self.m_led:Show(false)
+					end
+				end
+			end
+		elseif (tg > tg_led + 50) then
+			tg_led = tg
+			self.m_led:Show(not self.m_led:IsShown())
+		end
+	end
+
+	local s_freq = tostring(_freq)
+	local seg1, seg2, seg3
+	
+	if (_freq > 99) then
+		seg1 = strformat("green_%s", s_freq:sub(1, 1))
+		seg2 = strformat("green_%s", s_freq:sub(2, 2))
+		seg3 = strformat("green_%s", s_freq:sub(3, 3))
+	elseif (_freq > 9) then
+		seg1 = "green_0"
+		seg2 = strformat("green_%s", s_freq:sub(1, 1))
+		seg3 = strformat("green_%s", s_freq:sub(2, 2))
+	elseif (_freq > 0) then
+		seg1 = "green_0"
+		seg2 = "green_0"
+		seg3 = strformat("green_%s", s_freq:sub(1, 1))
+	else
+		seg1 = "green_0"
+		seg2 = "green_0"
+		seg3 = "green_0"
+	end
+	
+	self.m_seg1:InitTextureEx(seg1, "hud\\p3d")
+	self.m_seg2:InitTextureEx(seg2, "hud\\p3d")
+	self.m_seg3:InitTextureEx(seg3, "hud\\p3d")
+end
+
+function get_UI()
+	if (detector_rf_ui == nil) then
+		detector_rf_ui = UI3D_RF()
+	end
+	
+	return detector_rf_ui
+end
+
+
+-- =======================================================================
+-- Accessibility indicator based on RavenAscendant's work
+-- Dependent upon ui_rf_widget.script, will abort if not present
+-- =======================================================================
+
+HUD_IND = nil
+
+function enable_rf_widget()
+    if not (enable_acc_widget and ui_rf_widget and db.actor) then return end
+    if (HUD_IND == nil) then
+        HUD_IND = ui_rf_widget.UIRFWidget("nerfs_ui_elements.xml", "indicator", nil, wid_pos)
+
+        if HUD_IND then
+            get_hud():AddDialogToRender(HUD_IND)
+        else
+            dl("ERROR: Unable to load ui_rf_widget.script or initialize its HUD class")
+        end
+    end
+end
+
+function disable_rf_widget()
+    if not db.actor then return end
+    if (HUD_IND ~= nil) then
+        HUD_IND:ShowDialog(false)
+        get_hud():RemoveDialogToRender(HUD_IND)
+        HUD_IND = nil
+    end
+end
+
+function show_indicator(tf)
+	if not db.actor then return end
+	if HUD_IND then HUD_IND:ShowIndicator(enable_acc_widget and tf) end
+end
+
+--=======================================================================
+-- 	SOUND EFFECT FUNCTORS
+--=======================================================================
+
+function sfx_random_noise(rf_tbl)
+	--vl("sfx_random_noise called")
+	return snd_path_table and snd_path_table.random
+end
+
+function sfx_random_noise_psy(rf_tbl)
+	--vl("sfx_random_noise_psy called")
+	return snd_path_table and snd_path_table.psy
+end
+
+function sfx_radio_chatter(rf_tbl)
+	-- possble to add logic later that produces different chatter by faction
+	return snd_path_table and snd_path_table.chatter
+end
+
+function sfx_gsm_noise(rf_tbl)
+	return snd_path_table and snd_path_table.gsm
+end
+
+function sfx_background_noise(rf_tbl)
+	return snd_path_table and snd_path_table.white_noise
+end
+
+function sfx_emission(rf_tbl)
+	local emsnds = snd_path_table and snd_path_table.emission
+	return emsnds[math.random(#emsnds)]
+end
+
+--=======================================================================
+
+
+function load_sound_data()
+	dl("Loading sound data")
+	local loaded_manually = {
+		["config_sfx_defaults"] = true,
+		["config_sfx_random"] 	= true,
+		["config_sfx_bgnoise"] 	= true,
+	}
+	local rndcfg 	= rfcfg_ini:collect_section("config_sfx_random")
+	local bgcfg 	= rfcfg_ini:collect_section("config_sfx_bgnoise")
+	local sndpath 	= rndcfg.sfx_path.."\\"..rndcfg.sfx_filename
+	for i=1,rndcfg.sfx_max do
+		snd_path_table.random[i] = sndpath..tostring(i)
+		vl("Populating snd_path_table[random][%s] with %s",i,sndpath..tostring(i))
+		snd_random[i] = xr_sound.get_safe_sound_object(snd_path_table.random[i])
+	end
+	
+	local rfcfg_ltx = rfcfg_ini:get_sections(true)
+	for k,_ in pairs(rfcfg_ltx) do
+		local rfx = rfcfg_ini:collect_section(k)
+		local strex = str_explode(k,"_sfx_")
+		local sndpath = rfx.sfx_path
+		local sndfile = rfx.sfx_filename
+		if (strex and (strex[1] == "config")) and (not loaded_manually[k]) and sndpath and sndfile then
+			local sndsec = strex[2]
+			sndpath = sndpath.."\\"..sndfile
+			vl("sndpath for %s is %s",k,sndpath)
+			local sndmax = rfx.sfx_max or 1
+			local ind = 0
+			for i=1,sndmax do
+				if not snd_path_table[sndsec] then
+					snd_path_table[sndsec] = {}
+				end
+				local sndname = sndpath..tostring(i)
+				snd_path_table[sndsec][i] = sndname
+				ind = ind + 1
+				vl("Populating snd_path_table[%s][%s] with %s",sndsec,ind,sndname)
+			end
+			local startind = ind + 1
+			if rfx.insert_random then
+				vl("Inserting %s entries of random noise into %s",rfx.insert_random,sndsec)
+				for i=startind,(startind + tonumber(rfx.insert_random)) do
+					snd_path_table[sndsec][i] = snd_path_table.random[math.random(1,rndcfg.sfx_max)]
+					ind = ind + 1
+				end
+			end
+			startind = ind + 1
+			if rfx.insert_silence then
+				vl("Inserting %s entries of dead silence into %s",rfx.insert_silence,sndsec)
+				for i=startind,(startind + tonumber(rfx.insert_silence)) do
+					snd_path_table[sndsec][i] = path_silence
+					ind = ind + 1
+				end
+			end
+			if rfx.sfx_functor then
+				rfcfg[sndsec.."_functor"] = rfx.sfx_functor
+			end
+		end
+	end
+	local snd_e = snd_path_table.emission
+	local snd_t = snd_path_table.chatter
+	for i=1,#snd_e do
+		vl("Populating sound object for snd_emission[%s] (%s)",i,snd_e[i])
+		snd_emission[i] = xr_sound.get_safe_sound_object(snd_e[i])
+	end
+	for i=1,#snd_t do
+		vl("Populating sound object for snd_talk[%s] (%s)",i,snd_t[i])
+		snd_talk[i] = xr_sound.get_safe_sound_object(snd_t[i])
+	end
+	emission_functor = rfcfg["emission_functor"]
+	bgnoise_functor = bgcfg["sfx_functor"]
+	dl("Noise functors found:\n * background = %s\n * emission = %s",bgnoise_functor,emission_functor)
+
+	local typedefs = {
+		["dist"] 			= "number",
+		["freq"] 			= "number",
+		["variance"]		= "number",
+		["match_key"]		= "boolean",
+		["exact_match"] 	= "boolean",
+	}
+
+	local rfsrc_ltx = rfsrc_ini:get_sections(true)
+	for s,d in pairs(rfsrc_ltx) do
+		local srcdef = rfsrc_ini:collect_section(s)
+		dl("loading signal def for %s",s)
+		local key = s
+		if srcdef and srcdef.clsid then
+			key = clsid[srcdef.clsid]
+		elseif srcdef and srcdef.section then
+			key = srcdef.section
+		--[[
+		elseif srcdef and srcdef.match_key then
+			key = srcdef[srcdef.match_key] or key
+		--]]
+		end
+		signal_sources[key] = { key = s }
+		for attr,v in pairs(srcdef) do
+			local val = v
+			local csv = string.find(v,",") and true or false
+			vl("%s = %s",attr,v)
+			if csv and (attr == "freq") then
+				dl("%s is multi-frequency",attr)
+				local fr = str_explode(v,",")
+				for i = 1,#fr do
+					fr[i] = tonumber(fr[i])
+					vl("valid freq for %s: %s",attr,fr[i])
+				end
+				signal_sources[key].freqs = v
+				val = fr
+			elseif attr == "clsid" then
+				val = clsid[v]
+			elseif typedefs[attr] == "number" then
+				val = tonumber(v) or 0
+			elseif typedefs[attr] == "boolean" then
+				val = strbool(v)
+			end
+			signal_sources[key][attr] = val
+		end
+		vl("Finished loading %s signal source %s: %s",
+			(srcdef.clsid and "clsid") or
+			(srcdef.section and "section") or
+			s,key,signal_sources[key])
+	end
+end
+
+--=======================================================================
+-- 	CALLBACKS
+--=======================================================================
+local tg_scan = 0
+local tg_random = math.random(20,40)*1000
+-- added for accessibility indicator
+local tg_interferance = tg_random
+local vol_interferance = 0
+
+local snds = {}
+local refresh = false
+local emission = false
+local flag_10,flag_50,flag_preset
+
+local function server_entity_on_unregister(se_obj, typ)
+	RF_targets[se_obj.id] = nil
+end
+
+local function actor_on_first_update()
+	-- create RF stashes
+	if is_empty(RF_stashes) then
+		local sim = alife()
+		local gg = game_graph()
+	
+		-- gather all stashes
+		local lvls = {}
+		for id,v in pairs(treasure_manager.caches) do
+			local se = sim:object(id)
+			if se then
+				local lvl = sim:level_name(gg:vertex(se.m_game_vertex_id):level_id())
+				lvls[lvl] = lvls[lvl] or {} -- create level table
+				lvls[lvl][#lvls[lvl] + 1] = id -- add stashes from the same level
+			end
+		end
+		
+		-- fill stashes table with a few selected targets
+		for lvl,v in pairs(lvls) do
+			RF_stashes[lvl] = {}
+			local size = (#v > 15) and #v or 0
+			for i=1,size,(size/5) do
+				local indx = math.ceil(i)
+				local id = v[indx]
+				RF_stashes[lvl][id] = get_random_freq()
+				
+				if enable_debug then
+					level.map_add_object_spot_ser(id, "treasure", "RF Source\\nFrequency: " .. tostring(RF_stashes[lvl][id])) -- test
+				end
+				
+				dl("RF_stashes[%s][%s] = %s",lvl,id,RF_stashes[lvl][id])
+			end
+		end
+	end
+	on_option_change()
+end
+
+function get_sfx_for_signal(rf_tbl,snd_functor)
+	local snd = rf_tbl and rf_tbl.snd
+	--vl("get_sfx_for_signal called with snd %s | func %s",snd,snd_functor)
+	local sndpath = (snd_path_table and snd_path_table[snd])
+	if (snd == "func") and snd_functor then
+		--vl("executing %s",snd_functor)
+		sndpath = exec(snd_functor,rf_tbl)
+	end
+	--vl("sndpath: %s",sndpath)
+	return sndpath or snd_path_table.noise
+end
+
+local function calc_beep_gap(dist_to_RF, RF_range)
+	local gap = (dist_to_RF / RF_range) * 3000
+	if gap < min_gap then return min_gap end
+	--clamp minimum gap between beeps so that player doesn't get tinnitus
+	return gap
+end
+
+
+function match_multi_freq(curr_freq,match_freq)
+	local freq = match_freq
+	if type(freq) == "table" then
+		for i = 1,#freq do
+			if curr_freq == freq[i] then return true end
+		end
+	end
+	return curr_freq == freq
+end
+
+local function calc_flash_time(dist_to_RF, RF_range)
+	-- [Coverdrave]: Calculate the time the flashing LED is on based on distance, only for quest targets.
+	local flash = (dist_to_RF / RF_range) * 500
+	if flash < min_flash_time then return min_flash_time end
+	return flash
+end
+
+function actor_has_valid_device(must_be_active)
+	local obj_det
+	local must_equip = enable_rrfr and rrfr_must_equip_det
+	if must_be_active or must_equip then
+		obj_det = db.actor:item_in_slot(9)
+	else
+		obj_det = db.actor:active_detector()
+	end
+
+	return (obj_det and obj_det:section() == _device and obj_det:condition() >= obj_det:power_critical())
+end
+
+function set_indicator_color(signal, interference,emission, tg)
+	if HUD_IND then
+		HUD_IND:SetIndicatorColor(signal, interference,emission, tg)
+	end
+end
+
+function set_indicator_heading(id)
+	if HUD_IND and id then
+		HUD_IND:SetIndicatorHeading(id)
+	end
+end
+
+local tg_signal_pulse = 0
+local vol_signal_highest
+local function actor_on_update()
+	if enable_acc_widget and not HUD_IND then
+		enable_rf_widget()
+	end
+	
+	-- return if radio detector is not active
+	
+	if not actor_has_valid_device() then
+		sound_trigger(false)
+		show_indicator(false)
+		return
+	end
+	sound_trigger(true)
+	
+	-- Emissions
+	emission = GetEvent("surge", "state") or GetEvent("psi_storm", "state")
+	show_indicator(enable_acc_widget)
+	-- Scan for any nearby radio wave source
+	local tg = time_global()
+	if (tg > tg_scan) then
+		tg_scan = tg + scan_time
+		scan_online_sources()
+	end
+	
+	-- Signal sounds
+	local vol_noise_lowest = 0.7
+	vol_signal_highest = (tg_signal_pulse > tg) and vol_signal_highest or 0
+
+	local signal_id
+
+	for i=1,#RF do
+		local obj = level.object_by_id(RF[i].id)
+		if obj and (not emission) then
+
+			local pass_range = is_in_range(RF[i].freq) -- RRFR
+
+			local dist 		= db.actor:position():distance_to(obj:position()) or 0
+			local rfidist 	= RF[i].dist or 1
+			if pass_range and dist < rfidist then -- RRFR
+				local id = obj:id()
+				local sec = obj:section()
+				local clsid = obj:clsid()
+
+				local dist_ratio = dist / rfidist
+				local vol_range = get_vol_range(RF[i].freq)
+				
+				local vol_signal = clamp( (1-dist_ratio) * vol_range , 0 , 1) or 0
+				local vol_noise = clamp( dist_ratio * vol_range , 0.2 , 0.7 ) or 0.7
+				vol_noise_lowest = (vol_noise < vol_noise_lowest) and vol_noise or vol_noise_lowest
+				dl("RF[%s] - %s (%s) - RF dist: %s - current dist: %s - dist_ratio: %s", i, obj:section(), RF[i].id, rfidist, dist, dist_ratio)
+				--dl("vol_range: %s - vol_signal: %s - vol_noise: %s", vol_range, vol_signal, vol_noise)
+				if enable_rrfr and (RF_targets[id] and not string.find(sec,"quest_tb_package_")) then
+					-- Use Reworked RF Receiver's method for playing beeps
+					if RF_targets[id] and not string.find(sec,"quest_tb_package_") then
+						beep_gap = calc_beep_gap(dist, rfidist)
+						local timeglobal = time_global()
+						if (timeglobal > tg_beep) then
+							tg_beep = timeglobal + beep_gap
+							flash_time = calc_flash_time(dist, rfidist)
+							play_rf_sfx(snd_beep)
+							snd_beep.volume = (reworked_rf_receiver_mcm.get_config("custom_beep_volume") and reworked_rf_receiver_mcm.get_config("beep_volume")) or vol_signal
+						end
+					-- All other sources, using old beeping method
+					elseif RF_database[clsid] then
+						if (not snds[i]) or (snds[i] and (not snds[i]:playing())) or refresh then
+							local snd_paths = RF[i].snd
+							snds[i] = sound_object(snd_paths[math.random(#snd_paths)])
+							play_rf_sfx(snds[i])
+							print_dbg("snds[%s] - #s: %s", i, #snd_paths)
+						end
+						snds[i].volume = (reworked_rf_receiver_mcm.get_config("custom_beep_volume") and reworked_rf_receiver_mcm.get_config("beep_volume")) or vol_signal
+					end
+				else
+					if (not snds[i]) or (snds[i] and (not snds[i]:playing())) or refresh then
+						local snd_paths = RF[i].snd
+						local sndpath = snd_paths
+						if type(snd_paths) == "table" then
+							sndpath = snd_paths[math.random(#snd_paths)]
+						end
+						snds[i] = xr_sound.get_safe_sound_object(sndpath)
+						play_rf_sfx(snds[i])
+						dl("snds[%s] - #s: %s", i, #snd_paths)
+						if (vol_signal > vol_signal_highest) then
+							vol_signal_highest = vol_signal
+							signal_id = id
+							local pulse = tg + signal_pulse_length * snds[i]:length() * vol_signal_highest
+							tg_signal_pulse = pulse< tg_signal_pulse and tg_signal_pulse or pulse
+						end
+						snds[i].volume = vol_signal
+					end
+				end
+			end
+		end
+	end
+	vol_n = vol_noise_lowest
+
+	-- White noise sound
+	if (not snd_noise:playing()) then
+		local noisefx,functor
+		if emission then
+			functor = emission_functor
+		else
+			functor = bgnoise_functor
+		end
+		noisefx = functor and exec(functor)
+		if noisefx then
+			snd_noise = xr_sound.get_safe_sound_object(noisefx)
+			play_rf_sfx(snd_noise)
+		else
+			snd_noise = snd_silence
+			play_rf_sfx(snd_noise)
+			vol_n = 0
+		end
+	end
+	
+	snd_noise.volume = vol_n
+	refresh = false
+	
+	-- Random sounds
+	if (tg > tg_random) then
+		tg_random = tg + math.random(20,40)*1000
+		local randfac = (math.random(100) > 50)
+		local randsnd = snd_random[math.random(#snd_random)]
+		local talksnd = snd_talk[math.random(#snd_talk)]
+		local snd_random_now = randfac and randsnd or talksnd -- or snd_silence
+		--local snd_random_now = (math.random(100) > 50) and snd_random[math.random(#snd_random)] or snd_talk[math.random(#snd_talk)]
+		play_rf_sfx(snd_random_now)
+		snd_random_now.volume = math.random(10,100)/100
+		vol_interferance = math.random(10,100)/100
+		snd_random_now.volume = vol_interferance
+		tg_interferance = tg + snd_random_now:length()
+		--vl("snd_random_now:length():%s", snd_random_now:length())
+	end
+	if (tg > tg_interferance) then
+		vol_interferance = 0
+	end
+
+	set_indicator_color(vol_signal_highest, vol_interferance, emission, tg)
+	set_indicator_heading(signal_id)
+end
+
+local function load_state(m_data)
+	RF_stashes = m_data.RF_stashes or {}
+	RF_targets = m_data.RF_targets or {}
+	_freq = m_data.RF_freq or math.random(_min,_max)
+	stalker_pda_frequencies = m_data.stalker_pda_frequencies or {}
+end
+
+local function save_state(m_data)
+	validate_RF_targets()
+	m_data.RF_stashes = RF_stashes
+	m_data.RF_targets = RF_targets
+	m_data.RF_freq = _freq
+	m_data.stalker_pda_frequencies = stalker_pda_frequencies
+end
+
+local function on_key_hold(key)
+	if (key == DIK_keys["DIK_LSHIFT"]) then
+		flag_10 = true
+	elseif (key == DIK_keys["DIK_LMENU"]) then
+		flag_50 = true
+	elseif (key == DIK_keys["DIK_LCONTROL"]) then
+		flag_preset = true
+	end
+end
+
+function on_option_change()
+	if ui_mcm then
+		disable_rf_widget()
+		enable_acc_widget = ui_mcm.get("nerfs/nerfwidget/show")
+		enable_wid_pointer = ui_mcm.get("nerfs/nerfwidget/pointer")
+		local dbg = ui_mcm.get("nerfs/nerfmain/debuglogs")
+		if dbg ~= nil then debuglogs = dbg end
+		_max = ui_mcm.get("nerfs/nerfmain/max_freq") or _max
+		local colors = ui_rf_widget and ui_rf_widget.color_table
+		colors.lo = {
+			r = ui_mcm.get("nerfs/nerfwidget/lo_r") or colors.lo.r,
+			g = ui_mcm.get("nerfs/nerfwidget/lo_g") or colors.lo.g,
+			b = ui_mcm.get("nerfs/nerfwidget/lo_b") or colors.lo.b,
+			a = ui_mcm.get("nerfs/nerfwidget/lo_a") or colors.lo.a,
+		}	
+		colors.hi = {
+			r = ui_mcm.get("nerfs/nerfwidget/hi_r") or colors.hi.r,
+			g = ui_mcm.get("nerfs/nerfwidget/hi_g") or colors.hi.g,
+			b = ui_mcm.get("nerfs/nerfwidget/hi_b") or colors.hi.b,
+			a = ui_mcm.get("nerfs/nerfwidget/hi_a") or colors.hi.a,
+		}	
+		colors.em = {
+			r = ui_mcm.get("nerfs/nerfwidget/em_r") or colors.em.r,
+			g = ui_mcm.get("nerfs/nerfwidget/em_g") or colors.em.g,
+			b = ui_mcm.get("nerfs/nerfwidget/em_b") or colors.em.b,
+			a = ui_mcm.get("nerfs/nerfwidget/em_a") or colors.em.a,
+		}
+
+		local oldpos = wid_pos
+		wid_pos.x = ui_mcm.get("nerfs/nerfwidget/pos_x")
+		wid_pos.y = ui_mcm.get("nerfs/nerfwidget/pos_y")
+		if HUD_IND then
+			HUD_IND:SetPos(wid_pos.x, wid_pos.y)
+		end
+		dl("Loaded widget pos %s,%s from MCM, enable_acc_widget %s",wid_pos.x,wid_pos.y,enable_acc_widget)
+
+		for i=1,num_presets do
+			local ind = tostring(i)
+			presets[i].kb = ui_mcm.get("nerfs/nerfpresets/kb_preset"..ind)
+			presets[i].mk = ui_mcm.get("nerfs/nerfpresets/mk_preset"..ind)
+			presets[i].f = ui_mcm.get("nerfs/nerfpresets/preset"..ind.."_freq")
+			dl("Populating preset %s: kb %s | mk %s | freq %s",i,presets[i].kb,presets[i].mk,presets[i].f)
+		end
+
+		-- Reworked RF Receiver compatibility
+		local enrrfr = ui_mcm.get("nerfs/nerfmain/enable_rrfr")
+		if enrrfr ~= nil then rrfr_compatibility(enrrfr) end
+		if mwheel_avail then
+			mwheel_enabled = ui_mcm.get("nerfs/nerfmain/use_mwheel")
+		else
+			ui_mcm.set("nerfs/nerfmain/use_mwheel",false)
+		end
+		if enable_acc_widget then
+			enable_rf_widget()
+		end
+	end
+
+end
+
+local function mod_key_pressed(key)
+	local mkp = ui_mcm and ui_mcm.get_mod_key(key) or false
+    return mkp
+end
+
+function on_before_key_press(key,bind,dis,flags)
+	if not ui_mcm then return end
+	local detector = db.actor:active_detector()
+	local wep = db.actor:active_item()
+	if detector and (detector:section() == _device) and (not wep) then
+		for i=1,num_presets do
+			if presets and presets[i] then
+				if 	(key == presets[i].kb) and
+					mod_key_pressed(presets[i].mk) then
+						local newf = presets[i].f or 1
+						change_freq(newf,true)
+						flags.ret_value = false
+						local tiptext = string.format(gts("st_nerfs_freq_preset"),i,newf)
+						dotip(tiptext)
+				end
+			end
+		end
+	end
+end
+
+function on_key_release(key)
+	local detector = db.actor:active_detector()
+	local wep = db.actor:active_item()
+	
+	if detector and (detector:section() == _device) and (not wep) then
+
+		local num = (flag_50 and 50) or (flag_10 and 10) or 1
+		if (key == DIK_keys["MOUSE_1"]) then
+			change_freq(num)
+		elseif (key == DIK_keys["MOUSE_2"]) then
+			change_freq(-num)
+		end
+	end
+	flag_10 = false
+	flag_50 = false
+	flag_preset = false
+end
+
+function on_mouse_wheel(scroll_dir, flags)
+
+	local pda_active = item_device and item_device.is_pda_active()
+	--if pda_active or not (mwheel_enabled and actor_has_valid_device(true)) then return end
+	local inventory_open = actor_menu.inventory_opened()
+	local zoomed = axr_main.binoc_is_zoomed or axr_main.scoped_weapon_is_zoomed
+
+	if zoomed or pda_active or inventory_open or not (mwheel_enabled and actor_has_valid_device(true)) then return end
+
+	local num = (flag_50 and 50) or (flag_10 and 10) or 1
+	--vl("on_mouse_wheel(%s) | flag_10 %s | flag_50 %s | num %s",scroll_dir,flag_10,flag_50,num)
+	if flag_preset then
+		local inc_dir = -1
+		if scroll_dir and (scroll_dir > 0) then
+			inc_dir = 1
+		end
+		local npre = clamp(last_preset + inc_dir,1,num_presets)
+		if npre ~= last_preset then
+			last_preset = npre
+			local newf = presets[npre].f or 1
+			change_freq(newf,true)
+			local tiptext = string.format(gts("st_nerfs_freq_preset"),npre,newf)
+			dotip(tiptext)
+		end
+	else
+		if scroll_dir and (scroll_dir > 0) then
+			vl("current frequency %s, raising by %s",_freq,num)
+			change_freq(num)
+		else
+			vl("current frequency %s, lowering by %s",_freq,num)
+			change_freq(-num)
+		end
+	end
+	flags.ret_value = false
+end
+
+function actor_on_item_take(obj)
+	-- Reworked RF Receiver compatibility
+	local id = obj:id()
+	if RF_targets[id] then
+		clear_target(id)
+		scan_online_sources()
+	end
+end
+
+
+--=======================================================================
+-- 	DAR/RRFR compatibility monkeypatch
+--=======================================================================
+if dar_rf_noise then
+	local dar_anim_check = dar_rf_noise.actor_on_hud_animation_play
+	function dar_rf_noise.actor_on_hud_animation_play(anm_table, item)
+		dar_anim_check(anm_table, item)
+		dar_rf_noise.sound_currently_enabled = dar_sound_from_inv or dar_rf_noise.sound_currently_enabled
+	end
+end
+
+function rrfr_compatibility(onoff)
+	if onoff == nil then return enable_rrfr end
+	enable_rrfr = onoff and true or false
+	if enable_rrfr and reworked_rf_receiver_mcm then
+		local rrfr_us = reworked_rf_receiver_mcm.get_config("update_sources_on_frequency_change")
+		local rrfr_eq = reworked_rf_receiver_mcm.get_config("only_equip_rf")
+		if rrfr_us ~= nil then rrfr_update_sources = rrfr_us end
+		if rrfr_eq ~= nil then rrfr_must_equip_det = rrfr_eq end
+		RegisterScriptCallback("actor_on_item_take",actor_on_item_take)
+	else
+		UnregisterScriptCallback("actor_on_item_take",actor_on_item_take)
+	end
+	dar_sound_from_inv = (enable_rrfr and (not rrfr_must_equip_det))
+end
+
+function on_game_start()
+	load_sound_data()
+	if mwheel_avail then
+		RegisterScriptCallback("on_mouse_wheel",on_mouse_wheel)
+	end
+    RegisterScriptCallback("on_option_change",on_option_change)
+	RegisterScriptCallback("on_key_hold",on_key_hold)
+	RegisterScriptCallback("on_before_key_press",on_before_key_press)
+	RegisterScriptCallback("on_key_release",on_key_release)
+	RegisterScriptCallback("save_state",save_state)
+	RegisterScriptCallback("load_state",load_state)
+	RegisterScriptCallback("actor_on_first_update",actor_on_first_update)
+	RegisterScriptCallback("actor_on_update",actor_on_update)
+	RegisterScriptCallback("server_entity_on_unregister",server_entity_on_unregister)
+end

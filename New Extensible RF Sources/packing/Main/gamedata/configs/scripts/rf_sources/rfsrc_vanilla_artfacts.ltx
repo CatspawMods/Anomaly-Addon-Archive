@@ -1,0 +1,79 @@
+; Vanilla RF signal sources
+; All of these should behave precisely as they do in vanilla Anomaly
+; If you want to add new signal sources, don't edit this file
+; Instead, make your own rfsrc_yourname.ltx file and add them there
+; See rfsrc_anomalies.ltx for an explanation of the fields
+
+; Artifacts
+[rfss_af_ring]
+section = af_ring
+dist 	= 50
+snd 	= func
+func 	= item_radio.sfx_random_noise
+freq 	= 23
+action 	= item_radio.signal_active_artifact
+
+[rfss_af_electra_flash]
+section = af_electra_flash
+dist 	= 50
+snd 	= func
+func 	= item_radio.sfx_random_noise_psy
+freq 	= 124
+action 	= item_radio.signal_active_artifact
+
+[rfss_af_electra_moonlight]
+section = af_electra_moonlight
+dist 	= 50
+snd 	= func
+func 	= item_radio.sfx_random_noise
+freq 	= 57
+action 	= item_radio.signal_active_artifact
+
+[rfss_af_black_spray]
+section = af_black_spray
+dist 	= 50
+snd 	= func
+func 	= item_radio.sfx_random_noise_psy
+freq 	= 89
+action 	= item_radio.signal_active_artifact
+
+[rfss_af_full_empty]
+section = af_full_empty
+dist 	= 50
+snd 	= func
+func 	= item_radio.sfx_random_noise_psy
+freq 	= 236
+action 	= item_radio.signal_active_artifact
+
+[rfss_af_ice]
+section = af_ice
+dist 	= 50
+snd 	= func
+func 	= item_radio.sfx_random_noise_psy
+freq 	= 178
+action 	= item_radio.signal_active_artifact
+
+[rfss_af_soul]
+section = af_soul
+dist 	= 50
+snd 	= func
+func 	= item_radio.sfx_random_noise_psy
+freq 	= 302
+action	= item_radio.signal_active_artifact
+
+[rfss_af_compass]
+section = af_compass
+dist 	= 100
+snd 	= func
+func 	= item_radio.sfx_random_noise
+freq 	= 285
+action 	= item_radio.signal_active_artifact
+
+[rfss_af_death_lamp]
+section = af_death_lamp
+dist 	= 200
+snd 	= func
+func 	= item_radio.sfx_random_noise_psy
+freq 	= 321
+action 	= item_radio.signal_active_artifact
+

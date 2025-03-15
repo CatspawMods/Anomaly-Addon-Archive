@@ -1,0 +1,77 @@
+--[[ ====================================================================
+		Anomalous RF Signals
+		Monkeypatch for death_manager.spawn_cosmetics to randomly inject 
+		notes about "undocumented" RF signals into stalker loot
+-- ======================================================================
+    Author: Catspaw
+    I post gameplay video on my Youtube channel, Catspaw Adventures: 
+    https://www.youtube.com/channel/UCtG8fiWPUZEzWlkUn60btAw
+
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/anomalous-rf-signals-10
+    Version: 1.2
+    Updated: 20230617
+
+	This version included with New Extensible RF Sources.
+
+    You may alter any part of this mod and do whatever you like with it, 
+    just give credit where due.
+
+    This addon requires modded binaries that support DLTX. GAMMA also 
+    works. If you don't have the binaries, you can get them here:
+
+  	https://github.com/themrdemonized/STALKER-Anomaly-modded-exes
+
+    Credits: NLTP_ASHES and RavenAscendant for tips
+
+    S5yn3T, Stalzi, and Mr.Goose for RUS localization
+-- ===================================================================--]]
+
+local tip_prefix 		= "letter_rf_tip_"
+drop_chance_coef 	= 1.0
+
+allowed_factions = {
+	["army"] 			= {chance = 0.015},
+	["bandit"] 			= {chance = 0.005},
+	["csky"] 			= {chance = 0.01},
+	["dolg"] 			= {chance = 0.01},
+	["ecolog"] 			= {chance = 0.02},
+	["freedom"] 		= {chance = 0.01},
+	["killer"] 			= {chance = 0.0025},
+	["stalker"] 		= {chance = 0.005},
+	["greh"] 			= {chance = 0.01},
+	["isg"] 			= {chance = 0.015},
+	["renegade"] 		= {chance = 0.0025},
+}
+
+rf_tips = {
+	"af_ring",
+	"af_electra_flash",
+	"af_electra_moonlight",
+	"af_black_spray",
+	"af_full_empty",
+	"af_ice",
+	"af_soul",
+	"af_compass",
+	"af_death_lamp",
+	"controller",
+	"burer",
+	"poltergeist",
+	"psydog",
+}
+
+
+function rftip_note_spawner(npc, npc_id, npc_comm, npc_rank, visual, rand_condition)
+	local note = npc_comm and allowed_factions[npc_comm]
+	if not (npc and note) then return end
+	local chance = (note.chance or 0) * drop_chance_coef
+	if chance < math.random() then return end
+	local entry = math.random(#rf_tips)
+	local sec = tip_prefix..rf_tips[entry]
+   	alife_create_item(sec,npc)
+end
+
+existing_spawn_logic = death_manager.spawn_cosmetics
+function death_manager.spawn_cosmetics(npc, npc_id, npc_comm, npc_rank, visual, rand_condition)
+    existing_spawn_logic(npc, npc_id, npc_comm, npc_rank, visual, rand_condition)
+    rftip_note_spawner(npc, npc_id, npc_comm, npc_rank)
+end

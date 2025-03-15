@@ -6,7 +6,7 @@
 
 	Replaces the dialogue entries of existing faction guides to allow 
 	their prices and strings to be dynamic and customizable.
--- ==================================================================--]]
+-- ====================================================================]]
 local generate_route_list 			= [[<script_text>game_guide_travel.generate_route_list</script_text>]]
 local generate_guide_intro			= [[<script_text>game_guide_travel.generate_guide_intro</script_text>]]
 local generate_special_routelist 	= [[<script_text>game_guide_travel.special_guide_routelist_text</script_text>]]

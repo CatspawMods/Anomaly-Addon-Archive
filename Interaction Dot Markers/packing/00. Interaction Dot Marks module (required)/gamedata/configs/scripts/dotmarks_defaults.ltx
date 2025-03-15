@@ -1,0 +1,412 @@
+; Interaction Dot Markers (DotMarks)
+; Main configuration settings
+; Loaded on startup by: ui_hud_dotmarks.load_file_data()
+; Further massaging done by parse_file_data()
+;
+; All of the config settings for DotMarks are stored in the ui_hud_dotmarks.cfg table.
+; This main table loads all of its values from [default_settings] below, and will 
+; dynamically create and populate subtables based on the [setting_tables] and its 
+; related sections below.
+
+[setting_tables]
+; Never remove ANY values from this section, you WILL crash your game
+blacklisted_clsids
+blacklisted_ids
+blacklisted_sections
+breakable_box_visuals
+colors
+display_cases
+door_visuals
+dotmark_preset
+in_pickup_range
+invboxes
+gettable_types
+grenade_ammo_clsids
+markers
+mcm_paths
+monitors
+notable_npcs
+tutorial_hints
+prompts
+racked_items
+scan
+service_icons
+state_conds
+tex
+useless_shit
+vendors
+weight_colors
+
+[default_settings]
+; Any setting here will be loaded as part of the main cfg table
+; Any non-table key in the cfg table that is defined in the mcm_paths table 
+; below will query MCM during every on_option_change for an override (if any)
+
+scan_start_delay            = 0.1
+; Delay in seconds after actor_on_first_update before scanning
+near_scan_interval          = 244
+; Interval in ms between nearby-object scans
+far_scan_interval           = 2457
+; Interval in ms between faraway-object scans
+; Unusual numbers are chosen as a way of avoiding stacking updates
+skill_upd_interval          = 3211
+; Interval in ms between Skill System updates
+tut_check_interval 			= 49
+; Interval in ms between tutorial checks, needs to be responsive
+near_scan_radius            = 3
+; Radius in meters of the near scan (affects many other things)
+far_scan_radius             = 10
+; Radius in meters of the far scan
+use_skill_system            = true
+; Enable Skill System integration
+haru_skill_name             = scavenging
+; Name of related skill
+haru_skill_coef             = 0.5
+; Multiplier to near_scan_radius bonus range per skill level
+mutant_decay_time 			= 7200
+; Age after which a mutant corpse "decays" and cannot be looted
+bind_sec_interact 			= 22
+; DIK code of alternate interact keybind
+modk_sec_interact 			= 0
+; Modifier key of alt interact
+imod_sec_interact 			= 2
+; Input mode of alt interact
+sec_interact_dist 			= 2.5
+; Distance in meters of the alt interact (don't increase)
+interact_uifile 			= ui_dotmarks.xml
+; Contains UI element definitions
+marker_dotmark 				= ui_catsy_marker_intdot
+; Texture for the marker dots themselves
+main_drop_texture 			= ui_catsy_main_drop
+icon_sp_fave_texture 		= ui_catsy_icon_sortplus_fave
+icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
+; Texture used for the main prompt drop shadow
+target_lenience 			= 0.95
+; How far from center the crosshair can be for old targeting method
+item_use_delay 				= 0.1
+; Delay before consuming an item that has just been instantiated
+; Required to allow the new game object time to exist, and next frame isn't always enough
+alti_show_during_anim 		= true
+; Whether to show prompts during FDDA animations
+alti_busy_during_anim 		= true
+; Whether visible prompts are disabled during FDDA animations
+hide_interaction_dots 		= false
+; Killswitch for whether to show dots at all
+hide_connecting_line 		= false 
+; Killswitch for the animated white line that appears
+hide_pri_interact_ui 		= false
+; Killswitch for the replacement primary interact UI
+; Note that if you enable this and hide the vanilla UI, you may not have interact prompts at all!
+; I try to prevent this, but it's not my fault if you do silly things with the settings
+hide_sec_interact_ui 		= false
+; Killswitch for whether to display secondary action prompts
+hide_van_interact_ui		= true
+; Whether to hide the vanilla interaction prompts
+hide_drop_shadow 			= false
+; Whether to hide the drop shadow beneath prompts
+pri_use_h_offset 			= -10
+pri_use_v_offset 			= 28
+sec_use_h_offset 			= -10
+sec_use_v_offset 			= 48
+; Screen positions for the primary and secondary interact prompts
+; By default these are measured from the attached interaction dot
+fixed_screen_pos 			= false
+; If enabled, screen positions will instead be measured from the upper left of the screen
+; These are canvas coordinates so 1024x768
+keybind_bg_style 			= 3
+; Visual style for the "keyboard key" icons used as background for the name of the bound key
+; 	0 = no icon
+;	1 =	white outline
+; 	2 = black and white 3D
+; 	3 = worn appearance
+interact_drop_alpha 		= 0.55
+; Opacity of the interaction drop shadows
+dot_marker_size 			= 1
+; Scale multiplier for the size of the dot markers
+bodies_use_paw_patches 		= false
+; Integrates with my PAW addon to use its hi-res faction patch icons
+prompt_fade_in_time 		= 150
+; Time in ms for the fade-in effect on prompts
+prompt_fade_out_time 		= 150
+; Time in ms for the fade-out effect
+tutorial_prompt_x 			= 512
+tutorial_prompt_y 			= 600
+; Screen pos for the "tutorial" prompts at the bottom of the screen
+disable_icon_activedot 		= false
+; Disable the ringed dot that a dotmark changes to when active
+disable_icon_box 			= false
+; Disables the special "breakable item" icon used for physics boxes
+disable_icon_door 			= false
+; Disables the special icon used for doors
+disable_icon_services 		= false
+; Disables the special icon used when interacting with a service NPC
+disable_icon_talk 			= false
+; Disables the special icon used for talking to other stalkers
+sp_hide_junk_items 			= true
+; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
+sp_flag_favejunk 			= true
+; If Sorting Plus is installed, dot markers for favorited items will be flagged with an appropriate icon
+hidden_show_prompts 		= true
+; Controls whether prompts still appear if a marker is hidden because of sp_hide_junk_items or hide_interaction_dots
+hidden_marks_on_disabled 	= true
+; Disabled object classes (from the scan table below) will still have a marker generated, but hidden
+; If this option is false, no marker will be generated at all, and thus no interaction prompts are possible
+wheel_cycles_pickups 		= true
+; Mouse wheel cycles through targeted pickup, if there is more than one in range
+snd_path_blip 				= catspaw\paw_blip
+; Subtle UI sound effect
+disable_all_sounds 			= false
+; Disable sound effects
+bodies_use_mpda_rules 		= true
+; If enabled, body markers will use the same visibility rules as bodies in Milspec PDA
+show_multi_uses 			= true
+; Append the number of uses to the name of multi-use items with more than one remaining charge
+show_item_condition 		= true
+; Shows the item's percentage condition suffixed to the item name, if applicable
+show_item_charge 			= true
+; Shows the item's percentage of battery charge suffixed to the item name, if applicable
+show_condition_color 		= true
+; Changes the color of the condition text based on the condition
+show_parts_weapons 			= true
+; If Utjan's Item UI is installed, shows part condition indicators for weapons
+show_parts_armor 			= true
+; If Utjan's Item UI is installed, shows part condition indicators for outfits and headgear
+parts_wpo_colors 			= true
+; Uses Weapon Parts Overhaul condition color thresholds
+parts_dot_sep_width 		= 1
+; Spacing between the part condition dots
+parts_dot_pos_x 			= -7
+parts_dot_pos_y				= -4
+; Position of the part condition indicator, relative to the end of the prompt
+show_item_card 				= true
+; Show an item card pop-up when targeting a pickup
+item_card_pos_x 			= -9.5
+item_card_pos_y 			= 2
+; Position of the item card, relative to the end of the prompt
+; The following are a bunch of settings related to fine-tuning the position of the
+; item card elements within their containers.
+item_card_icon_weight 		= ui_catsy_marker_weight
+item_card_icon_value 		= ui_catsy_marker_ruble
+item_card_icon_sz   		= 7.5
+item_card_text_y    		= 1.5
+item_card_elem_x    		= 7.5
+item_card_elem_y    		= 0
+item_card_elem_h    		= 10
+item_card_icon_x    		= 4
+item_card_icon_y    		= 0
+sp_icon_pos_x 				= 10
+sp_icon_pos_y				= 1
+; It's unlikely I'll ever add any of those to MCM, but they're here for my own
+; convenience and for anyone to use at their own risk. I don't recommend screwing with
+; them, and I can't help you if you do.
+
+;hide_moving_doors 			= true
+; Hides the primary interact prompt while a door is in motion
+; HUD elements won't update quickly enough in Anomaly for the motion to look smooth
+; Unfortunately the joint position also doesn't update quickly enough, so still WIP
+
+[tex]
+; Icon texture overrides for certain types to use instead of the default dot marker
+Boxes 		= ui_catsy_marker_breakable
+; The tex table is mostly empty by default, but can be used to override the
+; icon texture used for any object type defined in the [scan] section below.
+
+[scan]
+; Defines which item categories are scanned by default
+Stalkers 	= true
+Bodies      = true
+Ammo        = true
+Stashes     = true
+Weapons     = true
+Grenades    = true
+Explosives  = true
+Outfits     = true
+Headgear    = true
+Artefacts   = true
+Consumables = true
+Tools       = true
+Devices     = true
+Quest       = true
+Campfires   = true
+Misc    	= true
+Doors       = true
+Boxes       = true
+Workshops 	= true
+
+[dotmark_preset]
+; Static presets for the dot markers that get passed to utils_catspaw_hudmarks
+; The dotmark preset loads these static values and generates others
+; Careless edits here are likely to fuck up the way markers work, if anything still works at all
+xmlfile             = ui_hud_marker.xml
+texture             = ui_catsy_marker_intdot
+show_dist           = false ; disables always-on display of marker distance
+show_hint           = false ; disables always-on display of marker hint
+managed_hover       = true 	; tells marker manager to handle hover logic
+hint_on_hover       = false	; only show hint when this is best hovered marker
+hover_dist 			= 3 	; distance up to which a mark can be hovered
+near_fade_dist      = 0 	; dotmarks shouldn't fade out when close
+near_hide_dist      = -1	; dotmarks shouldn't disappear completely when close
+near_end_dist       = -1	; dotmarks don't terminate on proximity
+far_hide_dist       = 0.5 	; dotmarks hide this far past the far_fade_dist (based on med_scan_radius)
+los_dist_min        = 0.15	; any closer than this and LOS is assumed true
+lost_los_dist 		= 0.5 	; LOS smoothing (LOS result cache) is disabled beyond this distance
+lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
+width               = 5		; texture width (in canvas units)
+height              = 5		; texture height (in canvas units)
+update_int          = 15	; update interval in ms for the marker itself
+
+[tutorial_hints]
+; Used internally to generate the appropriate text based on the active tutorial state
+; tutorial_name 				= localization_string_for_tutorial_prompt
+jup_b32_scanner 				= jup_b209_scanner_place_tips
+pri_b306_generator 				= pri_b306_generator_use
+jup_b206_plant 					= jup_b206_use_plant
+pas_b400_switcher 				= pas_b400_tip_switcher
+pri_a18_use_idol 				= pri_a18_use_idol
+jup_b209_monster_scanner_placed = jup_b209_scanner_place_tips
+jup_b9_heli_1 					= st_search_helicopter
+jup_b8_heli_4 					= st_search_helicopter
+jup_b10_ufo_tutor 				= jup_b10_ufo_searching_tips
+zat_b101_heli_5 				= st_search_helicopter
+zat_b28_heli_3 					= st_search_helicopter
+zat_b100_heli_2 				= st_search_helicopter
+zat_b33_snag_container 			= zat_b33_car_searching_tip
+tutorial_sleep 					= sleep_zone_tip
+tutorial_campfire_ignite 		= st_ignite_fire
+tutorial_campfire_extinguish 	= st_extinguish_fire
+bridge_down_red_forest 			= bridge_down_red_forest_tips
+bridge_stop_red_forest 			= bridge_stop_red_forest_tips
+bridge_up_red_forest 			= bridge_up_red_forest_tips
+
+[prompts]
+; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
+item_take 	= inventory_item_use
+npc_talk 	= character_use
+open_door 	= car_character_use
+close_door 	= tip_door_close
+ws_noaccess = st_tiski_no_info
+ws_use 		= st_tiski
+ws_repair 	= st_awr_tiski
+
+[colors]
+; Will be ignored if the key doesn't begin with "clr_", to avoid clobbering non-color tokens
+; Fifth value in some is a threshold/breakpoint for internal use in condition color lerping
+; TODO: move the one-off colors in the config table here with careful find-replace
+clr_dotmark 	= 255,220,220,220
+; Base color of the marker itself - not yet used
+clr_wpo_red		= 255,196,18,18
+clr_wpo_orn 	= 255,238,153,26
+clr_wpo_yel 	= 255,255,255,118
+clr_wpo_grn 	= 255,107,207,119
+clr_missing 	= 255,70,60,60
+; Weapon parts overhaul condition threshold colors
+clr_cnd_min 	= 255,196,18,18,0
+clr_cnd_mid 	= 255,255,255,118,0.5
+clr_cnd_max 	= 255,107,207,119,1
+; Vanilla condition lerping colors
+clr_card_drop 	= 170,255,255,255
+; Sets alpha for the item card drop shadow
+clr_text_light 	= 255,240,240,240
+; Text color for light text on dark background (e.g. drop shadow)
+clr_dotmark		= 255,220,220,220
+; Base color of the marker itself
+clr_text_busy	= 255,180,180,180
+; Text color for disabled prompts
+clr_text_dark	= 255,0,0,0
+; Text color for dark text on light background
+clr_key_hold	= 255,255,215,0
+; Color of the progress indicator that appears for longpress/key hold actions
+clr_battery 	= 255,86,196,209
+; Color of the battery charge bar
+clr_weight_ok 	= 255,255,255,255
+clr_weight_over = 255,255,50,0
+clr_weight_high = 255,200,150,0
+; Colors for inventory carry weight states
+
+[service_icons]
+; Active-swap icons used as icons for service NPCs
+trader 		= ui_catsy_marker_trade
+mechanic	= ui_catsy_marker_mech
+medic		= ui_catsy_marker_medic
+barman		= ui_catsy_marker_trade
+
+[display_cases]
+placeable_arti_display 		= true
+placeable_weapon_rack 		= true
+placeable_pistol_shelf 		= true
+
+[useless_shit]
+; TODO: add section names of things like matches that can't be used from the ground
+
+[grenade_ammo_clsids]
+; Don't touch
+; Defines which clsids are classified as GL ammo for the purposes of scan detection
+wpn_ammo_m209_s 	= true
+wpn_ammo_og7b_s 	= true
+wpn_ammo_vog25_s	= true
+wpn_ammo_m209   	= true
+wpn_ammo_og7b   	= true
+wpn_ammo_vog25 		= true
+
+[breakable_box_visuals]
+; Don't touch
+; Defines which object visuals are classified as breakable boxes, no other way to detect
+dynamics\box\box_wood_01 	= true
+dynamics\box\box_wood_02 	= true
+dynamics\box\box_metall_01	= true
+
+[door_visuals]
+; Don't touch
+; Defines which object visuals are classified as which type of door, and their marker pos adjustment
+dynamics\door\door_trader 		= 0.6
+dynamics\door\shkaf_work_01_door= 0
+
+[mcm_paths]
+; The paths below allow better iteration through the config table to get MCM settings.
+hide_interaction_dots 	= dotmarks/dmarkmain/
+hide_connecting_line 	= dotmarks/dmarkmain/
+hide_pri_interact_ui 	= dotmarks/dmarkmain/
+hide_sec_interact_ui 	= dotmarks/dmarkmain/
+hide_van_interact_ui 	= dotmarks/dmarkmain/
+dot_marker_size 		= dotmarks/dmarkmain/
+interact_drop_alpha 	= dotmarks/dmarkmain/
+bind_sec_interact 		= dotmarks/dmarkmain/
+modk_sec_interact 		= dotmarks/dmarkmain/
+imod_sec_interact 		= dotmarks/dmarkmain/
+alti_show_during_anim 	= dotmarks/dmarkadv/
+alti_busy_during_anim 	= dotmarks/dmarkadv/
+pri_use_h_offset 		= dotmarks/dmarkadv/
+pri_use_v_offset 		= dotmarks/dmarkadv/
+sec_use_h_offset 		= dotmarks/dmarkadv/
+sec_use_v_offset 		= dotmarks/dmarkadv/
+fixed_screen_pos 		= dotmarks/dmarkadv/
+near_scan_interval 		= dotmarks/dmarkadv/
+far_scan_interval 		= dotmarks/dmarkadv/
+near_scan_radius 		= dotmarks/dmarkadv/
+far_scan_radius 		= dotmarks/dmarkadv/
+use_skill_system 		= dotmarks/dmarkadv/
+skill_upd_interval 		= dotmarks/dmarkadv/
+haru_skill_name 		= dotmarks/dmarkadv/
+haru_skill_coef 		= dotmarks/dmarkadv/
+keybind_bg_style 		= dotmarks/dmarkadv/
+sp_hide_junk_items		= dotmarks/dmarkadv/
+sp_flag_favejunk		= dotmarks/dmarkadv/
+hidden_show_prompts		= dotmarks/dmarkadv/
+bodies_use_paw_patches	= dotmarks/dmarkadv/
+bodies_use_mpda_rules 	= dotmarks/dmarkadv/
+prompt_fade_in_time		= dotmarks/dmarkadv/
+prompt_fade_out_time	= dotmarks/dmarkadv/
+fddar_multipickup 		= fddar/pickup/multipickup
+disable_icon_box		= dotmarks/dmarkobjs/
+disable_icon_door		= dotmarks/dmarkobjs/
+disable_icon_talk		= dotmarks/dmarkobjs/
+disable_icon_services	= dotmarks/dmarkobjs/
+show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
+show_parts_armor		= item_icon_info/part_dots/show_on_armor
+parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
+parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
+parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
+show_item_card  		= dotmarks/dmarkadv/
+show_item_condition 	= dotmarks/dmarkadv/
+show_item_charge 		= dotmarks/dmarkadv/
+show_condition_color 	= dotmarks/dmarkadv/

@@ -4,21 +4,18 @@
     Author: Catspaw
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
-script_version          = "1.13"
-release_date            = 20240912
+script_version          = "1.14.2"
+release_date            = 20250311
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:
     https://www.moddb.com/mods/stalker-anomaly/addons/kiltrak
 
-    My mod unavoidably replaces their script, but their clever text 
-    descriptions are st_praise_chefskiss. It's great if you don't need 
-    extra features like custom icons or right-clicking on mapspots.
-
     Both addons based on the Body Dots Minimap addon by RavenAscendant
     https://www.moddb.com/mods/stalker-anomaly/addons/bodydotsminimap-white-dots-but-blue
  
-    If using MO2, load Milspec PDA after Kill Tracker.
+    If using MO2, load Milspec PDA after Kill Tracker. You will crash 
+    your game if you don't.
     
     If installing manually, just overwrite Kill Tracker's files with mine.
 -- ===================================================================--]]
@@ -26,7 +23,10 @@ debuglogs               = false     -- Debug logging for troubleshooting issues 
 verbose                 = false     -- Noisier verbose logging - no effect if debuglogs is false
 logprefix               = "[MPDA:KT] "
 assert(utils_catspaw_common,
-    "\n! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_common, which does not exist!\n"
+    "! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_common, which does not exist!"
+)
+assert(utils_catspaw_mapspots,
+"! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_mapspots, which could not be found!"
 )
 local dl                = function(logtext, ...) utils_catspaw_common.dlog(ish_kill_tracker, logtext, ...) end
 local vl                = function(logtext, ...) utils_catspaw_common.vlog(ish_kill_tracker, logtext, ...) end
@@ -35,11 +35,17 @@ local safeid            = utils_catspaw_common.safeid
 local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
 local get_next_interval = utils_catspaw_common.get_next_tg_interval
 local get_mcm           = utils_catspaw_common.get_mcm_or_default_val
+local is_living_thing   = utils_catspaw_common.is_living_thing
+local remove_all_spots  = utils_catspaw_mapspots.safe_remove_all_mapspots
+local add_mapspot       = utils_catspaw_mapspots.add_mapspot
+local remove_mapspot    = utils_catspaw_mapspots.remove_mapspot
 local gts               = game.translate_string
 local game_time_now     = game.get_game_time
 local level_start       = level.get_start_time
 local can_see_killspots = item_milpda.actor_can_see_killspots
 local pda_shows_kills   = item_milpda.shows_kills
+local pri_task_mapspot  = "storyline_task_location"
+local sec_task_mapspot  = "secondary_task_location"
 
 local mode_bi, mode_bio
 styles = {
@@ -146,17 +152,25 @@ end
 
 local function debug_dump_kills()
     if debuglogs and verbose then
-        vl("**** Currently-tracked bodies: %s ****",#tracked_bodies)
+        vl( "Dumping contents of tracked_bodies table:\n" .. utils_catspaw_common.logdiv ..
+            "- Currently-tracked bodies: %s", size_table(tracked_bodies)
+        )
         for k,v in pairs (tracked_bodies) do
-            local kt = "Unknown"
-            -- local comm = ""
+            local kt    = "Unknown entity"
             if v.typ == 1 then
-                kt = "Stalker" -- v.comm .. " stalker"
+                ktype   = string.format("Stalker (%s)", v.comm)
             elseif v.typ == 2 then
-                kt = "Monster"
+                ktype   = "Monster"
             end
-            vl("** %s (id %s)\n** Kill ID: %s | Marker text: %s\n** %s killed on map %s at %s\n********",v.name,k,v.kill_id,v.text,kt,v.level,v.tod)
+            printf(utils_catspaw_common.logdiv ..
+                    "$ | Kill ID: %s | %s (%s)\n" ..
+                    "% | %s killed on map %s at %s\n" ..
+                    "% | Marker text: %s",
+                v.kill_id, v.name, k, ktype, v.level, v.tod, v.text
+            )
+
         end
+        printf(utils_catspaw_common.logdiv .. logprefix .. "End of kill database dump")
     end
 end
 
@@ -202,7 +216,7 @@ function killspot_text(body)
 end
 
 function killspot_icon(id)
-    vl("killspot_icon(%s) called",id)
+    --vl("killspot_icon(%s) called",id)
     local paw = tasks_placeable_waypoints
     local body = tracked_bodies[id]
     if not body then return default_style end
@@ -212,7 +226,7 @@ function killspot_icon(id)
     local default = default_style_force or
                     (actor_kill and default_style_actor) or
                     default_style_other
-    vl("id %s | default: %s | use_paw_icon %s | mode %s",id,default,use_paw_icon,mode)
+    --vl("id %s | default: %s | use_paw_icon %s | mode %s",id,default,use_paw_icon,mode)
     if actor_kill then mode = mode_bi end
     if paw and use_paw_icon and (mode == "upaw") then
         local pawicon = paw.current_body_icon
@@ -253,7 +267,7 @@ function add_body_dot(id,text)
         tb.icon = mstyle
     end
     vl("Adding killspot %s (id %s) as Kill ID %s with style %s: %s",tb.name,id,tb.kill_id,mstyle,mapspot_text)
-    level.map_add_object_spot(id, mstyle, mapspot_text)
+    add_mapspot(id, mstyle, mapspot_text)
 end
 
 
@@ -275,7 +289,7 @@ end
 
 
 function tracked_kill(id)
-    vl("tracked_kill(%s) called", id)
+    --vl("tracked_kill(%s) called", id)
     if not (id and tracked_bodies[id]) then return end
     local is_monster = tracked_bodies[id].typ == 2
     local track_mode = is_monster and monster_tracking_mode or tracking_mode or 0
@@ -290,10 +304,12 @@ function tracked_kill(id)
 end
 
 
+
 function add_dot_if_tracked(id, text)
     --vl("add_dot_if_tracked called with id %s | text %s", id, text)
     if text and tracked_kill(id) then add_body_dot(id, text) end
 end
+
 
 
 function remove_dot(id,style)
@@ -303,13 +319,11 @@ function remove_dot(id,style)
     tb.icon = nil
     vl("Removing existing killspot for id %s", id)
     if level.map_remove_all_object_spots then
-        level.map_remove_all_object_spots(id)
+        remove_all_spots(id)
     else
-        level.map_remove_object_spot(id, removed_style)
-        level.map_remove_object_spot(id, default_style_other)
+        remove_mapspot(id, removed_style)
+        remove_mapspot(id, default_style_other)
     end
-    -- DISABLE
-    debug_dump_kills()
 end
 
 
@@ -342,7 +356,7 @@ end
 
 
 function clear_kill(victim)
-    vl("clear_kill called for %s (%s)",victim and victim:name(),victim and victim:id())
+    --vl("clear_kill called for %s (%s)",victim and victim:name(),victim and victim:id())
     if not victim then return end
     local id = victim:id()
     if tracked_bodies[id] then
@@ -353,14 +367,10 @@ function clear_kill(victim)
 end
 
 
-function is_living_thing(obj)
-    return IsStalker(obj) or IsMonster(obj)
-end
-
-
 function new_kill(victim, killer)
     if not (db.actor and victim and killer) then return end
     local se_obj    = alife_object(victim:id())
+    local kse_obj   = alife_object(killer:id())
     local comm      = get_object_community(se_obj)
     local typ       = 0
     local ktyp      = 0
@@ -377,11 +387,11 @@ function new_kill(victim, killer)
     local k_comm    = "The Zone"
     if IsStalker(killer) then
         ktyp        = 1
-        kname       = killer:character_name()
+        kname       = kse_obj and kse_obj:character_name()
     elseif IsMonster(killer) then
         ktyp        = 2
         k_comm      = "monster"
-        kname       = killer:character_name() or killer:name()
+        --kname       = killer:character_name() or killer:name()
     end
     local id        = victim:id()
     local name      = safename(victim)
@@ -451,16 +461,30 @@ function is_empty_mutant_corpse(obj)
 end
 
 function invalid_body_record(id, kd)
-    if not valid_id(id) then return true end
-    local tod = tonumber(kd and kd.tod) or 0
-    local se_obj = alife_object(id)
-    if not is_living_thing(se_obj) then return true end
-    local invalid = (not se_obj) or                    -- invalid obj
-                    (kd == nil) or                     -- invalid kill data
-                    (se_obj and se_obj:alive()) or     -- not dead
-                    is_empty_mutant_corpse(se_obj) or  -- decayed or looted mutant
-                    (get_time_elapsed(tod) > body_ttl) -- ttl expired
-    return invalid
+    if (not (kd and kd.kill_id)) or (not valid_id(id)) then
+        dl("Invalid data passed for Kill %s | ID %s", kd and kd.kill_id, id)
+        return true
+    end
+
+    local se_obj    = alife_object(id)
+    local now       = get_time_elapsed()
+    local ktime     = now - (kd.tod or 0)
+    
+    if not se_obj then
+        dl("%s: ID %s is no longer a valid se_obj", kd.kill_id, id)
+    elseif not is_living_thing(se_obj) then
+        dl("%s: object %s is not classed as a living thing, so it can't be a corpse", kd.kill_id, se_obj:name())
+    elseif se_obj:alive() then
+        dl("%s: %s is alive, so it can't be a corpse", kd.kill_id, se_obj:name())
+    elseif is_empty_mutant_corpse(se_obj) then
+        dl("%s: %s is a mutant corpse that has already been looted", kd.kill_id, se_obj:name())
+    elseif (ktime > body_ttl) then
+        dl("%s: %s has expired (now: %s | tod: %s | time: %s | ttl: %s)", kd.kill_id, se_obj:name(), now, kd.tod, ktime, body_ttl)
+    else
+        return false
+    end
+
+    return true
 end
 
 function reset_markers()
@@ -508,7 +532,7 @@ local function map_spot_menu_property_clicked(property_ui,id,level_name,prop)
         if prop == "deadbody" then
             -- catch for vanilla markers that slip through
             vl("Clearing vanilla map marker %s",prop)
-            level.map_remove_object_spot(id, prop)
+            remove_mapspot(id, prop)
             remove_dot(id)
             tracked_bodies[id] = nil
         elseif prop == context_item then
@@ -539,14 +563,14 @@ function clean_slate()
     dl("Wiping ALL tracked kill and mapspot data per player request")
     for k,v in pairs(tracked_bodies) do
         if level.map_remove_all_object_spots then
-            level.map_remove_all_object_spots(k)
+            remove_all_spots(k)
         else
             for _,s in pairs(styles) do
-                level.map_remove_object_spot(k,s)
+                remove_mapspot(k,s)
             end
-            level.map_remove_object_spot(k,default_style_force or default_style)
-            level.map_remove_object_spot(k,"deadbody")
-            level.map_remove_object_spot(k,"deadbody_location")
+            remove_mapspot(k,default_style_force or default_style)
+            remove_mapspot(k,"deadbody")
+            remove_mapspot(k,"deadbody_location")
         end
     end
     tracked_bodies = {}
@@ -625,6 +649,7 @@ end
 local function actor_on_first_update()
     first_update = true
     set_loot_autoclear(clear_on_loot)
+    debug_dump_kills()
     reset_markers()
 end
 

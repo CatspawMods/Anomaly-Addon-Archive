@@ -1,0 +1,17 @@
+<w>
+	<box x="0" y="0" stretch="1" complex_mode="1" />
+
+	<hide_head x="0" y="0" width="300" height="30" vert_align="c" complex_mode="1" />
+
+	<check x="0" y="0" width="35" height="30" stretch="1">
+        <texture>ui_inGame2_checkbox</texture>
+    </check>
+
+	<indicator x="0" y="0" width="50" height="50" stretch="1">
+		<texture>ui\nerfs\circle.dds</texture>
+	</indicator>
+	
+	<pointer x="0" y="0" width="50" height="50" stretch="1">
+		<texture>ui\nerfs\pointer_ring.dds</texture>
+	</pointer>
+</w>

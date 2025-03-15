@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<w>
+	<box stretch="1"/>
+
+	<alt_interact width="400" height="100" stretch="1" alignment="l">
+		<prompt width="15" height="20" stretch="1" vert_align="c">
+			<texture>ui_catsy_keybind_bg_single_v0</texture>
+		</prompt>
+
+		<prompt_l x="0" y="0" width="5.3125" height="20" stretch="1" alignment="l">
+			<texture>ui_catsy_keybind_bg_left_v0</texture>
+		</prompt_l>
+		<prompt_c x="5.3125" y="0" width="9.375" height="20" stretch="1" alignment="l">
+			<texture>ui_catsy_keybind_bg_center_v0</texture>
+		</prompt_c>
+		<prompt_r x="14.6875" y="0" width="5.3125" height="20" stretch="1" alignment="l">
+			<texture>ui_catsy_keybind_bg_right_v0</texture>
+		</prompt_r>
+
+		<label width="400" height="20" complex_mode="1" align="l" vert_align="c"/>
+	</alt_interact>
+
+	<prog_longpress width="15" height="20" align="l" min="0" max="1" pos="0">
+		<progress stretch="1">
+			<texture>ui_catsy_longpress_bigyellow</texture>
+		</progress>
+	</prog_longpress>
+
+	<prog_dotpointer width="5" height="26" stretch="1" min="0" max="1" pos="0" mode="down">
+		<progress stretch="1">
+			<texture>ui_catsy_line_white_45deg</texture>
+		</progress>
+	</prog_dotpointer>
+</w>

@@ -1,0 +1,12 @@
+<w>
+	<box stretch="1" />
+
+	<mcm_wid_pos_preview  x="0" y="0" width="640" height="270" stretch="1">
+		<preview_4_3 x="0" y="0" width="360" height="270" stretch="1" />
+		<preview_16_9 x="0" y="0" width="480" height="270" stretch="1" />
+		<preview_16_10 x="0" y="0" width="420" height="262" stretch="1" />
+		<preview_21_9 x="0" y="0" width="640" height="270" stretch="1" />
+		<widget  x="0" y="0"  width="1" height="1" stretch="1" />
+	</mcm_wid_pos_preview>
+</w>
+

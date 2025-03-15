@@ -1,0 +1,80 @@
+; Anomalous RF Signals addon included
+
+[letter_rf_tip_base]:identity_immunities
+$spawn					= "devices\roubles"
+$prefetch				= 16
+kind					= i_letter
+class					= II_ATTCH
+cform					= skeleton
+visual					= dynamics\equipments\quest\notes_letter_1.ogf
+description				= st_note_rf_tip_desc
+inv_name				= st_note_rf_tip_name
+inv_name_short			= st_note_rf_tip_name
+inv_grid_width			= 1
+inv_grid_height			= 1
+inv_grid_x				= 6
+inv_grid_y				= 14
+cost					= 500
+inv_weight				= 0.01
+attach_angle_offset		= -0.287979, 1.560923, 1.544060
+attach_position_offset 	= 0.096910, -0.013594, 0.107925
+attach_bone_name		= bip01_r_hand
+auto_attach				= false
+repair_part_bonus		= 0.01
+letter					= true
+snd_on_take				= paper
+use1_functor			= item_recipe.menu_read
+use1_action_functor		= item_recipe.func_letter
+use1_allow_db			= true
+
+[letter_rf_tip_controller]:letter_rf_tip_base
+inv_name				= st_note_rf_tip_controller_name
+inv_name_short			= st_note_rf_tip_controller_name
+
+[letter_rf_tip_poltergeist]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_poltergeist_name
+inv_name_short			= st_note_rf_tip_poltergeist_name
+
+[letter_rf_tip_burer]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_burer_name
+inv_name_short			= st_note_rf_tip_burer_name
+
+[letter_rf_tip_psydog]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_psydog_name
+inv_name_short			= st_note_rf_tip_psydog_name
+
+[letter_rf_tip_af_ring]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_ring_name
+inv_name_short			= st_note_rf_tip_af_ring_name
+
+[letter_rf_tip_af_electra_flash]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_electra_flash_name
+inv_name_short			= st_note_rf_tip_af_electra_flash_name
+
+[letter_rf_tip_af_electra_moonlight]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_electra_moonlight_name
+inv_name_short			= st_note_rf_tip_af_electra_moonlight_name
+
+[letter_rf_tip_af_black_spray]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_black_spray_name
+inv_name_short			= st_note_rf_tip_af_black_spray_name
+
+[letter_rf_tip_af_full_empty]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_full_empty_name
+inv_name_short			= st_note_rf_tip_af_full_empty_name
+
+[letter_rf_tip_af_ice]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_ice_name
+inv_name_short			= st_note_rf_tip_af_ice_name
+
+[letter_rf_tip_af_soul]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_soul_name
+inv_name_short			= st_note_rf_tip_af_soul_name
+
+[letter_rf_tip_af_compass]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_compass_name
+inv_name_short			= st_note_rf_tip_af_compass_name
+
+[letter_rf_tip_af_death_lamp]:letter_rf_tip_base
+inv_name			    = st_note_rf_tip_af_death_lamp_name
+inv_name_short			= st_note_rf_tip_af_death_lamp_name

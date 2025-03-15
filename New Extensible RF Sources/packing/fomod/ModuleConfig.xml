@@ -1,0 +1,117 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd"> 
+	<moduleName>New Extensible RF Sources</moduleName> 
+	<requiredInstallFiles> 
+		<folder source="Main\gamedata" destination="gamedata" /> 
+	</requiredInstallFiles> 
+	<installSteps order="Explicit"> 
+		<installStep name="Install NERFS"> 
+			<optionalFileGroups order="Explicit"> 
+				<group name="Click Next to proceed with installation" type="SelectExactlyOne"> 
+					<plugins order="Explicit"> 
+						<plugin name="Main"> 
+							<image path="fomod\images\nerfs-fomod.png" />
+							<description><![CDATA[
+New Extensible RF Sources (NERFS) is a comprehensive overhaul of the RF Receiver's functionality. 
+			
+Feature overview: https://www.youtube.com/watch?v=7sdVkImQS_Q
+
+• Expands the frequency range from 300 to 999 (configurable in MCM)
+• Adds interesting new sources of RF noise, like EM anomalies and cellular interference
+• Unique new sound effects for psy interference and GSM noise
+• Define up to 9 preset frequencies in MCM, and assign a different hotkey to each
+• Change frequency or presets with mouse wheel (requires modded binaries 20230701 or newer)
+• Adds an optional HUD indicator of signal strength, configurable for accessibility or preference
+• Compatible with TB's RF tasks, Reworked RF Receiver, and Remote Controlled Explosives]]>									</description> 
+							<typeDescriptor> 
+								<type name="Optional"/> 
+							</typeDescriptor> 
+						</plugin> 
+					</plugins> 
+				</group> 
+			</optionalFileGroups> 
+		</installStep> 
+		<installStep name="Anomalous RF Signals addon"> 
+			<optionalFileGroups order="Explicit"> 
+				<group name="Choose an option:" type="SelectExactlyOne"> 
+					<plugins order="Explicit"> 
+						<plugin name="Install ARFS DLTX"> 
+							<description><![CDATA[
+Install Anomalous RF Signals addon for moddded binaries that support DLTX.
+
+ARFS adds lootable lore notes that drop randomly from dead stalkers, giving the player a diegetic way to learn about useful RF frequencies through gameplay.
+
+GAMMA, EFP, and Screen Space Shaders are all based on the demonized binaries, and support DLTX. If you are running unmodified vanilla executables, DO NOT select this option.]]>
+							</description> 
+							<image path="fomod\images\arfs-fomod.png" />
+							<files> 
+								<folder source="Modules\ARFS DLTX\gamedata" destination="gamedata" priority="0" /> 
+							</files> 
+							<typeDescriptor> 
+								<type name="Recommended"/> 
+							</typeDescriptor> 
+						</plugin> 
+						<plugin name="Install ARFS Non-DLTX"> 
+							<description><![CDATA[
+Install Anomalous RF Signals addon for vanilla binaries, or modpacks which do not support DLTX.
+
+ARFS adds lootable lore notes that drop randomly from dead stalkers, giving the player a diegetic way to learn about useful RF frequencies through gameplay.
+
+If you are still using vanilla binaries, it is STRONGLY recommended that you upgrade to the demonized modded binaries, which can be downloaded here:
+https://github.com/themrdemonized/xray-monolith]]>
+							</description> 
+							<image path="fomod\images\arfs-fomod.png" />
+							<files> 
+								<folder source="Modules\ARFS Non-DLTX\gamedata" destination="gamedata" priority="0" /> 
+							</files> 
+							<typeDescriptor> 
+								<type name="Optional"/> 
+							</typeDescriptor> 
+						</plugin> 
+						<plugin name="Do not install"> 
+							<description>Do not install the ARFS module at all. Lore notes with information about RF frequencies will not be added to stalker loot tables.</description> 
+							<image path="fomod\images\arfs-fomod.png" />
+							<typeDescriptor> 
+								<type name="Optional"/> 
+							</typeDescriptor> 
+						</plugin> 
+					</plugins> 
+				</group> 
+			</optionalFileGroups> 
+		</installStep> 
+		<installStep name="Bizarre Interference compatibility patch"> 
+			<optionalFileGroups order="Explicit"> 
+				<group name="Choose an option:" type="SelectExactlyOne"> 
+					<plugins order="Explicit"> 
+						<plugin name="Do not install the patch"> 
+							<description><![CDATA[
+Bizarre Interference is an optional third-party addon which adds new sound effects that the RF Receiver can pick up during emissions. It can be downloaded here: 
+https://www.moddb.com/mods/stalker-anomaly/addons/bizarre-interference
+
+If you are not already using the Bizarre Interference addon, using the patch will crash your game--so unless you like collecting stack traces, just leave this default selected so that it isn't installed.]]>
+							</description> 
+							<image path="fomod\images\bizarre-fomod.png" />
+							<typeDescriptor> 
+								<type name="Recommended"/> 
+							</typeDescriptor> 
+						</plugin> 
+						<plugin name="Install the patch"> 
+							<description><![CDATA[
+Bizarre Interference is an optional third-party addon which adds new sound effects that the RF Receiver can pick up during emissions. It can be downloaded here: 
+https://www.moddb.com/mods/stalker-anomaly/addons/bizarre-interference
+
+If you are using Bizarre Interference, then you must install the patch in order to get the full expanded variety of sound effects from that addon. If so, select this option.]]>
+							</description> 
+							<image path="fomod\images\bizarre-fomod.png" />
+							<files> 
+								<folder source="Modules\Bizarre Interference\gamedata" destination="gamedata" priority="0" /> 
+							</files> 
+							<typeDescriptor> 
+								<type name="Optional"/> 
+							</typeDescriptor> 
+						</plugin> 
+					</plugins> 
+				</group> 
+			</optionalFileGroups> 
+		</installStep> 
+	</installSteps> 
+</config>

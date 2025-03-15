@@ -22,4 +22,8 @@
 		<texture id="ui_AlphaLion_XCorpseMarker-large" x="502" y="1" width="9" height="9" />
 		<texture id ="ui_mcm_catsy_messagebox_transbg_675x150" x="349" y="756" width="675" height="150" />			
 	</file>
+
+	<file name="ui\guide\encyclopedia_items_milpda">
+		<texture id="encyclopedia_items_milspec_pda_image" x="0" y="0" width="512" height="256" />
+	</file>
 </w>

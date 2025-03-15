@@ -1,0 +1,48 @@
+<w>
+	<file name ="catsy\ui_dotmarks">
+		<texture id = "ui_catsy_marker_intdot" x="0" y="0" width="64" height="64" />
+		<texture id = "ui_catsy_marker_breakable" x="0" y="64" width="64" height="64" />
+		<texture id = "ui_catsy_marker_trade" x="0" y="128" width="64" height="64" />
+		<texture id = "ui_catsy_marker_talk" x="0" y="192" width="64" height="64" />
+		<texture id = "ui_catsy_marker_door" x="0" y="256" width="64" height="64" />
+		<texture id = "ui_catsy_marker_mech" x="0" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_medic" x="192" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_dotactive" x="256" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_weight" x="320" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_ruble" x="384" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_icon_sortplus_fave" x="448" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_icon_sortplus_junk" x="512" y="320" width="64" height="64" />
+		<texture id = "ui_paw_emptytex" x="230" y="100" width="16" height="16" />
+		<texture id = "ui_catsy_main_drop" x="334" y="0" width="690" height="128" />
+		<texture id = "ui_catsy_card_drop" x="334" y="128" width="690" height="128" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v0" x="0" y="0" width="1" height="1" />
+		<texture id = "ui_catsy_keybind_bg_left_v0" x="0" y="0" width="1" height="1" />
+		<texture id = "ui_catsy_keybind_bg_center_v0" x="0" y="0" width="1" height="1" />
+		<texture id = "ui_catsy_keybind_bg_right_v0" x="0" y="0" width="1" height="1" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v1" x="64" y="0" width="128" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v1" x="64" y="0" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_center_v1" x="98" y="0" width="60" height="128" />
+		<texture id = "ui_catsy_keybind_bg_right_v1" x="158" y="0" width="34" height="128" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v2" x="64" y="128" width="128" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v2" x="64" y="128" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_center_v2" x="98" y="128" width="60" height="128" />
+		<texture id = "ui_catsy_keybind_bg_right_v2" x="158" y="128" width="34" height="128" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v3" x="64" y="256" width="128" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v3" x="64" y="256" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_center_v3" x="98" y="256" width="60" height="128" />
+		<texture id = "ui_catsy_keybind_bg_right_v3" x="158" y="256" width="34" height="128" />
+
+		<texture id = "ui_catsy_longpress_full" x="194" y="2" width="10" height="126" />
+		<texture id = "ui_catsy_longpress_bigyellow" x="192" y="128" width="128" height="128" />
+		<texture id = "ui_catsy_line_white_45deg" x="219" y="0" width="97" height="81" />
+
+		<texture id = "ui_mcm_dotmarks_banner_main" x="0" y="400" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_adv" x="0" y="500" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_objs" x="0" y="600" width="1024" height="100" />
+	</file>
+</w>
+

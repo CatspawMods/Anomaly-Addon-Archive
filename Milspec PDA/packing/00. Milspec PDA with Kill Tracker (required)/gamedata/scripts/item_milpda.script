@@ -16,8 +16,8 @@
 		* demonized for help with the NPC PDA weapon hide fix
 -- ==================================================================--]]
 script_name 			= "item_milpda"
-script_version        	= "1.13"
-release_date            = 20240912
+script_version        	= "1.14.2"
+release_date            = 20250311
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 		1. Pick up any Milspec PDAs and save your game
@@ -35,6 +35,7 @@ printf("%sMilspec PDA v%s (rel %s) began initialization at tg %s", logprefix, sc
 assert(utils_catspaw_common,
     "\n! ERROR: Milspec PDA requires utils_catspaw_common, which does not exist!\n"
 )
+
 local dl 				= function(logtext, ...) utils_catspaw_common.dlog(item_milpda, logtext, ...) end
 local vl 				= function(logtext, ...) utils_catspaw_common.vlog(item_milpda, logtext, ...) end
 local dotip 			= function(tiptext, dur, src, beep, icon, snd) utils_catspaw_common.dotip(tiptext, dur, src or "", beep, icon, snd or "pda_tips") end
@@ -355,15 +356,17 @@ function get_pda_feature_setting(feature,sec)
 	if known_pda(sec) then return pda_defs[sec][feature] end
 end
 
+local last_killspot_check = nil
 function actor_can_see_killspots()
 	if not (db.actor and kiltrak_enabled) then return false end
-	local dev = db.actor:item_in_slot(8)
-	if not dev then return false end
-	local pda = pda_defs[dev:section()]
-	if known_pda(dev:section()) then
-		return pda.show_k or false
+	local sec = equipped_pda()
+	local pda = sec and pda_defs[sec]
+	local can_see = (pda and pda.show_k) and true or false
+	if (not last_killspot_check) or (can_see ~= last_killspot_check) then
+		last_killspot_check = can_see
+		vl("actor_can_see_killspots: changed to %s | pda: %s", can_see, sec)
 	end
-	return false
+	return can_see
 end
 
 function has_faction_network_data(comm)
@@ -427,7 +430,7 @@ function pda_type_can_see_mapspot(target_comm)
 
 	local has_data = has_faction_network_data(comm)
 	
-	vl("Faction %s has_data: %s | comm %s | fd[comm].req %s",comm,has_data,fd[comm].req)	
+	--vl("Faction %s has_data: %s | comm %s | fd[comm].req %s",comm,has_data,fd[comm].req)	
 	return has_data
 end
 

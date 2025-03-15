@@ -1,0 +1,27 @@
+<!-- ====================================================================
+	New Extensible RF Sources
+    Author: Catspaw
+    Source: https://www.moddb.com/members/catspawmods/addons
+    Replacement for RF Receiver guide entry
+===================================================================== -->
+
+<string_table>
+	<string id="encyclopedia_items_detector_radio_text">
+		<text>
+			An %c[pda_white]RF Receiver%c[ui_gray_1] is a small device with a highly-sensitive RF module used for basic communications.
+			
+			\n \n%c[pda_green]Information%c[ui_gray_1]
+			\nRF Receivers have proven to be more durable than advanced devices such as PDAs, which is one reason why many stalkers prefer to own one for emergency situations or other uses.
+			\nMade of simple electronic components and a sensitive RF module, this device has the ability to receive radio signals on frequencies between 1 and 999 Mhz (configurable in MCM). 
+			
+			\n \n%c[pda_blue]Usage%c[ui_gray_1]
+			\nWhile holding the receiver, you can switch the working radio frequency.
+			\n• Press %c[255,255,215,0]Mouse1%c[ui_gray_1] or scroll up to increase the frequency.
+			\n• Press %c[255,255,215,0]Mouse2%c[ui_gray_1] or scroll down to decrease the frequency.
+			\n• Hold %c[255,255,215,0]Left-Shift%c[ui_gray_1] to increase frequency jumps by 10 Hz while increasing / decreasing the working frequency.
+			\n• Hold %c[255,255,215,0]Left-Alt%c[ui_gray_1] to increase frequency jumps by 50 Hz while increasing / decreasing the working frequency.
+
+			\n \n• Consumes %c[pda_white]0.1 uAh%c[ui_gray_1] per second of continuous usage.
+		</text>
+	</string>
+</string_table>

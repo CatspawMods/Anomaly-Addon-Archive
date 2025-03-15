@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.3"
-release_date    = 20240816
+script_version 	= "1.4"
+release_date    = 20250307
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -31,11 +31,36 @@ release_date    = 20240816
 assert(utils_catspaw_common,
 "! ERROR: " .. script_name .. " requires utils_catspaw_common, which could not be found!")
 -- =======================================================================
+-- 		LOGGING
+-- =======================================================================
+local dl, vl
+debuglogs   = false
+verbose     = false
+
+function allow_local_logging(onoff)
+    -- By default, logging in this script inherits its settings from utils_catspaw_common
+    -- This function allows anyone to switch on debug logging for this script's operations only
+    if onoff then
+        dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+    else
+        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+    end
+end
+allow_local_logging(true)
+
+function set_debug_logging(debug_en, verbose_en)
+    if (debug_en ~= nil) then debuglogs = debug_en end
+    if (verbose_en ~= nil) then verbose = verbose_en end
+end
+--set_debug_logging(true, true) --uncomment this line to enable all logging for troubleshooting
+
+-- =======================================================================
 -- 		SHORTCUTS
 -- =======================================================================
-local dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
-local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
 local safeid 			= utils_catspaw_common.safeid
+local valid_id 			= utils_catspaw_common.valid_id
 local getstrtbl_support	= utils_catspaw_common.exe_getstrtbl_support
 -- =======================================================================
 local psk       		= utils_data.parse_string_keys
@@ -43,6 +68,8 @@ local gts 				= game.translate_string
 local sformat 			= string.format
 local sfind 			= string.find
 local floor 			= math.floor
+local DIK_name          = ui_mcm and ui_mcm.display_key or (function() return "" end)
+
 -- =======================================================================
 -- 		TEXT SUBSTITUTION
 -- =======================================================================
@@ -64,6 +91,13 @@ local actor_tokens = {
 
 local ruble_locstr 		= "st_currency_rub"
 
+function first_lower(str)
+    return str and (str:gsub("^%u", string.lower))
+end
+
+function first_upper(str)
+    return str and (str:gsub("^%l", string.upper))
+end
 
 function explode_name(name)
 	--
@@ -253,11 +287,205 @@ function parse_color_tokens(s, t, c)
 	return psk(s, docolor and color_tokens or nocolor_tokens)
 end
 
+-- =======================================================================
+-- 		KEYBIND TEXT
+-- =======================================================================
+function valid_bind(kb)
+    return (kb ~= nil) and (kb ~= "") and (kb ~= "<!!!>") and (kb ~= -1)
+end
+
+
+function bindtext(kb, km)
+	-- Returns the display name for kb and km, where:
+	-- 	kb = the DIK code of any keybind, and
+	-- 	km = whether that key takes a modifier
+	-- 		0 - no modifier
+	-- 		1 - Shift
+	-- 		2 - Ctrl
+	-- 		3 - Alt
+    local kbt = ""
+    local kmt = ""
+    local mt = ""
+    local vbkb = valid_bind(kb)
+    local vbkm = km and km > 0
+    if vbkb then
+        kbt = DIK_name(kb)
+    end
+    if vbkm then
+        if km and km < 29 then
+            km = ((km == 1) and 42) or ((km == 2) and 29) or ((km == 3) and 56)
+        end
+        if km then
+            kmt = DIK_name(km)
+        end
+    end
+
+    if vbkb and vbkm then
+        mt = "+"
+    elseif not (vbkb or vbkm) then
+        kmt = "[UNBOUND]"
+        mt = ""
+        kbt = ""
+    end
+
+    return string.format("%s%s%s",kmt,mt,kbt)
+end
+
+-- =======================================================================
+-- 		OBJECT NAMES
+-- =======================================================================
+function find_best_localization(obj, name, section)
+	-- Tries to find the best localized name for an object of unknown type
+	-- based on known localization string naming patterns
+    name = name or (obj and obj:name())
+    section = section or (obj and ((obj.section and obj:section()) or (obj.section_name and obj:section_name())))
+
+    local locst = section and ini_sys:r_string_ex(section, "inv_name")
+    local text  = locst and gts(locst)
+    if text and locst and (text ~= locst) then
+        vl("Found localization for string %s: %s", locst, text)
+    end
+
+    if name and not text then
+        for _,locst in ipairs({
+        		name, "st_"..name,
+        		name.."_name",
+        		"st_"..name.."_name"
+        	}) do
+            text = gts(locst)
+            if text ~= locst then
+                vl("Found localization for string %s: %s", locst, text)
+                break
+            else
+                text = nil
+            end
+        end
+    end
+    if section and not text then     
+        for _,locst in ipairs({
+        		section, "st_"..section,
+        		section.."_name",
+        		"st_"..section.."_name"
+        	}) do
+            text = gts(locst)
+            if text ~= locst then
+                vl("Found localization for string %s: %s", locst, text)
+                break
+            else
+                text = nil
+            end
+        end
+    end
+    if not text then
+        dl("No localization or other name found for object | name %s | section %s", name, section)
+    end
+    return text
+end
+
+function safename(id)
+    if not valid_id(id) then return end
+    local text      = "unknown"
+    local se_obj    = alife_object(id)
+    if not se_obj then return text end
+    local name      = se_obj:name() or text
+    local cls       = se_obj:clsid()
+
+    if paw and paw.pins[id] then
+        -- If there's a pin for this ID, use its text above all else
+        text = paw.pins[id].name
+        vl("%s (%s) is a pin: %s",name,id,text)
+    elseif paw and (cls == clsid.script_zone) then
+        text = gts("st_paw_pin_default_name")
+        vl("%s (%s) is a script zone: %s",name,id,text)
+    elseif (cls == clsid.script_restr) then
+        local _,_,hint = txr_routes.get_route_info(name)
+        if hint then
+            text = hint and gts(hint) or text
+        else
+            text = gts(name)
+        end
+        vl("%s (%s) is a level transition: %s",name,id,text)
+    elseif (cls == clsid.smart_terrain) then
+        text = gts("st_"..name.."_name"):gsub("%."," -")
+        vl("%s (%s) is a smart terrain: %s",name,id,text)
+    elseif (cls == clsid.online_offline_group_s) then
+        local comm = se_obj.player_id
+        local sq = paw and gts("st_paw_squad") or "squad"
+        text = gts(comm)
+        text = text.." "..sq
+        if debuglogs then
+            text = text..": "..name
+        end
+        vl("%s (%s) is NPC squad with faction %s: %s",name,id,comm,text)
+    elseif IsInvbox(nil,cls) then
+        local obj = get_object_by_id(id)
+        local section = obj and obj:section()
+        text = find_best_localization(obj, name, section)
+        if name and (not text) or (text == name) then
+            if name:find("smart_terrain") and name:find("_box") then
+                local smartname = name:sub(1,-5)
+                text = gts("st_"..smartname.."_name"):gsub("%."," -") .. " " .. (paw and gts("st_paw_stash") or "stash")
+            end
+        end
+        if (not text) or (text == locst) then
+            dl("No localization found for stash %s",locst)
+            text = paw and (gts("st_paw_unknown").." "..gts("st_paw_stash")) or "Unknown stash"
+        end
+        vl("%s (%s) is an inventory_box stash: %s",name,id,text)
+    elseif IsStalker(nil,cls) or (cls == clsid.script_trader) then
+        text = se_obj:character_name()
+        vl("%s (%s) is a stalker: %s",name,id,text)
+    else
+        local obj = get_object_by_id(id)
+        local section = obj and obj:section()
+        if not section then
+            return text
+        end
+        if IsMonster(nil,cls) then
+            --[[
+                Hack adapted from ui_enemy_health.script
+                This logic acts as a translation layer for
+                any monster kind/species that doesn't line
+                up with the name of its encyclopedia entry
+            --]]
+            local special_cases = {
+                dog             = "blind_dog",
+                bird            = "crow",
+                giant           = "pseudogiant",
+                SM_KARLIK       = "karlik",
+                SM_LURKER       = "lurker",
+                SM_POLTER_G     = "poltergeist",
+                SM_PYRO_G       = "pyrogeist",
+                SM_PSEUDO_G     = "pseudogeist",
+                SM_PSYSUCKER    = "psysucker",
+            }
+            if string.find(section,'rotan') then
+                text = "rat"
+            elseif string.find(section,'psy_dog') then
+                text = "psydog"
+            else
+                local what = ini_sys:r_string_ex(section,"kind") or ini_sys:r_string_ex(section,"species") or nil
+                text = special_cases[what] or what
+            end
+            text = text and gts("encyclopedia_mutants_"..text)
+            vl("%s (%s) is a creature: %s",name,id,text)
+        else
+            text = find_best_localization(obj, name, section)
+            if not text then
+                text = name
+                dl("No localization or other name found for object %s (%s)", name, id)
+            end
+        end
+    end
+
+    dl("safename returns %s for %s",text, name)
+    return text
+end
+
 function load_female_name_strings()
 	if not getstrtbl_support() then
 		dl("load_female_name_strings: function get_string_table is unsupported by GAMMA or vanilla, aborting")
 	return end
-	-- GAMMA does not support this recent modded exes feature
 	-- Compile list of female names starting with "name_woman_"
 	-- Mainly for Dux's character kit
 	dl("load_female_name_strings: parsing any recognized female names in the character list")
@@ -277,3 +505,4 @@ function on_game_start()
 	-- Disabled by default, but feature is fully working and can be used by launching load_female_name_strings()
 	-- RegisterScriptCallback("actor_on_first_update", load_female_name_strings)
 end
+

@@ -1,0 +1,347 @@
+-- ======================================================================
+--[[    New Extensible RF Sources
+-- ======================================================================
+	MCM initialization script
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/new-extensible-rf-sources/
+-- ===================================================================--]]
+local rel_version 	= "$clr_redNERFS not installed!"
+if item_radio then
+	local ver 		= item_radio.script_version
+	local rel 		= tostring(item_radio.release_date)
+	if ver and rel then
+		rel_version = "$clr_tgrv" .. ver .. " (rel " .. rel .. ")"
+	end
+end
+
+if ui_rf_widget then end
+if utils_catspaw_common then end
+-- Force these to load first
+local strbool 			= utils_catspaw_common.strbool
+local psk          		= utils_data.parse_string_keys
+local gts 				= game.translate_string
+local widgets 			= {}
+local modes 			= {}
+local unsquish_ratio 	= (device().height / device().width) / (768 / 1024)
+
+color_tokens = {
+    ["clr_lbl"] = "%" .. "%c[255,0,200,220]",
+    ["clr_gld"] = "%" .. "%c[255,255,215,0]",
+    ["clr_wht"] = "%" .. "%c[255,255,255,255]",
+    ["clr_def"] = "%" .. "%c[255,200,200,200]",
+    ["clr_prp"] = "%" .. "%c[255,137,48,225]",
+    ["clr_red"] = "%" .. "%c[255,255,0,0]",
+    ["clr_tgr"] = "%" .. "%c[128,90,90,90]",
+}
+
+function on_mcm_load()
+	-- Trap if another addon has overwritten item_radio.script
+	local nerfs_installed = item_radio and item_radio.script_version
+	local dar_installed = (dar_rf_noise ~= nil)
+	local headerstring = nerfs_installed and "header" or "loadfailed"
+	local headercolor = nerfs_installed and {220,220,220,220} or {255,255,0,0}
+	local headerimg = dar_installed and "ui_mcm_nerfs_main_headerimg_new" or "ui_mcm_nerfs_main_headerimg"
+	unsquish_ratio = (device().height / device().width) / (768 / 1024)
+
+	op = {	 id= "nerfs", gr={
+			{ id = "nerfmain", sh=true, gr={
+					{id = "menuslide_main", type = "slide", link = headerimg, size = {512,235}, spacing = 0, borderless= true},
+					{id = "mainheader1", type = "desc", clr = headercolor, text = "ui_mcm_nerfs_nerfmain_"..headerstring.."1",
+						install_ok 	= nerfs_installed,
+						ui_hook_functor = {catsy_nerfs_mcm.mcm_init_header_element},
+					},
+					{id = "mainheader2", type = "desc", clr = headercolor, text = "ui_mcm_nerfs_nerfmain_"..headerstring.."2",
+						install_ok 	= nerfs_installed,
+						ui_hook_functor = {catsy_nerfs_mcm.mcm_init_header_element},
+					},
+					{id = "max_freq", type = "track", val = 2, min = 300, max = 999, step = 1, def = 999},
+					{id = "use_mwheel", type = "check", val = 1, def = true},
+					{id = "header3", type = "desc", text = "ui_mcm_nerfs_scrolldown"},
+					{id = "enable_rrfr", type = "check", val = 1, def = false},
+					{id = "debuglogs", type = "check", val = 1, def = false},
+					{id = "binaries", type = "desc", text = "ui_mcm_nerfs_nerfmain_binaries"},
+				},
+			},
+			{ id = "nerfpresets", sh=true, gr={
+					{id = "headerimg", type = "slide", link = "ui_mcm_nerfs_presets_headerimg", size = {512,50}, spacing = 20},
+					{id = "header1", type = "desc", clr = {255,255,255,0}, text = "ui_mcm_nerfpresets_header1"},
+					{id = "header2", type = "desc", clr = {255,200,200,200}, text = "ui_mcm_nerfpresets_header2"},
+					{id = "preset1_freq", type = "input", val = 2, min = 1, max = 999, def = 1},
+	                {id = "kb_preset1", type = "key_bind", val = 2, def = DIK_keys.DIK_1},
+	                {id = "mk_preset1", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset2_freq", type = "input", val = 2, min = 1, max = 999, def = 145},
+	                {id = "kb_preset2", type = "key_bind", val = 2, def = DIK_keys.DIK_2},
+	                {id = "mk_preset2", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset3_freq", type = "input", val = 2, min = 1, max = 999, def = 300},
+	                {id = "kb_preset3", type = "key_bind", val = 2, def = DIK_keys.DIK_3},
+	                {id = "mk_preset3", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset4_freq", type = "input", val = 2, min = 1, max = 999, def = 400},
+	                {id = "kb_preset4", type = "key_bind", val = 2, def = DIK_keys.DIK_4},
+	                {id = "mk_preset4", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset5_freq", type = "input", val = 2, min = 1, max = 999, def = 500},
+	                {id = "kb_preset5", type = "key_bind", val = 2, def = DIK_keys.DIK_5},
+	                {id = "mk_preset5", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset6_freq", type = "input", val = 2, min = 1, max = 999, def = 762},
+	                {id = "kb_preset6", type = "key_bind", val = 2, def = DIK_keys.DIK_6},
+	                {id = "mk_preset6", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset7_freq", type = "input", val = 2, min = 1, max = 999, def = 810},
+	                {id = "kb_preset7", type = "key_bind", val = 2, def = DIK_keys.DIK_7},
+	                {id = "mk_preset7", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset8_freq", type = "input", val = 2, min = 1, max = 999, def = 869},
+	                {id = "kb_preset8", type = "key_bind", val = 2, def = DIK_keys.DIK_8},
+	                {id = "mk_preset8", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+					{id = "preset9_freq", type = "input", val = 2, min = 1, max = 999, def = 915},
+	                {id = "kb_preset9", type = "key_bind", val = 2, def = DIK_keys.DIK_9},
+	                {id = "mk_preset9", type = ui_mcm.kb_mod_radio, val = 2, def = 3, hint = "mcm_kb_modifier", 
+		                content = { 
+		                    {0,"mcm_kb_mod_none"}, 
+		                    {1,"mcm_kb_mod_shift"}, 
+		                    {2,"mcm_kb_mod_ctrl"}, 
+		                    {3,"mcm_kb_mod_alt"}
+		                }},
+				},
+			},
+		},
+	}
+	local widgetmenu =
+			{ id = "nerfwidget", sh=true, gr={
+					{id = "headerimg", type = "slide", link = "ui_mcm_nerfs_widget_headerimg", size = {512,50}, spacing = 20},
+					{id = "show", type = "check", val = 1, def = false},
+					{id = "pointer", type = "check", val = 1, def = false},
+
+					{id = "pos_preview", 
+						type 			= "image",
+					 	link 			= "ui_mcm_pospre_emptytex",
+					 	onselect_path 	= "nerfs/nerfwidget",
+					 	size			= {512,270},
+						ui_hook_functor = {catsy_nerfs_mcm.mcm_init_pos_preview},
+					},
+
+					{id = "pos_x", type= "input", val = 2, min = 0, max = 1024, def = 491,
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_value_select},
+					},
+					{id = "pos_y", type= "input", val = 2, min = 0, max = 768, def = 670,
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_value_select},
+					},
+					{id = "preview_aspect", type= "list", val = 0, def = "16_9",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_value_select}, 
+						content = {
+						   {"16_9","preview_aspect_16_9"},
+						   {"16_10","preview_aspect_16_10"},
+						   {"21_9","preview_aspect_21_9"},
+						   {"4_3","preview_aspect_4_3"},
+						}
+					},
+					{id = "divider", type= "line"},
+
+					{id = "header", type = "desc", text = "ui_mcm_nerfs_scrolldown"},
+					{id = "lo_header", type = "desc", text = "ui_mcm_nerfs_nerfwidget_lo_header",
+						ui_hook_functor = {catsy_nerfs_mcm.mcm_init_color_preview},
+					},
+					{id = "lo_a", type = "input", val = 2, min = 0, max = 255, def = 255, hint = "nerfs_nerfwidget_clr_a",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "lo_r", type = "input", val = 2, min = 0, max = 255, def = 50, hint = "nerfs_nerfwidget_clr_r",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "lo_g", type = "input", val = 2, min = 0, max = 255, def = 50, hint = "nerfs_nerfwidget_clr_g",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "lo_b", type = "input", val = 2, min = 0, max = 255, def = 50, hint = "nerfs_nerfwidget_clr_b",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "hi_header", type = "desc", text = "ui_mcm_nerfs_nerfwidget_hi_header",
+						ui_hook_functor = {catsy_nerfs_mcm.mcm_init_color_preview},
+					},
+					{id = "hi_a", type = "input", val = 2, min = 0, max = 255, def = 255, hint = "nerfs_nerfwidget_clr_a",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "hi_r", type = "input", val = 2, min = 0, max = 255, def = 50, hint = "nerfs_nerfwidget_clr_r",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "hi_g", type = "input", val = 2, min = 0, max = 255, def = 250, hint = "nerfs_nerfwidget_clr_g",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "hi_b", type = "input", val = 2, min = 0, max = 255, def = 50, hint = "nerfs_nerfwidget_clr_b",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "em_header", type = "desc", text = "ui_mcm_nerfs_nerfwidget_em_header",
+						ui_hook_functor = {catsy_nerfs_mcm.mcm_init_color_preview},
+					},
+					{id = "em_a", type = "input", val = 2, min = 0, max = 255, def = 128, hint = "nerfs_nerfwidget_clr_a",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "em_r", type = "input", val = 2, min = 0, max = 255, def = 200, hint = "nerfs_nerfwidget_clr_r",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "em_g", type = "input", val = 2, min = 0, max = 255, def = 0, hint = "nerfs_nerfwidget_clr_g",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+					{id = "em_b", type = "input", val = 2, min = 0, max = 255, def = 0, hint = "nerfs_nerfwidget_clr_b",
+						on_selection_functor = {catsy_nerfs_mcm.pos_preview_color_select}, 
+					},
+
+				},
+			}
+
+	if ui_rf_widget then
+		-- Add the accessibility widget menu if that script is present
+		table.insert(op.gr, widgetmenu)
+	end
+	return op
+end
+
+GUI_PosPre = nil
+
+local function get_clr_val(mode,clr)
+	return axr_main.config:r_value("mcm", "nerfs/nerfwidget/"..mode.."_"..clr, {val=2})
+end
+
+function sync_widget_color(ctrl, colors)
+	if not (ctrl and colors) then return end
+	ctrl:SetTextureColor(GetARGB(colors.a, colors.r, colors.g, colors.b))
+end
+
+function mcm_init_pos_preview(anchor, handlers, attrs, flags)
+	local path = attrs and attrs.onselect_path
+	if not (anchor and path) then return end
+
+    local mcm_x		= axr_main.config:r_value("mcm", "nerfs/nerfwidget/pos_x")
+    local mcm_y		= axr_main.config:r_value("mcm", "nerfs/nerfwidget/pos_y")
+
+	local args = {
+		def_x 		= mcm_x or 491,
+		def_y 		= mcm_y or 670,
+		opt_changex = "pos_x",
+		opt_changey = "pos_y",
+		widget_tex 	= "rax_circle_ind"
+	}
+	
+	GUI_PosPre = pos_previewer_mcm.UIMCMPosPreview(anchor, path, args)
+	for k,v in pairs(pos_previewer_mcm.aspects) do
+		widgets[k] = {
+			ctrl 	= GUI_PosPre.preview.wid[k],
+			colors 	= {
+				a = get_clr_val("hi", "a"),
+				r = get_clr_val("hi", "r"),
+				g = get_clr_val("hi", "g"),
+				b = get_clr_val("hi", "b")
+			}
+		}
+
+		sync_widget_color(widgets[k].ctrl, widgets[k].colors)
+	end
+end
+
+function mcm_init_color_preview(anchor, handlers, attrs, flags)
+	local xml = CScriptXmlInit()
+	xml:ParseFile("nerfs_ui_elements.xml")
+	local mcmid = attrs and attrs.id
+	local mode 	= string.sub(mcmid,1,2)
+	modes[mode] = {
+		ctrl = xml:InitStatic("indicator", anchor),
+		colors = {
+			a = get_clr_val(mode, "a"),
+			r = get_clr_val(mode, "r"),
+			g = get_clr_val(mode, "g"),
+			b = get_clr_val(mode, "b")
+		}
+	}
+	modes[mode].ctrl:SetWndSize(vector2():set(48 * unsquish_ratio, 48))
+	sync_widget_color(modes[mode].ctrl, modes[mode].colors)
+	handlers.desc:SetWndPos(vector2():set(60 * unsquish_ratio, 0))
+end
+
+function mcm_init_header_element(anchor, handlers, opts, flags)
+	local installed = opts and opts.install_ok
+	if not installed then return end
+	handlers.desc:SetText("")
+	if (opts.id ~= "mainheader1") then return end
+
+	handlers.desc:SetText("")
+	anchor:SetWndPos(vector2():set(0, -16))
+	local xml 	= CScriptXmlInit()
+	xml:ParseFile("nerfs_ui_elements.xml")
+	local head 	= xml:InitStatic("box",anchor)
+	local tbg1	= xml:InitStatic("box",anchor)
+	local tbox1	= xml:InitTextWnd("box",tbg1)
+	local tbox2	= xml:InitTextWnd("box",tbg1)
+	local rvbox	= xml:InitTextWnd("box",tbg1)
+
+	tbg1:SetWndSize(vector2():set(650 * unsquish_ratio, 215))
+	tbg1:SetWndPos(vector2():set(10, -5))
+	tbg1:InitTexture("ui_mcm_nerfs_messagebox_transbg")
+
+	tbox1:SetWndSize(vector2():set(620 * unsquish_ratio, 150))
+	tbox1:SetText(psk(gts("ui_mcm_nerfs_nerfmain_header_complex1"), color_tokens))
+	tbox1:SetWndPos(vector2():set(10, 12))
+
+	tbox2:SetWndSize(vector2():set(620 * unsquish_ratio, 50))
+	tbox2:SetText(psk(gts("ui_mcm_nerfs_nerfmain_header_complex2"), color_tokens))
+	tbox2:SetWndPos(vector2():set(10, 170))
+
+	rvbox:SetWndSize(vector2():set(480 * unsquish_ratio, 20))
+	rvbox:SetText(psk(rel_version, color_tokens))
+	rvbox:SetWndPos(vector2():set(0, -16))
+	rvbox:SetFont(GetFontMedium())
+end
+
+function pos_preview_value_select(path, opt, value, attrs)
+	GUI_PosPre:CheckSelectedValue(path, opt, value)
+end
+
+function pos_preview_color_select(path, opt, value, attrs)
+	local mode 	= string.sub(opt,1, 2)
+	local clr 	= string.sub(opt,4, 4)
+	modes[mode].colors[clr] = value
+	sync_widget_color(modes[mode].ctrl, modes[mode].colors)
+end
+

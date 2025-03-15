@@ -1,0 +1,17 @@
+<w>
+	<file name="ui\guide\encyclopedia_arfs">
+		<texture id="encyclopedia__notes_letter_rf_tip_controller_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_poltergeist_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_burer_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_psydog_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_ring_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_electra_flash_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_electra_moonlight_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_black_spray_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_full_empty_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_ice_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_soul_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_compass_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_letter_rf_tip_af_death_lamp_image" x="0" y="0" width="512" height="256" />
+	</file>
+</w>

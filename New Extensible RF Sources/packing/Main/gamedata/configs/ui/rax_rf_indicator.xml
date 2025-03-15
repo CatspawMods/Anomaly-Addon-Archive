@@ -1,0 +1,8 @@
+<w>
+	<indicator x="0" y="0" width="50" height="50" stretch="1">
+		<!-- The 0,0 in the indicator line above is used as a starting point for the position that you can customize in MCM. You don't need to hardcode this. -Catspaw -->
+
+		<!-- x is the location of the left edge of the indicator, y is the top edge. x is 0 to 1024 y is 0 to 768 no matter your dispaly resulution. 0,0 is top left. 512,384 is the middle of the screen(ish), 1024,768 will put the top left of the texture at the bottom right if the screen meaning the texture will be off screen. -RavenAscendant /!-->
+		<texture>ui\nerfs\circle.dds</texture>
+	</indicator>
+</w>

@@ -1,0 +1,559 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Author: Catspaw
+    Updated: 20250313
+    Permission granted to freely translate this file into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+	<string id="st_alti_unload_weapon">
+		<text>Unload</text>
+	</string>
+
+	<string id="st_alti_eject_mag">
+		<text>Eject mag of</text>
+	</string>
+
+	<string id="st_alti_take">
+		<text>Take</text>
+	</string>
+
+	<string id="st_alti_use_booster">
+		<text>Use</text>
+	</string>
+
+	<string id="st_alti_takeuse">
+		<text>Take and use</text>
+	</string>
+
+	<string id="st_alti_cannot">
+		<text>Can't</text>
+	</string>
+
+	<string id="st_alti_read">
+		<text>Take and read</text>
+	</string>
+
+	<string id="st_alti_search">
+		<text>Search</text>
+	</string>
+
+	<string id="st_alti_consume_food">
+		<text>Consume</text>
+	</string>
+
+	<string id="st_alti_speak">
+		<text>Speak with</text>
+	</string>
+
+	<string id="st_alti_pickup_bp">
+		<text>Pick up your stash and everything in it</text>
+	</string>
+
+	<string id="st_alti_deploy_bp">
+		<text>Place stash using</text>
+	</string>
+
+	<string id="st_alti_takeall">
+		<text>Take everything from</text>
+	</string>
+
+	<string id="st_alti_empty">
+		<text>(empty)</text>
+	</string>
+
+	<string id="st_alti_from">
+		<text>from</text>
+	</string>
+
+	<string id="st_alti_now">
+		<text>now</text>
+	</string>
+
+	<string id="st_alti_uses">
+		<text>uses</text>
+	</string>
+
+	<string id="st_alti_nopower">
+		<text>no power</text>
+	</string>
+
+	<string id="st_alti_hold">
+		<text>(Hold) </text>
+	</string>
+
+	<string id="st_alti_busy">
+		<text>Too busy to </text>
+	</string>
+
+	<string id="st_alti_doubletap">
+		<text>(Double-tap) </text>
+	</string>
+
+	<string id="st_alti_prompt_ammo">
+		<text>%s %s (%s) %s %s</text>
+	</string>
+
+	<string id="st_alti_prompt_eatable">
+		<text>%s %s %s</text>
+	</string>
+
+	<string id="st_alti_prompt_booster">
+		<text>%s %s %s</text>
+	</string>
+	
+	<string id="st_body_is_claimed">
+		<text>Claimed</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_bodies">
+		<text>Mark Bodies</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_ammo">
+		<text>Mark Ammo</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_stashes">
+		<text>Mark Stashes</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_weapons">
+		<text>Mark Weapons</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_grenades">
+		<text>Mark Grenades</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_explosives">
+		<text>Mark Explosives</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_outfits">
+		<text>Mark Outfits</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_headgear">
+		<text>Mark Headgear</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_artefacts">
+		<text>Mark Artefacts</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_consumables">
+		<text>Mark Consumables</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_tools">
+		<text>Mark Tools</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_devices">
+		<text>Mark Devices</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_quest">
+		<text>Mark Quest Items</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_campfires">
+		<text>Mark Campfires</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_misc">
+		<text>Mark Misc Loot</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_boxes">
+		<text>Mark Breakable Boxes</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_doors">
+		<text>Mark Doors</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_stalkers">
+		<text>Mark NPCs</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_workshops">
+		<text>Mark Workbenches</text>
+	</string>
+
+	<string id="ui_mcm_menu_dotmarks">
+		<text>DotMarks</text>
+	</string>
+
+	<string id="ui_mcm_menu_dmarkmain">
+		<text>General Settings</text>
+	</string>
+
+	<string id="ui_mcm_menu_dmarkadv">
+		<text>Advanced Settings</text>
+	</string>
+
+	<string id="ui_mcm_menu_dotalti">
+		<text>secondary interact</text>
+	</string>
+
+	<string id="ui_mcm_menu_dmarkobjs">
+		<text>Object Settings</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_mainmenu">
+		<text>General configuration settings for Interaction Dot Marks.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_adv_desc">
+		<text>You probably won't need (and shouldn't mess with) most of the following settings, but they're here for those who do.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_objmenu1">
+		<text>Here you can enable or disable Interaction Dot Marks for different types of objects, as well as object-specific settings.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_objmenu2">
+		<text>If you make changes here, they may not take effect for already-scanned objects until you move away from them or saveload.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_altmenu">
+		<text>Settings for the secondary interact function that is available when hovering a dotmarked object within interaction range.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_interval">
+		<text>Near scan interval</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_interval_desc">
+		<text>Interval between nearby-object scans, in milliseconds. Smaller values will update more frequently.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_interval">
+		<text>Far scan interval</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_interval_desc">
+		<text>Interval between the more-intensive faraway-object scans, in milliseconds. Smaller values will update more frequently, but may have a performance cost.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_radius">
+		<text>Radius of near scan</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_radius_desc">
+		<text>Radius of the nearby-object scan in meters. Many things are based on this value, such as the distances at which markers fade out and scale up/down. It is recommended that you don't adjust this value, or do so in very small increments.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_radius">
+		<text>Radius of far scan</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_radius_desc">
+		<text>Radius of the faraway-object scan in meters, which is used to detect objects before they come into visual range. This also determines the distance at which the system cleans up markers that are no longer needed.
+		\n 
+		\nThis MUST be larger than the near scan radius, but very large values may have a performance cost, and there is no benefit to setting them more than about 5-10m higher than the near radius.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_skill_upd_interval">
+		<text>Interval between Skill System updates</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_use_skill_system">
+		<text>Increase perception radius based on Skill System</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_name">
+		<text>Name of the skill used for this check</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_coef">
+		<text>Scan radius multiplier per skill level</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_coef_desc">
+		<text>If Skill System integration is enabled, this setting controls the multiplier that is applied to the near scan radius per skill level, and effectively increases the player's "perception" range--within which dot markers can appear.
+		\n 
+		\nAt Scavenging level 15 with the default multiplier of 0.5 and radius of 3, the final near scan radius would be 10.5m.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_alti_desc">
+		<text>The secondary interact allows context-sensitive actions when targeting marked objects without needing to pick them up first--such as removing the ammo from a weapon, or consuming food items. FDDA Redone strongly recommended.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_bind_sec_interact">
+		<text>Keybind for secondary interact</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs">
+		<text>Enable debug logging</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs_desc">
+		<text>If you are reporting a problem, turn this on and generate a clean log that shows the problem happening.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_verbose">
+		<text>Debug logging is verbose (detailed)</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_verbose_desc">
+		<text>When reporting a problem please also enable this. It will ensure that the log contains the most detailed troubleshooting information.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_interaction_dots">
+		<text>Hide interaction dot markers</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_interaction_dots_desc">
+		<text>If enabled, the interaction dots themselves will be hidden, but the interaction UI will still be available.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_pri_interact_ui">
+		<text>Hide the custom primary interact UI</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_pri_interact_ui_desc">
+		<text>If enabled, the custom primary interact UI added by DotMarks will not be shown. The primary vanilla "use" function and prompts will still work normally.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_sec_interact_ui">
+		<text>Hide the custom secondary interact UI</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_sec_interact_ui_desc">
+		<text>If enabled, the custom secondary interact UI added by DotMarks will not be shown, and secondary interactions will not be available.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_van_interact_ui">
+		<text>Hide vanilla interact UI</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_van_interact_ui_desc">
+		<text>If enabled, any vanilla interact prompts (the text at the bottom of the screen) will be hidden if they have been replaced by a custom version.
+			\n 
+			\nThis setting has no effect if the custom primary interaction UI is also hidden.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_connecting_line">
+		<text>Hide the connecting white line</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_hide_connecting_line_desc">
+		<text>If enabled, will hide the white line connecting the dot to the interact prompt.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_show_during_anim">
+		<text>Show alt use UI during FDDA animations</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_busy_during_anim">
+		<text>Alt use disabled during FDDA animations</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_show_during_anim_desc">
+		<text>If enabled, the secondary interact UI will still be shown during FDDA animations, and the next setting below controls whether it can be used. If you want to hide the prompt entirely during animations, disable this option.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_alti_busy_during_anim_desc">
+		<text>If this option is enabled, the secondary interact UI is disabled during FDDA animations, dimming and showing a "Too Busy" message until the current animation completes.\n
+		\n 
+		\nDisabling this option will allow "animation canceling", skipping the current animation and immediately beginning the next. The sound effects will still play.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_offsets_desc">
+		<text>These settings adjust the positions of the interact prompts. These are canvas coordinates, which are 1024x768--not your screen resolution. Some may require a restart to take effect.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_h_offset">
+		<text>Horizontal offset for first interact</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_h_offset_desc">
+		<text>Adjust the prompt's position horizontally. Allowed values are -512 to 1024.
+			\n 
+			\nDefault: -10
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_v_offset">
+		<text>Vertical offset for first interact</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_v_offset_desc">
+		<text>Adjust the prompt's position vertically. Allowed values are -384 to 768.
+			\n 
+			\nDefault: 28
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_h_offset">
+		<text>Horizontal offset for second interact</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_h_offset_desc">
+		<text>Adjust the prompt's position horizontally. Allowed values are -512 to 1024.
+			\n 
+			\nDefault: -10
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_v_offset">
+		<text>Vertical offset for second interact</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_v_offset_desc">
+		<text>Adjust the prompt's position vertically. Allowed values are -384 to 768.
+			\n 
+			\nDefault: 48
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_fixed_screen_pos">
+		<text>Use fixed screen positions (restart required)</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_fixed_screen_pos_desc">
+		<text>If this option is enabled, the custom interaction prompts will have a fixed screen position based on the offsets above, and the offsets are measured relative to the upper-left corner of the screen.
+			\n 
+			\nBy default, the prompts follow the position of their attached dotmark, and their offsets are measured from the position of that dot.
+			\n 
+			\nYou must restart/saveload your game for this setting to take effect.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_interact_drop_alpha">
+		<text>Main drop shadow transparency</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_interact_drop_alpha_desc">
+		<text>Sets the alpha (transparency) channel for the main drop shadows underneath the interaction prompts or other UI elements. Set to zero to disable the main drop shadows.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_keybind_bg_style">
+		<text>Keybind icon style</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_keybind_bg_style_desc">
+		<text>Sets the visual style for the graphical "key" icons used as backgrounds for the keybind text on interaction prompts, or disables the backgrounds entirely.
+		</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_kbstyle_worn">
+		<text>3D worn appearance</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_kbstyle_full">
+		<text>3D black and white</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_kbstyle_wire">
+		<text>White wireframe</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_kbstyle_none">
+		<text>No background</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size">
+		<text>Interaction Dot Marker size</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size_desc">
+		<text>This slider adjusts the size of the dot markers added to objects in the world. A value of 1 is their default intended size, while zero will hide these icons entirely. Other features of this addon, such as the text labels or secondary interaction, will not be affected.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_hide_junk_items">
+		<text>Hide items marked as junk in Sorting Plus</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_hide_junk_items_desc">
+		<text>If the Sorting Plus addon is installed, and an item has been marked as "junk", then a mark will not be shown for it.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_hidden_show_prompts">
+		<text>Hidden items still show interaction prompts</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hidden_show_prompts_desc">
+		<text>If a marker is hidden using the above setting or "Hide interaction dot markers", its interaction prompts will still be shown.
+			\n
+			\nNOTE: If this option is not enabled, hidden markers will not have any visible interaction prompts at all. This will not prevent you from picking them up if you want to, it just won't show the prompt.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_paw_patches">
+		<text>Dead stalkers use PAW faction patches</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_paw_patches_desc">
+		<text>If my Personal Adjustable Waypoint addon (PAW) is installed, this option will cause dead stalkers to show their faction patch instead of the dot marker icon.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_disable_all_sounds">
+		<text>Disable UI sound effects</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_disable_all_sounds_desc">
+		<text>Disables the subtle UI "blip" sound effect that plays when cycling the mouse wheel or during other similar events.</text>
+	</string>
+	
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_mpda_rules">
+		<text>Body markers obey Milspec PDA rules</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_mpda_rules_desc">
+		<text>If my Milspec PDA addon is installed, this option will obey that addon's visibility settings for dead bodies--which will only show a marker on bodies whose map markers are visible to the player.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box">
+		<text>Disable special icon for breakable boxes</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box_desc">
+		<text>If this option is enabled, breakable boxes will use the standard dot marker instead of their special "breakable object" icon.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk">
+		<text>Disable special icon for talking to NPCs</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk_desc">
+		<text>If this option is enabled, stalkers will use the standard dot marker instead of swapping to their special "speech bubble" icon when their primary interaction prompt is shown.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services">
+		<text>Disable special icon for service NPCs</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services_desc">
+		<text>If this option is enabled, service NPCs will use the standard dot marker instead of swapping to their service-specific icon when their primary interaction prompt is shown.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door">
+		<text>Disable special icon for doors</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door_desc">
+		<text>If this option is enabled, doors will use the standard dot marker instead of swapping to their special "door" icon when their primary interaction prompt is shown.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_in_time">
+		<text>Prompt fade-in duration</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_in_time_desc">
+		<text>The duration, in milliseconds, of the fade-in effect for interaction prompts.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_out_time">
+		<text>Prompt fade-out duration</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_out_time_desc">
+		<text>The duration, in milliseconds, of the fade-out effect for interaction prompts.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_card">
+		<text>Show item quick info card</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_card_desc">
+		<text>If enabled, a small display will be shown beside the primary interaction prompt, showing its weight and value and (optionally, with Utjan's addon) indicator dots for the condition of weapon/armor parts.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_condition">
+		<text>Show gear condition percentage</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_condition_desc">
+		<text>If enbabled, the condition of outfits and headgear will be appended to the name of the item.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_charge">
+		<text>Show device battery percentage</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_item_charge_desc">
+		<text>If enabled, the battery charge of devices will be appended to the name of the item.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_show_condition_color">
+		<text>Show condition/charge level in color</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_show_condition_color_desc">
+		<text>If enabled, the color of the condition/battery text will change based on the value.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_flag_favejunk">
+		<text>Show icon for favorites/junk on the item card</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_flag_favejunk_desc">
+		<text>If enabled, items marked as Favorites or Junk with Sorting Plus will display the appropriate icon on the item card.</text>
+	</string>	
+
+</string_table>

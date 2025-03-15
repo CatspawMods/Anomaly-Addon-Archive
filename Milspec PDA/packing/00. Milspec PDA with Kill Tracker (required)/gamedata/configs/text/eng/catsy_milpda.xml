@@ -564,7 +564,7 @@
 
     <string id="encyclopedia_addons_milspec_pda_text">
         <text>
-            \n%c[ui_gray_1]The %c[255,130,180,130]Milspec PDA%c[ui_gray_1] addon has multiple related purposes: \n 
+            \n \n%c[ui_gray_1]The %c[255,130,180,130]Milspec PDA%c[ui_gray_1] addon has multiple related purposes: \n 
             %c[ui_gray_1] • %c[pda_white]Allows detailed %c[pda_yellow]customization of squad and body mapspots%c[pda_white] supported by each tier of PDA\n
             %c[ui_gray_1] • %c[pda_white]Adds the %c[255,130,180,130]Milspec PDA%c[pda_white]: a %c[pda_yellow]tier 4 device that isn't sold or dropped%c[pda_white], and is difficult to craft\n
             %c[ui_gray_1] • %c[pda_white]Includes %c[255,130,180,130]Kill Tracker%c[pda_white]: %c[pda_yellow]customizable dead body tracking%c[pda_white] with support for PAW icons\n
@@ -611,7 +611,7 @@
 
             Progressive Mode is %c[pda_yellow]very powerful, and configurable to your liking%c[ui_gray_1]. Think unlocking access is too easy, or too hard? Tweak the requirements however you like. Choose whether neutral factions must also be unlocked, whether factions will ever revoke your access at all--and if they do, how long it takes.\n \n
 
-            This unlock duration could be weeks if you like, or even a matter of seconds or minutes--with a low unlock threshold, short unlock durations turn effectively turn each PDA drop into a powerful but temporary buff. Or if you like a long grind for a longer-term advantage, that works too.\n \n
+            This unlock duration could be weeks if you like, or even a matter of seconds or minutes--with a low unlock threshold, short unlock durations effectively turn each PDA drop into a powerful but temporary buff. Or if you like a long grind for a longer-term advantage, that works too.\n \n
 
             %c[pda_yellow]It's your game. Play your way.\n 
 
@@ -642,4 +642,25 @@
         </text>
     </string>
 
+<!-- Added in 1.14 -->
+    <string id="ui_catsy_hide_intro_header">
+        <text>$clr_tgrDon't show this intro message again</text>
+    </string>
+
+    <string id="encyclopedia_items_milspec_pda">
+        <text>Milspec PDA</text>
+    </string>
+    <string id="encyclopedia_items_milspec_pda_text">
+        <text>
+            Designed by an unknown entity for use by covert military or NGO operators, the %c[255,130,180,130]Milspec PDA%c[ui_gray_1], or "MilPDA" for short, is a sophisticated custom variant of the everyday PDA carried by nearly every stalker in the Zone. It has all the features found in ordinary commercial PDAs, but also includes a cryptographic module that enables the user to infiltrate many of the Zone's secure private networks using data downloaded from found or captured PDAs.\n
+
+            \nWith the correct configuration settings, this allows the device to reveal the location of enemy squads operating nearby--provided the user has broken that faction's network security and gained access to their GPS data.\n
+
+            \n• The PDA consumes %c[pda_white]0.2 mAh%c[ui_gray_1] per second of continuous usage.\n
+
+            \nSee also:
+            \nPDA Guide: %c[255,0,200,220]Addons > Milspec PDA%c[ui_gray_1]
+            \nSettings: %c[pda_yellow]Mod Configuration Menu > Milspec PDA%c[ui_gray_1]
+        </text>
+    </string>
 </string_table>

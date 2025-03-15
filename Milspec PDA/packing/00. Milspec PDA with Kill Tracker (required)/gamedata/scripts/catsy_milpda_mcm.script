@@ -10,6 +10,9 @@ local rel_version 	= "Milspec PDA not installed!"
 local psk   		= utils_data.parse_string_keys
 local gts 			= game.translate_string
 
+if utils_catspaw_common then end
+local strbool 		= utils_catspaw_common.strbool
+
 if item_milpda then
 	local ver 		= item_milpda.script_version
 	local rel 		= tostring(item_milpda.release_date)
@@ -17,6 +20,8 @@ if item_milpda then
 		rel_version = "v" .. ver .. " (rel " .. rel .. ")"
 	end
 end
+
+
 
 local color_tokens = {
 	["clr_def"] = "%" .. "%c[default]",
@@ -38,6 +43,7 @@ function on_mcm_load()
 						ui_hook_functor = {catsy_milpda_mcm.init_mcm_header_element},
 					},
 					{id = "header_main", type = "desc", text = "ui_mcm_milpda_header_main_plaintext",
+						precondition 	= {catsy_milpda_mcm.intro_header_enabled},
 						ui_hook_functor = {catsy_milpda_mcm.init_mcm_header_element},
 					},
 					{id = "tracking_mode", type = "list", val = 2, def = 3,
@@ -230,6 +236,43 @@ function on_mcm_load()
 	return op
 end
 
+
+function intro_header_enabled()
+	return not strbool(axr_main.config:r_value("mcm", "milpda/milpdagen/hide_intro_header", {val=0}))
+end
+
+function intro_header_disabled()
+	return strbool(axr_main.config:r_value("mcm", "milpda/milpdagen/hide_intro_header", {val=0}))
+end
+
+
+class "SimpleCheck"(CUIScriptWnd)
+
+function SimpleCheck:__init(anchor, default, path, opt) super()
+	-- Creates a simple checkbox that controls an MCM value without being tied to MCM's UI
+	if not (anchor and ui_mcm and path and opt) then return end
+	self.path = path
+	self.opt = opt
+	self.opt_id = ui_mcm.cc(path, opt)
+	local xml = CScriptXmlInit()
+	xml:ParseFile("milpda_ui_elements.xml")
+	local ctrl_id = "checkbox_" .. tostring(time_global())
+	self.ctrl = xml:InitCheck("check", anchor)
+	self.ctrl:SetCheck(default and true or false)
+	self:Register(self.ctrl, ctrl_id)
+	self:AddCallback(ctrl_id, ui_events.BUTTON_CLICKED, self.Clicked, self)
+end
+
+
+function SimpleCheck:Clicked()
+	--printf("SimpleCheck:Clicked")
+	local value = self.ctrl:GetCheck()
+	if self.opt_id then
+		--printf("Setting MCM value: %s = %s", self.opt_id, value)
+		ui_mcm.set(self.opt_id, value)
+	end
+end
+
 function init_mcm_header_element(anchor, handlers, opts, flags)
 	local opt_id 	= opts and opts.id
 	local xml 		= CScriptXmlInit()
@@ -268,7 +311,19 @@ function init_mcm_header_element(anchor, handlers, opts, flags)
 		end
 
 		if (opt_id == "header_main") then
-			setup_mpda_header(opt_id, 12, 	150, 125,	12, 50, 105)
+			if intro_header_disabled() then return end
+			printf("got past intro header test")
+			setup_mpda_header(opt_id, 12, 	160, 125,	12, 50, 95)
+
+			local chk = SimpleCheck(tbg1, false, "milpda/milpdagen", "hide_intro_header")
+			chk.ctrl:SetWndPos(vector2():set(630 * unsquish_ratio, 125))
+			printf("set up check")
+
+		    local cap  = xml:InitTextWnd("hide_head", chk.ctrl)
+		    cap:SetWndSize(vector2():set(300 * unsquish_ratio, 30))
+		    cap:SetWndPos(vector2():set(-360 * unsquish_ratio, 8))
+		    cap:SetTextAlignment(4) -- right-align
+		    cap:SetText(psk(gts("ui_catsy_hide_intro_header"), color_tokens))
 		elseif (opt_id == "header_prog") then
 			setup_mpda_header(opt_id, 1, 	130, 125,	7,	60, 62)
 		elseif (opt_id == "header_bl") then
