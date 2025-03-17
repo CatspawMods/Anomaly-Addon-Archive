@@ -6,6 +6,10 @@
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
 <string_table>
+	<string id="st_paw_unknown">
+		<text>Unknown</text>
+	</string>
+
 	<string id="st_alti_unload_weapon">
 		<text>Unload</text>
 	</string>
@@ -121,8 +125,8 @@
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_grenades">
 		<text>Mark Grenades</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_scan_explosives">
-		<text>Mark Explosives</text>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_explosive">
+		<text>Mark Explosive Objects</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_outfits">
 		<text>Mark Outfits</text>
@@ -415,7 +419,7 @@
 		<text>Hidden items still show interaction prompts</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hidden_show_prompts_desc">
-		<text>If a marker is hidden using the above setting or "Hide interaction dot markers", its interaction prompts will still be shown.
+		<text>If a marker is hidden using for any reason, its interaction prompts will still be shown.
 			\n
 			\nNOTE: If this option is not enabled, hidden markers will not have any visible interaction prompts at all. This will not prevent you from picking them up if you want to, it just won't show the prompt.
 		</text>
@@ -699,7 +703,7 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_addons_desc">
-		<text>$clr_gldThird-Party Addon Support\n
+		<text>$clr_gldOther Addon Support\n
 			$clr_whtDotMarks supports multiple other addons, such as Sorting Plus, Utjan's Item UI, Milspec PDA, PAW, and more. Some of these integrations have options which you can adjust here.</text>
 	</string>
 

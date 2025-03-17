@@ -5,7 +5,7 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_cfg"
-script_version  = "0.8-b2"
+script_version  = "0.8-b3"
 release_date    = 20250316
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -109,7 +109,7 @@ local base_config = {
         Grenades = (
             function(obj) return obj and IsGrenade(nil, obj:clsid()) end
         ),
-        Explosives = (
+        Explosive = (
             function(obj) return obj and IsExplosive(nil, obj:clsid()) end
         ),
         Outfits = (
@@ -377,8 +377,6 @@ local base_config = {
     -- =======================================================================    
         Grenades = (
             function(obj)
-                get_bones_for_obj(obj)
-
                 return {
                     logged_type     = "a grenade",
                     pickup          = true,
@@ -388,13 +386,20 @@ local base_config = {
             end
         ),
     -- =======================================================================    
-        Explosives = (
-            function()
-                return {
-                    logged_type     = "an explosive",
-                    pickup          = true,
-                    texture         = get_cfg_for_type("tex", "Explosives") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+        Explosive = (
+            -- This seems to be explosive barrels and the like
+            function(obj)
+                local visual        = obj and obj:get_visual_name()
+                return obj and {
+                    logged_type     = "an explosive object",
+                    texture         = get_cfg_for_type("tex", "Explosive") or cfg.marker_dotmark,
+                    visual          = visual,
+                    no_pri          = true,
+                    line_adj_x      = 2,
+                    line_adj_h      = -8,
+                    line_adj_y      = 8,
+                    width           = 16,
+                    height          = 16,
                 }
             end
         ),
@@ -435,8 +440,6 @@ local base_config = {
     -- =======================================================================    
         Artefacts = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 return obj and {
                     logged_type     = "an artefact",
                     pickup          = true,
@@ -449,16 +452,35 @@ local base_config = {
     -- =======================================================================    
         Consumables = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 local section       = obj and obj:section()
                 local multi_uses    = nil
+                local money         = nil
+                local name          = nil
+
+                if section:find("^money_") then
+                    money           = ini_sys:r_string_ex(section, "money_amount") or nil
+                    printf("money amount: %s", money)
+                    local pre       = ""
+                    if money and money:find(",") then
+                        money       = str_explode(money, ",")
+                        money       = money[1] and money[2] and math.floor((tonumber(money[1]) + tonumber(money[2])) * 0.5)
+                        pre         = "~"
+                    elseif not money then
+                        money       = ini_sys:r_float_ex(section, "cost") or nil
+                        printf("no money_amount found, cost is %s", money)
+                    end
+                    money           = money and (pre .. tostring(money) .. " " .. gts("st_roubles"))
+                end
+                
                 if section and IsItem("multiuse", section, obj) then
                     multi_uses = obj:get_remaining_uses()
                 end
+
                 return obj and {
-                    logged_type     = "food, drugs, or drink",
+                    logged_type     = money and "money (under consumables)" or "food, drugs, or drink",
                     pickup          = true,
+                    money           = money or nil,
+                    name            = name or nil,
                     --bone            = "bone01",
                     multi_uses      = multi_uses,
                     -- if multi_uses and multi_uses > 1, the number of uses will be suffixed to the prompt
@@ -471,8 +493,6 @@ local base_config = {
     -- =======================================================================    
         Tools = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 local section       = obj and obj:section()
                 local multi_uses    = nil
                 if section and IsItem("multiuse", section, obj) then

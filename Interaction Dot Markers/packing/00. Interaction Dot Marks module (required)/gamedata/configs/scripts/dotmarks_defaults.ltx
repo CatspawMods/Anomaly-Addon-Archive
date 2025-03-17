@@ -193,6 +193,7 @@ sp_icon_pos_y				= 1
 Boxes 		= ui_catsy_marker_breakable
 Doors 		= ui_catsy_marker_door
 Stalkers 	= ui_catsy_marker_talk
+Explosive 	= ui_catsy_marker_explosive
 ; The tex table is mostly empty by default, but can be used to override the
 ; icon texture used for most objects defined in the [scan] section below.
 
@@ -204,7 +205,7 @@ Ammo        = true
 Stashes     = true
 Weapons     = true
 Grenades    = true
-Explosives  = true
+Explosive   = false
 Outfits     = true
 Headgear    = true
 Artefacts   = true
@@ -215,7 +216,7 @@ Quest       = true
 Campfires   = true
 Misc    	= true
 Doors       = true
-Boxes       = true
+Boxes       = false
 Workshops 	= true
 
 [dotmark_preset]
@@ -239,6 +240,7 @@ lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
 width               = 5		; texture width (in canvas units)
 height              = 5		; texture height (in canvas units)
 update_int          = 15	; update interval in ms for the marker itself
+;facing_check 		= true 	; experimental optimization feature
 
 [tutorial_hints]
 ; Used internally to generate the appropriate text based on the active tutorial state
@@ -364,7 +366,7 @@ wpn_ammo_vog25 		= true
 [breakable_box_visuals]
 ; Defines which object visuals are classified as breakable boxes, no other way to detect
 dynamics\box\box_wood_01 	= true
-dynamics\box\box_wood_02 	= true
+;dynamics\box\box_wood_02 	= true ; this seems to pick up non-breakable boxes in Meadows
 dynamics\box\box_metall_01	= true
 
 [door_visuals]
@@ -433,4 +435,4 @@ show_item_charge 		= dotmarks/dmarkmain/
 show_condition_color 	= dotmarks/dmarkmain/
 font_main_prompt 		= dotmarks/dmarkadv/
 show_multi_uses 		= dotmarks/dmarkmain/
-wheel_cycles_pickups 	= dotmarks/dmarkadv/
+wheel_cycles_pickups 	= dotmarks/dmarkmain/

@@ -33,6 +33,7 @@ color_tokens = {
     ["clr_red"] = "%" .. "%c[255,255,0,0]",
     ["clr_tgr"] = "%" .. "%c[128,90,90,90]",
     ["clr_cmg"] = "%" .. "%c[255,150,150,150]",
+    ["clr_uab"] = "%" .. "%c[255,0,87,183]",
 }
 
 -- ======================================================================
@@ -70,7 +71,7 @@ function init_header_element(anchor, handlers, opts, flags)
 		rvbox:SetWndSize(vector2():set(480 * cfg.unsquish_ratio, 20))
 		rvbox:SetText(psk(rel_version, color_tokens))
 		rvbox:SetWndPos(vector2():set(10 * cfg.unsquish_ratio, -8))
-		rvbox:SetFont(GetFontMedium())
+		--rvbox:SetFont(GetFontSmall())
 		rvbox:SetTextComplexMode(true)
 	end
 
@@ -137,7 +138,7 @@ function get_main_menu()
 		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color},
 		{ id = "show_multi_uses", 		type = "check", 	val = 1, def = cfg.show_multi_uses},
 		{ id = "sp_flag_favejunk", 		type = "check", 	val = 1, def = cfg.sp_flag_favejunk},
-
+		{ id = "wheel_cycles_pickups", 	type = "check", 	val = 1, def = cfg.wheel_cycles_pickups },
 		{ id = "dot_marker_size", 		type = "track",		val = 2, min = 0, step = 0.1, max = 2, def = cfg.dot_marker_size },
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha },
 
@@ -194,7 +195,6 @@ function get_adv_menu()
 			dmark_text_h 	= 90,
 			dmark_text_v 	= 9
 		},
-		{ id = "wheel_cycles_pickups", 	type = "check", 	val = 1, def = cfg.wheel_cycles_pickups },
 		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
 
 		{id = "keybind_bg_style", type= "list", val = 2, def = cfg.keybind_bg_style, 
@@ -232,11 +232,11 @@ function get_adv_menu()
 
 		{ id = "prompt_fade_in_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_in_time },
 		{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
-		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
 
 		{id = "divider", type= "line"},
 
 		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
+		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
 		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
 		{ id = "hide_pri_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_pri_interact_ui },
 		{ id = "hide_sec_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_sec_interact_ui },

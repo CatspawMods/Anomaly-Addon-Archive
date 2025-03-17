@@ -6,6 +6,10 @@
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
 <string_table>
+	<string id="st_paw_unknown">
+		<text>Неопознанный</text>
+	</string>
+
 	<string id="st_alti_unload_weapon">
 		<text>Выгрузите</text>
 	</string>
@@ -121,7 +125,7 @@
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_grenades">
 		<text>Отметить гранаты</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_scan_explosives">
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_explosive">
 		<text>Отметить взрывчатку</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_outfits">
@@ -412,7 +416,7 @@
 		<text>Скрытые элементы по-прежнему отображают подсказки о взаимодействии</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hidden_show_prompts_desc">
-		<text>Если маркер скрыт с помощью вышеуказанной настройки или «Скрыть маркеры точек взаимодействия», его подсказки все равно будут отображаться.
+		<text>Если маркер по какой-либо причине скрыт, подсказки по его взаимодействию все равно будут отображаться.
 			\n
 			\nВНИМАНИЕ: Если эта опция не включена, скрытые маркеры вообще не будут иметь видимых подсказок взаимодействия. Это не помешает вам поднять их, если вы захотите, просто не будет показана подсказка.
 		</text>

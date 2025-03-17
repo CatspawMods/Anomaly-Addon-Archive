@@ -41,7 +41,9 @@ script_name     = "ui_hud_dotmarks"
     TODO:
     -   Need to optimize and clean up a whole lot of WIP code
     -   Test with EVERY distinct type of item
-    -   Figure out why campfire interact sometimes gets stuck
+    -   Campfire interact sometimes gets stuck
+    -   Breakable boxes stopped self-destroying their markers
+    -   Explosive detection doesn't detect all explosive objects
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -88,7 +90,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
     if (verbose_en ~= nil) then verbose = verbose_en end
     if (dump_en ~= nil) then debug_dump = dump_en end
 end
-set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 -- First two values will be overridden by MCM once the game loads
 
 -- ======================================================================
@@ -193,10 +195,11 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     local _             = debug_dump and vl("[%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
                     local obj           = mark.id and get_object_by_id(mark.id)
                     if not obj then return end
-                    if mark.is_campfire and (not get_nearby_campfire()) then
-                        if not hide then printf("Stuck campfire cleared") end
+                    if mark.is_campfire and (not get_nearby_campfire(cfg.far_scan_radius + 5)) then
+                        if not hide then dl("Stuck campfire %s cleared at %s ", now) end
                         -- Check for stuck campfire prompts
-                        hide            = true
+                        mark:Destroy()
+                        return
                     elseif mark.is_arty and (not can_actor_see_artefact(obj)) then
                         -- Check whether object is an artefact that is not currently visible
                         hide            = true
@@ -284,6 +287,8 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
                                     mark.use_pri.parse_text_colors = true
                                     text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
+                                elseif treasure_manager.caches[mark.id] and not cfg.invboxes[id] then
+                                    text = " (" .. gts("st_paw_unknown") .. ")"
                                 else
                                     text = " " .. gts("st_alti_empty")
                                 end
@@ -401,10 +406,21 @@ function item_pickup_intercept(obj, flags)
     local curr_target = get_current_target()
     --vl("Current target: %s", curr_target)
     taken_obj = curr_target and get_object_by_id(curr_target)
+    local anim_delay = false
     if taken_obj then
         vl("Forcing actor to take %s (%s) instead", taken_obj:name(), taken_obj:id())
         flags.ret_value = false
-        db.actor:take_item(taken_obj)
+        anim_delay = not not taken_obj:section():find("^money_")
+        if anim_delay then
+            CreateTimeEvent("take_money_delay", time_global(), 0.5, (
+                function()
+                    db.actor:take_item(taken_obj)        
+                    return true
+                end
+            ))
+        else
+            db.actor:take_item(taken_obj)
+        end
     end
     return taken_obj
 end
@@ -487,7 +503,7 @@ function clr_tbl_to_index(clr_tbl, tval)
 end
 
 function getargb(clr_tbl)
-    return get_argb( clr_tbl.a, clr_tbl.r, clr_tbl.g, clr_tbl.b )
+    return clr_tbl and get_argb( clr_tbl.a, clr_tbl.r, clr_tbl.g, clr_tbl.b )
 end
 
 function lerp_color(val, mi, md, mx)
@@ -665,14 +681,12 @@ function InteractPrompt:__init(anchor, args) super()
     self.text_color_busy    = csv2clr(args.argb_busy)   or color.clr_text_busy  or self.text_color_default
     self.text_color_light   = csv2clr(args.argb_light)  or color.clr_text_light or self.text_color_default
     self.text_color_dark    = csv2clr(args.argb_dark)   or color.clr_text_dark  or self.text_color_default
-    self.progress_color     = csv2clr(args.argb_prog)   or color.clr_key_hold  or get_argb(255,255,215,0)
+    self.progress_color     = csv2clr(args.argb_prog)   or color.clr_key_hold or csv_argb_to_tbl({255,255,215,0})
 
     self.active_prefix      = args.active_prefix or args.act    or ""
     self.active_prompt      = args.active_prompt or args.text   or (args.tutorial and trimmed_prompt(gts(args.tutorial))) or ""
     self.active_suffix      = args.active_suffix or args.suffix or ""
     self.args               = args
-
-
 
     self.last_state         = false
     self:on_option_change()
@@ -802,7 +816,7 @@ function InteractPrompt:BuildUI()
     -- Set up long press progress indicator
     if args.long then
         self.longpress  = xml:InitProgressBar("prog_longpress", self.prompt)
-        self.longpress:SetColor(get_argb(self.progress_color))
+        self.longpress:SetColor(getargb(self.progress_color))
         self.longpress:SetProgressPos(0)
     end
 
@@ -846,7 +860,7 @@ function InteractPrompt:BuildUI()
     self:eleSetBaseColorScheme(self.label_sh, self.text_color_dark)
 
     local obj = self.args.id and get_object_by_id(self.args.id)
-    self:SetupConditionSuffix(obj)
+    self:SetupSuffix(obj)
     self:SetPrompt()
 
     if obj and self.args.pri then
@@ -857,9 +871,16 @@ function InteractPrompt:BuildUI()
     self:actor_on_update()
 end
 
-function InteractPrompt:SetupConditionSuffix(obj)
+function InteractPrompt:SetupSuffix(obj)
     obj             = obj or (self.args.id and get_object_by_id(self.args.id))
-    if (not obj) or not (cfg.show_item_condition or cfg.show_item_charge) then return end
+    if (not obj) then return end
+    --if self.args.money then
+        --self.active_suffix = string.format(" ($clr_gld%s$clr_def)", self.args.money)
+        --self.parse_text_colors = true
+        --return
+    --end
+
+    if not (cfg.show_item_condition or cfg.show_item_charge) then return end
 
     local sec       = self.args.section or obj:section()
     local cls       = self.args.clsid or obj:clsid()
@@ -868,7 +889,7 @@ function InteractPrompt:SetupConditionSuffix(obj)
     local gear_cnd  = (self.args.has_parts and cfg.show_item_condition)
     local batt_cnd  = ((self.args.has_power or self.args.has_battery) and cfg.show_item_charge)
 
-    vl("[InteractPrompt:SetupConditionSuffix][%s][has_cond %s][multi %s]", sec, has_cond, self.args.multi_uses)
+    vl("[InteractPrompt:SetupSuffix][%s][has_cond %s][multi %s]", sec, has_cond, self.args.multi_uses)
 
     if self.args.multi_uses then
         -- Setup suffix text for multiuse items
@@ -1575,7 +1596,7 @@ function InteractPrompt:actor_on_update()
     end
 end
 
-function InteractPrompt:Destroy()
+function InteractPrompt:Destroy(reason)
     self:ShowPrompt(false)
     self.hint_filters = nil
     self.tutorial = nil
@@ -1584,6 +1605,9 @@ function InteractPrompt:Destroy()
     UnregisterScriptCallback("on_key_hold", self)
     UnregisterScriptCallback("on_key_press", self)
     self.destroyed = true
+    if reason then
+        dl("[InteractPrompt:Destroy][%s][%s]", self.args.id, reason)
+    end
 end
 
 -- =======================================================================
@@ -1595,20 +1619,17 @@ function uiscale(i)
 end
 
 function get_font(num)
-    printf("getting font %s", num or cfg.font_main_prompt or fallback_font)
     local font = fonts[num or cfg.font_main_prompt or fallback_font]
     return font and font.font
 end
 
 function get_font_size(num)
     local font = fonts[num or cfg.font_main_prompt or fallback_font]
-    printf("getting size for font %s: %s", num or cfg.font_main_prompt or fallback_font, font and font.size)
     return font and font.size
 end
 
 function get_font_scale(num)
     local scale = get_font_size() / 16
-    printf("getting scale for font %s: %s", num or cfg.font_main_prompt or fallback_font, scale)
     return scale
 end
 
@@ -1718,16 +1739,6 @@ function get_args_for_valid_objects(obj)
     local args = { logged_type = "something else", section = sec, clsid = cls }
 
     for item_class, enabled in pairs(cfg.scan) do
---[[
-        if enabled then
-            --vl("Checking %s against category %s", obj:name(), item_class)
-            if cfg.is_item[item_class](obj) then
-                args = get_cfg_for_type("args", item_class, obj) or {}
-                args.id = id
-                args.clsid = cls
-            end
-        end
---]]
         --vl("Checking %s against category %s", obj:name(), item_class)
         if cfg.is_item[item_class](obj) then
             args = get_cfg_for_type("args", item_class, obj) or {}
@@ -1766,7 +1777,7 @@ function setup_pri_interact_prompt(mark, args)
     local int_text  = trimmed_prompt(maingameui.UIStaticQuickHelp:GetText())
 
     if mark.pickup then
-        int_text = gts("st_alti_take") .. " " .. mark.name
+        int_text = gts("st_alti_take") .. " " .. (mark.money or mark.name)
     elseif mark and mark.is_stalker and mark.is_alive then
         int_text = gts("st_alti_speak") .. " " .. mark.name
     elseif mark and mark.is_door then
@@ -1951,21 +1962,23 @@ function obj_has_available_sec_interact(obj, id, mark)
     local is_backpack   = mark and mark.is_backpack
     local is_invbox     = IsInvbox(nil, cls) or is_backpack
 
-    local has_interact = (
-        (has_ammo and not is_melee) or
-        has_batteries or
-        is_consumable or
-        is_readable or
-        is_invbox
-    )
+    local has_interact = (not mark.money) and
+        (
+            (has_ammo and not is_melee) or
+            has_batteries or
+            is_consumable or
+            is_readable or
+            is_invbox
+        )
 
-    vl("obj_has_available_sec_interact: %s | %s (%s) | ammo %s | eatable %s | readable %s",
+    vl("obj_has_available_sec_interact: %s | %s (%s) | ammo %s | eatable %s | readable %s | money %s",
         has_interact,
         obj and obj:name(),
         id,
         has_ammo,
         is_consumable,
-        is_readable
+        is_readable,
+        mark.money
     )
     return has_interact
 end
@@ -2654,69 +2667,6 @@ function actor_on_item_take(obj)
         unregister_scanned_entity(id)
     end
 end
-
---[[
-function load_file_data(ini_name, cfg_table)
-    -- Parameterizing this to turn it into a reusable module
-    local def_ini = ini_name and ini_file_ex(ini_name)
-    if not def_ini then return false end
-
-    dl("Loading file data and populating tables")
-    local function load_table_values(from_tbl, to_tbl)
-        if not to_tbl then to_tbl = {} end
-        for k,v in pairs(from_tbl) do
-            local template = false
-            if tonumber(v) then
-                to_tbl[k] = tonumber(v)
-            elseif (v == "true") or (v == "false") then
-                to_tbl[k] = strbool(v)
-            else
-                if (type(v) == "string") and v:find("template") then
-                    vl("Loading values for %s from template table %s", k, v)
-                    to_tbl[k] = {}
-                    load_table_values(cfg_table[v], to_tbl[k])
-                    template = true
-                else
-                    to_tbl[k] = v
-                end
-            end
-            if (debug_dump and not template) then vl("* Loaded: %s = %s", k, v) end
-        end
-    end
-    local function load_config_tables(from_tbl)
-        if not from_tbl then return end
-        for k,v in pairs(from_tbl) do
-            vl("Initializing new config subtable %s", k)
-            if not cfg_table[k] then cfg_table[k] = {} end
-            local tbl_ltx = def_ini:collect_section(k)
-            if tbl_ltx then
-                local tbl = {}
-                if k:find("clsid") then
-                    for k1, v1 in pairs(tbl_ltx) do
-                        local i = tonumber(k1) or clsid[k1] or k1
-                        tbl[i] = v1
-                    end
-                else
-                    tbl = tbl_ltx
-                end
-                vl("Populating values for config subtable %s", k)
-                load_table_values(tbl, cfg_table[k])
-            end
-        end
-    end
-
-    vl("Populating default settings")
-    if not cfg_table then cfg_table = {} end
-    local def_ltx       = def_ini and def_ini:get_sections(true)
-    local dts_ltx       = def_ini:collect_section("default_settings")
-    load_table_values(dts_ltx, cfg_table)
-    load_config_tables(def_ini:collect_section("template_tables"))
-    load_config_tables(def_ini:collect_section("setting_tables"))
-
-    return true
-end
---]]
-
 
 function on_mouse_wheel(scroll_dir, flags)
     if not cfg.wheel_cycles_pickups then return end
