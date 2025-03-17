@@ -11,10 +11,11 @@ Also implements an "Alternate Interact" keybind with contextual actions such as 
 Requires modded exes by demonized:
 https://github.com/themrdemonized/xray-monolith
 
-If your version of the modded exes is earlier than `20250306`, you will
-see this error in your log:
+This addon *will not work at all* on vanilla Anomaly, and may crash spectacularly if you try.
 
-`![axr_main callback_set] callback actor_on_update_pickup doesn't exist!``
+If your version of the modded exes is earlier than `20250306`, you will see this error in your log:
+
+`![axr_main callback_set] callback actor_on_update_pickup doesn't exist!`
 
 If you are seeing that, you **MUST** update your version of the modded exes in order for object targeting to work properly.
 
