@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250313
+    Updated: 20250316
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -176,32 +176,8 @@
 		<text>Advanced Settings</text>
 	</string>
 
-	<string id="ui_mcm_menu_dotalti">
-		<text>secondary interact</text>
-	</string>
-
 	<string id="ui_mcm_menu_dmarkobjs">
 		<text>Object Settings</text>
-	</string>
-
-	<string id="ui_mcm_dotmarks_mainmenu">
-		<text>General configuration settings for Interaction Dot Marks.</text>
-	</string>
-
-	<string id="ui_mcm_dotmarks_adv_desc">
-		<text>You probably won't need (and shouldn't mess with) most of the following settings, but they're here for those who do.</text>
-	</string>
-
-	<string id="ui_mcm_dotmarks_objmenu1">
-		<text>Here you can enable or disable Interaction Dot Marks for different types of objects, as well as object-specific settings.</text>
-	</string>
-
-	<string id="ui_mcm_dotmarks_objmenu2">
-		<text>If you make changes here, they may not take effect for already-scanned objects until you move away from them or saveload.</text>
-	</string>
-
-	<string id="ui_mcm_dotmarks_altmenu">
-		<text>Settings for the secondary interact function that is available when hovering a dotmarked object within interaction range.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_interval">
@@ -261,10 +237,6 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_alti_desc">
-		<text>The secondary interact allows context-sensitive actions when targeting marked objects without needing to pick them up first--such as removing the ammo from a weapon, or consuming food items. FDDA Redone strongly recommended.</text>
-	</string>
-
 	<string id="ui_mcm_dotmarks_dmarkmain_bind_sec_interact">
 		<text>Keybind for secondary interact</text>
 	</string>
@@ -283,40 +255,40 @@
 		<text>When reporting a problem please also enable this. It will ensure that the log contains the most detailed troubleshooting information.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_interaction_dots">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_interaction_dots">
 		<text>Hide interaction dot markers</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_interaction_dots_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_interaction_dots_desc">
 		<text>If enabled, the interaction dots themselves will be hidden, but the interaction UI will still be available.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_pri_interact_ui">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_pri_interact_ui">
 		<text>Hide the custom primary interact UI</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_pri_interact_ui_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_pri_interact_ui_desc">
 		<text>If enabled, the custom primary interact UI added by DotMarks will not be shown. The primary vanilla "use" function and prompts will still work normally.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_sec_interact_ui">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_sec_interact_ui">
 		<text>Hide the custom secondary interact UI</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_sec_interact_ui_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_sec_interact_ui_desc">
 		<text>If enabled, the custom secondary interact UI added by DotMarks will not be shown, and secondary interactions will not be available.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_van_interact_ui">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_van_interact_ui">
 		<text>Hide vanilla interact UI</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_van_interact_ui_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_van_interact_ui_desc">
 		<text>If enabled, any vanilla interact prompts (the text at the bottom of the screen) will be hidden if they have been replaced by a custom version.
 			\n 
 			\nThis setting has no effect if the custom primary interaction UI is also hidden.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_connecting_line">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_connecting_line">
 		<text>Hide the connecting white line</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_hide_connecting_line_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_connecting_line_desc">
 		<text>If enabled, will hide the white line connecting the dot to the interact prompt.</text>
 	</string>
 
@@ -342,40 +314,40 @@
 		<text>These settings adjust the positions of the interact prompts. These are canvas coordinates, which are 1024x768--not your screen resolution. Some may require a restart to take effect.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_h_offset">
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_x_offset">
 		<text>Horizontal offset for first interact</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_h_offset_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_x_offset_desc">
 		<text>Adjust the prompt's position horizontally. Allowed values are -512 to 1024.
 			\n 
 			\nDefault: -10
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_v_offset">
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_y_offset">
 		<text>Vertical offset for first interact</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_v_offset_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_y_offset_desc">
 		<text>Adjust the prompt's position vertically. Allowed values are -384 to 768.
 			\n 
 			\nDefault: 28
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_h_offset">
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_x_offset">
 		<text>Horizontal offset for second interact</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_h_offset_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_x_offset_desc">
 		<text>Adjust the prompt's position horizontally. Allowed values are -512 to 1024.
 			\n 
 			\nDefault: -10
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_v_offset">
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_y_offset">
 		<text>Vertical offset for second interact</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_v_offset_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_y_offset_desc">
 		<text>Adjust the prompt's position vertically. Allowed values are -384 to 768.
 			\n 
 			\nDefault: 48
@@ -521,39 +493,239 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_show_item_card">
+	<string id="ui_mcm_dotmarks_dmarkmain_show_item_card">
 		<text>Show item quick info card</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_show_item_card_desc">
+	<string id="ui_mcm_dotmarks_dmarkmain_show_item_card_desc">
 		<text>If enabled, a small display will be shown beside the primary interaction prompt, showing its weight and value and (optionally, with Utjan's addon) indicator dots for the condition of weapon/armor parts.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_show_item_condition">
+	<string id="ui_mcm_dotmarks_dmarkmain_show_item_condition">
 		<text>Show gear condition percentage</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_show_item_condition_desc">
-		<text>If enbabled, the condition of outfits and headgear will be appended to the name of the item.</text>
+	<string id="ui_mcm_dotmarks_dmarkmain_show_item_condition_desc">
+		<text>If enbabled, the condition of weapons, outfits and headgear will be appended to the name of the item.\n
+
+		\nThis option is disabled by default in GAMMA, which does not use item condition.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_show_item_charge">
+	<string id="ui_mcm_dotmarks_dmarkmain_show_item_charge">
 		<text>Show device battery percentage</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_show_item_charge_desc">
+	<string id="ui_mcm_dotmarks_dmarkmain_show_item_charge_desc">
 		<text>If enabled, the battery charge of devices will be appended to the name of the item.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_show_condition_color">
+	<string id="ui_mcm_dotmarks_dmarkmain_show_condition_color">
 		<text>Show condition/charge level in color</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_show_condition_color_desc">
+	<string id="ui_mcm_dotmarks_dmarkmain_show_condition_color_desc">
 		<text>If enabled, the color of the condition/battery text will change based on the value.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_flag_favejunk">
+	<string id="ui_mcm_dotmarks_dmarkmain_sp_flag_favejunk">
 		<text>Show icon for favorites/junk on the item card</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_flag_favejunk_desc">
+	<string id="ui_mcm_dotmarks_dmarkmain_sp_flag_favejunk_desc">
 		<text>If enabled, items marked as Favorites or Junk with Sorting Plus will display the appropriate icon on the item card.</text>
 	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_font_main_prompt">
+		<text>Font used for main prompt</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_font_main_prompt_desc">
+		<text>Some fonts will look better at different resolutions due to the inconsistent way Anomaly sizes the text. The default for the prompt text is Letterica 16, but choose whichever one looks best to you.</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_font_item_card">
+		<text>Font used for the Item Card</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_font_item_card_desc">
+		<text>Some fonts will look better at different resolutions due to the inconsistent way Anomaly sizes the text. The default for the Item Card is the Small Print font, but choose whichever one looks best to you.
+			 \n
+			\nThe addon tries to adjust the UI based on the size of the text, but it may be necessary to adjust screen position values for the Item Card or other elements when using some fonts.</text>
+	</string>	
+
+	<string id="ui_mcm_lst_dmarks_font_graf32">
+		<text>Graffiti 32</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_font_graf22">
+		<text>Graffiti 22</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_font_graf19">
+		<text>Graffiti 19</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_font_let25">
+		<text>Letterica 25</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_font_let18">
+		<text>Letterica 18</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_font_let16">
+		<text>Letterica 16 (default)</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_font_medium">
+		<text>Medium Print</text>
+	</string>
+	<string id="ui_mcm_lst_dmarks_font_small">
+		<text>Small Print (no Cyrillic)</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_itemcard_desc">
+		<text>The Item Card is an optional info window attached to the prompt that shows vital data such as an item's weight and value, as well as integrating with other addons such as Sorting Plus and Utjan's Item UI Improvements.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_sz">
+		<text>Item Card icon size</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_sz_desc">
+		<text>Changes the size of the icons in the Item Card, used for attributes such as Weight and Value.
+		 \n
+		\nDefault: 7.5</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_x">
+		<text>Item Card X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_x_desc">
+		<text>Adjusts the amount that the Item Card's position is horizontally offset.
+		 \n
+		\nDefault: -9.5</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_y">
+		<text>Item Card Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_y_desc">
+		<text>Adjusts the amount that the Item Card's position is vertically offset.
+		 \n
+		\nDefault: 2</text>
+	</string>	
+
+
+	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_x">
+		<text>Part condition dots X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_x_desc">
+		<text>Adjusts the horizontal offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
+		 \n
+		\nDefault: -7</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_y">
+		<text>Part condition dots Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_y_desc">
+		<text>Adjusts the vertical offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
+		 \n
+		\nDefault: -4</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_x">
+		<text>Sorting Plus icon X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_x_desc">
+		<text>Adjusts the horizontal offset for the Favorite/Junk icons added by Sorting Plus. This position is measured relative to the right end of the Item Card, which is based on the length of the longest text field: Weight or Value.
+		 \n
+		\nDefault: 10</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_y">
+		<text>Sorting Plus icon Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_y_desc">
+		<text>Adjusts the vertical offset for the Favorite/Junk icons added by Sorting Plus. This position is measured relative to the right end of the Item Card, which is based on the length of the longest text field: Weight or Value.
+		 \n
+		\nDefault: 1</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_header_debug">
+		<text>$clr_whtIf you need to report a problem or crash:\n
+			\n$clr_cmg1. $clr_whtTurn on $clr_gldboth debug and verbose$clr_wht logging below
+			\n$clr_cmg2. $clr_whtExit the game and restart it
+			\n$clr_cmg3. $clr_whtReproduce the issue $clr_gldas quickly and simply as possible
+			\n$clr_cmg4. $clr_whtExit $clr_gldimmediately$clr_wht and send me the log\n
+
+			\n$clr_redIf you don't do this or can't reproduce the issue, I probably can't help you.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_header_debug_nocolor">
+		<text>If you need to report a problem or crash:
+			\n1. Turn on both debug and verbose logging below
+			\n2. Exit the game and restart it
+			\n3. Reproduce the issue as quickly and simply as possible
+			\n4. Exit immediately and send me the log\n
+
+			\nIf you don't do this or can't reproduce the issue, I probably can't help you.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_header_main_nocolor">
+		<text>Welcome to Interaction Dot Marks--a modernized replacement for the object interaction UI that brings some of Stalker 2's QoL features back to Anomaly, while adding powerful new options. Everyone enjoys different things, so DotMarks is designed to be customized to your preferences. If you don't find what you're looking for in the options below, head over to the Advanced tab.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_header_main">
+		<text>$clr_whtWelcome to $clr_gldInteraction Dot Marks$clr_wht--a modernized replacement for the object interaction UI that brings some of Stalker 2's QoL features back to Anomaly, while adding powerful new options.\n
+		\nEveryone enjoys different things, so DotMarks is designed to be $clr_lblcustomized to your preferences$clr_wht. If you don't find what you're looking for in the options below, head over to the $clr_lblAdvanced$clr_wht tab.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_header_oldexes">
+		<text>$clr_redWARNING: Your modded binaries are out of date!\n
+		\n$clr_whtInteraction Dot Marks $clr_gldrequires modded binaries 20250306 or newer$clr_wht in order to function properly. Before attempting to use this addon, perform a clean installation of the latest demonized modded binaries:\n
+		\nhttps://github.com/themrdemonized/xray-monolith
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_header_notmodded">
+		<text>$clr_redWARNING: You are not running modded binaries!\n
+		\n$clr_whtInteraction Dot Marks $clr_gldrequires modded binaries 20250306 or newer$clr_wht in order to function properly. Before attempting to use this addon, perform a clean installation of the latest demonized modded binaries:\n
+		\nhttps://github.com/themrdemonized/xray-monolith
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_objmenu">
+		<text>$clr_whtHere you can enable or disable $clr_gldInteraction Dot Marks$clr_wht for different types of objects, as well as object-specific settings.\n
+
+		\n$clr_gldIf you make changes here, they may not take effect for already-scanned objects until you move away from them or saveload.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_adv_desc">
+		<text>$clr_gldAdvanced Settings\n
+			$clr_whtYou probably won't need most of the following settings, but they're here for those who want to customize the UI exactly to their liking.\n
+			\nScroll down for many more options than you see here.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_desc">
+		<text>$clr_gldThird-Party Addon Support\n
+			$clr_whtDotMarks supports multiple other addons, such as Sorting Plus, Utjan's Item UI, Milspec PDA, PAW, and more. Some of these integrations have options which you can adjust here.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_scanmenu">
+		<text>$clr_whtThe following checkboxes $clr_gldcontrol whether visible dot markers are added$clr_wht to each different class of object. If any are distracting or less useful for you, unchecking them here will hide their markers. You can still interact with the objects normally.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_alti_desc">
+		<text>$clr_whtThe $clr_gldsecondary interact$clr_wht allows context-sensitive actions when targeting marked objects without needing to pick them up first--such as removing the ammo from a weapon, or consuming food items. FDDA Redone is strongly recommended.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_show_multi_uses">
+		<text>Show quantity for multi-use items</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_show_multi_uses_desc">
+		<text>When enabled, the number of uses in a multi-use item will be displayed beside the prompt, if more than one remains.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_wheel_cycles_pickups">
+		<text>Mouse wheel cycles focused pickup</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_wheel_cycles_pickups_desc">
+		<text>When enabled, if there is more than one nearby item that can be picked up, scrolling the mouse wheel will cycle focus through the nearby items instead of its usual function.\n
+
+		\nIf FDDAR's multi-pickup option is disabled, DotMarks will try to respect this by only allowing the focused item to be picked up, but that isn't always possible.</text>
+	</string>
+
 
 </string_table>

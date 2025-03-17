@@ -1,47 +1,19 @@
+; =================================================================================
 ; Interaction Dot Markers (DotMarks)
 ; Main configuration settings
-; Loaded on startup by: ui_hud_dotmarks.load_file_data()
-; Further massaging done by parse_file_data()
-;
+; Loaded on startup by: dotmarks_main.load_file_data()
+; Further massaging done by ui_hud_dotmarks.parse_file_data()
+; =================================================================================
+
 ; All of the config settings for DotMarks are stored in the ui_hud_dotmarks.cfg table.
 ; This main table loads all of its values from [default_settings] below, and will 
 ; dynamically create and populate subtables based on the [setting_tables] and its 
 ; related sections below.
 
-[setting_tables]
-; Never remove ANY values from this section, you WILL crash your game
-blacklisted_clsids
-blacklisted_ids
-blacklisted_sections
-breakable_box_visuals
-colors
-display_cases
-door_visuals
-dotmark_preset
-in_pickup_range
-invboxes
-gettable_types
-grenade_ammo_clsids
-markers
-mcm_paths
-monitors
-notable_npcs
-tutorial_hints
-prompts
-racked_items
-scan
-service_icons
-state_conds
-tex
-useless_shit
-vendors
-weight_colors
-
 [default_settings]
 ; Any setting here will be loaded as part of the main cfg table
 ; Any non-table key in the cfg table that is defined in the mcm_paths table 
 ; below will query MCM during every on_option_change for an override (if any)
-
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 near_scan_interval          = 244
@@ -104,10 +76,10 @@ hide_van_interact_ui		= true
 ; Whether to hide the vanilla interaction prompts
 hide_drop_shadow 			= false
 ; Whether to hide the drop shadow beneath prompts
-pri_use_h_offset 			= -10
-pri_use_v_offset 			= 28
-sec_use_h_offset 			= -10
-sec_use_v_offset 			= 48
+pri_use_x_offset 			= -10
+pri_use_y_offset 			= 28
+sec_use_x_offset 			= -10
+sec_use_y_offset 			= 48
 ; Screen positions for the primary and secondary interact prompts
 ; By default these are measured from the attached interaction dot
 fixed_screen_pos 			= false
@@ -119,6 +91,20 @@ keybind_bg_style 			= 3
 ;	1 =	white outline
 ; 	2 = black and white 3D
 ; 	3 = worn appearance
+font_main_prompt 			= 2
+; Font to use for the main prompt text
+;
+;
+;
+;
+;
+;
+;
+font_item_card				= 0
+; Font to use for the item card text
+ui_scale 					= 1
+; Multiplier for UI element size and position calculations
+; WIP, not enabled yet
 interact_drop_alpha 		= 0.55
 ; Opacity of the interaction drop shadows
 dot_marker_size 			= 1
@@ -180,6 +166,8 @@ parts_dot_pos_y				= -4
 ; Position of the part condition indicator, relative to the end of the prompt
 show_item_card 				= true
 ; Show an item card pop-up when targeting a pickup
+item_card_icon_sz   		= 7.5
+; Item card info icon size - e.g weight, value
 item_card_pos_x 			= -9.5
 item_card_pos_y 			= 2
 ; Position of the item card, relative to the end of the prompt
@@ -187,7 +175,6 @@ item_card_pos_y 			= 2
 ; item card elements within their containers.
 item_card_icon_weight 		= ui_catsy_marker_weight
 item_card_icon_value 		= ui_catsy_marker_ruble
-item_card_icon_sz   		= 7.5
 item_card_text_y    		= 1.5
 item_card_elem_x    		= 7.5
 item_card_elem_y    		= 0
@@ -200,19 +187,17 @@ sp_icon_pos_y				= 1
 ; convenience and for anyone to use at their own risk. I don't recommend screwing with
 ; them, and I can't help you if you do.
 
-;hide_moving_doors 			= true
-; Hides the primary interact prompt while a door is in motion
-; HUD elements won't update quickly enough in Anomaly for the motion to look smooth
-; Unfortunately the joint position also doesn't update quickly enough, so still WIP
-
 [tex]
 ; Icon texture overrides for certain types to use instead of the default dot marker
+; Also used for active_swap icons
 Boxes 		= ui_catsy_marker_breakable
+Doors 		= ui_catsy_marker_door
+Stalkers 	= ui_catsy_marker_talk
 ; The tex table is mostly empty by default, but can be used to override the
-; icon texture used for any object type defined in the [scan] section below.
+; icon texture used for most objects defined in the [scan] section below.
 
 [scan]
-; Defines which item categories are scanned by default
+; Defines which item categories exist, and which are scanned by default
 Stalkers 	= true
 Bodies      = true
 Ammo        = true
@@ -278,20 +263,13 @@ bridge_down_red_forest 			= bridge_down_red_forest_tips
 bridge_stop_red_forest 			= bridge_stop_red_forest_tips
 bridge_up_red_forest 			= bridge_up_red_forest_tips
 
-[prompts]
-; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
-item_take 	= inventory_item_use
-npc_talk 	= character_use
-open_door 	= car_character_use
-close_door 	= tip_door_close
-ws_noaccess = st_tiski_no_info
-ws_use 		= st_tiski
-ws_repair 	= st_awr_tiski
-
 [colors]
 ; Will be ignored if the key doesn't begin with "clr_", to avoid clobbering non-color tokens
 ; Fifth value in some is a threshold/breakpoint for internal use in condition color lerping
 ; TODO: move the one-off colors in the config table here with careful find-replace
+
+; It's probably best not to mess with these unless you know what you're doing with ARGB values.
+
 clr_dotmark 	= 255,220,220,220
 ; Base color of the marker itself - not yet used
 clr_wpo_red		= 255,196,18,18
@@ -299,7 +277,7 @@ clr_wpo_orn 	= 255,238,153,26
 clr_wpo_yel 	= 255,255,255,118
 clr_wpo_grn 	= 255,107,207,119
 clr_missing 	= 255,70,60,60
-; Weapon parts overhaul condition threshold colors
+; Weapon Parts Overhaul condition threshold colors
 clr_cnd_min 	= 255,196,18,18,0
 clr_cnd_mid 	= 255,255,255,118,0.5
 clr_cnd_max 	= 255,107,207,119,1
@@ -308,8 +286,6 @@ clr_card_drop 	= 170,255,255,255
 ; Sets alpha for the item card drop shadow
 clr_text_light 	= 255,240,240,240
 ; Text color for light text on dark background (e.g. drop shadow)
-clr_dotmark		= 255,220,220,220
-; Base color of the marker itself
 clr_text_busy	= 255,180,180,180
 ; Text color for disabled prompts
 clr_text_dark	= 255,0,0,0
@@ -324,13 +300,14 @@ clr_weight_high = 255,200,150,0
 ; Colors for inventory carry weight states
 
 [service_icons]
-; Active-swap icons used as icons for service NPCs
+; Active-swap icons used for service NPCs with an active interaction prompt
 trader 		= ui_catsy_marker_trade
 mechanic	= ui_catsy_marker_mech
 medic		= ui_catsy_marker_medic
 barman		= ui_catsy_marker_trade
 
 [display_cases]
+; Containers with a section listed here will be treated as Hideout Furniture display cases
 placeable_arti_display 		= true
 placeable_weapon_rack 		= true
 placeable_pistol_shelf 		= true
@@ -338,8 +315,44 @@ placeable_pistol_shelf 		= true
 [useless_shit]
 ; TODO: add section names of things like matches that can't be used from the ground
 
+; ================================================================================
+; 	DON'T TOUCH BELOW THIS LINE
+; ================================================================================
+; These are critical settings that allow the addon to function properly. They are
+; not intended to be customized, and there is almost no reason to do so except to
+; add support for new items from other addons, which is best done by the addon
+; author through DLTX. I can't help with anything that happens if you change them.
+
+[setting_tables]
+; Never remove or alter ANY values from this section, you WILL crash your game
+blacklisted_clsids
+blacklisted_ids
+blacklisted_sections
+breakable_box_visuals
+colors
+display_cases
+door_visuals
+dotmark_preset
+in_pickup_range
+invboxes
+gettable_types
+grenade_ammo_clsids
+markers
+mcm_paths
+monitors
+notable_npcs
+tutorial_hints
+prompts
+racked_items
+scan
+service_icons
+state_conds
+tex
+useless_shit
+vendors
+weight_colors
+
 [grenade_ammo_clsids]
-; Don't touch
 ; Defines which clsids are classified as GL ammo for the purposes of scan detection
 wpn_ammo_m209_s 	= true
 wpn_ammo_og7b_s 	= true
@@ -349,25 +362,33 @@ wpn_ammo_og7b   	= true
 wpn_ammo_vog25 		= true
 
 [breakable_box_visuals]
-; Don't touch
 ; Defines which object visuals are classified as breakable boxes, no other way to detect
 dynamics\box\box_wood_01 	= true
 dynamics\box\box_wood_02 	= true
 dynamics\box\box_metall_01	= true
 
 [door_visuals]
-; Don't touch
 ; Defines which object visuals are classified as which type of door, and their marker pos adjustment
 dynamics\door\door_trader 		= 0.6
 dynamics\door\shkaf_work_01_door= 0
 
+[prompts]
+; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
+item_take 	= inventory_item_use
+npc_talk 	= character_use
+open_door 	= car_character_use
+close_door 	= tip_door_close
+ws_noaccess = st_tiski_no_info
+ws_use 		= st_tiski
+ws_repair 	= st_awr_tiski
+
 [mcm_paths]
 ; The paths below allow better iteration through the config table to get MCM settings.
-hide_interaction_dots 	= dotmarks/dmarkmain/
-hide_connecting_line 	= dotmarks/dmarkmain/
-hide_pri_interact_ui 	= dotmarks/dmarkmain/
-hide_sec_interact_ui 	= dotmarks/dmarkmain/
-hide_van_interact_ui 	= dotmarks/dmarkmain/
+hide_interaction_dots 	= dotmarks/dmarkadv/
+hide_connecting_line 	= dotmarks/dmarkadv/
+hide_pri_interact_ui 	= dotmarks/dmarkadv/
+hide_sec_interact_ui 	= dotmarks/dmarkadv/
+hide_van_interact_ui 	= dotmarks/dmarkadv/
 dot_marker_size 		= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
 bind_sec_interact 		= dotmarks/dmarkmain/
@@ -375,10 +396,10 @@ modk_sec_interact 		= dotmarks/dmarkmain/
 imod_sec_interact 		= dotmarks/dmarkmain/
 alti_show_during_anim 	= dotmarks/dmarkadv/
 alti_busy_during_anim 	= dotmarks/dmarkadv/
-pri_use_h_offset 		= dotmarks/dmarkadv/
-pri_use_v_offset 		= dotmarks/dmarkadv/
-sec_use_h_offset 		= dotmarks/dmarkadv/
-sec_use_v_offset 		= dotmarks/dmarkadv/
+pri_use_x_offset 		= dotmarks/dmarkadv/
+pri_use_y_offset 		= dotmarks/dmarkadv/
+sec_use_x_offset 		= dotmarks/dmarkadv/
+sec_use_y_offset 		= dotmarks/dmarkadv/
 fixed_screen_pos 		= dotmarks/dmarkadv/
 near_scan_interval 		= dotmarks/dmarkadv/
 far_scan_interval 		= dotmarks/dmarkadv/
@@ -390,7 +411,7 @@ haru_skill_name 		= dotmarks/dmarkadv/
 haru_skill_coef 		= dotmarks/dmarkadv/
 keybind_bg_style 		= dotmarks/dmarkadv/
 sp_hide_junk_items		= dotmarks/dmarkadv/
-sp_flag_favejunk		= dotmarks/dmarkadv/
+sp_flag_favejunk		= dotmarks/dmarkmain/
 hidden_show_prompts		= dotmarks/dmarkadv/
 bodies_use_paw_patches	= dotmarks/dmarkadv/
 bodies_use_mpda_rules 	= dotmarks/dmarkadv/
@@ -406,7 +427,10 @@ show_parts_armor		= item_icon_info/part_dots/show_on_armor
 parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
 parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
 parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
-show_item_card  		= dotmarks/dmarkadv/
-show_item_condition 	= dotmarks/dmarkadv/
-show_item_charge 		= dotmarks/dmarkadv/
-show_condition_color 	= dotmarks/dmarkadv/
+show_item_card  		= dotmarks/dmarkmain/
+show_item_condition 	= dotmarks/dmarkmain/
+show_item_charge 		= dotmarks/dmarkmain/
+show_condition_color 	= dotmarks/dmarkmain/
+font_main_prompt 		= dotmarks/dmarkadv/
+show_multi_uses 		= dotmarks/dmarkmain/
+wheel_cycles_pickups 	= dotmarks/dmarkadv/

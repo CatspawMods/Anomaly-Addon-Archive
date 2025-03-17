@@ -948,10 +948,8 @@ function UIHUDMarker:InitMarker()
     if (not self.marker) then
         self.marker     = xml:InitStatic("marker", self)
     end
-    if self.texture then 
-        vl("* Initting texture %s for marker on %s", self.texture, self.id)
-        self.marker:InitTexture(self.texture)
-    end
+    vl("* Initting texture %s for marker on %s", self.texture or "[BLANK]", self.id)
+    self.marker:InitTexture(self.texture or "")
     local color = GetARGB(255, 255, 255, 255)
     if self.custom_argb and not is_empty(self.custom_argb) then
         local pcc = self.custom_argb

@@ -1,12 +1,10 @@
 -- =======================================================================
 --[[    Interaction Dot Marks ("DotMarks")
-
+    
     PRE-RELEASE TEST BUILD - THIS IS A WORK IN PROGRESS
 
 -- ===================================================================--]]
 script_name     = "ui_hud_dotmarks"
-script_version  = "0.7-b11"
-release_date    = 20250315
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -43,23 +41,26 @@ release_date    = 20250315
     TODO:
     -   Need to optimize and clean up a whole lot of WIP code
     -   Test with EVERY distinct type of item
-
+    -   Figure out why campfire interact sometimes gets stuck
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
+assert(dotmarks_main, "\n\n"..
+    "! ui_hud_dotmarks requires script dotmarks_main, which does not exist!\n\n"
+)
 assert(utils_catspaw_common, "\n\n"..
-    "! ui_hud_dotmarks requires utils_catspaw_common, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist!\n\n"
 )
 assert(utils_catspaw_hudmarks, "\n\n"..
-    "! ui_hud_dotmarks requires utils_catspaw_hudmarks, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_hudmarks, which does not exist!\n\n"
 )
 assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
-    "! ui_hud_dotmarks requires utils_catspaw_text, which does not exist or is an older version!\n" ..
+    "! ui_hud_dotmarks requires script utils_catspaw_text, which does not exist or is an older version!\n" ..
     "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
     "If the version is outdated, try moving this addon to the bottom of your load order."
 )
 assert(utils_catspaw_mapspots, "\n\n"..
-    "! ui_hud_dotmarks requires utils_catspaw_mapspots, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist!\n\n"
 )
 --assert(false,"debug killswitch")
 -- =======================================================================
@@ -87,7 +88,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
     if (verbose_en ~= nil) then verbose = verbose_en end
     if (dump_en ~= nil) then debug_dump = dump_en end
 end
---set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 -- First two values will be overridden by MCM once the game loads
 
 -- ======================================================================
@@ -115,26 +116,37 @@ local first_lower       = utils_catspaw_text.first_lower
 local first_upper       = utils_catspaw_text.first_upper
 local get_argb          = utils_catspaw_mapspots.get_argb
 local is_already_target = utils_catspaw_hudmarks.is_object_already_targeted
-local paw               = tasks_placeable_waypoints
+--local paw               = tasks_placeable_waypoints
 local is_favorite       = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_favorite
 local is_junk           = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_junk
 local gts               = game.translate_string
 -- ======================================================================
-dotmarks_config_file    = "scripts\\dotmarks_defaults.ltx"
+local config_file       = dotmarks_main.dotmarks_config_file
+near_scan_radius        = dotmarks_main.near_scan_radius
+get_nearby_campfire     = dotmarks_main.get_nearby_campfire
+get_val_or_funcval      = dotmarks_main.get_val_or_funcval
+get_cfg_for_type        = dotmarks_main.get_cfg_for_type
+is_blacklisted          = dotmarks_main.is_blacklisted
+is_empty_mutant_corpse  = dotmarks_main.is_empty_mutant_corpse
+get_fixed_screen_pos    = dotmarks_main.get_fixed_screen_pos
+fonts                   = dotmarks_main.fonts
 targeted_id, locked_id  = nil
 cfg                     = {}
 pickup_index            = {}
 nearby_pickups          = {}
 active_anims            = {}
 -- ======================================================================
+local st_kg             = gts("st_kg")
 local maingameui        = nil
 local hmm               = nil
 local scanning          = false
 local ea_enabled        = false
 local anim_playing      = false
-local in_sleep_zone     = false
+--local in_sleep_zone     = false
 local actor_moved       = false
 local extra_carry       = nil
+local fallback_font     = 3
+local _uiscale          = 1
 -- ======================================================================
 --      HUD MARKER PRESET PATCH
 --  Set up "dotmark" preset and patch it into utils_catspaw_hudmarks
@@ -168,35 +180,36 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             -- ================================================================================
             func_on_update = (
             -- ================================================================================
-            --  Main update loop for Dot Marker objects
+            --      MAIN UPDATE LOOP FOR DOT MARKER OBJECTS
+            -- ================================================================================
             --  Runs at the start of every marker update
             --  Determines prompt and marker visibility for most objects
-            --  Updates condition and other metadata that are visible on prompts
+            --  Updates condition and other metadata that are visible on prompts, if enabled
             -- ================================================================================
                 function(mark, args)
-                    -- Check whether all markers are hidden
-                    local now = time_global()
-                    local id = mark and mark.id
-                    local targeted = is_current_target(id)
-                    local hide = not not (mark and mark.hidden)
-                    local _ = debug_dump and vl("[%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
-                    local obj = mark.id and get_object_by_id(mark.id)
+                    local now           = time_global()
+                    local id            = mark and mark.id
+                    local hide          = mark and mark.hidden
+                    local _             = debug_dump and vl("[%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
+                    local obj           = mark.id and get_object_by_id(mark.id)
                     if not obj then return end
                     if mark.is_campfire and (not get_nearby_campfire()) then
+                        if not hide then printf("Stuck campfire cleared") end
                         -- Check for stuck campfire prompts
-                        hide = true
+                        hide            = true
                     elseif mark.is_arty and (not can_actor_see_artefact(obj)) then
                         -- Check whether object is an artefact that is not currently visible
-                        hide = true
+                        hide            = true
                     end
-                    local sec = obj:section()
-                    local can_show = false
-                    local no_prompts = false
+                    local can_show      = false
+
+                    local targeted      = is_current_target(id)
                     if mark.is_stalker then
                         if targeted then can_show = true end
                     end
                     -- ================================================================================
                     -- Check whether this marker is for a junk object
+                    local sec           = obj:section()
                     if (not hide) and obj and zzz_rax_sortingplus_mcm and cfg.sp_hide_junk_items then
                         local sec = obj:section()
                         if is_junk(sec) then
@@ -205,7 +218,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     end
                     -- ================================================================================
                     -- Check whether any logic has shut off interaction prompts entirely
-                    if no_prompts or (hide and not cfg.hidden_show_prompts) then
+                    if (hide and not cfg.hidden_show_prompts) then
                         --printf("Aborting all prompt display")
                         _ = mark.use_pri and mark.use_pri:ShowPrompt(false)
                         _ = mark.alt_interact and mark.alt_interact:ShowPrompt(false)
@@ -270,7 +283,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     local wc = mark.weight and actor_weight_class(mark.weight)
                                     local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
                                     mark.use_pri.parse_text_colors = true
-                                    text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, gts("st_kg"))
+                                    text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
                                 else
                                     text = " " .. gts("st_alti_empty")
                                 end
@@ -381,28 +394,6 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
     end
 )
 
-
--- =======================================================================
---[[      ITEM PICKUP CONTROL - FDDA AND FDDA REDONE MONKEYPATCHES
-    Intercepts primary-use keybind and checks for correct target, altering
-    the passed object if necessary.
--- =====================================================================]]
-
-function can_actor_see_artefact(obj)
-    local arty  = obj and obj:cast_Artefact()
-    local vstate= arty and arty.getVisible and arty:getVisible() or 0
-    return (vstate == 1) and true or false
-end
-
-function get_bones_for_obj(obj)
-    local bones = obj and obj.list_bones and obj:list_bones()
-    --printf("bones for %s", obj:name())
-    --for k,v in pairs(bones) do
-        --printf("[%s] = %s", k, v)
-    --end
-    return bones
-end
-
 function item_pickup_intercept(obj, flags)
     -- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
     local taken_obj
@@ -418,657 +409,19 @@ function item_pickup_intercept(obj, flags)
     return taken_obj
 end
 
-local fddar_on_item_callback = liz_fdda_redone_item_pickup and liz_fdda_redone_item_pickup.actor_on_item_before_pickup
-local fdda_on_item_callback = take_item_anim and take_item_anim.actor_on_item_before_pickup
-
-if fddar_on_item_callback then
-    liz_fdda_redone_item_pickup.actor_on_item_before_pickup = (
-        function(obj, flags)
-            --vl("FDDA Redone detected, patching liz_fdda_redone_item_pickups.actor_on_item_before_pickup")
-            local taken_obj = item_pickup_intercept(obj, flags)
-            flags.ret_value = false
-            fddar_on_item_callback(taken_obj or obj, flags)
-        end
-    )
-elseif fdda_on_item_callback then
-    take_item_anim.actor_on_item_before_pickup = (
-        function(obj, flags)
-            --vl("FDDA detected, patching take_item_anim.actor_on_item_before_pickup")
-            local taken_obj = item_pickup_intercept(obj, flags)
-            flags.ret_value = false
-            fdda_on_item_callback(taken_obj or obj, flags)
-        end
-    )
+function can_actor_see_artefact(obj)
+    local arty  = obj and obj:cast_Artefact()
+    local vstate= arty and arty.getVisible and arty:getVisible() or 0
+    return (vstate == 1) and true or false
 end
 
--- =======================================================================
---      MAIN CONFIG TABLE
---  Most values are loaded from configs\scripts\dotmarks_defaults.ltx
--- =======================================================================
-cfg = {
--- =======================================================================
---  [cfg.is_item]: table of functors to test if an object matches a type
--- =======================================================================
-    is_item = {
-        Stalkers = (
-            function(obj) 
-                local comm = obj and get_object_community(obj)
-                local is_enemy = comm and game_relations.is_factions_enemies(get_actor_true_community(), comm)
-                return obj and (
-                    (IsStalker(nil, obj:clsid()) and obj:alive() and not is_enemy) or
-                    (obj:clsid() == clsid.script_trader)
-                )
-            end
-        ),
-        Bodies = (
-            function(obj) return obj and (is_living_thing(obj) and not obj:alive()) end
-        ),
-        Stashes = (
-            function(obj) return obj and IsInvbox(nil, obj:clsid()) end
-        ),
-        Ammo = (
-            function(obj) 
-                local cls = obj and obj:clsid()
-                if not cls then return end
-                return IsAmmo(nil, cls) or (cfg.grenade_ammo_clsids and cfg.grenade_ammo_clsids[cls])
-            end
-        ),
-        Weapons = (
-            function(obj) return obj and (IsWeapon(nil, obj:clsid()) or (obj:clsid() == clsid.wpn_binocular_s)) end -- also catches binocs
-        ),
-        Grenades = (
-            function(obj) return obj and IsGrenade(nil, obj:clsid()) end
-        ),
-        Explosives = (
-            function(obj) return obj and IsExplosive(nil, obj:clsid()) end
-        ),
-        Outfits = (
-            function(obj) return obj and IsOutfit(nil, obj:clsid()) end
-        ),
-        Headgear = (
-            function(obj) return obj and IsHeadgear(nil, obj:clsid()) end
-        ),
-        Artefacts = (
-            function(obj) return obj and IsArtefact(nil, obj:clsid()) end
-        ),
-        Consumables = (
-            function(obj) 
-                local cls = obj and obj:clsid()
-                if (cls and (cls == clsid.obj_food)) then
-                    return true
-                end
-                local section = obj and obj:section()
-                return 
-                    (section and 
-                        (IsItem("eatable", section)) or
-                        (ini_sys:r_string_ex(section, "kind") == "i_medical")
-                    )
-            end
-        ),
-        Tools = (
-            function(obj) return obj and IsItem("tool", obj:section()) end
-        ),
-        Devices = (
-            function(obj) return obj and IsItem("device", obj:section()) end
-        ),
-        Quest = (
-            function(obj) return obj and IsItem("quest", obj:section()) end
-        ),
-        Campfires = (
-            function(obj) return obj and (obj:clsid() == clsid.zone_campfire) end
-        ),
-        Doors = (
-            function(obj) 
-                local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
-                return (scheme == "ph_door")
-            end
-        ),
-        Boxes = (
-            function(obj)
-                local cls = obj and obj:clsid()
-                if not (cls and (cls == clsid.obj_phys_destroyable)) then return end
-                local visual = obj:get_visual_name()
-                return visual and cfg.breakable_box_visuals[visual]
-            end
-        ),
-        Misc = (
-            function(obj) 
-                return obj and (
-                    (obj:clsid() == clsid.obj_attachable) or
-                    (obj:clsid() == clsid.equ_backpack)
-                )
-            end
-        ),
-        Workshops = (
-            function(obj)
-                return obj and (obj:clsid() == clsid.obj_physic) and string.match(obj:name(), "awr_tiski") end
-        ),
-
-
-    },
--- =======================================================================
---  [cfg.args]: required, returns a table of parameters for a mark type
---  At a minimum, this must include args.texture, which must be the name 
---  of a valid texture (even a blank one)
--- =======================================================================    
-    args = {
-    -- Whenever an object matches one of the is_item functions above, the next
-    -- step is to get its base args (flags and metadata) for passing along to
-    -- the HUD Marker Manager in utils_catspaw_hudmarks
-    -- =======================================================================    
-        Stalkers = (
-            function(obj)
-                if not obj then return end
-                local id            = obj:id()
-                local cls           = obj:clsid()
-                if not cls then return end
-                local sec           = obj:section()
-                local args          = {
-                    logged_type    = "stalker (alive)",
-                    -- logged_type is purely informational for logging
-                    is_npc         = true, -- these three flags should be obvious
-                    is_alive       = true, -- utilized during main loop to speed up checks
-                    is_stalker     = true, -- passed through via args to the interaction prompts
-                    bone           = "bip01_spine1",
-                    -- causes marker position to be based on this bone
-                    pos_adjust     = vector():set(0, 0.1, 0),
-                    -- adjust final marker world pos additively by this value
-                    texture        = get_cfg_for_type("tex", "Stalkers") or cfg.marker_dotmark,
-                    -- The get_cfg_for_type call for the "tex" type returns the contents of
-                    -- the cfg.tex table for the specified object class.
-                    hint_filters = {["character_use"] = "character_use"},
-                    -- Hint filters specify strings that this marker's primary interaction prompt
-                    -- should watch for and erase from the QuickHelp static, and optionally 
-                    -- specify a replacement localization string to use.
-                }
-
-                local service_icon
-                if cfg.vendors[sec] then
-                    --vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
-                    args.service_type   = cfg.vendors[sec]
-                    local enabled       = not cfg.disable_icon_services
-                    service_icon        = enabled and cfg.service_icons[args.service_type] or nil
-                    -- Service NPCs (e.g. traders, mechancis) show a special icon instead of
-                    -- the dot marker when they are targeted for interaction.
-                    -- killswitched by cfg.disable_icon_services
-                end
-                if service_icon then
-                    vl("Found NPC service icon %s, enabling active swap")
-                    -- The active_swap arg specifies a list of args that are swapped in
-                    -- whenever the marker becomes the current active target.
-                    -- The original values are restored when it is no longer targeted.
-                    args.active_swap = {
-                        texture     = service_icon,
-                        width       = 16,   -- marker width
-                        height      = 16,   -- marker height
-                        line_adj_x  = 4,    -- x position of the white line
-                        line_adj_y  = 11,   -- y position of the white line
-                        line_adj_h  = -11,  -- height of the white line
-                    }
-                elseif not cfg.disable_icon_talk then
-                    vl("Stalker talk icon %s enabled for active swap")
-                    args.active_swap = {
-                        texture     = "ui_catsy_marker_talk",
-                        width       = 16,
-                        height      = 16,
-                        line_adj_x  = 4,
-                        line_adj_h  = -11,
-                        line_adj_y  = 11,
-                    }
-                end
-
-                return args
-            end
-        ),
-    -- =======================================================================    
-        Bodies = (
-            function(obj)
-                if not obj then return end
-                if is_empty_mutant_corpse(obj) then return end
-                local id            = obj:id()
-                local cls           = obj:clsid()
-                if not (id and cls) then return end
-                local args = {
-                    is_npc          = true,
-                    comm            = get_object_community(obj) or nil,
-                    section         = obj:section(),
-                    bone            = "bip01_spine1",
-                    hint_filters = {
-                        ["dead_character_use"]          = "dead_character_use",
-                        ["dead_character_use_or_drag"]  = "dead_character_use_or_drag",
-                        ["st_body_loot"]                = "st_body_loot",
-                        ["st_body_knife_bad"]           = "st_body_knife_bad",
-                        ["st_body_knife_needed"]        = "st_body_knife_needed",
-                        ["st_body_knife_weak"]          = "st_body_knife_weak",
-                    },
-                }
-                
-                if IsStalker(nil, cls) then
-                    args.is_stalker = true
-                elseif IsMonster(nil, cls) then
-                    args.is_mutant = true
-                end
-
-                args.logged_type    = "dead " .. (args.is_stalker and "stalker" or "mutant")
-                if paw and cfg.bodies_use_paw_patches then
-                    args.is_stalker = args.is_stalker and (args.comm ~= "zombied")
-                    args.texture    = (args.is_stalker and ("ui_icons_paw_badge_uhr_" .. args.comm)) or cfg.marker_dotmark
-                    if args.is_stalker then
-                        args.width      = 16
-                        args.height     = 16
-                        args.line_adj_x = 4
-                        args.line_adj_h = -10
-                        args.line_adj_y = 10
-                    end
-                else
-                    args.texture    = get_cfg_for_type("tex", "Bodies", obj) or cfg.marker_dotmark
-                end
-                if is_body_claimed(id) then
-                    args.name       = safename(id) .. " (" .. gts("st_body_is_claimed") .. ")"
-                end
-                if args.is_stalker then
-                    args.has_items  = not obj:is_inv_box_empty()
-                end
-
-                return args
-            end
-        ),
-    -- =======================================================================    
-        Stashes = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                local sec = obj and obj:section()
-                return obj and {
-                    logged_type     = "a stash",
-                    is_stash        = true,
-                    is_backpack     = (sec == "inv_backpack"),
-                    is_display      = cfg.display_cases[sec] or nil,
-                    has_items       = obj and not obj:is_inv_box_empty(),
-                    texture         = get_cfg_for_type("tex", "Stashes") or cfg.marker_dotmark,
-                    los_pos_adjust  = vector():set(0, 0.5, 0),
-                    --pos_adjust      = vector():set(0, 0.4, 0),
-                    hint_filters   = {
-                        ["inventory_box_use"]       = "inventory_box_use",
-                        ["actor_inventory_box_use"] = "actor_inventory_box_use",
-                        ["st_search_treasure"]      = "st_search_treasure",
-                    },
-                }
-            end
-        ),
-    -- =======================================================================    
-        Ammo = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                return obj and {
-                    logged_type     = "ammo",
-                    bone            = "link",
-                    pickup          = true,     -- object is a gettable inventory item
-                    texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Weapons = (
-            function(obj)
-                if weapon_showcase and not is_empty(weapon_showcase.weapon_displays) then
-                    local id = obj and obj:id()
-                    for case_id, case_guns in pairs(weapon_showcase.weapon_displays) do
-                        for item_id, world_id in pairs(case_guns) do
-                            if (id == item_id) or (id == world_id) then
-                                cfg.racked_items[world_id] = case_id
-                                --printf("%s: case %s | item_id %s | world_id %s", obj:name(), case_id, item_id, world_id)
-                                -- Ignore weapons in Hideout Furniture display cases
-                                return nil
-                            end
-                        end
-                    end
-                end
-
-                local count = obj and obj:get_ammo_in_magazine()
-                return obj and {
-                    logged_type     = "a weapon",
-                    has_parts       = true,
-                    pickup          = true,
-                    texture         = get_cfg_for_type("tex", "Weapons") or cfg.marker_dotmark,
-                    --pos_adjust      = vector():set(0, 0.15, 0),
-                    -- adjusts world coordinates of the marker itself
-                    bone            = "wpn_body",
-                    ammo_count      = count,
-                    -- if ammo_count and ammo_count > 0, unload-ammo secondary action will be shown
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Grenades = (
-            function(obj)
-                get_bones_for_obj(obj)
-
-                return {
-                    logged_type     = "a grenade",
-                    pickup          = true,
-                    texture         = get_cfg_for_type("tex", "Grenades") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Explosives = (
-            function()
-                return {
-                    logged_type     = "an explosive",
-                    pickup          = true,
-                    texture         = get_cfg_for_type("tex", "Explosives") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Outfits = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                return obj and {
-                    logged_type     = "an outfit",
-                    pickup          = true,
-                    has_parts       = true, -- Item has component parts with condition
-                    bone            = "joint1",
-                    texture         = get_cfg_for_type("tex", "Outfits") or cfg.marker_dotmark,
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Headgear = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                return obj and {
-                    logged_type     = "headgear",
-                    pickup          = true,
-                    has_parts       = true,
-                    bone            = "joint1",
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
-                    texture         = get_cfg_for_type("tex", "Headgear") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Artefacts = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                return obj and {
-                    logged_type     = "an artefact",
-                    pickup          = true,
-                    is_arty         = true,
-                    texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Consumables = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                local section       = obj and obj:section()
-                local multi_uses    = nil
-                if section and IsItem("multiuse", section, obj) then
-                    multi_uses = obj:get_remaining_uses()
-                end
-                return obj and {
-                    logged_type     = "food, drugs, or drink",
-                    pickup          = true,
-                    --bone            = "bone01",
-                    multi_uses      = multi_uses,
-                    -- if multi_uses and multi_uses > 1, the number of uses will be suffixed to the prompt
-                    section         = section,
-                    texture         = get_cfg_for_type("tex", "Consumables") or cfg.marker_dotmark,
-                    hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Tools = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                local section       = obj and obj:section()
-                local multi_uses    = nil
-                if section and IsItem("multiuse", section, obj) then
-                    multi_uses = obj:get_remaining_uses()
-                end
-                return obj and {
-                    logged_type     = "a tool",
-                    pickup          = true,
-                    multi_uses      = multi_uses,
-                    section         = section,
-                    texture         = get_cfg_for_type("tex", "Tools") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Devices = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                return obj and {
-                    logged_type     = "a device",
-                    pickup          = true,
-                    has_battery     = true,
-                    bone            = "wpn_body",
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
-                    texture         = get_cfg_for_type("tex", "Devices") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Quest = (
-            function(obj)
-                return obj and {
-                    logged_type     = "a quest item",
-                    pickup          = true,
-                    section         = obj:section(),
-                    texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================
-        Campfires = (
-            function(obj)
-                return obj and {
-                    logged_type     = "a campfire",
-                    texture         = cfg.marker_dotmark,
-                    is_campfire     = true,
-                    name            = gts("st_itm_campfire"),
-                    --los_pos_adjust  = vector():set(0, 0, 0),
-                    -- Changes the world coordinates used for LOS checks
-                    pos_adjust      = vector():set(0, 0.25, 0),
-                    no_pri          = true, -- Do not display a primary interaction prompt
-                    -- This is because campfire interactions are shown via the
-                    -- tutorial system, and are handled as a fixed-position
-                    -- screen prompt
-                }
-            end
-        ),
-    -- =======================================================================    
-        Doors = (
-            function(obj)
-                if not obj then return end
-                local visual    = obj:get_visual_name()
-                local id        = obj:id()
-                local ph_door   = id and db.storage[id]["ph_door"]
-                local vadjust   = visual and cfg.door_visuals and cfg.door_visuals[visual] or 0.25
-
-                local args = {
-                    logged_type         = "a door",
-                    texture             = get_cfg_for_type("tex", "Doors") or cfg.marker_dotmark,
-                    is_door             = true,
-                    bone                = "lock",
-                    pos_adjust          = vector():set(0, vadjust, 0),
-                    scheme              = ph_door,
-                    -- The scheme is used for getting direct access to the door handlers and data
-                    visual              = visual,
-                    -- The name of the 3D model visual used for the object
-                    interact_dist       = 4,
-                    -- Doors can be interacted with from a greater than normal distance
-                }
-                if (not cfg.disable_icon_door) then
-                    args.active_swap = {
-                        texture     = "ui_catsy_marker_door",
-                        width       = 20,
-                        height      = 20,
-                        line_adj_x  = 4,
-                        line_adj_h  = -12,
-                        line_adj_y  = 12,
-                    }
-                end
-                return args
-            end
-        ),
-    -- =======================================================================    
-        Boxes = (
-            function(obj)
-                --get_bones_for_obj(obj)
-
-                if not obj then return end
-                local visual = obj:get_visual_name()
-                return {
-                    logged_type     = "a breakable box",
-                    texture         = (not cfg.disable_icon_box) and get_cfg_for_type("tex", "Boxes") or cfg.marker_dotmark,
-                    visual          = visual,
-                    no_pri          = true,
-                    line_adj_x      = 2,
-                    line_adj_h      = -8,
-                    line_adj_y      = 8,
-                    width           = 10,
-                    height          = 10,
-                }
-            end
-        ),
-    -- =======================================================================    
-        Misc = (
-            function(obj)
-                if not obj then return end
-                --get_bones_for_obj(obj)
-                local name = obj:name()
-                local section = obj:section()
-                local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
-                return {
-                    kind            = kind,
-                    -- Used for further object type detection
-                    pickup          = true,
-                    --bone            = name:find("patch" and "joint1" or "link"),
-                    section         = section,
-                    is_readable     = kind and (kind == "i_letter") or nil,
-                    -- Book or letter that can be picked up and read as a secondary action
-                    is_backpack     = (obj:clsid() == clsid.equ_backpack),
-                    logged_type     = "miscellaneous loot",
-                    texture         = get_cfg_for_type("tex", "Misc") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
-                }
-            end
-        ),
-    -- =======================================================================    
-        Tutorials = (
-            -- Tutorials are a class of on-screen prompt that is displayed by the game engine
-            -- according to some fairly arcane functionality in the game_tutorials.xml file.
-            -- Most are not actually "tutorials" as such, but instead use the engine's tutorial
-            -- system as a way of displaying custom interaction prompts to the player.
-            
-            -- These include campfire interactions, sleep zones, and many quest-specific
-            -- one-off interaction prompts. All are displayed by DotMarks as fixed-position
-            -- screen prompts, as most are not actually attached to any world object.
-
-            -- There was no existing way to capture these tutorial events, so I created the
-            -- modxml_tutorial_hooks script to set up on/off flags for the states of all such
-            -- tutorial-interactions.
-            function()
-                local x,y               = get_fixed_screen_pos()
-                return {
-                    logged_type         = "game_tutorials.xml pop-up",
-                    texture             = "",
-                    fixed               = true,
-                    los_check_int       = -1,
-                    locked_screen_pos   = vector2():set(x, y),
-                }
-            end
-        ),
-        Workshops = (
-            function(obj)
-                if not obj then return end
-                local visual = obj:get_visual_name()
-
-                return {
-                    logged_type         = "a workshop bench",
-                    texture             = get_cfg_for_type("tex", "Workshops") or cfg.marker_dotmark,
-                    visual              = visual,
-                    section             = obj:section(),
-                    interact_dist       = 1.5,
-                    refresh_text        = true,
-                    -- Forces the prompt text to check for changes on every update
-                    hint_filters       = {
-                        ["st_tiski_no_info"]= "st_tiski_no_info",
-                        ["st_tiski"]        = "st_tiski",
-                        ["st_awr_tiski"]    = "st_awr_tiski",
-                    },
-                }
-            end
-        ),        
-    },
--- =======================================================================    
---  [cfg.state_conds]: a set of extra checks for tutorial-based prompts 
---  that must also be true (in addition to the tutorial state) in order 
---  for this script to trigger the tutorial prompt.
--- =======================================================================    
-    state_conds = {
-        ["sleep_zone_tip"]              = ( function() return in_sleep_zone end ),
-        -- Check whether actor is actually in the sleep zone - the tutorial fires sooner
-        ["tutorial_campfire_ignite"]    = ( 
-            function()
-                return not is_nearest_campfire_lit()
-                --local fire = bind_campfire.get_nearby_campfire(2.5, true)
-                --if type(fire) == "boolean" then return not fire end
-                --return fire and not fire:is_on()
-            end
-        ),
-        -- Check whether campfire is authoritatively on or off
-        ["tutorial_campfire_extinguish"]= ( 
-            function() 
-                return is_nearest_campfire_lit()
-                --local fire = bind_campfire.get_nearby_campfire(2.5, true)
-                --if type(fire) == "boolean" then return fire end
-                --return fire and fire:is_on()
-            end 
-        ),
-    },
-}
--- =======================================================================    
-
-function get_nearby_campfire(dist)
-    return bind_campfire.get_nearby_campfire(dist or 2.5, true)
-end
-
-function is_nearest_campfire_lit()
-    local fire = get_nearby_campfire()
-    if type(fire) == "boolean" then return fire end
-    -- bind_campfire is fucking stupid, and returns different data types
-    -- so we have to trap that to avoid a dumb crash
-    return fire and fire:is_on()
+function get_bones_for_obj(obj)
+    local bones = obj and obj.list_bones and obj:list_bones()
+    --printf("bones for %s", obj:name())
+    --for k,v in pairs(bones) do
+        --printf("[%s] = %s", k, v)
+    --end
+    return bones
 end
 
 local ini_parts = itms_manager.ini_parts
@@ -1099,7 +452,7 @@ end
 
 function interact_vert_offset(ui_interact)
     local args = ui_interact and ui_interact.args
-    return args and (not args.pri) and (not cfg.hide_pri_interact_ui) and cfg.sec_use_v_offset or cfg.pri_use_v_offset
+    return args and (not args.pri) and (not cfg.hide_pri_interact_ui) and cfg.sec_use_y_offset or cfg.pri_use_y_offset
 end
 
 function csv_argb_to_tbl(csv)
@@ -1162,12 +515,6 @@ function lerp_color(val, mi, md, mx)
         end
     end
     return clr_tbl(t[1], t[2], t[3], t[4])
-end
-
-function get_fixed_screen_pos()
-    local x = cfg.tutorial_prompt_x or (cfg.fixed_screen_pos and cfg.pri_use_h_offset) or 512
-    local y = cfg.tutorial_prompt_y or (cfg.fixed_screen_pos and cfg.pri_use_v_offset) or 600
-    return x,y
 end
 
 function is_already_target(id)
@@ -1233,8 +580,8 @@ end
         key         ::  The DIK code of the bound key for the interact
         mod         ::  The modifier key code (alt, shift, ctrl)
         mode        ::  The input mode of the interaction (0=simple, 1=doubletap, 2=longpress/hold)
-        hoffset     ::  Horizontal pos offset
-        voffset     ::  Vertical pos offset
+        xoffset     ::  Horizontal pos offset
+        yoffset     ::  Vertical pos offset
         act         ::  Action text to display as a prefix to the prompt text, usually handled automatically
         argb_light  ::  Index of four values used as the ARGB for light-colored text
         argb_light  ::  Index of four values used as the ARGB for dark-colored text
@@ -1272,8 +619,18 @@ function InteractPrompt:__init(anchor, args) super()
     args.mode   = self:InputMode(args.mode)
     args.bind   = args.bind or bindtext(key, mod)
     args.long   = args.long or (args.mode == 2)
-    args.hoffset= args.hoffset or (args.pri and cfg.pri_use_h_offset or cfg.sec_use_h_offset) or 0
-    args.voffset= args.voffset or (args.pri and cfg.pri_use_v_offset or cfg.sec_use_v_offset) or 0
+    args.xoffset= args.xoffset or (args.pri and cfg.pri_use_x_offset or cfg.sec_use_x_offset)
+    args.yoffset= args.yoffset or (args.pri and cfg.pri_use_y_offset or cfg.sec_use_y_offset)
+    if (not args.no_sec_yscale) and (not args.pri) then
+        local pxoff = cfg.pri_use_x_offset
+        local pyoff = cfg.pri_use_y_offset
+        local sxoff = cfg.sec_use_x_offset
+        local syoff = cfg.sec_use_y_offset
+        local ydiff = syoff - pyoff
+        args.yoffset = args.yoffset - ydiff + fontscale(ydiff)
+    end
+    --args.xoffset= args.xoffset or (args.pri and cfg.pri_use_x_offset or cfg.sec_use_x_offset) or 0
+    --args.yoffset= args.yoffset or (args.pri and cfg.pri_use_y_offset or cfg.sec_use_y_offset) or 0
     args.act    = args.act or ""
     args.name   = args.name or ""
     args.fixed  = ((args.fixed ~= nil) and args.fixed) or cfg.fixed_screen_pos
@@ -1396,7 +753,7 @@ function InteractPrompt:BuildUI()
     local xml           = self.xml
     xml:ParseFile(cfg.interact_uifile)
     local args          = self.args
-    local boxlen        = #args.bind * 5.825
+    local boxlen        = fontscale(#args.bind * 5.825)
     local boxpos        = -(boxlen - 4)
     self.args.style     = cfg.keybind_bg_style or 0
     vl("Keybind icon style is %s", self.args.style)
@@ -1406,8 +763,8 @@ function InteractPrompt:BuildUI()
     if self.args.locked_screen_pos then
         self.wnd:SetWndPos(self.args.locked_screen_pos)
     else
-        local x             = args.hoffset
-        local y             = args.voffset
+        local x             = args.xoffset
+        local y             = args.yoffset
         self.wnd:SetWndPos(vector2():set(x, y))
     end
 
@@ -1421,6 +778,7 @@ function InteractPrompt:BuildUI()
     if one_char then
         self.prompt     = xml:InitStatic("alt_interact:prompt", self.wnd)
         self.prompt:InitTexture("ui_catsy_keybind_bg_single_v" .. self.args.style)
+        self.prompt:SetWndSize(vector2():set(fontscale(15), fontscale(20)))
     else
         self.prompt     = xml:InitStatic("box", self.wnd)
         
@@ -1432,10 +790,12 @@ function InteractPrompt:BuildUI()
         self.prompt_r:InitTexture("ui_catsy_keybind_bg_right_v" .. args.style)
 
         stretch_adj     = 2
-        self.prompt_c:SetWndSize(vector2():set(boxlen, 20))
+        self.prompt_l:SetWndSize(vector2():set(fontscale(5.3125), fontscale(20)))
         self.prompt_l:SetWndPos(vector2():set(0, 0))
-        self.prompt_c:SetWndPos(vector2():set(5.3125, 0))
-        self.prompt_r:SetWndPos(vector2():set(5 + boxlen, 0))
+        self.prompt_c:SetWndSize(vector2():set(boxlen, fontscale(20)))
+        self.prompt_c:SetWndPos(vector2():set(fontscale(5.2125), 0))
+        self.prompt_r:SetWndPos(vector2():set(fontscale(4.8) + boxlen, 0))
+        self.prompt_r:SetWndSize(vector2():set(fontscale(5.3125), fontscale(20)))
     end
     self.prompt:SetWndPos(vector2():set(boxpos or 0, 0))
 
@@ -1449,21 +809,24 @@ function InteractPrompt:BuildUI()
     -- Set up text drop shadows
     self.bind_sh        = xml:InitStatic("alt_interact:label", self.prompt)
     self.label_sh       = xml:InitStatic("alt_interact:label", self.wnd)
-    self.bind_sh:SetWndSize(vector2():set((boxlen or 0) + 15, 20))
-    self.bind_sh:SetWndPos(vector2():set(stretch_adj + 4.5, 3.25))
-    self.label_sh:SetWndPos(vector2():set(24.5, 3.25))
+    self.bind_sh:SetWndSize(vector2():set((boxlen or 0) + fontscale(15), fontscale(20)))
+    self.bind_sh:SetWndPos(vector2():set(fontscale(stretch_adj + 4.5), fontscale(3.25)))
+    self.label_sh:SetWndPos(vector2():set(fontscale(24.5), fontscale(3.25)))
+    self.bind_sh:TextControl():SetFont(get_font())
+    self.label_sh:TextControl():SetFont(get_font())
 
     -- Keybind text indicator
     self.bind           = xml:InitStatic("alt_interact:label", self.prompt)
     self:eleSetBaseColorScheme(self.bind, self.black_text and self.text_color_dark or self.text_color_light)
+    self.bind:TextControl():SetFont(get_font())
 
     self:SetBindText(bindtext(self:BindKey(), self:ModKey()))
 
-    self.bind:SetWndSize(vector2():set((boxlen or 0) + 15, 20))
+    self.bind:SetWndSize(vector2():set((boxlen or 0) + fontscale(15), fontscale(20)))
     if one_char then
-        self.bind:SetWndPos(vector2():set(stretch_adj + 4.5, 2.5))
+        self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + 4.5), fontscale(2.5)))
     else
-        self.bind:SetWndPos(vector2():set(stretch_adj + 3, 2.5))
+        self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + 3), fontscale(2.5)))
     end
 
     -- Width reference static
@@ -1473,7 +836,8 @@ function InteractPrompt:BuildUI()
     -- Prompt text label
     self.label          = xml:InitStatic("alt_interact:label", self.wnd)
     self:eleSetBaseColorScheme(self.label, self.text_color_light)
-    self.label:SetWndPos(vector2():set(24, 3.5))
+    self.label:SetWndPos(vector2():set(fontscale(24), fontscale(3.5)))
+    self.label:TextControl():SetFont(get_font())
 
     self:eleSetBaseColorScheme(self.bind_sh, self.text_color_dark)
     if self.black_text then
@@ -1502,7 +866,9 @@ function InteractPrompt:SetupConditionSuffix(obj)
     local has_cond  = (sec and cls) and (utils_item.is_degradable(nil, sec) or IsWeapon(nil, cls) or IsOutfit(nil, cls) or IsHeadgear(nil, cls))
     local is_mag    = magazine_binder and sec and magazine_binder.is_magazine(sec)
     local gear_cnd  = (self.args.has_parts and cfg.show_item_condition)
-    local batt_cnd  = (self.args.has_battery and cfg.show_item_charge)
+    local batt_cnd  = ((self.args.has_power or self.args.has_battery) and cfg.show_item_charge)
+
+    vl("[InteractPrompt:SetupConditionSuffix][%s][has_cond %s][multi %s]", sec, has_cond, self.args.multi_uses)
 
     if self.args.multi_uses then
         -- Setup suffix text for multiuse items
@@ -1530,7 +896,7 @@ function InteractPrompt:SetConditionText(sec, cond)
         local str   = string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
         set_color_token(key, str)
         self.parse_text_colors = true
-        if (cond < 0.01) and self.args.has_battery then
+        if (cond < 0.01) and self.args.has_power then
             self.active_suffix = string.format(" ($%s%s$clr_def)", key, gts("st_alti_nopower"))
         else
             self.active_suffix = string.format(" ($%s%s%%$clr_def)", key, cond)
@@ -1573,7 +939,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 
     --printf("setting up item card | weight %s | w %s f %s | value %s", weight, whole, frac, value)
     xml:ParseFile(cfg.interact_uifile)
-    local offset    = self:UpdatePromptLength()
+    local offset    = fontscale(self:UpdatePromptLength())
     self.itemcard   = self.xml:InitStatic("box", anchor or self.wnd)
 
     local icon_sz   = cfg.item_card_icon_sz
@@ -1582,7 +948,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
     local text_y    = cfg.item_card_text_y
     local elem_x    = cfg.item_card_elem_x
     local elem_y    = cfg.item_card_elem_y
-    local elem_h    = cfg.item_card_elem_h
+    local elem_h    = fontscale(cfg.item_card_elem_h)
     local icon_x    = cfg.item_card_icon_x
     local icon_y    = cfg.item_card_icon_y
 
@@ -1600,7 +966,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
     self.card_wgt_text = self.xml:InitStatic("box", self.card_wgt)
     self.card_wgt_text:SetWndSize(vector2():set(0, elem_h))
     self.card_wgt_text:SetWndPos(vector2():set(offset, text_y))
-    self.card_wgt_text:TextControl():SetFont(GetFontSmall())
+    self.card_wgt_text:TextControl():SetFont(get_font(cfg.font_item_card or 0))
     self.card_wgt_text:TextControl():SetText(self.weight)
     self.card_wgt_text:AdjustWidthToText()
     self.card_wgt_text:Show(true)
@@ -1625,7 +991,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
     self.card_val_text = self.xml:InitStatic("box", self.card_val)
     self.card_val_text:SetWndSize(vector2():set(0, elem_h))
     self.card_val_text:SetWndPos(vector2():set(offset, text_y - 0.5))
-    self.card_val_text:TextControl():SetFont(GetFontSmall())
+    self.card_val_text:TextControl():SetFont(get_font(cfg.font_item_card or 0))
     self.card_val_text:TextControl():SetText(value)
     self.card_val_text:TextControl():SetTextColor(getargb( cfg.colors.clr_text_light )) 
     self.card_val_text:AdjustWidthToText()
@@ -1654,7 +1020,7 @@ function InteractPrompt:UpdateFaveJunkIcon()
     self.card_sp_icon:Show(has_icon)
     if not has_icon then return end
 
-    self.card_sp_icon:SetWndPos(vector2():set(self.longest_card + (cfg.sp_icon_pos_x or 0), (cfg.sp_icon_pos_y or 0)))
+    self.card_sp_icon:SetWndPos(vector2():set(self.longest_card + fontscale(cfg.sp_icon_pos_x or 0), (cfg.sp_icon_pos_y or 0)))
     self.card_sp_icon:SetWndSize(vector2():set(16 * cfg.unsquish_ratio, 16))    
 end
 
@@ -2085,7 +1451,7 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
     self.lref:AdjustWidthToText()
     --local pos = self.lref:GetWidth()
     local pos = self:UpdatePromptLength()
-    self.drop:SetWndSize(vector2():set(pos + 55, 22))
+    self.drop:SetWndSize(vector2():set(pos + fontscale(55), fontscale(22)))
 end
 
 function InteractPrompt:GetQuickHelp()
@@ -2224,6 +1590,32 @@ end
 --      MAIN LOGIC
 -- =======================================================================
 
+function uiscale(i)
+    return i * (_uiscale or 1)
+end
+
+function get_font(num)
+    printf("getting font %s", num or cfg.font_main_prompt or fallback_font)
+    local font = fonts[num or cfg.font_main_prompt or fallback_font]
+    return font and font.font
+end
+
+function get_font_size(num)
+    local font = fonts[num or cfg.font_main_prompt or fallback_font]
+    printf("getting size for font %s: %s", num or cfg.font_main_prompt or fallback_font, font and font.size)
+    return font and font.size
+end
+
+function get_font_scale(num)
+    local scale = get_font_size() / 16
+    printf("getting scale for font %s: %s", num or cfg.font_main_prompt or fallback_font, scale)
+    return scale
+end
+
+function fontscale(i)
+    return i * get_font_scale()
+end
+
 function is_dead_body(args)
     return args.is_npc and not args.is_alive
 end
@@ -2253,16 +1645,6 @@ function can_chop_body(section)
     end
     --printf("can_chop_body: %s | %s", result, tip)
     return result, tip
-end
-
-
-function is_empty_mutant_corpse(obj)
-    if not (obj and IsMonster(obj)) then return end
-    local id = safeid(obj)
-    local looted = se_load_var(id,obj:name(),"looted")
-    local st = db.storage[id]
-    local decayed = (st and st.death_time and game.get_game_time():diffSec(st.death_time) > cfg.mutant_decay_time)
-    return looted or decayed
 end
 
 function is_actor_in_sleep_zone()
@@ -2325,29 +1707,6 @@ function stop_scanning()
     return true
 end
 
-function near_scan_radius()
-    return cfg.near_scan_radius + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
-end
-
-function get_val_or_funcval(val_or_func, ...)
-    if not val_or_func then return end
-    if type(val_or_func) == "function" then
-        return val_or_func(...)
-    else
-        return val_or_func
-    end
-end
-
-function get_cfg_for_type(cfg_type, obj_type, ...)
-    return cfg and cfg_type and obj_type and cfg[cfg_type] and get_val_or_funcval(cfg[cfg_type][obj_type], ...)
-end
-
-function is_blacklisted(id, cls, sec)
-    return (cls and cfg.blacklisted_clsids and cfg.blacklisted_clsids[cls]) or
-            (id and cfg.blacklisted_ids and cfg.blacklisted_ids[id]) or
-            (sec and cfg.blacklisted_sections and cfg.blacklisted_sections[sec])
-end
-
 function get_args_for_valid_objects(obj)
     if not obj then return end
     local id = obj:id()
@@ -2375,6 +1734,8 @@ function get_args_for_valid_objects(obj)
             args.id = id
             args.clsid = cls
             args.hidden = (not enabled) or nil
+            args.has_power = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
+            break
         end
     end
 
@@ -2757,17 +2118,6 @@ function actor_on_net_destroy()
 end
 
 
-function is_body_claimed(id)
-    if grok_loot_claim then
-        local claimed   = grok_loot_claim.claimed
-        local k_id      = claimed and id and claimed[id]
-        local k_obj     = k_id and get_object_by_id(k_id)
-        local k_alive   = k_obj and is_living_thing(k_obj) and k_obj:alive()
-        return not not (k_alive and (k_id ~= AC_ID))
-    end
-    return false
-end
-
 function update_actor_extra_weight()
     local w = 0
     local function itr(npc,itm)
@@ -2948,7 +2298,7 @@ function eject_mag_from_ground(wpn)
         wpn:force_unload_magazine(false)
         wpn:unload_magazine()
         if magazines.retain_round(wpn) and #mag_data.loaded > 0 then
-            print_dbg("retaining round of type %s in chamber", stack.peek(mag_data.loaded))
+            vl("retaining round of type %s in chamber", stack.peek(mag_data.loaded))
             stack.pop(mag_data.loaded)
             wpn:set_ammo_elapsed(1)
         else
@@ -2959,7 +2309,7 @@ function eject_mag_from_ground(wpn)
         if se_mag then
             magazines.create_time_event("mag_redux", "timer_eject_"..id, 0, magazines.timer_eject_magazine, id, se_mag.id, mag_data)
         else
-            print_dbg("Could not create magazine %s", mag_data.section)
+            dl("Could not create magazine %s", mag_data.section)
         end
         magazine_binder.set_data(id, {
             section     = "no_mag",
@@ -3130,6 +2480,7 @@ function on_option_change()
     end
     debuglogs       = get_mcm("dotmarks/dmarkadv/debuglogs", debuglogs)
     verbose         = get_mcm("dotmarks/dmarkadv/verbose", verbose)
+    _uiscale        = get_mcm("dotmarks/dmarkadv/ui_scale", _uiscale)
     dl("Debug logging enabled | verbose %s | debug_dump %s", debuglogs, verbose, debug_dump)
     ea_enabled  = ea_callbacks and get_mcm("EA_settings/enable_animations", ea_enabled)
     scanned     = {}
@@ -3215,7 +2566,7 @@ end
 function actor_on_update()
     if not scanning then return end
     --if debug_dump then dump_monitor_states() end
-    in_sleep_zone = is_actor_in_sleep_zone()
+    dotmarks_main.in_sleep_zone = is_actor_in_sleep_zone()
     if cfg.tut_check_interval then
         if (next_tut_check <= time_global()) then
             next_tut_check   = get_next_check(cfg.tut_check_interval)
@@ -3304,6 +2655,7 @@ function actor_on_item_take(obj)
     end
 end
 
+--[[
 function load_file_data(ini_name, cfg_table)
     -- Parameterizing this to turn it into a reusable module
     local def_ini = ini_name and ini_file_ex(ini_name)
@@ -3363,28 +2715,11 @@ function load_file_data(ini_name, cfg_table)
 
     return true
 end
+--]]
 
-function remove_obj_from_box_table(box, item)
-    if not (box and item) then return end
-    local b_id = box:id()
-    if not cfg.invboxes[b_id] then return end
-    local i_id = item:id()
-    --printf("Removing ID %s (%s) from table for invbox %s", i_id, cfg.invboxes[b_id][i_id], b_id)
-    cfg.invboxes[b_id][i_id] = nil
-end
-
-function add_obj_to_box_table(box, item)
-    if not (box and item) then return end
-    if not (box and item) then return end
-    local b_id = box:id()
-    if not cfg.invboxes[b_id] then return end
-    local i_id = item:id()
-    local sec = item:section()
-    cfg.invboxes[b_id][i_id] = sec
-    --printf("Adding ID %s (%s) to table for invbox %s", i_id, sec, b_id)
-end
 
 function on_mouse_wheel(scroll_dir, flags)
+    if not cfg.wheel_cycles_pickups then return end
     if not get_current_target() then return end
     if actor_menu.inventory_opened() then return end
     if item_device and item_device.is_pda_active() then return end
@@ -3450,11 +2785,14 @@ function parse_file_data()
 end
 
 function on_game_start()
+    cfg = dotmarks_main.get_base_config_table()
     mags_installed = (magazines and magazine_binder)
-    if load_file_data(dotmarks_config_file, this.cfg) then
+    if dotmarks_main.load_file_data(config_file, this.cfg) then
         parse_file_data()
+        dotmarks_main.refresh_main_config()
         RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
-        if not (fddar_on_item_callback or fdda_on_item_callback) then
+        local fdda_callback = (z_fdda_pickup_intercept and (z_fdda_pickup_intercept.fddar_oibp or z_fdda_pickup_intercept.fdda_oibp))
+        if not fdda_callback then
             vl("No form of FDDA installed, registering internal pickup callback")
             RegisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
         end
@@ -3465,8 +2803,6 @@ function on_game_start()
         RegisterScriptCallback("on_key_release", on_key_release)
         RegisterScriptCallback("on_option_change", on_option_change)
         RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
-        RegisterScriptCallback("actor_on_item_take_from_box", remove_obj_from_box_table)
-        RegisterScriptCallback("actor_on_item_put_in_box", add_obj_to_box_table)
 
         local last_en = ea_enabled
         on_option_change()
@@ -3483,6 +2819,6 @@ function on_game_start()
         end
     else
         printf("%s could not find config file %s\n" ..
-                "! ERROR: %sstartup aborted, no callbacks will be registered", script_name, logprefix, dotmarks_config_file)
+                "! ERROR: %sstartup aborted, no callbacks will be registered", script_name, logprefix, config_file)
     end
 end
