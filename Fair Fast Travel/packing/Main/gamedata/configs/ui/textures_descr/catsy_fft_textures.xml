@@ -15,9 +15,9 @@
 		<texture id = "ui_fft_menuslide_slider_backpack" x="0" y="362" width="512" height="50" />
 
 		<texture id = "ui_fft_menuslide_slider_guided" x="0" y="462" width="512" height="50" />
-		<texture id ="ui_mcm_fft_messagebox_transbg_gen" x="0" y="0" width="512" height="30" />		
-		<texture id ="ui_mcm_fft_messagebox_transbg_head90" x="0" y="30" width="512" height="90" />		
-		<texture id ="ui_mcm_fft_messagebox_transbg_head140" x="0" y="120" width="512" height="140" />		
+		<texture id = "ui_mcm_fft_messagebox_transbg_gen" x="0" y="0" width="512" height="30" />		
+		<texture id = "ui_mcm_fft_messagebox_transbg_head90" x="0" y="30" width="512" height="90" />		
+		<texture id = "ui_mcm_fft_messagebox_transbg_head140" x="0" y="120" width="512" height="140" />
 
 		<texture id = "ui_fft_travel_icon_black" x="0" y="513" width="43" height="43" />
 		<texture id = "ui_fft_travel_icon_white" x="43" y="513" width="43" height="43" />

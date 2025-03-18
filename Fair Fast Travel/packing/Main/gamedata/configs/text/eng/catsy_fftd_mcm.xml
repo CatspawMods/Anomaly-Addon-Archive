@@ -250,7 +250,7 @@
 	</string>
 
 	<string id="ui_mcm_header_ftsub">
-		<text>This is the default form of fast travel, which is  controlled by all of Anomaly's fast travel settings. If a travel option says "fast travel" rather than "backpack" or "guide", it is using the settings on this page.</text>
+		<text>This is the default form of fast travel, which is controlled by all of Anomaly's fast travel settings. If a travel option says "fast travel" rather than "backpack" or "guide", it is using the settings on this page.</text>
 	</string>
 
 	<string id="ui_mcm_header_bp">

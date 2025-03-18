@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.17"
-release_date 	= 20250309
+script_version 	= "2.17.1"
+release_date 	= 20250318
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
@@ -527,7 +527,7 @@ end
 
 
 function guide_travel_ok(tt,silent)
-	--if not guide_enabled then return true end
+	if (tt ~= "gt") then return true end
 	local level_name = level.name()
 	local guide_ok = not guide_ignored_levels[level_name]
 	dl("Condition check: guide_ok = %s | guide_ignored_levels[%s] %s",guide_ok,level_name,guide_ignored_levels[level_name])

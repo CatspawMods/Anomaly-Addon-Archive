@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.4"
-release_date    = 20250307
+script_version 	= "1.5"
+release_date    = 20250318
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -62,6 +62,7 @@ end
 local safeid 			= utils_catspaw_common.safeid
 local valid_id 			= utils_catspaw_common.valid_id
 local getstrtbl_support	= utils_catspaw_common.exe_getstrtbl_support
+local get_stash_hint 	= utils_catspaw_common.get_stash_hint
 -- =======================================================================
 local psk       		= utils_data.parse_string_keys
 local gts 				= game.translate_string
@@ -231,7 +232,7 @@ end
 
 function set_color_token(k, s)
 	-- set or add a color token in the format of the color_tokens table above
-	color_tokens[k] = s
+	color_tokens[k] = "%" .. s
 	nocolor_tokens[k] = ""
 end
 
@@ -240,10 +241,22 @@ update_nocolor_tokens()
 function int_to_rgba(i)
 	-- Converts integer to RGB or RGBA values
 	-- returns r, g, b, a, defaulting alpha to 255 if not specified (value is <= 0xffffff)
+	-- Improved bitwise version from RavenAscendant
+	-- Should be functionally identical but much more efficient
+	if not (i and type(i) == "number") then return end
+	local a
+	if i <= 0xffffff then a = 255 end
+	return 	bit.band(bit.rshift(i, 16), 255),
+			bit.band(bit.rshift(i, 8), 255),
+			bit.band(i, 255),
+			a or bit.band(bit.rshift(i, 24), 255)
+--[[
+	if not (i and type(i) == "number") then return end
 	return 	floor(floor(i / 256) / 256) % 256, 
 			floor(i / 256) % 256, 
 			(i % 256), 
 			(i > 0xffffff) and (floor(floor(floor(i / 256) / 256) / 256) % 256) or 255
+--]]
 end
 
 function parse_hex_colors(str)
@@ -334,10 +347,16 @@ end
 -- =======================================================================
 -- 		OBJECT NAMES
 -- =======================================================================
+
+function inventory_name(obj, section)
+	section = section or (obj and obj:section())
+	return section and ini_sys:r_string_ex(section, "inv_name") or nil
+end
+
 function find_best_localization(obj, name, section)
 	-- Tries to find the best localized name for an object of unknown type
 	-- based on known localization string naming patterns
-    name = name or (obj and obj:name())
+    name = name or (obj and (inventory_name(obj) or obj:name()))
     section = section or (obj and ((obj.section and obj:section()) or (obj.section_name and obj:section_name())))
 
     local locst = section and ini_sys:r_string_ex(section, "inv_name")
@@ -420,7 +439,10 @@ function safename(id)
     elseif IsInvbox(nil,cls) then
         local obj = get_object_by_id(id)
         local section = obj and obj:section()
-        text = find_best_localization(obj, name, section)
+        text = get_stash_hint(id)
+        if name and (not text) or (text == "") then
+        	text = find_best_localization(obj, name, section)
+        end
         if name and (not text) or (text == name) then
             if name:find("smart_terrain") and name:find("_box") then
                 local smartname = name:sub(1,-5)
