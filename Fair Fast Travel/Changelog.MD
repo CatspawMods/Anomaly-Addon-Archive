@@ -5,6 +5,10 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-durati
 **2.17.1:**
 - Updated `utils_catspaw_text` to 1.5.
 - Fix for "no guides" error message incorrectly preventing travel from labs and other dangerous areas.
+- Changes to some MCM defaults for non-GAMMA users:
+  * Basic Fast Travel no longer has a cost by default
+  * Brain Scorcher blocking travel is off by default
+- These were always intended to be optional features, and were initially set to default in order to gather playtest data, but were intended to be disabled sooner.
 
 **2.17.0:**
 - Updated my utility scripts.
