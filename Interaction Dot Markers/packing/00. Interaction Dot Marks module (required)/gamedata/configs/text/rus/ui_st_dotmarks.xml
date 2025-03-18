@@ -446,6 +446,14 @@
 		</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom">
+		<text>Отключите специальный иконку для взрывоопасных предметов</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom_desc">
+		<text>Если эта опция включена, взрывоопасные объекты будут использовать стандартный точечный маркер вместо специального значка «Я могу взорваться».
+		</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box">
 		<text>Отключение специальной иконки для разбиваемых ящиков</text>
 	</string>

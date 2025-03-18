@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_cfg"
-script_version  = "0.8-b3"
-release_date    = 20250316
+script_version  = "0.8-b4"
+release_date    = 20250317
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -40,9 +40,11 @@ release_date    = 20250316
     If it's even older than that, some stuff may not work at all. You
     should update your modded exes ASAP.    
 -- =====================================================================]]
-
 assert(utils_catspaw_common, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist!\n\n"
+)
+assert(utils_catspaw_mapspots, "\n\n"..
+    "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist!\n\n"
 )
 assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_text, which does not exist or is an older version!\n" ..
@@ -68,9 +70,11 @@ local strbool           = utils_catspaw_common.strbool
 local is_living_thing   = utils_catspaw_common.is_living_thing
 local safeid            = utils_catspaw_common.safeid
 local safename          = utils_catspaw_text.safename
+local get_argb          = utils_catspaw_mapspots.get_argb
 local paw               = tasks_placeable_waypoints
 local gts               = game.translate_string
 local cfg               = {}
+local in_sleep_zone     = false
 -- =======================================================================
 --      MAIN CONFIG TABLE
 --  Most values are loaded from configs\scripts\dotmarks_defaults.ltx
@@ -199,6 +203,7 @@ local base_config = {
                     is_npc         = true, -- these three flags should be obvious
                     is_alive       = true, -- utilized during main loop to speed up checks
                     is_stalker     = true, -- passed through via args to the interaction prompts
+                    section         = sec,
                     bone           = "bip01_spine1",
                     -- causes marker position to be based on this bone
                     pos_adjust     = vector():set(0, 0.1, 0),
@@ -211,19 +216,32 @@ local base_config = {
                     -- should watch for and erase from the QuickHelp static, and optionally 
                     -- specify a replacement localization string to use.
                 }
-
-                local service_icon
-                if cfg.vendors[sec] then
-                    --vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
-                    args.service_type   = cfg.vendors[sec]
-                    local enabled       = not cfg.disable_icon_services
-                    service_icon        = enabled and cfg.service_icons[args.service_type] or nil
-                    -- Service NPCs (e.g. traders, mechancis) show a special icon instead of
-                    -- the dot marker when they are targeted for interaction.
-                    -- killswitched by cfg.disable_icon_services
+                if (not cfg.disable_icon_services) then
+                    if cfg.vendors[sec] then
+                        vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
+                        args.service_type   = cfg.vendors[sec]
+                        -- Service NPCs (e.g. traders, mechancis) show a special icon instead of
+                        -- the dot marker when they are targeted for interaction.
+                        -- killswitched by cfg.disable_icon_services
+                    end
+                    if not args.service_type then
+                        if (obj:character_community() == "trader") or
+                                (cls == clsid.script_trader) or
+                                (cls == clsid.trader) or
+                                sec:find("trader") then
+                                    args.service_type = "trader"
+                        elseif sec:find("mechanic") then
+                            args.service_type = "mechanic"
+                        elseif sec:find("medic") then
+                            args.service_type = "medic"
+                        elseif sec:find("guide") or sec:find("navigator") then
+                            args.service_type = "guide"
+                        end
+                    end
                 end
-                if service_icon then
-                    vl("Found NPC service icon %s, enabling active swap")
+                if args.service_type then
+                    local service_icon = args.service_type and cfg.service_icons[args.service_type] or nil
+                    vl("Found NPC service icon %s, enabling active swap", service_icon)
                     -- The active_swap arg specifies a list of args that are swapped in
                     -- whenever the marker becomes the current active target.
                     -- The original values are restored when it is no longer targeted.
@@ -236,9 +254,10 @@ local base_config = {
                         line_adj_h  = -11,  -- height of the white line
                     }
                 elseif not cfg.disable_icon_talk then
-                    vl("Stalker talk icon %s enabled for active swap")
+                    local texture = get_cfg_for_type("tex", "Stalkers")
+                    vl("Stalker talk icon %s enabled for active swap", texture)
                     args.active_swap = {
-                        texture     = get_cfg_for_type("tex", "Stalkers"),
+                        texture     = texture,
                         width       = 16,
                         height      = 16,
                         line_adj_x  = 4,
@@ -392,7 +411,7 @@ local base_config = {
                 local visual        = obj and obj:get_visual_name()
                 return obj and {
                     logged_type     = "an explosive object",
-                    texture         = get_cfg_for_type("tex", "Explosive") or cfg.marker_dotmark,
+                    texture         = (not cfg.disable_icon_boom) and get_cfg_for_type("tex", "Explosive") or cfg.marker_dotmark,
                     visual          = visual,
                     no_pri          = true,
                     line_adj_x      = 2,
@@ -722,6 +741,41 @@ function near_scan_radius()
     return cfg.near_scan_radius + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
 end
 
+function csv_argb_to_tbl(csv)
+    local c = csv and str_explode(csv, ",")
+    return c and {
+        a = c[1] or 255,
+        r = c[2] or 255,
+        g = c[3] or 255,
+        b = c[4] or 255,
+        v = c[5] or nil -- threshold value for internal use
+    } or nil
+end
+
+function clr_tbl(a, r, g, b, v)
+    return {
+        a = a,
+        r = r,
+        g = g,
+        b = b,
+        v = v
+    }
+end
+
+function clr_tbl_to_index(clr_tbl, tval)
+    return {
+        clr_tbl.a or 255,
+        clr_tbl.r or 255,
+        clr_tbl.g or 255,
+        clr_tbl.b or 255,
+        clr_tbl.v or tval or 0
+    }
+end
+
+function getargb(clr_tbl)
+    return clr_tbl and get_argb( clr_tbl.a, clr_tbl.r, clr_tbl.g, clr_tbl.b )
+end
+
 function get_nearby_campfire(dist)
     return bind_campfire.get_nearby_campfire(dist or 2.5, true)
 end
@@ -823,7 +877,7 @@ function load_file_data(ini_name, cfg_table)
                     to_tbl[k] = v
                 end
             end
-            if (debug_dump and not template) then vl("* Loaded: %s = %s", k, v) end
+            if not template then vl("* Loaded: %s = %s", k, v) end
         end
     end
     local function load_config_tables(from_tbl)

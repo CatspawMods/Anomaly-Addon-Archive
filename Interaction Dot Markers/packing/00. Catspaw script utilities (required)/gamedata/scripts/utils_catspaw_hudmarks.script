@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.4-b2"
-release_date    = 20250315
+script_version  = "0.4-b3"
+release_date    = 20250317
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -87,6 +87,7 @@ local safename          = utils_catspaw_text.safename
 local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
 local gts               = game.translate_string
 local markers           = {}
+local nearest           = {}
 local unsquish_ratio    = 1
 local hover_tolerance   = 0.8
 
@@ -513,6 +514,7 @@ end
 function HUDMarkerManager:DelMarker(mark_id)
     --vl("[HUDMarkerManager:DelMarker] m_id: %s", mark_id)
     if not (mark_id and markers[mark_id]) then return end
+    nearest[markers[mark_id].id or 0] = nil
     markers[mark_id]:Destroy()
     markers[mark_id] = nil
 end
@@ -552,12 +554,12 @@ function HUDMarkerManager:HoverTolerance(mark)
 end
 
 function HUDMarkerManager:Update()
-
-
     for k,v in pairs(markers) do
         if v.managed_updates then v:Update() end
         --vl("checking hover for marker %s (%s) | hovered %s | last_hover %s | last_dist %s", v.name, v.id, v.hovered, v.last_hover, v.last_dist)
-        if (v.id == self.best_hover_id) then
+        local id = v.id
+        nearest[id] = v.last_dist
+        if (id == self.best_hover_id) then
             --vl("%s is the last best_hover_id, checking distance and tolerance", v.id)
             if (v.last_dist > self:HoverDist(v)) or (v.last_hover < self:HoverTolerance(v)) then
                 self:HoverOut(v)
@@ -587,6 +589,22 @@ end
 
 function get_marker_table()
     return markers
+end
+
+function get_nearest(num)
+    -- needs testing
+    if not nearest then nearest = {} end
+    if is_empty(nearest) then return end
+    table.sort(nearest)
+    local i = 1
+    local tbl = {}
+    num = num or size_table(nearest)
+    for id,dist in spairs(nearest) do
+        tbl[i] = {id=id,dist=dist}
+        i = i + 1
+        if i > num then break end
+    end
+    return tbl
 end
 
 function get_hover_tolerance(mark_id)

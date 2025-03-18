@@ -6,6 +6,7 @@
 		<texture id = "ui_catsy_marker_talk" x="0" y="192" width="64" height="64" />
 		<texture id = "ui_catsy_marker_door" x="0" y="256" width="64" height="64" />
 		<texture id = "ui_catsy_marker_mech" x="0" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_guide" x="192" y="256" width="64" height="64" />
 		<texture id = "ui_catsy_marker_medic" x="192" y="320" width="64" height="64" />
 		<texture id = "ui_catsy_marker_dotactive" x="256" y="320" width="64" height="64" />
 		<texture id = "ui_catsy_marker_weight" x="320" y="320" width="64" height="64" />
@@ -38,7 +39,7 @@
 
 		<texture id = "ui_catsy_longpress_full" x="194" y="2" width="10" height="126" />
 		<texture id = "ui_catsy_longpress_bigyellow" x="192" y="128" width="128" height="128" />
-		<texture id = "ui_catsy_line_white_45deg" x="219" y="0" width="97" height="81" />
+		<texture id = "ui_catsy_line_white_45deg" x="219" y="0" width="100" height="86" />
 
 		<texture id = "ui_mcm_dotmarks_banner_main" x="0" y="400" width="1024" height="100" />
 		<texture id = "ui_mcm_dotmarks_banner_adv" x="0" y="500" width="1024" height="100" />

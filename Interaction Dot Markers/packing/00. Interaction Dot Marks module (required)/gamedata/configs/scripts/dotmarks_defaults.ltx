@@ -25,7 +25,7 @@ skill_upd_interval          = 3211
 ; Interval in ms between Skill System updates
 tut_check_interval 			= 49
 ; Interval in ms between tutorial checks, needs to be responsive
-near_scan_radius            = 3
+near_scan_radius            = 4
 ; Radius in meters of the near scan (affects many other things)
 far_scan_radius             = 10
 ; Radius in meters of the far scan
@@ -33,7 +33,7 @@ use_skill_system            = true
 ; Enable Skill System integration
 haru_skill_name             = scavenging
 ; Name of related skill
-haru_skill_coef             = 0.5
+haru_skill_coef             = 0.2
 ; Multiplier to near_scan_radius bonus range per skill level
 mutant_decay_time 			= 7200
 ; Age after which a mutant corpse "decays" and cannot be looted
@@ -272,7 +272,7 @@ bridge_up_red_forest 			= bridge_up_red_forest_tips
 
 ; It's probably best not to mess with these unless you know what you're doing with ARGB values.
 
-clr_dotmark 	= 255,220,220,220
+clr_dmark_norm 	= 255,220,220,220
 ; Base color of the marker itself - not yet used
 clr_wpo_red		= 255,196,18,18
 clr_wpo_orn 	= 255,238,153,26
@@ -307,6 +307,7 @@ trader 		= ui_catsy_marker_trade
 mechanic	= ui_catsy_marker_mech
 medic		= ui_catsy_marker_medic
 barman		= ui_catsy_marker_trade
+guide 		= ui_catsy_marker_guide
 
 [display_cases]
 ; Containers with a section listed here will be treated as Hideout Furniture display cases
@@ -386,16 +387,23 @@ ws_repair 	= st_awr_tiski
 
 [mcm_paths]
 ; The paths below allow better iteration through the config table to get MCM settings.
-hide_interaction_dots 	= dotmarks/dmarkadv/
-hide_connecting_line 	= dotmarks/dmarkadv/
-hide_pri_interact_ui 	= dotmarks/dmarkadv/
-hide_sec_interact_ui 	= dotmarks/dmarkadv/
-hide_van_interact_ui 	= dotmarks/dmarkadv/
+show_item_card  		= dotmarks/dmarkmain/
+show_item_charge 		= dotmarks/dmarkmain/
+show_multi_uses 		= dotmarks/dmarkmain/
+sp_flag_favejunk		= dotmarks/dmarkmain/
+show_item_condition 	= dotmarks/dmarkmain/
+show_condition_color 	= dotmarks/dmarkmain/
+wheel_cycles_pickups 	= dotmarks/dmarkmain/
 dot_marker_size 		= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
 bind_sec_interact 		= dotmarks/dmarkmain/
 modk_sec_interact 		= dotmarks/dmarkmain/
 imod_sec_interact 		= dotmarks/dmarkmain/
+hide_interaction_dots 	= dotmarks/dmarkadv/
+hide_connecting_line 	= dotmarks/dmarkadv/
+hide_pri_interact_ui 	= dotmarks/dmarkadv/
+hide_sec_interact_ui 	= dotmarks/dmarkadv/
+hide_van_interact_ui 	= dotmarks/dmarkadv/
 alti_show_during_anim 	= dotmarks/dmarkadv/
 alti_busy_during_anim 	= dotmarks/dmarkadv/
 pri_use_x_offset 		= dotmarks/dmarkadv/
@@ -413,26 +421,36 @@ haru_skill_name 		= dotmarks/dmarkadv/
 haru_skill_coef 		= dotmarks/dmarkadv/
 keybind_bg_style 		= dotmarks/dmarkadv/
 sp_hide_junk_items		= dotmarks/dmarkadv/
-sp_flag_favejunk		= dotmarks/dmarkmain/
 hidden_show_prompts		= dotmarks/dmarkadv/
 bodies_use_paw_patches	= dotmarks/dmarkadv/
 bodies_use_mpda_rules 	= dotmarks/dmarkadv/
 prompt_fade_in_time		= dotmarks/dmarkadv/
 prompt_fade_out_time	= dotmarks/dmarkadv/
-fddar_multipickup 		= fddar/pickup/multipickup
+font_main_prompt 		= dotmarks/dmarkadv/
+font_item_card 			= dotmarks/dmarkadv/
+parts_dot_pos_x 		= dotmarks/dmarkadv/
+parts_dot_pos_y 		= dotmarks/dmarkadv/
+item_card_icon_sz 		= dotmarks/dmarkadv/
+item_card_pos_x 		= dotmarks/dmarkadv/
+item_card_pos_y 		= dotmarks/dmarkadv/
+item_card_text_y 		= dotmarks/dmarkadv/
+item_card_elem_x 		= dotmarks/dmarkadv/
+item_card_elem_y 		= dotmarks/dmarkadv/
+item_card_elem_h 		= dotmarks/dmarkadv/
+item_card_icon_x 		= dotmarks/dmarkadv/
+item_card_icon_y 		= dotmarks/dmarkadv/
+sp_icon_pos_x 			= dotmarks/dmarkadv/
+sp_icon_pos_y 			= dotmarks/dmarkadv/
+disable_icon_boom		= dotmarks/dmarkobjs/
 disable_icon_box		= dotmarks/dmarkobjs/
 disable_icon_door		= dotmarks/dmarkobjs/
 disable_icon_talk		= dotmarks/dmarkobjs/
 disable_icon_services	= dotmarks/dmarkobjs/
+fddar_multipickup 		= fddar/pickup/multipickup
 show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
 show_parts_armor		= item_icon_info/part_dots/show_on_armor
 parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
 parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
 parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
-show_item_card  		= dotmarks/dmarkmain/
-show_item_condition 	= dotmarks/dmarkmain/
-show_item_charge 		= dotmarks/dmarkmain/
-show_condition_color 	= dotmarks/dmarkmain/
-font_main_prompt 		= dotmarks/dmarkadv/
-show_multi_uses 		= dotmarks/dmarkmain/
-wheel_cycles_pickups 	= dotmarks/dmarkmain/
+
+

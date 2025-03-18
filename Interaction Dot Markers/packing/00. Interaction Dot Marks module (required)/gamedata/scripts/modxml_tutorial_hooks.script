@@ -2,8 +2,8 @@
 --[[	Game Tutorial Hooks and Monitors - DXML Module
 -- ===================================================================--]]
 script_name 	= "modxml_tutorial_hooks"
-script_version 	= "1.2"
-release_date    = 20250307
+script_version 	= "1.2.1"
+release_date    = 20250317
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -128,13 +128,13 @@ function on_xml_read()
 					-- Procedurally generate in/out handler functions for each tutorial
 					this["monitor_" .. tut .. "_start"] = (
 						function() 
-							--_ = DEV_DEBUG and printf("Began tutorial state %s at %s", tut, time_global())
+							_ = DEV_DEBUG and printf("Began tutorial state %s at %s", tut, time_global())
 							monitors[tut].state = true
 						end
 					)
 					this["monitor_" .. tut .. "_stop"] = (
 						function() 
-							--_ = DEV_DEBUG and printf("ended tutorial state %s at %s", tut, time_global())
+							_ = DEV_DEBUG and printf("Ended tutorial state %s at %s", tut, time_global())
 							monitors[tut].state = false
 						end
 					)

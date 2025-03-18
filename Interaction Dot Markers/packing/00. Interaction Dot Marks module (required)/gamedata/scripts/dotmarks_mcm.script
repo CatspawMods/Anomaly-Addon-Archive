@@ -7,6 +7,11 @@
 assert(utils_catspaw_common, "\n\n"..
     "! dotmarks_mcm requires utils_catspaw_common, which does not exist!\n\n"
 )
+assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
+    "! ui_hud_dotmarks requires script utils_catspaw_text, which does not exist or is an older version!\n" ..
+    "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
+    "If the version is outdated, try moving this addon to the bottom of your load order."
+)
 assert(dotmarks_main, "\n\n"..
     "! dotmarks_mcm requires dotmarks_main, which does not exist!\n\n"
 )
@@ -21,10 +26,12 @@ local sfind 		= string.find
 local ssub 			= string.sub
 local lang 			= "eng"
 local psk 			= utils_data.parse_string_keys
+local get_argb 		= utils_catspaw_text.get_argb
 local ver 			= dotmarks_main.script_version or "ersion not found!"
 local rel 			= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
 local rel_version 	= string.format("$clr_tgrv%s (rel %s)", ver, rel)
 dotmarks_main.load_file_data("scripts\\dotmarks_defaults.ltx", cfg)
+cfg.colors.clr_dmark_norm = dotmarks_main.csv_argb_to_tbl(cfg.colors["clr_dmark_norm"])
 
 color_tokens = {
     ["clr_lbl"] = "%" .. "%c[255,0,200,220]",
@@ -38,7 +45,13 @@ color_tokens = {
 
 -- ======================================================================
 
-local pre = {}
+local pre 	= {}
+local wnds 	= {}
+local cache = {}
+
+local function prefetch_mcm_val(path, typ)
+	return axr_main.config:r_value(path, {val = typ or 0})
+end
 
 function init_preview(anchor, handlers, opts, flags)
 	pre.main = xml:InitStatic("box", anchor)
@@ -52,7 +65,6 @@ function init_preview(anchor, handlers, opts, flags)
 	pre.fr 	= xml:InitStatic("box", pre.bg)
 	pre.fr:InitTexture("ui_mcm_dmarks_preview_frame")
 	pre.fr:SetWndSize(vector2():set(300 * cfg.unsquish_ratio, 190))
-
 end
 
 function init_header_element(anchor, handlers, opts, flags)
@@ -93,6 +105,7 @@ function init_simple_icon(anchor, handlers, opts, flags)
 	ctrl:InitTexture(opts.icon)
 	ctrl:SetWndSize(vector2():set((opts.icon_w or 0) * cfg.unsquish_ratio, opts.icon_h or opts.icon_w or 0))
 	ctrl:SetWndPos(vector2():set((opts.icon_x or 0) * cfg.unsquish_ratio, opts.icon_y or 0))
+	return ctrl
 end
 
 function init_service_icons(anchor, handlers, opts, flags)
@@ -107,10 +120,63 @@ function init_service_icons(anchor, handlers, opts, flags)
 			ctrl:SetWndSize(vector2():set((opts.icon_w or 0) * cfg.unsquish_ratio, opts.icon_h or opts.icon_w or 0))
 			ctrl:SetWndPos(vector2():set((x or 0) * cfg.unsquish_ratio, opts.icon_y or 0))
 			i = i + 1
-			used[v] = true
+			used[v] = ctrl
 		end
 	end
+	wnds[opts.id] 		= used
+	wnds[opts.id].opts 	= opts
+	return wnds[opts.id]
+end
 
+function sync_widget_color(ctrl, colors)
+	if not (ctrl and colors) then return end
+	ctrl:SetTextureColor(GetARGB(colors.a, colors.r, colors.g, colors.b))
+end
+
+function sync_widget_size(ctrl, w, h)
+	if not (ctrl and w) then return end
+	ctrl:SetWndSize(vector2():set(w, h or w))
+	ctrl:EnableHeading(true)
+    ctrl:SetConstHeading(true)
+end
+
+function init_dotmark_preview(anchor, handlers, opts, flags)
+	local opts2 	= dup_table(opts)
+	opts2.icon 		= "ui_catsy_marker_dotactive"
+	opts2.icon_x 	= (opts.icon_x - 35)
+	wnds[opts.id] = {
+		reg = init_simple_icon(anchor, handlers, opts, flags),
+		act = init_simple_icon(anchor, handlers, opts2, flags)
+	}
+	local ctrl = wnds[opts.id]
+	local size 	= prefetch_mcm_val("dotmarks/dotmain/dot_marker_size", 2) or 1
+	printf("marker size loaded: %s | base %s", size, opts.icon_w)
+	local color = cfg.colors.clr_dmark_norm
+	ctrl.reg.opts = opts
+	ctrl.act.opts = opts2
+	on_dotmark_size_select(flags.path, opts.id, size)
+	return ctrl
+end
+
+function on_dotmark_size_select(path, opt, value, attrs)
+	local ctrl 	= wnds[opt]
+	if not ctrl then return end
+	cache[opt] 	= value
+	local opts 	= ctrl.reg.opts
+	local szw 	= opts.icon_w or 5
+	local szh 	= opts.icon_h
+	local w 	= value * szh
+	local h 	= value * szh
+	local diff 	= (szw  - w) / 2
+	local diff2 = (szw  - (w * 2)) / 2
+	local x 	= (opts.icon_x + diff ) * cfg.unsquish_ratio
+	local x2 	= (opts.icon_x + diff2 - 35 ) * cfg.unsquish_ratio
+	local y 	= opts.icon_y
+	printf("[%s][%s] val %s | sz %s,%s | new %s,%s | diff %s | x,y %s,%s", path,opt,value,szw,szh,w,h,diff,x,y)
+	sync_widget_size(ctrl.reg, w, h)
+	sync_widget_size(ctrl.act, w * 2, h * 2)
+	ctrl.reg:SetWndPos(vector2():set(x, y + diff))
+	ctrl.act:SetWndPos(vector2():set(x2, y + diff2))
 end
 
 -- ======================================================================
@@ -126,7 +192,7 @@ function get_main_menu()
 			dmark_text 		= header_desc,
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head" .. ((lang == "rus") and "140" or "90"),
 			dmark_apos 		= -20,
-			dmark_bpos 		= 6,
+			dmark_bpos 		= 10,
 			dmark_box_h 	= (lang == "rus") and 130 or 100,
 			dmark_text_h 	= (lang == "rus") and 120 or 90,
 			dmark_text_v 	= 12
@@ -134,12 +200,20 @@ function get_main_menu()
 
 		{ id = "show_item_card", 		type = "check", 	val = 1, def = cfg.show_item_card},
 		{ id = "show_item_charge", 		type = "check", 	val = 1, def = cfg.show_item_charge},
-		{ id = "show_item_condition", 	type = "check", 	val = 1, def = cfg.show_item_condition and not utils_catspaw_common.using_gamma_modpack},
-		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color},
 		{ id = "show_multi_uses", 		type = "check", 	val = 1, def = cfg.show_multi_uses},
 		{ id = "sp_flag_favejunk", 		type = "check", 	val = 1, def = cfg.sp_flag_favejunk},
+		{ id = "show_item_condition", 	type = "check", 	val = 1, def = cfg.show_item_condition and not utils_catspaw_common.using_gamma_modpack},
+		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color},
 		{ id = "wheel_cycles_pickups", 	type = "check", 	val = 1, def = cfg.wheel_cycles_pickups },
-		{ id = "dot_marker_size", 		type = "track",		val = 2, min = 0, step = 0.1, max = 2, def = cfg.dot_marker_size },
+		{ id = "dot_marker_size", 		type = "track",		val = 2, min = 0, step = 0.1, max = 2, def = cfg.dot_marker_size,
+			on_selection_functor= {dotmarks_mcm.on_dotmark_size_select},
+			ui_hook_functor 	= {dotmarks_mcm.init_dotmark_preview},
+			icon 	= cfg.marker_dotmark or "",
+			icon_w 	= (cfg.dotmark_preset.width or 5) * 1.5,
+			icon_h 	= (cfg.dotmark_preset.height or 5) * 1.5,
+			icon_x 	= 370,
+			icon_y 	= 12,
+		},
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha },
 
 		{ id = "header_sec", 	type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_alti_desc",
@@ -196,6 +270,7 @@ function get_adv_menu()
 			dmark_text_v 	= 9
 		},
 		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
+		{ id = "item_card_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.item_card_pos_y },
 
 		{id = "keybind_bg_style", type= "list", val = 2, def = cfg.keybind_bg_style, 
 			content = {
@@ -318,13 +393,22 @@ function generate_objs_menu()
 			dmark_text_h 	= 90,
 			dmark_text_v 	= 12
 		},
-		{ id = "disable_icon_box", 		type = "check", val = 1, def = cfg.disable_icon_box,
-			ui_hook_functor = {dotmarks_mcm.init_simple_icon},
-			icon = cfg.tex.Boxes or "",
-			icon_w = 24,
-			icon_h = 24,
+
+		{ id = "disable_icon_services", type = "check", val = 1, def = cfg.disable_icon_services,
+			ui_hook_functor = {dotmarks_mcm.init_service_icons},
+			icon_w = 32,
+			icon_h = 32,
 			icon_x = 450,
-			icon_y = 11,
+			icon_y = 8,
+		},
+
+		{ id = "disable_icon_talk", 	type = "check", val = 1, def = cfg.disable_icon_talk,
+			ui_hook_functor = {dotmarks_mcm.init_simple_icon},
+			icon = cfg.tex.Stalkers or "",
+			icon_w = 32,
+			icon_h = 32,
+			icon_x = 450,
+			icon_y = 8,
 		},
 
 		{ id = "disable_icon_door", 	type = "check", val = 1, def = cfg.disable_icon_door,
@@ -335,20 +419,22 @@ function generate_objs_menu()
 			icon_x = 450,
 			icon_y = 8,
 		},
-		{ id = "disable_icon_talk", 	type = "check", val = 1, def = cfg.disable_icon_talk,
+
+		{ id = "disable_icon_box", 		type = "check", val = 1, def = cfg.disable_icon_box,
 			ui_hook_functor = {dotmarks_mcm.init_simple_icon},
-			icon = cfg.tex.Stalkers or "",
-			icon_w = 32,
-			icon_h = 32,
+			icon = cfg.tex.Boxes or "",
+			icon_w = 24,
+			icon_h = 24,
 			icon_x = 450,
-			icon_y = 8,
+			icon_y = 11,
 		},
-		{ id = "disable_icon_services", type = "check", val = 1, def = cfg.disable_icon_services,
-			ui_hook_functor = {dotmarks_mcm.init_service_icons},
-			icon_w = 32,
-			icon_h = 32,
+		{ id = "disable_icon_boom", 	type = "check", val = 1, def = cfg.disable_icon_boom,
+			ui_hook_functor = {dotmarks_mcm.init_simple_icon},
+			icon = cfg.tex.Explosive or "",
+			icon_w = 24,
+			icon_h = 24,
 			icon_x = 450,
-			icon_y = 8,
+			icon_y = 11,
 		},
 
 		{id = "divider", type= "line"},
@@ -380,10 +466,9 @@ end
 
 function on_mcm_load()
 	if not cfg then return end
+	cache = {}
 	cfg.unsquish_ratio = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
 	lang = ui_options.curr_localization()
-
-
 	xml:ParseFile("ui_dotmarks.xml")
 	if exes_version then
 		if exes_version < 20250306 then

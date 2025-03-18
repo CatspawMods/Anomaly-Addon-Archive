@@ -449,6 +449,14 @@
 		</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom">
+		<text>Disable special icon for explosive objects</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom_desc">
+		<text>If this option is enabled, explosive objects will use the standard dot marker instead of their special "I explode" icon.
+		</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box">
 		<text>Disable special icon for breakable boxes</text>
 	</string>
@@ -466,7 +474,7 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services">
-		<text>Disable special icon for service NPCs</text>
+		<text>Disable special icons for service NPCs</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services_desc">
 		<text>If this option is enabled, service NPCs will use the standard dot marker instead of swapping to their service-specific icon when their primary interaction prompt is shown.

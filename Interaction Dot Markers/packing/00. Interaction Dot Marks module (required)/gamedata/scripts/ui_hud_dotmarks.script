@@ -131,6 +131,10 @@ get_cfg_for_type        = dotmarks_main.get_cfg_for_type
 is_blacklisted          = dotmarks_main.is_blacklisted
 is_empty_mutant_corpse  = dotmarks_main.is_empty_mutant_corpse
 get_fixed_screen_pos    = dotmarks_main.get_fixed_screen_pos
+csv_argb_to_tbl         = dotmarks_main.csv_argb_to_tbl
+clr_tbl                 = dotmarks_main.clr_tbl
+clr_tbl_to_index        = dotmarks_main.clr_tbl_to_index
+getargb                 = dotmarks_main.getargb
 fonts                   = dotmarks_main.fonts
 targeted_id, locked_id  = nil
 cfg                     = {}
@@ -144,7 +148,6 @@ local hmm               = nil
 local scanning          = false
 local ea_enabled        = false
 local anim_playing      = false
---local in_sleep_zone     = false
 local actor_moved       = false
 local extra_carry       = nil
 local fallback_font     = 3
@@ -164,14 +167,14 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             -- ================================================================================
             id                  = id,
             -- various attributes are based on the scan radius settings:
-            far_fade_dist       = (near_scan_radius() or 3) - 0.5,
-            far_hide_dist       = (near_scan_radius() or 3),
+            far_fade_dist       = (near_scan_radius() or 4) - 0.5,
+            far_hide_dist       = (near_scan_radius() or 4),
             far_end_dist        = (cfg.far_scan_radius or 10) + 5,
-            scale_dist_min      = (near_scan_radius() or 3) - 1,
-            scale_dist_mid      = (near_scan_radius() or 3) - 0.5,
-            scale_dist_max      = (near_scan_radius() or 3),
+            scale_dist_min      = (near_scan_radius() or 4) - 1,
+            scale_dist_mid      = (near_scan_radius() or 4) - 0.5,
+            scale_dist_max      = (near_scan_radius() or 4),
             los_check_int       = (not cfg.ignore_los) and 50 or nil, -- interval in ms to check LOS to marker object
-            los_check_range     = (near_scan_radius() or 3) + 1,
+            los_check_range     = (near_scan_radius() or 4) + 1,
             func_anim_take_curve= utils_catspaw_common.easing.InSine, -- easing function used for item take animation
 
             coord_args = { -- zero out all default screen coordinate adjustments
@@ -193,12 +196,13 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     local id            = mark and mark.id
                     local hide          = mark and mark.hidden
                     local _             = debug_dump and vl("[%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
-                    local obj           = mark.id and get_object_by_id(mark.id)
+                    local obj           = id and get_object_by_id(id)
                     if not obj then return end
                     if mark.is_campfire and (not get_nearby_campfire(cfg.far_scan_radius + 5)) then
                         if not hide then dl("Stuck campfire %s cleared at %s ", now) end
                         -- Check for stuck campfire prompts
                         mark:Destroy()
+                        cfg.markers[id] = nil
                         return
                     elseif mark.is_arty and (not can_actor_see_artefact(obj)) then
                         -- Check whether object is an artefact that is not currently visible
@@ -236,24 +240,29 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                         local in_pickup_range = cfg.in_pickup_range[id]
                         -- ================================================================================
                         -- Check availability of primary interact prompt
-                        if mark.use_pri then
+                        if (not hide) and mark.use_pri then
                             --printf("pri interact check")
                             local _ = debug_dump and vl("Checking whether to show pri interact prompt for %s | targeted %s", mark.name, targeted)
                             if obj and mark.is_npc then
                                 --printf("obj is NPC")
+                                --[[
                                 if mark.is_alive and (not obj:alive()) then
                                     -- If an NPC dies, convert it to a body marker
                                     vl("NPC is now dead, recreating marker as body")
                                     mark.use_pri:ShowPrompt(false)
                                     mark:Destroy()
+                                    cfg.markers[id] = nil
                                     scan_nearby_object(obj)
                                     return
                                 elseif (not mark.is_alive) then
+                                --]]
+                                if (not mark.is_alive) then
                                     --printf("obj is dead body | mpda rules: %s | empty %s", cfg.bodies_use_mpda_rules, is_empty_mutant_corpse(obj))
                                     local tracked = true
                                     if is_empty_mutant_corpse(obj) then
                                         --printf("mutant corpse is empty, destroying")
                                         mark:Destroy()
+                                        cfg.markers[id] = nil
                                         return
                                     elseif cfg.bodies_use_mpda_rules then
                                         -- Hide bodies that Milspec PDA won't show
@@ -265,31 +274,35 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     else
                                         --printf("dead corpse checks out")
                                     end
-                                elseif (mark.is_stalker) and not obj:is_talk_enabled() then
-                                    -- Actor can't talk to living NPC
-                                    if (not mark.use_pri.disabled) then
+                                elseif mark.is_stalker then
+                                    can_show = can_show or targeted
+                                    if (not mark.use_pri.disabled) and (not obj:is_talk_enabled()) then
+                                        -- Living NPC who can't engage in conversation
                                         mark.use_pri:ShowPrompt(false)
+                                        return
                                     end
-                                    return
                                 end
-                            end
-                            local is_inv_container = mark.is_stash or (mark.is_stalker and not mark.is_alive)
-                            if is_inv_container and (not hide) and (not mark.is_display) then
+                            elseif (not hide) and (not mark.is_display) and (mark.is_stash or (mark.is_stalker and not mark.is_alive)) then
+                                printf("is_inv_container")
                                 -- Update contents of inventory containers
                                 mark.has_items = not obj:is_inv_box_empty()
                                 local text = nil
                                 if mark.has_items and (not cfg.invboxes[id]) then
+                                    printf("getting inv table")
                                     cfg.invboxes[id] = get_inventory_table(obj, id)
                                 end
                                 if mark.has_items and cfg.invboxes[id] and (not is_empty(cfg.invboxes[id])) then
+                                    printf("container not empty, showing prompt")
                                     mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id])
                                     local wc = mark.weight and actor_weight_class(mark.weight)
                                     local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
                                     mark.use_pri.parse_text_colors = true
                                     text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
                                 elseif treasure_manager.caches[mark.id] and not cfg.invboxes[id] then
+                                    printf("container not yet searched")
                                     text = " (" .. gts("st_paw_unknown") .. ")"
                                 else
+                                    printf("container empty")
                                     text = " " .. gts("st_alti_empty")
                                 end
                                 mark.use_pri:SetPrompt(nil, nil, text or "")
@@ -344,7 +357,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     if not mark.base_w then mark.base_w = mark.args.width end
                     if not mark.base_h then mark.base_h = mark.args.height end
 
-                    if (mark.use_pri and mark.active_swap) and (not hide) then
+                    if (not hide) and (mark.use_pri and mark.active_swap) then
                         for k,v in pairs(mark.active_swap) do
                             if can_show then
                                 mark[k] = v
@@ -469,41 +482,6 @@ end
 function interact_vert_offset(ui_interact)
     local args = ui_interact and ui_interact.args
     return args and (not args.pri) and (not cfg.hide_pri_interact_ui) and cfg.sec_use_y_offset or cfg.pri_use_y_offset
-end
-
-function csv_argb_to_tbl(csv)
-    local c = csv and str_explode(csv, ",")
-    return c and {
-        a = c[1] or 255,
-        r = c[2] or 255,
-        g = c[3] or 255,
-        b = c[4] or 255,
-        v = c[5] or nil -- threshold value for internal use
-    } or nil
-end
-
-function clr_tbl(a, r, g, b, v)
-    return {
-        a = a,
-        r = r,
-        g = g,
-        b = b,
-        v = v
-    }
-end
-
-function clr_tbl_to_index(clr_tbl, tval)
-    return {
-        clr_tbl.a or 255,
-        clr_tbl.r or 255,
-        clr_tbl.g or 255,
-        clr_tbl.b or 255,
-        clr_tbl.v or tval or 0
-    }
-end
-
-function getargb(clr_tbl)
-    return clr_tbl and get_argb( clr_tbl.a, clr_tbl.r, clr_tbl.g, clr_tbl.b )
 end
 
 function lerp_color(val, mi, md, mx)
@@ -1600,11 +1578,13 @@ function InteractPrompt:Destroy(reason)
     self:ShowPrompt(false)
     self.hint_filters = nil
     self.tutorial = nil
+    self.destroyed = true
     UnregisterScriptCallback("on_option_change", self)
     UnregisterScriptCallback("actor_on_update", self)
     UnregisterScriptCallback("on_key_hold", self)
     UnregisterScriptCallback("on_key_press", self)
-    self.destroyed = true
+    get_hud():RemoveDialogToRender(self)
+    
     if reason then
         dl("[InteractPrompt:Destroy][%s][%s]", self.args.id, reason)
     end
@@ -2576,6 +2556,7 @@ function update_nearby_pickups()
     actor_moved = false
 end
 
+
 function actor_on_update()
     if not scanning then return end
     --if debug_dump then dump_monitor_states() end
@@ -2585,8 +2566,8 @@ function actor_on_update()
             next_tut_check   = get_next_check(cfg.tut_check_interval)
             --printf("game.has_active_tutorial(): %s", game.has_active_tutorial())
             if cfg.tutorial_hints and is_not_empty(cfg.tutorial_hints) then
-                cfg.tutorials_cleared = false
                 if game.has_active_tutorial() then
+                    cfg.tutorials_cleared = false
                     if not cfg.monitors then cfg.monitors = {} end
                     for k,v in pairs(cfg.tutorial_hints) do
                         local last_state = cfg.monitors[k]
@@ -2615,7 +2596,11 @@ function actor_on_update()
                 elseif (not cfg.tutorials_cleared) then
                     --printf("No active tutorial, hiding all tutorial prompts")
                     for k,v in pairs(cfg.tutorial_hints) do
-                        if cfg.markers[k] then cfg.markers[k]:ShowPrompt(false) end
+                        --if cfg.markers[k] then cfg.markers[k]:ShowPrompt(false) end
+                        if cfg.markers[k] then
+                            cfg.markers[k]:Destroy()
+                            cfg.markers[k] = nil
+                        end
                     end
                     cfg.tutorials_cleared = true
                 end
@@ -2663,7 +2648,6 @@ end
 function actor_on_item_take(obj)
     local id = obj and obj:id()
     if cfg.markers[id] then
-        cfg.markers[id]:Show(false)
         unregister_scanned_entity(id)
     end
 end
@@ -2731,7 +2715,25 @@ function parse_file_data()
         if fd.medic then    cfg.vendors[fd.medic]     = "medic" end
         if fd.barman then   cfg.vendors[fd.barman]    = "barman" end
         if fd.guide then    cfg.vendors[fd.guide]     = "guide" end
-    end    
+    end
+    if debug_dump then
+        printf("Loaded NPC vendors:")
+        for k,v in pairs(cfg.vendors) do
+            printf("|| %s = %s", k,v)
+        end
+    end 
+end
+
+function handle_npc_death(npc)
+    local id = npc and npc:id()
+    if cfg.markers[id] then
+        local mark = cfg.markers[id]
+        if mark.use_pri then mark.use_pri:Destroy() end
+        if mark.alt_interact then mark.alt_interact:Destroy() end
+        mark:Destroy()
+        cfg.markers[id] = nil
+        scan_nearby_object(npc)
+    end
 end
 
 function on_game_start()
@@ -2753,6 +2755,11 @@ function on_game_start()
         RegisterScriptCallback("on_key_release", on_key_release)
         RegisterScriptCallback("on_option_change", on_option_change)
         RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
+        RegisterScriptCallback("npc_on_death_callback", handle_npc_death)
+        RegisterScriptCallback("monster_on_death_callback", handle_npc_death)
+        if stealth_kill_detection then
+            RegisterScriptCallback("npc_on_silent_kill_callback", handle_npc_death)
+        end
 
         local last_en = ea_enabled
         on_option_change()
