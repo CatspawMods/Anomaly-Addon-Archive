@@ -2,6 +2,14 @@
 Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
 
 ## Change Log
+**2.17.1:**
+- Updated `utils_catspaw_text` to 1.5.
+- Fix for "no guides" error message incorrectly preventing travel from labs and other dangerous areas.
+
+**2.17.0:**
+- Updated my utility scripts.
+- Unlocalized some tables in the `game_guide_travel`.
+
 **2.16.0:**
 - Travel costs now scale based on a `map_hazard_coef` value that is set per-map in `configs\scripts\fast_travel\travel_destinations.ltx`.This feature is on by default, and can be disabled in MCM.
 - Fix for crash when trying to use the Monolith guide in Outskirts.
