@@ -1,3 +1,11 @@
+<!-- ======================================================================
+	HUD Marker UI element
+	Author: Catspaw (CatspawMods @ ModDB)
+	Updated: 20250318
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive/
+===========================================================================
+	Required by: utils_catspaw_hudmarks
+========================================================================-->
 <?xml version="1.0" encoding="utf-8"?>
 
 <w>

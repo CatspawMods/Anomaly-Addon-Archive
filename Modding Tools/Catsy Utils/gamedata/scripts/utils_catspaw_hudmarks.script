@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.4-b2"
-release_date    = 20250315
+script_version  = "0.4-b3"
+release_date    = 20250317
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -31,6 +31,8 @@ release_date    = 20250315
     See "HUD MARKER MANAGER USAGE" below for usage of the mark manager.
 
     See "HUD MARKER CLASS USAGE" below for usage of the marker class.
+
+    NOTE: as per the version number, this is still a work in progress.
 
 -- ===================================================================--]]
 --      DEPENDENCIES
@@ -83,10 +85,12 @@ local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
 local get_next_check    = utils_catspaw_common.get_next_tg_interval
 local lerp              = utils_catspaw_common.lerp
 local round10           = utils_catspaw_common.round10
+local to360             = utils_catspaw_common.to360
 local safename          = utils_catspaw_text.safename
 local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
 local gts               = game.translate_string
 local markers           = {}
+local nearest           = {}
 local unsquish_ratio    = 1
 local hover_tolerance   = 0.8
 
@@ -163,6 +167,22 @@ function add_marker_preset(preset_name, table_or_functor, overwrite)
     marker_presets[preset_name] = table_or_functor
 end
 -- ======================================================================
+
+function get_object_bearing(pos, obj, id)
+    -- Somehow just calling this during the update loop causes the entire script to shit itself
+    if not db.actor then return end
+    if not pos then
+        obj         = obj or (id and get_object_by_id(id))
+        pos         = obj and obj:position()
+    end
+    if not pos then return end
+    local dirToPos  = pos:sub(device().cam_pos):normalize()
+    local dir       = device().cam_dir
+    local dirToPosH = to360(-math.deg(dirToPos:getH()))
+    local dirH      = to360(-math.deg(dir:getH()))
+    local degree    = to360(dirH - dirToPosH)
+    return degree
+end
 
 function get_object_center(id)
     local obj = id and get_object_by_id(id)
@@ -513,6 +533,7 @@ end
 function HUDMarkerManager:DelMarker(mark_id)
     --vl("[HUDMarkerManager:DelMarker] m_id: %s", mark_id)
     if not (mark_id and markers[mark_id]) then return end
+    nearest[markers[mark_id].id or 0] = nil
     markers[mark_id]:Destroy()
     markers[mark_id] = nil
 end
@@ -552,12 +573,12 @@ function HUDMarkerManager:HoverTolerance(mark)
 end
 
 function HUDMarkerManager:Update()
-
-
     for k,v in pairs(markers) do
         if v.managed_updates then v:Update() end
         --vl("checking hover for marker %s (%s) | hovered %s | last_hover %s | last_dist %s", v.name, v.id, v.hovered, v.last_hover, v.last_dist)
-        if (v.id == self.best_hover_id) then
+        local id = v.id
+        nearest[id] = v.last_dist
+        if (id == self.best_hover_id) then
             --vl("%s is the last best_hover_id, checking distance and tolerance", v.id)
             if (v.last_dist > self:HoverDist(v)) or (v.last_hover < self:HoverTolerance(v)) then
                 self:HoverOut(v)
@@ -587,6 +608,22 @@ end
 
 function get_marker_table()
     return markers
+end
+
+function get_nearest(num)
+    -- needs testing
+    if not nearest then nearest = {} end
+    if is_empty(nearest) then return end
+    table.sort(nearest)
+    local i = 1
+    local tbl = {}
+    num = num or size_table(nearest)
+    for id,dist in spairs(nearest) do
+        tbl[i] = {id=id,dist=dist}
+        i = i + 1
+        if i > num then break end
+    end
+    return tbl
 end
 
 function get_hover_tolerance(mark_id)
@@ -948,10 +985,8 @@ function UIHUDMarker:InitMarker()
     if (not self.marker) then
         self.marker     = xml:InitStatic("marker", self)
     end
-    if self.texture then 
-        vl("* Initting texture %s for marker on %s", self.texture, self.id)
-        self.marker:InitTexture(self.texture)
-    end
+    vl("* Initting texture %s for marker on %s", self.texture or "[BLANK]", self.id)
+    self.marker:InitTexture(self.texture or "")
     local color = GetARGB(255, 255, 255, 255)
     if self.custom_argb and not is_empty(self.custom_argb) then
         local pcc = self.custom_argb
@@ -1170,6 +1205,7 @@ end
 function UIHUDMarker:GetPos(pos_adjust, obj)
     obj = obj or get_object_by_id(self.id)
     local pos = self.locked_world_pos or self:GetBonePos(self.args.bone, obj) or get_object_center(self.id)--(se_obj and se_obj.position)
+    printf("Bearing to %s: %s", self.name, get_object_bearing(pos))
     local adjtxt = ""
     if pos and pos_adjust then
         adjtxt = debug_dump and string.format("\n* Was: %s,%s,%s | Adjusted by: %s,%s,%s", pos.x, pos.y, pos.z, pos_adjust.x, pos_adjust.y, pos_adjust.z) or ""
@@ -1417,11 +1453,14 @@ function UIHUDMarker:Update()
                 local xdot = dotproduct_for_pos(mark_pos)
                 self.last_hover = xdot or 0
             end
+            if name ~= self.prev_name then
+                self.label:TextControl():SetText(name)
+                self.label_sh:TextControl():SetText(name)
+                self.lref:TextControl():SetText(name)
+                self.lref:AdjustWidthToText()
+            end
+            self.prev_name      = name
 
-            self.label:TextControl():SetText(name)
-            self.label_sh:TextControl():SetText(name)
-            self.lref:TextControl():SetText(name)
-            self.lref:AdjustWidthToText()
             tw              = self.lref:GetWidth()
             nx              = pos.x - (tw * .5)
             ny              = pos.y - 22 + yadj + (self.hint_y_adj or 0)

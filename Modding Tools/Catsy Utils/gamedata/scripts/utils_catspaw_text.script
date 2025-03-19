@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.5-b1"
-release_date    = 20250313
+script_version 	= "1.5"
+release_date    = 20250318
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -241,11 +241,22 @@ update_nocolor_tokens()
 function int_to_rgba(i)
 	-- Converts integer to RGB or RGBA values
 	-- returns r, g, b, a, defaulting alpha to 255 if not specified (value is <= 0xffffff)
+	-- Improved bitwise version from RavenAscendant
+	-- Should be functionally identical but much more efficient
+	if not (i and type(i) == "number") then return end
+	local a
+	if i <= 0xffffff then a = 255 end
+	return 	bit.band(bit.rshift(i, 16), 255),
+			bit.band(bit.rshift(i, 8), 255),
+			bit.band(i, 255),
+			a or bit.band(bit.rshift(i, 24), 255)
+--[[
 	if not (i and type(i) == "number") then return end
 	return 	floor(floor(i / 256) / 256) % 256, 
 			floor(i / 256) % 256, 
 			(i % 256), 
 			(i > 0xffffff) and (floor(floor(floor(i / 256) / 256) / 256) % 256) or 255
+--]]
 end
 
 function parse_hex_colors(str)
