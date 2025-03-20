@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.4-b3"
-release_date    = 20250317
+script_version  = "0.5-b1"
+release_date    = 20250320
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -168,6 +168,8 @@ end
 
 function get_object_bearing(pos, obj, id)
     -- Thanks to demonized for help with this
+    -- For some reason it causes the main loop to shit the bed though
+    -- Unused for now
     if not db.actor then return end
     if not pos then
         obj         = obj or (id and get_object_by_id(id))
@@ -178,9 +180,8 @@ function get_object_bearing(pos, obj, id)
     local dir       = device().cam_dir
     local dirToPosH = to360(-math.deg(dirToPos:getH()))
     local dirH      = to360(-math.deg(dir:getH()))
-    return dirH
-    --local degree    = to360(dirH - dirToPosH)
-    --return degree
+    local degree    = to360(dirH - dirToPosH)
+    return degree
 end
 
 function get_object_center(id)
@@ -1364,9 +1365,14 @@ function UIHUDMarker:Update()
         --vl("[UIHUDMarker:Update][%s] Current distance to %s: %sm", self.mark_id, self.name, dist)
     end
 
+    -- Hide marker if PDA is open and show_in_pda is false
+    if (item_device.is_pda_active() and not self.show_in_pda) then
+        self:HideAll("PDA open")
+    return end
+
     if se_obj and not self.skip_online_checks then
-        -- Hide marker if PDA is open and show_in_pda is false, or if se_obj is offline and show_offline is false
-        if (item_device.is_pda_active() and not self.show_in_pda) or ((not se_obj.online) and not self.show_offline) then
+        -- Hide marker if se_obj is offline and show_offline is false
+        if (not se_obj.online) and not self.show_offline then
             self:HideAll("not online")
         return end
 

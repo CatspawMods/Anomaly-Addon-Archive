@@ -151,12 +151,15 @@ local scanning          = false
 local ea_enabled        = false
 local anim_playing      = false
 local actor_moved       = false
-local ignore_next_use   = false
 local extra_carry       = nil
 local use_dik           = nil
 local fdda_callback     = nil
 local fallback_font     = 3
 local _uiscale          = 1
+local next_skill_upd    = 0
+local next_near_scan    = 0
+local next_early_scan   = 0
+local next_tut_check    = 0
 -- ======================================================================
 --      HUD MARKER PRESET PATCH
 --  Set up "dotmark" preset and patch it into utils_catspaw_hudmarks
@@ -174,7 +177,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             -- various attributes are based on the scan radius settings:
             far_fade_dist       = near_scan_radius() - 0.5,
             far_hide_dist       = near_scan_radius(),
-            far_end_dist        = near_scan_radius() + early_scan_radius() + 3,
+            far_end_dist        = early_scan_radius() + 3,
             scale_dist_min      = (near_scan_radius() or 4) - 1,
             scale_dist_mid      = (near_scan_radius() or 4) - 0.5,
             scale_dist_max      = (near_scan_radius() or 4),
@@ -204,10 +207,11 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     local obj           = id and get_object_by_id(id)
                     if not obj then return end
                     if mark.is_campfire and (not get_nearby_campfire(early_scan_radius())) then
-                        if not hide then dl("Stuck campfire %s cleared at %s ", now) end
+                        if not hide then dl("Stuck campfire %s cleared at %s", id, now) end
+                        unregister_scanned_entity(id)
                         -- Check for stuck campfire prompts
-                        mark:Destroy()
-                        cfg.markers[id] = nil
+                        --mark:Destroy()
+                        --cfg.markers[id] = nil
                         return
                     elseif mark.is_arty and (not can_actor_see_artefact(obj)) then
                         -- Check whether object is an artefact that is not currently visible
@@ -277,8 +281,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                         --printf("dead corpse checks out")
                                     end
                                 elseif mark.is_stalker then
+                                    --printf("%s is stalker", mark.name)
                                     --can_show = can_show or targeted
-                                    if (not mark.use_pri.disabled) and (not obj:is_talk_enabled()) then
+                                    if (not obj:is_talk_enabled()) then
+                                        --printf("%s does not have talk enabled", mark.name)
                                         -- Living NPC who can't engage in conversation
                                         mark.use_pri:ShowPrompt(false)
                                         return
@@ -309,6 +315,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                 end
                                 mark.use_pri:SetPrompt(nil, nil, text or "")
                             end
+                            --printf("passed NPC and container checks")
                             if mark.pickup then
                                 -- Mark is an item pickup
                                 can_show = targeted
@@ -327,7 +334,6 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     not_hidden_by_anim
                                 ) 
                             end
-
                             if mark.condition then
                                 -- Update condition for degradable objects
                                 local cond = obj:condition()
@@ -337,7 +343,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     mark.use_pri:SetPrompt()
                                 end
                             end
-                            --vl("can_show %s (%s): %s", mark.name, mark.id, can_show)
+                            vl("can_show %s (%s): %s", mark.name, mark.id, can_show)
                             mark.use_pri:ShowPrompt(can_show)
                             -- ================================================================================
                             -- Check availability of secondary interact prompt
@@ -704,6 +710,7 @@ function InteractPrompt:__init(anchor, args) super()
 
     RegisterScriptCallback("on_option_change", self)
     RegisterScriptCallback("actor_on_update", self)
+    RegisterScriptCallback("actor_on_net_destroy", self)
 
     self.init_done = true
     vl("[InteractPrompt] Completed setup for prompt: %s", self:GetFullPrompt())
@@ -816,8 +823,8 @@ function InteractPrompt:BuildUI()
         self.prompt_l:SetWndSize(vector2():set(fontscale(5.3125), fontscale(20)))
         self.prompt_l:SetWndPos(vector2():set(0, 0))
         self.prompt_c:SetWndSize(vector2():set(boxlen, fontscale(20)))
-        self.prompt_c:SetWndPos(vector2():set(fontscale(5.2125), 0))
-        self.prompt_r:SetWndPos(vector2():set(fontscale(4.8) + boxlen, 0))
+        self.prompt_c:SetWndPos(vector2():set(fontscale(5.1125), 0))
+        self.prompt_r:SetWndPos(vector2():set(fontscale(4.78) + boxlen, 0))
         self.prompt_r:SetWndSize(vector2():set(fontscale(5.3125), fontscale(20)))
     end
     self.prompt:SetWndPos(vector2():set(boxpos or 0, 0))
@@ -1248,8 +1255,13 @@ function InteractPrompt:on_key_press(key, flags)
     end    
 end
 
+function InteractPrompt:actor_on_net_destroy() self:Destroy("shutdown") end
 
 function InteractPrompt:on_option_change()
+    if self.args.tutorial and self.init_done then
+        self:Destroy()
+        return
+    end
     if self.args.pri then
         self.args.key   = self.args.key or bind_to_dik(key_bindings.kUSE)
     else
@@ -1267,7 +1279,6 @@ function InteractPrompt:on_option_change()
     self.bind_sh:Show((not self.black_text) and (not cfg.hide_drop_shadow))
     self.label_sh:Show(not cfg.hide_drop_shadow)
 end
-
 
 function InteractPrompt:BusyState(tf, prefix, force_update)
     local last_state = self.busystate
@@ -1821,7 +1832,7 @@ function setup_pri_interact_prompt(mark, args)
     vl("[%s] setup_pri_interact_prompt for %s", mark.mark_id or "fixed interaction", args and (args.name or args.logged_type) or "unknown type with no passed args")
     if not mark then return end
     if mark.use_pri then
-        mark.use_pri:Destroy()
+        mark.use_pri:Destroy("re-init of existing prompt")
         mark.use_pri = nil
     end
     args            = args or {}
@@ -1980,10 +1991,10 @@ function unregister_scanned_entity(id)
     if cfg.markers[id] then
         local mark = cfg.markers[id]
         if mark.use_pri then
-            mark.use_pri:Destroy()
+            mark.use_pri:Destroy("unregistering pri use" .. id)
         end
         if mark.alt_interact then
-            mark.alt_interact:Destroy()
+            mark.alt_interact:Destroy("unregistering sec use")
         end
         mark:Destroy()
         cfg.markers[id] = nil
@@ -2520,59 +2531,12 @@ function handle_secondary_interact(obj)
     end
 end
 
-function on_before_key_press(key, bind, dis, flags)
-    if cfg.watch_use and (key == use_dik) and not ignore_next_use then
-        cfg.use_released = nil
-        --printf("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
-        cfg.held_key = key
-    end
-end
-
-function on_key_release(key)
-    if ignore_next_use then
-        ignore_next_use = false
-        return
-    end
-    if key == cfg.held_mod then cfg.held_mod = nil end
-    if (key == cfg.held_key) then
-        if (key == use_dik) then
-            local pickup = get_target_pickup()
-            cfg.use_released = cfg.use_released or time_global()
-            local dur = cfg.holding and cfg.holding.peak_hold
-            local time = cfg.holding and cfg.holding.hold_time
-            --printf("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
-            cfg.held_key = nil
-
-            if pickup and not (dur and time and (dur >= time)) then
-                cfg.use_released = nil
-                --printf("No completed hold action, item pickup should occur", time)
-                force_actor_to_take(pickup)
-            end
-
-        end
-        
-    end
-    
-end
-
 function ea_on_item_use()
     anim_playing = true
 end
 
 function ea_on_item_anim_stop()
     anim_playing = false
-end
-
-
-local next_skill_upd    = 0
-local next_near_scan    = 0
-local next_early_scan     = 0
-local next_tut_check    = 0
-
-function dump_monitor_states()
-    for k,v in pairs(cfg.monitors) do
-        printf("State monitor for %s: %s", k, state_monitor(k))
-    end
 end
 
 function cycle_targeted_pickup(dir)
@@ -2596,11 +2560,11 @@ end
 
 function reset_nearby_item_tables()
     --printf("reset_nearby_item_tables")
-    locked_id = nil
-    actor_moved = true
+    locked_id       = nil
+    actor_moved     = true
     cfg.last_pickup = nil
-    nearby_pickups = {}
-    pickup_index = {}
+    nearby_pickups  = {}
+    pickup_index    = {}
 end
 
 function update_nearby_pickups()
@@ -2627,6 +2591,58 @@ function update_nearby_pickups()
     actor_moved = false
 end
 
+function setup_tutorial_prompt(tutorial)
+    printf("Need to set up a new interact UI for tutorial %s", tutorial)
+    local args = get_cfg_for_type("args", "Tutorials") or {}
+    --args.preset             = "dotmark"
+    args.tutorial           = tutorial
+    args.fixed              = true
+    args.anchor             = maingameui
+    args.active_prompt      = trimmed_prompt(gts(cfg.tutorial_hints[tutorial]))
+    args.logged_type        = "tutorial prompt"
+    cfg.markers[tutorial]   = setup_pri_interact_prompt(maingameui, args)
+end
+
+function check_tutorial_states()
+    --printf("game.has_active_tutorial(): %s", game.has_active_tutorial())
+    if cfg.tutorial_hints and is_not_empty(cfg.tutorial_hints) then
+        if game.has_active_tutorial() then
+            cfg.tutorials_cleared = false
+            if not cfg.monitors then cfg.monitors = {} end
+            for k,v in pairs(cfg.tutorial_hints) do
+                local last_state = cfg.monitors[k]
+                cfg.monitors[k] = state_monitor(k)
+                --printf("checking state for tutorial %s: %s", k, cfg.monitors[k])
+                if cfg.monitors[k] then
+                    if cfg.markers[k] then
+                        --printf("Tutorial %s is active, showing its prompt", k)
+                        cfg.markers[k]:ShowPrompt(true)
+                    else
+                        setup_tutorial_prompt(k)
+                    end
+                elseif cfg.markers[k] then
+                    --printf("Tutorial %s is not active, hiding its prompt", k)
+                    cfg.markers[k]:ShowPrompt(false)
+                end
+            end
+        elseif (not cfg.tutorials_cleared) then
+            --printf("No active tutorial, hiding all tutorial prompts")
+            for k,v in pairs(cfg.tutorial_hints) do
+                if cfg.markers[k] then
+                    cfg.markers[k]:Destroy()
+                    cfg.markers[k] = nil
+                end
+            end
+            cfg.tutorials_cleared = true
+        end
+    end
+end
+
+function dump_monitor_states()
+    for k,v in pairs(cfg.monitors) do
+        printf("State monitor for %s: %s", k, state_monitor(k))
+    end
+end
 
 function actor_on_update()
     if not scanning then return end
@@ -2634,54 +2650,14 @@ function actor_on_update()
     dotmarks_main.in_sleep_zone = is_actor_in_sleep_zone()
     if cfg.tut_check_interval then
         if (next_tut_check <= time_global()) then
-            next_tut_check   = get_next_check(cfg.tut_check_interval)
-            --printf("game.has_active_tutorial(): %s", game.has_active_tutorial())
-            if cfg.tutorial_hints and is_not_empty(cfg.tutorial_hints) then
-                if game.has_active_tutorial() then
-                    cfg.tutorials_cleared = false
-                    if not cfg.monitors then cfg.monitors = {} end
-                    for k,v in pairs(cfg.tutorial_hints) do
-                        local last_state = cfg.monitors[k]
-                        cfg.monitors[k] = state_monitor(k)
-                        --printf("checking state for tutorial %s: %s", k, cfg.monitors[k])
-                        if cfg.monitors[k] then
-                            if cfg.markers[k] then
-                                --printf("Tutorial %s is active, showing its prompt", k)
-                                cfg.markers[k]:ShowPrompt(true)
-                           else
-                                --printf("Need to set up a new interact UI for tutorial %s", k)
-                                local args = get_cfg_for_type("args", "Tutorials", obj) or {}
-                                args.preset         = "dotmark"
-                                args.tutorial       = k
-                                args.fixed          = true
-                                args.anchor         = maingameui
-                                args.active_prompt  = trimmed_prompt(gts(cfg.tutorial_hints[k]))
-                                args.logged_type    = "tutorial prompt"
-                                cfg.markers[k]      = setup_pri_interact_prompt(maingameui, args)
-                            end
-                        elseif cfg.markers[k] then
-                            --printf("Tutorial %s is not active, hiding its prompt", k)
-                            cfg.markers[k]:ShowPrompt(false)
-                        end
-                    end
-                elseif (not cfg.tutorials_cleared) then
-                    --printf("No active tutorial, hiding all tutorial prompts")
-                    for k,v in pairs(cfg.tutorial_hints) do
-                        --if cfg.markers[k] then cfg.markers[k]:ShowPrompt(false) end
-                        if cfg.markers[k] then
-                            cfg.markers[k]:Destroy()
-                            cfg.markers[k] = nil
-                        end
-                    end
-                    cfg.tutorials_cleared = true
-                end
-            end
+            next_tut_check = get_next_check(cfg.tut_check_interval)
+            check_tutorial_states()
         end
     end
     
     update_nearby_pickups()
     if locked_id then
-        local _ = debug_dump and vl("locked_id is %s, skipping target updates and target scans", locked_id)
+        local _ = debug_dump and vl("locked_id is %s, skipping target updates and scans", locked_id)
         return
     end
     update_targeted_object()
@@ -2706,6 +2682,37 @@ function actor_on_update()
             scan_nearby_entities(early_scan_radius())
         end
     end
+end
+
+function on_before_key_press(key, bind, dis, flags)
+    if cfg.watch_use and (key == use_dik) then
+        cfg.use_released = nil
+        --printf("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
+        cfg.held_key = key
+    end
+end
+
+function on_key_release(key)
+    if key == cfg.held_mod then cfg.held_mod = nil end
+    if (key == cfg.held_key) then
+        if (key == use_dik) then
+            local pickup = get_target_pickup()
+            cfg.use_released = cfg.use_released or time_global()
+            local dur = cfg.holding and cfg.holding.peak_hold
+            local time = cfg.holding and cfg.holding.hold_time
+            --printf("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
+            cfg.held_key = nil
+
+            if pickup and not (dur and time and (dur >= time)) then
+                cfg.use_released = nil
+                --printf("No completed hold action, item pickup should occur", time)
+                force_actor_to_take(pickup)
+            end
+
+        end
+        
+    end
+    
 end
 
 function actor_on_update_pickup(obj)

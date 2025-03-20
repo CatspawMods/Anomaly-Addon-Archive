@@ -42,16 +42,17 @@
 		<texture id = "ui_catsy_line_white_45deg" x="219" y="0" width="100" height="86" />
 
 		<texture id = "ui_mcm_dotmarks_banner_main" x="0" y="400" width="1024" height="100" />
-		<texture id = "ui_mcm_dotmarks_banner_adv" x="0" y="500" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_sec" x="0" y="500" width="1024" height="100" />
 		<texture id = "ui_mcm_dotmarks_banner_objs" x="0" y="600" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_adv" x="0" y="700" width="1024" height="100" />
 
-		<texture id = "ui_mcm_dmarks_messagebox_transbg_gen" x="0" y="700" width="512" height="30" />		
-		<texture id = "ui_mcm_dmarks_messagebox_transbg_head90" x="0" y="730" width="512" height="90" />		
-		<texture id = "ui_mcm_dmarks_messagebox_transbg_head140" x="0" y="820" width="512" height="140" />		
-		<texture id = "ui_mcm_dmarks_preview_static" x="0" y="1340" width="600" height="380" />		
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_gen" x="0" y="800" width="512" height="30" />		
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_head90" x="0" y="830" width="512" height="90" />		
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_head140" x="0" y="920" width="512" height="140" />		
+		<texture id = "ui_mcm_dmarks_preview_static" x="0" y="1440" width="600" height="380" />		
 
-		<texture id = "ui_mcm_dmarks_preview_frame" x="512" y="700" width="300" height="190" />		
-		<texture id = "ui_mcm_dmarks_preview_bg" x="0" y="960" width="600" height="380" />		
+		<texture id = "ui_mcm_dmarks_preview_frame" x="512" y="800" width="300" height="190" />		
+		<texture id = "ui_mcm_dmarks_preview_bg" x="0" y="1060" width="600" height="380" />		
 		<texture id = "ui_mcm_dmarks_preview_gun" x="1448" y="0" width="600" height="380" />		
 		<texture id = "ui_mcm_dmarks_preview_det" x="1448" y="380" width="600" height="380" />		
 		<texture id = "ui_mcm_dmarks_preview_med" x="1448" y="760" width="600" height="380" />		

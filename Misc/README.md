@@ -1,7 +1,9 @@
-If you are **not** using modded exes, and therefore cannot use version 1.1 of the Barrier Defense Task Emission Fix, then use 1.0 instead.
+If you are using the most recent version of Anomaly, then you no longer need the Barrier Defense Task Emission Fix addon--that fix is included in Anomaly 1.5.3. You should be running the latest version no matter what, and I recommend using the latest modded exes from demonized:
 
-Version 1.1 is more compatible with other addons because it doesn't replace `tasks_defense.script`, but it requires the unlocalizer feature in modded exes.
+https://github.com/themrdemonized/STALKER-Anomaly-modded-exes
 
-You should be using modded exes anyway. There is absolutely no good reason to use the vanilla binaries unless you are looking for a the purest vanilla experience, with no bugfixes or pretty shaders.
+They contain advanced features that many new addons require, and other improvements that nearly make Anomaly a new game.
 
-Get them here: https://github.com/themrdemonized/STALKER-Anomaly-modded-exes
+The rest are other simple one-off addons that didn't require their own folder. Most are essentially complete and will receive no further updates, though I need to look into reports that Actor Hit Effects isn't working anymore.
+
+You can find more information on their individual Moddb pages here: https://www.moddb.com/members/catspawmods/addons

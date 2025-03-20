@@ -176,6 +176,10 @@
 		<text>General Settings</text>
 	</string>
 
+	<string id="ui_mcm_menu_dmarksec">
+		<text>Secondary Interact</text>
+	</string>
+
 	<string id="ui_mcm_menu_dmarkadv">
 		<text>Advanced Settings</text>
 	</string>
@@ -241,7 +245,7 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_bind_sec_interact">
+	<string id="ui_mcm_dotmarks_dmarksec_bind_sec_interact">
 		<text>Keybind for secondary interact</text>
 	</string>
 
@@ -720,7 +724,9 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_alti_desc">
-		<text>$clr_whtThe $clr_gldsecondary interact$clr_wht allows context-sensitive actions when targeting marked objects without needing to pick them up first--such as removing the ammo from a weapon, or consuming food items. FDDA Redone is strongly recommended.</text>
+		<text>$clr_whtThe $clr_gldsecondary interact$clr_wht allows context-sensitive actions when targeting marked objects without needing to pick them up first--such as removing the ammo from a weapon, or consuming food items. FDDA Redone is strongly recommended.\n
+
+			\nBy default it is set to a long-press version of your primary interact (your "use" key), but you can change it here to whatever is most convenient.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmain_show_multi_uses">
@@ -739,10 +745,10 @@
 		\nIf FDDAR's multi-pickup option is disabled, DotMarks will try to respect this by only allowing the focused item to be picked up, but that isn't always possible.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_long_press_delay">
+	<string id="ui_mcm_dotmarks_dmarksec_long_press_delay">
 		<text>Long-press stutter delay</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_long_press_delay_desc">
+	<string id="ui_mcm_dotmarks_dmarksec_long_press_delay_desc">
 		<text>When a long-press (hold) action is completed, inputs from that same key will be ignored for this many milliseconds. This is to prevent the same key from incorrectly registering as a simple press just after releasing the key.\n
 		
 		\nIf you find that pressing your primary interact to pick up an item isn't registering, you can try lowering this value. It must be betweem 50 and 2000.</text>

@@ -2,7 +2,6 @@
 This is a version archive and general code repository for any [Stalker: Anomaly mods made by Catspaw](https://www.moddb.com/members/catspawmods/addons). 
 
 # Terms of use
-
 1. Feel free to use anything you find here for noncommercial purposes in your own addons, including using any bits of code in your own scripts.
 2. Generally speaking, please DO NOT include modified versions of the same files in your own addons.
 3. **ALL CONTENT FOUND HERE IS USED AT YOUR OWN RISK.** I can't provide any support at all for what you find here, period.
@@ -12,11 +11,13 @@ In other words, if I have a file called `utils_catspaw_common.script`, you're fr
 Do you want ugly mod conflicts? Because that's how you get ugly mod conflicts. Don't do it, please.
 
 # Troubleshooting
-
-If you are encountering an unsolvable issue with the most recent version of any of my addons, you can download one of the versions here to see if that works better.
+If you are encountering an unsolvable issue with the most recent version of any of my addons, you can download one of the older versions here to see if that works better. You'll find them in the "old" subfolder under each addon.
 
 As mentioned above, I cannot provide ANY assistance with any previous version of any of my mods, or for any of the random code found only here--only for the most recent releases of addons that are posted on Moddb.
 
-This archive sometimes lags behind Moddb for updates, so always check Moddb first for the latest versions of any released addons: https://www.moddb.com/members/catspawmods/addons
+This archive sometimes lags behind Moddb for updates, so always check Moddb first to make sure which one is most recent: https://www.moddb.com/members/catspawmods/addons
 
 My Youtube channel: https://www.youtube.com/@CatspawAdventures
+
+# Носители русского языка
+Я не говорю по-русски, но поскольку многие пользователи Anomaly говорят по-русски, я стараюсь хотя бы обеспечить машинный перевод русской локализации в своих аддонах. Если вы являетесь носителем языка и хотите предоставить исправленную версию любого файла локализации, пожалуйста, не стесняйтесь.

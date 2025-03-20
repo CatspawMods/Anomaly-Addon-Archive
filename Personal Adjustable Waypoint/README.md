@@ -1,0 +1,3 @@
+# Personal Adjustable Waypoint
+Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/personal-adjustable-waypoint-for-anomaly-151-152-and-gamma
+A waypoint that you can place anywhere like a personal customizable quest marker, along with a powerful suite of mapping tools that--among many other features--let you choose from a library of icons to leave markers anywhere on the map, and annotate it with labels that say whatever you like.

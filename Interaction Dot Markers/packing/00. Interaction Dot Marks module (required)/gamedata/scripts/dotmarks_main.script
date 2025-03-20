@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_cfg"
-script_version  = "0.8-b7"
-release_date    = 20250319
+script_version  = "0.8-b8"
+release_date    = 20250320
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -478,7 +478,7 @@ local base_config = {
 
                 if section:find("^money_") then
                     money           = ini_sys:r_string_ex(section, "money_amount") or nil
-                    printf("money amount: %s", money)
+                    --printf("money amount: %s", money)
                     local pre       = ""
                     if money and money:find(",") then
                         money       = str_explode(money, ",")
@@ -486,7 +486,7 @@ local base_config = {
                         pre         = "~"
                     elseif not money then
                         money       = ini_sys:r_float_ex(section, "cost") or nil
-                        printf("no money_amount found, cost is %s", money)
+                        --printf("no money_amount found, cost is %s", money)
                     end
                     money           = money and (pre .. tostring(money) .. " " .. gts("st_roubles"))
                 end
@@ -639,7 +639,7 @@ local base_config = {
                 local name = obj:name()
                 local section = obj:section()
                 local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
-                printf("Misc loot %s has condition: %s", obj:name(), utils_item.is_degradable(nil, section))
+                --printf("Misc loot %s has condition: %s", obj:name(), utils_item.is_degradable(nil, section))
                 return {
                     kind            = kind,
                     -- Used for further object type detection

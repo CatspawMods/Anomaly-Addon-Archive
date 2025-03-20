@@ -2,19 +2,21 @@
 --[[	Game Tutorial Hooks and Monitors - DXML Module
 -- ===================================================================--]]
 script_name 	= "modxml_tutorial_hooks"
-script_version 	= "1.2.1"
-release_date    = 20250317
+script_version 	= "1.3"
+release_date    = 20250320
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
 -- =======================================================================	
 	DEPENDENCIES:
+
 	This script requires the on_xml_read cache feature of the 20250228 
 	modded exes update. Get it here:
 
 	https://github.com/themrdemonized/xray-monolith
 -- =======================================================================	
 	PURPOSE:
+
 	Many game prompts--such as "use" prompts for campfires, sleep zones, 
 	and quest-specific interacts--are displayed using the game's 
 	"tutorial" system, which is defined in game_tutorials.xml. The text 
@@ -33,10 +35,28 @@ release_date    = 20250317
 
 	Where tutorial_name is the name of the node in game_tutorials.xml,
 	e.g. "tutorial_campfire_ignite" for the prompt to light a campfire.
--- =======================================================================	
-	If another script sets replacements_enabled to false during runtime,
-	it should cause the on_xml_read to abort out, thus disabling the 
-	changes made by this script the next time a tutorial loads.
+-- =======================================================================
+	MODPACK AUTHORS:
+
+		If your modpack modifies game_tutorials.xml, and you need to force
+		this script to skip some of your custom tutorial names for any
+		reason, you need to inject your tutorial names into the exceptions
+		table like so:
+
+		1. Create a script named modxml_z_tutorial_hooks_yourmodname.script
+				Where "yourmodname" is obviously replaced with something 
+				identifying your addon.
+				
+				The script name MUST begin with "modxml" in order to load 
+				during DXML processing.
+
+		2. Put something like this in your script:
+				if modxml_tutorial_hooks then
+					modxml_tutorial_hooks.exceptions[my_tutorial_name] = true
+					modxml_tutorial_hooks.exceptions[another_tutorial_name] = true
+				end
+
+		And so on. That should cause this script to skip your tutorials.
 -- =======================================================================
 	Feel free to crib code from this or include a copy of it in your own 
 	addon, but in the interest of avoiding any possibility of conflicts:
@@ -61,8 +81,15 @@ assert(dxml_cache_enabled,
 "It will cause a severe lag every time you approach a campfire or sleep zone."
 )
 
-replacements_enabled 	= true
+replacements_enabled 	= true 	-- killswitch
 monitors 				= {}
+
+exceptions 				= {
+	-- Any tutorial names in this table will be skipped
+	-- These first two are required, otherwise the log will spam errors
+	["totaliz_helper_mlr"]	= true,
+	["credits_seq"]			= true
+}
 
 function get_monitoring_functors(tut)
 	if not tut then return end
@@ -107,7 +134,7 @@ function on_xml_read()
         local root = res and res.kids
 
         if root then
-        	local exceptions = {["totaliz_helper_mlr"]=true, ["credits_seq"]=true}
+        	
         	-- These will cause errors if we try to process them like the others
         	for k,v in pairs(root) do
         		-- Iterate through each tutorial node
@@ -128,13 +155,13 @@ function on_xml_read()
 					-- Procedurally generate in/out handler functions for each tutorial
 					this["monitor_" .. tut .. "_start"] = (
 						function() 
-							_ = DEV_DEBUG and printf("Began tutorial state %s at %s", tut, time_global())
+							_ = DEV_DEBUG and printf("[TutorialMonitor] Began tutorial state %s at %s", tut, time_global())
 							monitors[tut].state = true
 						end
 					)
 					this["monitor_" .. tut .. "_stop"] = (
 						function() 
-							_ = DEV_DEBUG and printf("Ended tutorial state %s at %s", tut, time_global())
+							_ = DEV_DEBUG and printf("[TutorialMonitor] Ended tutorial state %s at %s", tut, time_global())
 							monitors[tut].state = false
 						end
 					)

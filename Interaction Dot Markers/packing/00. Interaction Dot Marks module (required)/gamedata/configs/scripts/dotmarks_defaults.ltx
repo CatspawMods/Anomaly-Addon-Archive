@@ -97,15 +97,10 @@ keybind_bg_style 			= 3
 ; 	3 = worn appearance
 font_main_prompt 			= 2
 ; Font to use for the main prompt text
-;
-;
-;
-;
-;
-;
-;
+; The UI tries to adapt, but some fonts work better than others
 font_item_card				= 0
 ; Font to use for the item card text
+; The default small font has no Cyrillic support, but it's the only one of its size
 ui_scale 					= 1
 ; Multiplier for UI element size and position calculations
 ; WIP, not enabled yet
@@ -132,6 +127,8 @@ disable_icon_services 		= false
 ; Disables the special icon used when interacting with a service NPC
 disable_icon_talk 			= false
 ; Disables the special icon used for talking to other stalkers
+disable_icon_boom 			= false
+; Disables the special icon used for some explosive objects
 sp_hide_junk_items 			= true
 ; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
 sp_flag_favejunk 			= true
@@ -187,9 +184,6 @@ item_card_icon_x    		= 4
 item_card_icon_y    		= 0
 sp_icon_pos_x 				= 10
 sp_icon_pos_y				= 1
-; It's unlikely I'll ever add any of those to MCM, but they're here for my own
-; convenience and for anyone to use at their own risk. I don't recommend screwing with
-; them, and I can't help you if you do.
 
 [tex]
 ; Icon texture overrides for certain types to use instead of the default dot marker
@@ -394,6 +388,7 @@ ws_repair 	= st_awr_tiski
 
 [mcm_paths]
 ; The paths below allow better iteration through the config table to get MCM settings.
+; Main menu
 show_item_card  		= dotmarks/dmarkmain/
 show_item_charge 		= dotmarks/dmarkmain/
 show_multi_uses 		= dotmarks/dmarkmain/
@@ -403,10 +398,12 @@ show_condition_color 	= dotmarks/dmarkmain/
 wheel_cycles_pickups 	= dotmarks/dmarkmain/
 dot_marker_size 		= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
-bind_sec_interact 		= dotmarks/dmarkmain/
-modk_sec_interact 		= dotmarks/dmarkmain/
-imod_sec_interact 		= dotmarks/dmarkmain/
-long_press_delay 		= dotmarks/dmarkmain/
+; Secondary menu
+bind_sec_interact 		= dotmarks/dmarksec/
+modk_sec_interact 		= dotmarks/dmarksec/
+imod_sec_interact 		= dotmarks/dmarksec/
+long_press_delay 		= dotmarks/dmarksec/
+; Advanced menu
 hide_interaction_dots 	= dotmarks/dmarkadv/
 hide_connecting_line 	= dotmarks/dmarkadv/
 hide_pri_interact_ui 	= dotmarks/dmarkadv/
@@ -450,11 +447,13 @@ item_card_icon_x 		= dotmarks/dmarkadv/
 item_card_icon_y 		= dotmarks/dmarkadv/
 sp_icon_pos_x 			= dotmarks/dmarkadv/
 sp_icon_pos_y 			= dotmarks/dmarkadv/
+; Objects menu
 disable_icon_boom		= dotmarks/dmarkobjs/
 disable_icon_box		= dotmarks/dmarkobjs/
 disable_icon_door		= dotmarks/dmarkobjs/
 disable_icon_talk		= dotmarks/dmarkobjs/
 disable_icon_services	= dotmarks/dmarkobjs/
+; From other addons
 fddar_multipickup 		= fddar/pickup/multipickup
 show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
 show_parts_armor		= item_icon_info/part_dots/show_on_armor

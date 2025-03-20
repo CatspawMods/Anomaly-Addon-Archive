@@ -210,12 +210,22 @@ function get_main_menu()
 		},
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha },
 
+		{id = "divider", type= "line"},
+	}
+end
+
+-- ======================================================================
+
+function get_sec_menu()
+	return {
+		{ id = "menuslide_sec", type = "slide", link = "ui_mcm_dotmarks_banner_sec", size = {512,50}, spacing = 0},
+
 		{ id = "header_sec", 	type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_alti_desc",
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_apos 		= -5,
-			dmark_box_h 	= 70,
-			dmark_text_h 	= 60,
+			dmark_box_h 	= 115,
+			dmark_text_h 	= 105,
 			dmark_text_v 	= 10
 		},
 		{ id = "bind_sec_interact", 	type = "key_bind", 			val = 2, def = cfg.bind_sec_interact or bind_to_dik(key_bindings.kUSE)},
@@ -481,6 +491,7 @@ function on_mcm_load()
 
 	op = { id = "dotmarks", gr = {
 			{ id = "dmarkmain", sh = true, gr = get_main_menu() },
+			{ id = "dmarksec", sh = true, gr = get_sec_menu() },
 			{ id = "dmarkadv", sh = true, gr = get_adv_menu() },
 			{ id = "dmarkobjs", sh = true, gr = generate_objs_menu() }
 		}
