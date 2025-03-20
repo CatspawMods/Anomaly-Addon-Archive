@@ -83,6 +83,7 @@ local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
 local get_next_check    = utils_catspaw_common.get_next_tg_interval
 local lerp              = utils_catspaw_common.lerp
 local round10           = utils_catspaw_common.round10
+local to360             = utils_catspaw_common.to360
 local safename          = utils_catspaw_text.safename
 local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
 local gts               = game.translate_string
@@ -164,6 +165,23 @@ function add_marker_preset(preset_name, table_or_functor, overwrite)
     marker_presets[preset_name] = table_or_functor
 end
 -- ======================================================================
+
+function get_object_bearing(pos, obj, id)
+    -- Thanks to demonized for help with this
+    if not db.actor then return end
+    if not pos then
+        obj         = obj or (id and get_object_by_id(id))
+        pos         = obj and obj:position()
+    end
+    if not pos then return end
+    local dirToPos  = pos:sub(device().cam_pos):normalize()
+    local dir       = device().cam_dir
+    local dirToPosH = to360(-math.deg(dirToPos:getH()))
+    local dirH      = to360(-math.deg(dir:getH()))
+    return dirH
+    --local degree    = to360(dirH - dirToPosH)
+    --return degree
+end
 
 function get_object_center(id)
     local obj = id and get_object_by_id(id)
@@ -1273,21 +1291,26 @@ function UIHUDMarker:Update()
     end
 
     local id            = self.id
-    if id and self.is_wp then
-        id = paw and paw.get_current_waypoint()
-        self.name = paw and (
-            (paw.get_waypoint_name and paw.get_waypoint_name()) or (paw.placed_waypoint and paw.placed_waypoint.name)
-        ) or self.name
+    if not self.skip_hint then
+        if id and self.is_wp then
+            id          = paw and paw.get_current_waypoint()
+            self.name   = paw and (
+                (paw.get_waypoint_name and paw.get_waypoint_name()) or (paw.placed_waypoint and paw.placed_waypoint.name)
+            ) or self.name
+        end
+        if (self.name == "no hint") then
+            self.name   = ""
+        end
     end
-    if (self.name == "no hint") then self.name = "" end
 
     local se_obj        = id and alife_object(id)
-    local pin           = id and self.is_pin and paw and paw.pins and paw.pins[id]
+    local pin           = paw and self.is_pin and id and paw.pins and paw.pins[id]
     -- Destroy marker if ID's object is invalid, or if it's a pin with an invalid pin record
     if ((not se_obj) or (self.is_pin and not pin)) and not (self.locked_world_pos or self.locked_screen_pos) then
         vl("Invalid pin or se_obj, destroying HUD marker for pin %s", id or self.name or self.mark_id)
         self:Destroy()
-    return end
+        return
+    end
 
     local mark_pos  = se_obj and self:GetPos(self.pos_adjust)
     local dist      = mark_pos and db.actor:position():distance_to(mark_pos) or 1
@@ -1341,7 +1364,7 @@ function UIHUDMarker:Update()
         --vl("[UIHUDMarker:Update][%s] Current distance to %s: %sm", self.mark_id, self.name, dist)
     end
 
-    if se_obj then
+    if se_obj and not self.skip_online_checks then
         -- Hide marker if PDA is open and show_in_pda is false, or if se_obj is offline and show_offline is false
         if (item_device.is_pda_active() and not self.show_in_pda) or ((not se_obj.online) and not self.show_offline) then
             self:HideAll("not online")
@@ -1433,11 +1456,14 @@ function UIHUDMarker:Update()
                 local xdot = dotproduct_for_pos(mark_pos)
                 self.last_hover = xdot or 0
             end
+            if name ~= self.prev_name then
+                self.label:TextControl():SetText(name)
+                self.label_sh:TextControl():SetText(name)
+                self.lref:TextControl():SetText(name)
+                self.lref:AdjustWidthToText()
+            end
+            self.prev_name      = name
 
-            self.label:TextControl():SetText(name)
-            self.label_sh:TextControl():SetText(name)
-            self.lref:TextControl():SetText(name)
-            self.lref:AdjustWidthToText()
             tw              = self.lref:GetWidth()
             nx              = pos.x - (tw * .5)
             ny              = pos.y - 22 + yadj + (self.hint_y_adj or 0)

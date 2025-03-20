@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.7"
-release_date    = 20250306
+script_version 	= "1.7.1"
+release_date    = 20250318
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -319,6 +319,7 @@ function get_angle_for_pos(pos)
     local dirToPosH = to360(-math.deg(dirToPos:getH()))
     local dirH = to360(-math.deg(dir:getH()))
     local degree = to360(dirH - dirToPosH)
+    return degree
 end
 
 -- ======================================================================

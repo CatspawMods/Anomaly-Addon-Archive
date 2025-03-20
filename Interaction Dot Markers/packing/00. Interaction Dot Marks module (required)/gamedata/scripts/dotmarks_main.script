@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_cfg"
-script_version  = "0.8-b4"
-release_date    = 20250317
+script_version  = "0.8-b7"
+release_date    = 20250319
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -738,7 +738,16 @@ function refresh_main_config()
 end
 
 function near_scan_radius()
-    return cfg.near_scan_radius + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
+    return (cfg.near_scan_radius or 4) + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
+end
+
+function early_scan_radius()
+    return near_scan_radius() + (cfg.early_scan_radius or 5)
+end
+
+function is_fdda_installed()
+    local monkey = z_fdda_pickup_intercept_dotmarks
+    return not not (monkey and (monkey.fddar_oibp or fdda_oibp))
 end
 
 function csv_argb_to_tbl(csv)

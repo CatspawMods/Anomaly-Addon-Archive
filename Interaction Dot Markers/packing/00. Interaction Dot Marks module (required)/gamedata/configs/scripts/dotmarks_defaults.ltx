@@ -18,17 +18,18 @@ scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 near_scan_interval          = 244
 ; Interval in ms between nearby-object scans
-far_scan_interval           = 2457
+early_scan_interval         = 2457
 ; Interval in ms between faraway-object scans
 ; Unusual numbers are chosen as a way of avoiding stacking updates
-skill_upd_interval          = 3211
+skill_upd_interval          = 29711
 ; Interval in ms between Skill System updates
+; These can be very infrequent, since skill level-ups are usually rare
 tut_check_interval 			= 49
 ; Interval in ms between tutorial checks, needs to be responsive
 near_scan_radius            = 4
 ; Radius in meters of the near scan (affects many other things)
-far_scan_radius             = 10
-; Radius in meters of the far scan
+early_scan_radius           = 2
+; Radius in meters beyond the near scan for the early scan
 use_skill_system            = true
 ; Enable Skill System integration
 haru_skill_name             = scavenging
@@ -37,8 +38,9 @@ haru_skill_coef             = 0.2
 ; Multiplier to near_scan_radius bonus range per skill level
 mutant_decay_time 			= 7200
 ; Age after which a mutant corpse "decays" and cannot be looted
-bind_sec_interact 			= 22
+;bind_sec_interact 			= 22
 ; DIK code of alternate interact keybind
+; When commented out like this, DotMarks will try to default to your use keybind
 modk_sec_interact 			= 0
 ; Modifier key of alt interact
 imod_sec_interact 			= 2
@@ -49,15 +51,17 @@ interact_uifile 			= ui_dotmarks.xml
 ; Contains UI element definitions
 marker_dotmark 				= ui_catsy_marker_intdot
 ; Texture for the marker dots themselves
+marker_dotactive 			= ui_catsy_marker_dotactive
 main_drop_texture 			= ui_catsy_main_drop
 icon_sp_fave_texture 		= ui_catsy_icon_sortplus_fave
 icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
 ; Texture used for the main prompt drop shadow
 target_lenience 			= 0.95
 ; How far from center the crosshair can be for old targeting method
-item_use_delay 				= 0.1
-; Delay before consuming an item that has just been instantiated
-; Required to allow the new game object time to exist, and next frame isn't always enough
+item_use_delay 				= 0.5
+; Delay between taking an item and trying to use it 
+; Required to give FDDA animation time to begin
+long_press_delay 			= 1000
 alti_show_during_anim 		= true
 ; Whether to show prompts during FDDA animations
 alti_busy_during_anim 		= true
@@ -240,6 +244,8 @@ lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
 width               = 5		; texture width (in canvas units)
 height              = 5		; texture height (in canvas units)
 update_int          = 15	; update interval in ms for the marker itself
+skip_online_checks 	= true 	; Optimization, skips the step of checking for online status and same-map
+skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
 ;facing_check 		= true 	; experimental optimization feature
 
 [tutorial_hints]
@@ -337,6 +343,7 @@ display_cases
 door_visuals
 dotmark_preset
 in_pickup_range
+input_filters ; WIP
 invboxes
 gettable_types
 grenade_ammo_clsids
@@ -399,22 +406,24 @@ interact_drop_alpha 	= dotmarks/dmarkmain/
 bind_sec_interact 		= dotmarks/dmarkmain/
 modk_sec_interact 		= dotmarks/dmarkmain/
 imod_sec_interact 		= dotmarks/dmarkmain/
+long_press_delay 		= dotmarks/dmarkmain/
 hide_interaction_dots 	= dotmarks/dmarkadv/
 hide_connecting_line 	= dotmarks/dmarkadv/
 hide_pri_interact_ui 	= dotmarks/dmarkadv/
 hide_sec_interact_ui 	= dotmarks/dmarkadv/
 hide_van_interact_ui 	= dotmarks/dmarkadv/
-alti_show_during_anim 	= dotmarks/dmarkadv/
-alti_busy_during_anim 	= dotmarks/dmarkadv/
 pri_use_x_offset 		= dotmarks/dmarkadv/
 pri_use_y_offset 		= dotmarks/dmarkadv/
 sec_use_x_offset 		= dotmarks/dmarkadv/
 sec_use_y_offset 		= dotmarks/dmarkadv/
 fixed_screen_pos 		= dotmarks/dmarkadv/
 near_scan_interval 		= dotmarks/dmarkadv/
-far_scan_interval 		= dotmarks/dmarkadv/
+early_scan_interval 	= dotmarks/dmarkadv/
 near_scan_radius 		= dotmarks/dmarkadv/
-far_scan_radius 		= dotmarks/dmarkadv/
+early_scan_radius 		= dotmarks/dmarkadv/
+alti_show_during_anim 	= dotmarks/dmarkadv/
+alti_busy_during_anim 	= dotmarks/dmarkadv/
+item_use_delay	 		= dotmarks/dmarkadv/
 use_skill_system 		= dotmarks/dmarkadv/
 skill_upd_interval 		= dotmarks/dmarkadv/
 haru_skill_name 		= dotmarks/dmarkadv/
@@ -452,5 +461,3 @@ show_parts_armor		= item_icon_info/part_dots/show_on_armor
 parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
 parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
 parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
-
-

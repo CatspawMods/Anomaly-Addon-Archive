@@ -7,11 +7,6 @@
 assert(utils_catspaw_common, "\n\n"..
     "! dotmarks_mcm requires utils_catspaw_common, which does not exist!\n\n"
 )
-assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_text, which does not exist or is an older version!\n" ..
-    "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
-    "If the version is outdated, try moving this addon to the bottom of your load order."
-)
 assert(dotmarks_main, "\n\n"..
     "! dotmarks_mcm requires dotmarks_main, which does not exist!\n\n"
 )
@@ -26,7 +21,6 @@ local sfind 		= string.find
 local ssub 			= string.sub
 local lang 			= "eng"
 local psk 			= utils_data.parse_string_keys
-local get_argb 		= utils_catspaw_text.get_argb
 local ver 			= dotmarks_main.script_version or "ersion not found!"
 local rel 			= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
 local rel_version 	= string.format("$clr_tgrv%s (rel %s)", ver, rel)
@@ -224,7 +218,7 @@ function get_main_menu()
 			dmark_text_h 	= 60,
 			dmark_text_v 	= 10
 		},
-		{ id = "bind_sec_interact", 	type = "key_bind", 			val = 2, def = cfg.bind_sec_interact },
+		{ id = "bind_sec_interact", 	type = "key_bind", 			val = 2, def = cfg.bind_sec_interact or bind_to_dik(key_bindings.kUSE)},
 		{ id = "modk_sec_interact", 	type = ui_mcm.kb_mod_radio, val = 2, def = cfg.modk_sec_interact, hint = "mcm_kb_modifier", 
 			content = {
 				{0,"mcm_kb_mod_none"},
@@ -240,6 +234,12 @@ function get_main_menu()
 				{2,"mcm_kb_mode_hold"}
 			}
 		},
+
+		{id = "divider", type= "line"},
+
+		{ id = "long_press_delay", 		type = "input", 	val = 2, min = 50, max = 2000, def = cfg.long_press_delay },
+
+		{id = "divider", type= "line"},
 	}
 end
 
@@ -345,6 +345,7 @@ function get_adv_menu()
 		{ id = "bodies_use_mpda_rules",	type = "check", 	val = 1, def = cfg.bodies_use_mpda_rules },
 		{ id = "alti_show_during_anim", type = "check", 	val = 1, def = cfg.alti_show_during_anim },
 		{ id = "alti_busy_during_anim", type = "check", 	val = 1, def = cfg.alti_busy_during_anim },
+		{ id = "item_use_delay", 		type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.item_use_delay },
 		{ id = "sp_hide_junk_items", 	type = "check", 	val = 1, def = cfg.sp_hide_junk_items },
 		{ id = "sp_icon_pos_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.sp_icon_pos_x},
 		{ id = "sp_icon_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.sp_icon_pos_y },
@@ -373,9 +374,9 @@ function get_adv_menu()
 
 		{id = "divider", type= "line"},
 		{ id = "near_scan_interval", 	type = "input", 	val = 2, min = 0, max = 10000, step = 1, def = cfg.near_scan_interval },
-		{ id = "far_scan_interval", 	type = "input", 	val = 2, min = 0, max = 30000, step = 1, def = cfg.far_scan_interval },
+		{ id = "early_scan_interval", 	type = "input", 	val = 2, min = 0, max = 30000, step = 1, def = cfg.far_scan_interval },
 		{ id = "near_scan_radius", 		type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.near_scan_radius },
-		{ id = "far_scan_radius", 		type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.far_scan_radius },
+		{ id = "early_scan_radius", 	type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.far_scan_radius },
 
 		{id = "divider", type= "line"},
 	}

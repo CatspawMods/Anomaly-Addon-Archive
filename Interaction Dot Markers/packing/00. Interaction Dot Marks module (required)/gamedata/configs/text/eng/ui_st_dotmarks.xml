@@ -192,11 +192,11 @@
 		<text>Interval between nearby-object scans, in milliseconds. Smaller values will update more frequently.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_interval">
+	<string id="ui_mcm_dotmarks_dmarkadv_early_scan_interval">
 		<text>Far scan interval</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_interval_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_early_scan_interval_desc">
 		<text>Interval between the more-intensive faraway-object scans, in milliseconds. Smaller values will update more frequently, but may have a performance cost.</text>
 	</string>
 
@@ -208,14 +208,14 @@
 		<text>Radius of the nearby-object scan in meters. Many things are based on this value, such as the distances at which markers fade out and scale up/down. It is recommended that you don't adjust this value, or do so in very small increments.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_radius">
+	<string id="ui_mcm_dotmarks_dmarkadv_early_scan_radius">
 		<text>Radius of far scan</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_far_scan_radius_desc">
+	<string id="ui_mcm_dotmarks_dmarkadv_early_scan_radius_desc">
 		<text>Radius of the faraway-object scan in meters, which is used to detect objects before they come into visual range. This also determines the distance at which the system cleans up markers that are no longer needed.
 		\n 
-		\nThis MUST be larger than the near scan radius, but very large values may have a performance cost, and there is no benefit to setting them more than about 5-10m higher than the near radius.</text>
+		\nThis is measured from the end of the near scan radius, but higher values may have a performance cost, and there is no benefit to setting them more than about 5m higher than the near radius.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_skill_upd_interval">
@@ -739,5 +739,22 @@
 		\nIf FDDAR's multi-pickup option is disabled, DotMarks will try to respect this by only allowing the focused item to be picked up, but that isn't always possible.</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkmain_long_press_delay">
+		<text>Long-press stutter delay</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_long_press_delay_desc">
+		<text>When a long-press (hold) action is completed, inputs from that same key will be ignored for this many milliseconds. This is to prevent the same key from incorrectly registering as a simple press just after releasing the key.\n
+		
+		\nIf you find that pressing your primary interact to pick up an item isn't registering, you can try lowering this value. It must be betweem 50 and 2000.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_use_delay">
+		<text>Item secondary use delay</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_use_delay_desc">
+		<text>When using a secondary action on a pickup item, this is the delay in seconds between the pickup event and the secondary action.\n
+
+		\nWhen using FDDA, this is necessary in order to allow the pickup animation time to begin. This setting should have no effect without FDDA installed.</text>
+	</string>
 
 </string_table>
