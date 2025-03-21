@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.7.1"
-release_date    = 20250318
+script_version 	= "1.8.1"
+release_date    = 20250321
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -155,6 +155,10 @@ function get_obj_section(obj)
  	return obj and (obj.section and obj:section() or obj:section_name())
 end
 
+function get_obj_kind(obj)
+	return obj and SYS_GetParam(0, get_obj_section(obj), "kind") or "na"
+end
+
 function var_from_str_path(str)
 	-- Retrieves a variable value whose script.varname path is stored in a string
 	local res = nil
@@ -204,26 +208,23 @@ end
 
 function round100(num)
 	-- nice round numbers to 100s
-	if num == 0 then return 0 end
+	if (num or 0) == 0 then return 0 end
 	return floor(num * 0.01) * 100
 end
 
 function round10(num)
 	-- nice round numbers to 10s
-	if num == 0 then return 0 end
+	if (num or 0) == 0 then return 0 end
 	return floor(num * 0.1) * 10
 end
 
 function dec2(num)
-	if num == 0 then return 0 end
+	if (num or 0) == 0 then return 0 end
 	return math.floor(num * 100) / 100
 end
 
 function greater_of(n1, n2)
-	if not (n1 and n2) then return end
-	n1 = tonumber(n1) or 0
-	n2 = tonumber(n2) or 0
-	return (n1 > n2) and n1 or n2
+	return n1 and n2 and math.max(tonumber(n1), tonumber(n2))
 end
 
 function lerp(a, b, f)
@@ -241,6 +242,12 @@ easing = {
 	OutSine = (function(x) return math.sin((x * math.pi) / 2) end),
 	InQuint = (function(x) if not x then return end return x * x * x * x * x end),
 	OutQuint = (function(x) if not x then return end return 1 - math.pow(1 - x, 5) end),
+	easeOutElastic = (
+		function(x)
+    		local c4 = 2 * math.pi / 3
+    		return x == 0 and 0 or (x == 1 and 1 or 2 ^ (-10 * x) * math.sin((x * 10 - 0.75) * c4) + 1)
+		end
+	)    		
 }
 
 function roll(chance)

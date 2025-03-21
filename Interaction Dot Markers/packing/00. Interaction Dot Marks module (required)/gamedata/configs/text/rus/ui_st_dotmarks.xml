@@ -122,6 +122,9 @@
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_weapons">
 		<text>Отметить оружие</text>
 	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_scan_attachments">
+		<text>Отметьте вложения</text>
+	</string>	
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_grenades">
 		<text>Отметить гранаты</text>
 	</string>
@@ -758,5 +761,13 @@
 
 		\nПри использовании FDDA это необходимо для того, чтобы время анимации пикапа началось. Без установленного FDDA эта настройка не влияет.</text>
 	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_popin_anim_dur">
+		<text>Продолжительность анимации появления маркера</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_popin_anim_dur_desc">
+		<text>Длительность анимации эластичного всплытия, которая воспроизводится при переносе фокуса на маркер. Может составлять до 2000 мс. При установке нуля функция будет отключена.</text>
+	</string>
+
 
 </string_table>

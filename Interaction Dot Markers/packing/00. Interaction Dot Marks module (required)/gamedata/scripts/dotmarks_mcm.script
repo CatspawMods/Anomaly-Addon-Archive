@@ -317,6 +317,7 @@ function get_adv_menu()
 
 		{ id = "prompt_fade_in_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_in_time },
 		{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
+		{ id = "popin_anim_dur", 		type = "track",		val = 2, min = 0, step = 1, max = 2000, def = cfg.popin_anim_dur },
 
 		{id = "divider", type= "line"},
 

@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.5-b1"
-release_date    = 20250320
+script_version  = "0.6"
+release_date    = 20250321
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -83,9 +83,11 @@ local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
 local get_next_check    = utils_catspaw_common.get_next_tg_interval
 local lerp              = utils_catspaw_common.lerp
 local round10           = utils_catspaw_common.round10
+local dec2              = utils_catspaw_common.dec2
 local to360             = utils_catspaw_common.to360
 local safename          = utils_catspaw_text.safename
 local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
+local get_argb          = utils_catspaw_mapspots.get_argb
 local gts               = game.translate_string
 local markers           = {}
 local nearest           = {}
@@ -241,14 +243,14 @@ function check_los_to_obj(id, range, bone, flags, tolerance, pos_adjust)
 end
 
 
-function fade_by_dist(element, dist, flr, min, mid, max, alpha, r, g, b, mode)
+--function fade_by_dist(element, dist, flr, min, mid, max, alpha, r, g, b, mode)
     --[[ 
     element is a valid UI element, and how the fade is done is determined by mode:
         mode 0 = fade a Static element (default)
         mode 1 = fade text in a Static
         mode 2 = fade text in a TextWnd
     --]]
-    alpha   = alpha or 255
+--[[    alpha   = alpha or 255
     r       = r or 255
     g       = g or 255
     b       = b or 255
@@ -280,10 +282,53 @@ function fade_by_dist(element, dist, flr, min, mid, max, alpha, r, g, b, mode)
         )
     end
 end
+--]]
 
+function fade_by_dist(element, dist, flr, min, mid, max, alpha, r, g, b, mode)
+    --[[ 
+    element is a valid UI element, and how the fade is done is determined by mode:
+        mode 0 = fade a Static element (default)
+        mode 1 = fade text in a Static
+        mode 2 = fade text in a TextWnd
+    --]]
+    alpha   = alpha or 255
+    r       = r or 255
+    g       = g or 255
+    b       = b or 255
+    if not (paw and (paw.cart_mode and paw.cartmode_unfade)) then
+        if (dist < flr) then
+            alpha = 0
+        elseif (dist < min) then
+            alpha = alpha * (dist / (min - flr))
+        elseif (mid > 0) then
+            if (dist > (mid + max)) then
+                alpha = 0
+            elseif (dist > mid) then
+                alpha = alpha * (1 - ((dist - mid) / max))
+            end
+        end
+    end
+    if element then
+        if mode == 1 then
+            element:TextControl():SetTextColor(GetARGB(alpha,r,g,b))
+        elseif mode == 2 then
+            element:SetTextColor(GetARGB(alpha,r,g,b))
+        else
+            element:SetTextureColor(GetARGB(alpha,r,g,b))
+        end
+    end
+    if debug_dump then
+        vl("[utils_catspaw_hudmarks.fade_by_dist] Fading elements by dist %s:\n"..
+            "- near_fade %s | near_hide %s | far_fade %s | far_hide %s\n" ..
+            "= Result: Alpha %s | %s,%s,%s",
+            dist, flr, min, mid, max, alpha, r, g, b
+        )
+    end
+    return {a=alpha,r=r,g=g,b=b}
+end
 
 function scale_by_dist(element, dist, w, h, min, mid, max, up_amt, dn_amt, unsquish)
-    --vl("scale_by_dist for %sx%s element at dist %s | unsquish %s | %s - %s -  %s ",w,h,dist,unsquish,min,mid,max)
+    --printf("scale_by_dist for %sx%s element at dist %s | unsquish %s | %s - %s -  %s ",w,h,dist,unsquish,min,mid,max)
     dist        = clamp(dist,0,max)
     local nw    = w
     local nh    = h
@@ -297,10 +342,10 @@ function scale_by_dist(element, dist, w, h, min, mid, max, up_amt, dn_amt, unsqu
         nh      = h - (((dist - mid) / (max - mid)) * (h * dn_amt))
     end
 
-    if unsquish then
+    if unsquish or (unsquish == nil) then
         nw = nw * unsquish_ratio
     end
-    --vl("scale_by_dist for %sx%s element:\nw %s -> nw %s | h %s -> nh %s | ratio: %s",element:GetWidth(),element:GetHeight(),w,nw,h,nh,unsquish_ratio)
+    --printf("scale_by_dist for %sx%s element:\nw %s -> nw %s | h %s -> nh %s | ratio: %s",element:GetWidth(),element:GetHeight(),w,nw,h,nh,unsquish_ratio)
 
     return nw,nh
 end
@@ -1049,6 +1094,39 @@ function UIHUDMarker:Destroy()
     get_hud():RemoveDialogToRender(self)
 end
 
+function UIHUDMarker:UpdateBaseMarkerSize(w, h)
+    self.base_w = w or self.base_w or self.width
+    self.base_h = h or self.base_h or self.base_w or self.height
+    --vl("[%s][%s] UpdateBaseMarkerSize: %s|%s -> %sx%s", time_global(), self.name or self.mark_id, dec2(w), dec2(h), dec2(self.base_w), dec2(self.base_h))
+end
+
+function UIHUDMarker:SetMarkerSize(w, h, scale)
+    scale = scale or self.marker_scale or 1
+    w = w or self.base_w
+    h = h or self.base_h
+    self.width = w * scale
+    self.height = h * scale
+    --vl("[%s][%s] SetMarkerSize: [%s x %s] -> [%s x %s] | scale %s", time_global(), self.name or self.mark_id, dec2(w), dec2(h), dec2(self.width), dec2(self.height), scale)
+    self.marker:SetWndSize(vector2():set(self.width, self.height))
+end
+
+function UIHUDMarker:ScaleMarkerByDistance(w, h, dist, scale)
+    --vl("[%s][%s] ScaleMarkerByDistance: %sx%s | dist %s | scale %s", time_global(), self.name or self.mark_id, w and dec2(w), h and dec2(h), dec2(dist or self.last_dist or 0), scale)
+    self:UpdateBaseMarkerSize(w, h)
+    w, h = scale_by_dist(
+                self.marker, dist or self.last_dist or 0,
+                self.base_w, 
+                self.base_h,
+                self.scale_dist_min or 10,
+                self.scale_dist_mid or 20,
+                self.scale_dist_max or 50,
+                self.scale_up_amt,
+                self.scale_dn_amt,
+                self.correct_aspect
+            )
+    self:SetMarkerSize(w, h, scale)
+end
+
 
 function UIHUDMarker:physic_object_on_death_callback(victim, killer)
     --vl("[%s] UIHUDMarker:physic_object_on_death_callback")
@@ -1242,6 +1320,7 @@ function UIHUDMarker:HideAll(reason)
     self.label:Show(false)
     self.label_sh:Show(false)
     self.marker:Show(false)
+    self.is_shown = false
 end
 
 
@@ -1268,6 +1347,7 @@ function UIHUDMarker:ShowMarker(onoff, reason)
     self.label:Show(show_hint)
     self.label_sh:Show(show_hint)
     self.marker:Show(onoff)
+    self.is_shown = onoff
 end
 
 function UIHUDMarker:GetMarkerStatic(element)
@@ -1305,15 +1385,17 @@ function UIHUDMarker:Update()
     end
 
     local se_obj        = id and alife_object(id)
+    local obj           = id and get_object_by_id(id)
     local pin           = paw and self.is_pin and id and paw.pins and paw.pins[id]
     -- Destroy marker if ID's object is invalid, or if it's a pin with an invalid pin record
-    if ((not se_obj) or (self.is_pin and not pin)) and not (self.locked_world_pos or self.locked_screen_pos) then
-        vl("Invalid pin or se_obj, destroying HUD marker for pin %s", id or self.name or self.mark_id)
+    if (((not obj) and (not se_obj)) or (self.is_pin and not pin)) and not (self.locked_world_pos or self.locked_screen_pos) then
+        vl("Invalid pin or game/server object, destroying HUD marker for pin %s | obj %s | se_obj %s", id or self.name or self.mark_id, obj and "exists" or nil, se_obj and "exists" or nil)
         self:Destroy()
         return
     end
 
-    local mark_pos  = se_obj and self:GetPos(self.pos_adjust)
+    --local mark_pos  = se_obj and self:GetPos(self.pos_adjust)
+    local mark_pos  = self:GetPos(self.pos_adjust)
     local dist      = mark_pos and db.actor:position():distance_to(mark_pos) or 1
     -- Destroy marker if the object falls outside of its min/max "end" distances
     if self.near_end_dist and ((dist < self.near_end_dist) or (dist > self.far_end_dist)) then
@@ -1381,6 +1463,7 @@ function UIHUDMarker:Update()
             self:HideAll("other map")
         return end
     end
+
     --printf("[UIHUDMarker:Update][%s][%s] Checking to see if there are screen coords for %s", self.id, self.mark_id, self.name)
     -- Visual update logic
     if (main_hud_shown() or axr_main.binoc_is_zoomed or axr_main.scoped_weapon_is_zoomed) then
@@ -1404,13 +1487,18 @@ function UIHUDMarker:Update()
                                     clamp((self.lock_y or vec.y) + (self.adj_final_y or 0), self.min_y, self.max_y)
                                 )
             self.last_screen_pos = vec
+            self.marker:SetWndPos(vec)
             vl("[UIHUDMarker:Update][%s] Final screen coords: %s, %s", self.mark_id, vec.x, vec.y)
+
             local unsquish  = self.correct_aspect
             if (unsquish == nil) then 
                 unsquish = true
             end
 
+            self.timestamp = time_global()
+            --printf("[%s] width %s | height %s | timestamp %s", self.mark_id, self.width, self.height, self.timestamp)
             --vl("scaling by distance and aspect")
+            --[[
             local szx,szy   = scale_by_dist(
                                 self.marker, dist, 
                                 self.width or 24, 
@@ -1422,12 +1510,11 @@ function UIHUDMarker:Update()
                                 self.scale_dn_amt,
                                 unsquish
                             )
+            self.marker:SetWndSize(vector2():set(szx, szy))
+            --]]
+            --printf("[%s][%s] Calling ScaleMarkerByDistance from UIHUDMarker loop: %sx%s", time_global(), self.name, dec2(self.width), dec2(self.height))
+            self:ScaleMarkerByDistance()--self.width, self.height, self.last_dist)
 
-            self.marker:SetWndPos(vec)
-
-            self.marker:SetWndSize(vector2():set(szx,szy))
-
-            --vl("window pos and size set, performing fade by distance")
             local m_nhide   = self.near_hide_dist
             local m_near    = self.near_fade_dist
             local m_far     = self.far_fade_dist
@@ -1442,50 +1529,64 @@ function UIHUDMarker:Update()
             local d_fhide   = self.d_far_hide_dist or self.far_hide_dist
             local colors    = self.custom_argb and (not is_empty(self.custom_argb)) and self.custom_argb or {a=255,r=255,g=255,b=255}
 
-            fade_by_dist(self.marker,   dist, m_nhide, m_near, m_far, m_fhide, colors.a, colors.r, colors.g, colors.b)
-            fade_by_dist(self.label,    dist, h_nhide, h_near, h_far, h_fhide, 255, 230, 230, 230, 1)
-            fade_by_dist(self.label_sh, dist, h_nhide, h_near, h_far, h_fhide, 255, 0, 0, 0, 1)
-            fade_by_dist(self.dist,     dist, d_nhide, d_near, d_far, d_fhide, 255, 230, 230, 230, 1)
-            fade_by_dist(self.dist_sh,  dist, d_nhide, d_near, d_far, d_fhide, 255, 0, 0, 0, 1)
-
-            local name          = self.name or self.is_pin and pin and pin.text
-            local maxd          = 100
-            local disty         = dist
-            if dist >= maxd then 
-                disty           = maxd
-            end
-            local yadj          = (disty / maxd * 6)
-            local pos           = self.marker:GetWndPos()
-            local nx,ny,dx,dy,tw
+            local c = {}
+            c = get_argb(fade_by_dist(nil, dist, m_nhide, m_near, m_far, m_fhide, colors.a, colors.r, colors.g, colors.b) or c)
+            self.marker:SetTextureColor(c)
+            c = get_argb(fade_by_dist(nil, dist, h_nhide, h_near, h_far, h_fhide, 255, 230, 230, 230) or c)
+            self.label:TextControl():SetTextColor(c)
+            self.dist:TextControl():SetTextColor(c)
+            c = get_argb(fade_by_dist(nil, dist, h_nhide, h_near, h_far, h_fhide, 255, 0, 0, 0) or c)
+            self.label_sh:TextControl():SetTextColor(c)
+            self.dist_sh:TextControl():SetTextColor(c)
 
             if self.managed_hover or self.hint_on_hover or self.dist_on_hover then
                 local xdot = dotproduct_for_pos(mark_pos)
                 self.last_hover = xdot or 0
             end
-            if name ~= self.prev_name then
-                self.label:TextControl():SetText(name)
-                self.label_sh:TextControl():SetText(name)
-                self.lref:TextControl():SetText(name)
-                self.lref:AdjustWidthToText()
+
+            -- Logic related to updating the label and distance text
+            if not (self.skip_hint and self.skip_dist) then
+                local name          = self.name or self.is_pin and pin and pin.text
+                local maxd          = 100
+                local disty         = dist
+                if dist >= maxd then 
+                    disty           = maxd
+                end
+                local yadj          = (disty / maxd * 6)
+                local pos           = self.marker:GetWndPos()
+                local nx,ny,dx,dy,tw
+
+                -- Update label display hint
+                if not self.skip_hint then
+                    if (name ~= self.prev_name) then
+                        self.label:TextControl():SetText(name)
+                        self.label_sh:TextControl():SetText(name)
+                        self.lref:TextControl():SetText(name)
+                        self.lref:AdjustWidthToText()
+                        self.prev_name = name
+                    end
+                    tw              = self.lref:GetWidth()
+                    nx              = pos.x - (tw * .5)
+                    ny              = pos.y - 22 + yadj + (self.hint_y_adj or 0)
+                    self.label:SetWndPos(vector2():set(nx, ny))
+                end
+
+                -- Update distance display text
+                if not self.skip_dist then
+                    local dist_txt  = string.format("%.1f",dist).."m"
+                    self.dist:TextControl():SetText(dist_txt)
+                    self.dist_sh:TextControl():SetText(dist_txt)
+                    self.wref:TextControl():SetText(dist_txt)
+                    self.wref:AdjustWidthToText()
+                    tw              = self.wref:GetWidth()
+                    nx              = pos.x - (tw * .5)
+                    ny              = pos.y + szy - 11 + yadj + (self.dist_y_adj or 0)
+                    self.dist:SetWndPos(vector2():set(nx, ny))
+                end
             end
-            self.prev_name      = name
 
-            tw              = self.lref:GetWidth()
-            nx              = pos.x - (tw * .5)
-            ny              = pos.y - 22 + yadj + (self.hint_y_adj or 0)
-            self.label:SetWndPos(vector2():set(nx, ny))
-
-            local dist_txt  = string.format("%.1f",dist).."m"
-            self.dist:TextControl():SetText(dist_txt)
-            self.dist_sh:TextControl():SetText(dist_txt)
-            self.wref:TextControl():SetText(dist_txt)
-            self.wref:AdjustWidthToText()
-            tw              = self.wref:GetWidth()
-            nx              = pos.x - (tw * .5)
-            ny              = pos.y + szy - 11 + yadj + (self.dist_y_adj or 0)
-            self.dist:SetWndPos(vector2():set(nx, ny))
+            -- Execute func_on_update_end, if any
             if self.func_on_update_end then
-                --vl("[UIHUDMarker:Update] Executing custom func_on_update_end %s", self.func_on_destroy)
                 self.func_on_update_end(self)
             end
             self:ShowMarker(true, "completed update")

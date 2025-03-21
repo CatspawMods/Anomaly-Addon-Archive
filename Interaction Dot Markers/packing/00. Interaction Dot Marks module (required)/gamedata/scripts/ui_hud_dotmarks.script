@@ -106,8 +106,9 @@ local get_mcm           = utils_catspaw_common.get_mcm_or_default_val
 local fade_curve        = utils_catspaw_common.easing.OutQuint
 local lerp              = utils_catspaw_common.lerp
 local dec2              = utils_catspaw_common.dec2
-local greater_of        = utils_catspaw_common.greater_of
 local get_stash_hint    = utils_catspaw_common.get_stash_hint
+local easeOutElastic    = utils_catspaw_common.easing.easeOutElastic
+local get_obj_kind      = utils_catspaw_common.get_obj_kind
 local safename          = utils_catspaw_text.safename
 local bindtext          = utils_catspaw_text.bindtext
 local get_localization  = utils_catspaw_text.find_best_localization
@@ -124,6 +125,7 @@ local is_junk           = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is
 local gts               = game.translate_string
 -- ======================================================================
 local config_file       = dotmarks_main.dotmarks_config_file
+get_type_for_kind       = dotmarks_main.get_type_for_kind
 near_scan_radius        = dotmarks_main.near_scan_radius
 early_scan_radius       = dotmarks_main.early_scan_radius
 get_nearby_campfire     = dotmarks_main.get_nearby_campfire
@@ -151,6 +153,7 @@ local scanning          = false
 local ea_enabled        = false
 local anim_playing      = false
 local actor_moved       = false
+local popin_active      = nil
 local extra_carry       = nil
 local use_dik           = nil
 local fdda_callback     = nil
@@ -174,7 +177,6 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             --  Presets that need to be generated on marker create rather than static LTX defs
             -- ================================================================================
             id                  = id,
-            -- various attributes are based on the scan radius settings:
             far_fade_dist       = near_scan_radius() - 0.5,
             far_hide_dist       = near_scan_radius(),
             far_end_dist        = early_scan_radius() + 3,
@@ -317,7 +319,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                             end
                             --printf("passed NPC and container checks")
                             if mark.pickup then
-                                -- Mark is an item pickup
+                                --printf("Mark is an item pickup")
                                 can_show = targeted
                                 if cfg.show_item_card then
                                     mark.use_pri:UpdateWeightColor()
@@ -366,25 +368,58 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                         end
                     end
                     -- ================================================================================
-                    -- Set blank or special textures for markers
                     local texture = mark.texture or ""
                     if not mark.base_w then mark.base_w = mark.args.width end
                     if not mark.base_h then mark.base_h = mark.args.height end
 
                     if (not hide) and (mark.use_pri and mark.active_swap) then
+                        --mark:ActiveSwap(can_show)
+                        --[-[
                         for k,v in pairs(mark.active_swap) do
                             if can_show then
-                                mark[k] = v
-                                mark.use_pri.args[k] = v
+                                if (popin_active ~= mark.mark_id) then
+                                    --printf("[%s][%s] Active swap: %s = %s", time_global(), mark.name, k, v)
+                                    mark[k] = v
+                                    mark.use_pri.args[k] = v
+                                end
                             else
+                                mark.popin_done = false
                                 mark[k] = mark.args[k]
                                 mark.use_pri.args[k] = mark.args[k]
+                                --printf("[%s][%s] Inactive revert: %s = %s", time_global(), mark.name, k, mark.args[k])
                             end
                             mark.base_w = mark.width
                             mark.base_h = mark.height
                         end
-                        texture = mark.texture     
+                        if mark.is_active ~= can_show then
+                            --printf("[%s][%s] Mark active status changed to %s (was %s)", time_global(), mark.name, can_show, mark.is_active)
+                            mark.last_active_state = mark.is_active
+                            mark.is_active = can_show
+                            mark.next_update = 0
+                        end
+                        --]]
+                        texture = mark.texture
                         mark.use_pri:SetupConnectingLine()
+
+                        if can_show and cfg.popin_anim_dur and (cfg.popin_anim_dur > 0) and not (popin_active or mark.popin_done) then
+                            --printf("Trying to begin popin effect | active %s | done %s", popin_active, mark.popin_done)
+                            do_marker_popin(
+                                mark.mark_id,
+                                mark.args.width, mark.args.height,
+                                mark.active_swap.width, mark.active_swap.height,
+                                cfg.popin_anim_dur,
+                                easeOutElastic,
+                                (function()
+                                    mark.next_update = 0
+                                    mark.popin_done = true
+                                    popin_active = nil
+                                end),
+                                (function() 
+                                    --printf("[%s][%s][abort func] popin_active: %s | mark texture: \"%s\"", time_global(), mark.mark_id, popin_active, mark.texture)
+                                    return (not popin_active) or (popin_active ~= mark.mark_id) or (not mark.texture) or (mark.texture ~= mark.active_swap.texture)
+                                end)
+                            )
+                        end
                     end
 
                     if (hide or cfg.hide_interaction_dots) then
@@ -392,9 +427,17 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                         -- Clear texture for hidden markers
                         texture = ""
                     else
+                        --mark:ScaleMarkerByDistance(mark.base_w, mark.base_h, nil, cfg.dot_marker_size)
                         mark.width = mark.base_w * (cfg.dot_marker_size or 1)
                         mark.height = mark.base_h * (cfg.dot_marker_size or 1)
+
+                        --printf("[%s][%s] Calling ScaleMarkerByDistance from main dotmarks loop: [%s x %s]", time_global(), mark.name, dec2(mark.width), dec2(mark.height))
+                        --printf("[%s][%s] Setting marker width manually from main dotmarks loop: [%s x %s]", time_global(), mark.name, dec2(mark.width), dec2(mark.height))
+                        mark:ScaleMarkerByDistance()
+                        --printf("Base size is %sx%s, setting to %sx%s after UI scaling", mark.base_w, mark.base_h, mark.width, mark.height)
                     end
+                    mark.loop_num = mark.loop_num and (mark.loop_num + 1) or 0
+                    --printf("[%s][%s] End of main update loop %s | Final size: [%s x %s]", time_global(), mark.name, mark.loop_num, dec2(mark.width), dec2(mark.height))
                     mark.marker:InitTexture(texture)
 
                 end
@@ -413,8 +456,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                 end
             ),
             -- ================================================================================
-            --  When any marker is destroyed, unregister that ID and clear its metadata
             func_on_destroy = (
+            -- ================================================================================
+            --  When any marker is destroyed, unregister that ID and clear its metadata
+            -- ================================================================================
                 function(mark) this.unregister_scanned_entity(mark and mark.id) end
             ),
         }
@@ -425,6 +470,44 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
         return preset_args
     end
 )
+
+function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
+    if self.destroyed or not (self.active_swap and self.use_pri) then return end
+    if state == nil then state = not self.disabled end
+    if state ~= self.is_active then
+        self.last_active_state = self.is_active
+        self.is_active = state
+        self.next_update = 0
+
+        local anim_args = {
+            ["width"] = true,
+            ["height"] = true,
+        }
+        if state then
+            if not popin_active then
+                --printf("Active swap:")
+                for k,v in pairs(self.active_swap) do
+                    --printf("|| %s = %s", k, v)
+                    self[k] = v
+                    self.use_pri.args[k] = v
+                end
+            end
+        else
+            --printf("Inactive, reverting to:")
+            self.popin_done = false
+            for k,v in pairs(self.active_swap) do
+                --printf("|| %s = %s", k, v)
+                self[k] = self.args[k]
+                self.use_pri.args[k] = self.args[k]
+            end
+
+        end
+    end
+    if not popin_active then
+        self.base_w = self.width
+        self.base_h = self.height
+    end
+end
 
 function item_pickup_intercept(obj, flags)
     -- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
@@ -459,6 +542,9 @@ function item_pickup_intercept(obj, flags)
     local anim_delay = false
     if taken_obj then
         vl("Forcing actor to take %s (%s) instead", taken_obj:name(), taken_obj:id())
+        if cfg.markers[curr_target] then
+            cfg.markers[curr_target]:HideAll("dotmarks taking item")
+        end
         if flags.ret_value then
         -- The monkeypatch in z_fdda_pickup_intercept_dotmarks sets flags.ret_value to false
         -- if flags.ret_value is already false when it gets to DotMarks, DotMarks will assume
@@ -468,6 +554,104 @@ function item_pickup_intercept(obj, flags)
         end
     end
     return taken_obj
+end
+
+
+function easeOutElastic(x)
+    local c4 = 2 * math.pi / 3
+    return x == 0 and 0 or (x == 1 and 1 or 2 ^ (-10 * x) * math.sin((x * 10 - 0.75) * c4) + 1)
+end
+
+function set_final_marker_size(mark_id)
+    local mark = hmm:GetMarker(mark_id)
+    if not mark then return end
+    mark.width = mark.base_w * (cfg.dot_marker_size or 1)
+    mark.height = mark.base_h * (cfg.dot_marker_size or 1)
+    --printf("Final mark size: %sx%s", mark.width, mark.height)
+end
+
+function do_marker_popin(
+        mark_id,
+        w_start, h_start, w_end, h_end, duration,
+        easing_func, on_finish_func, abort_func
+    )
+    if not mark_id then return end
+    --printf("Initializing popin for %s at %s", mark_id, time_global())
+
+    local anim_state = 0
+
+    local anim_id = mark_id .. "_popin"
+
+    if active_anims[mark_id] then
+        --printf("Repeat invocation of popin event, restarting")
+        popin_active = nil
+    end
+    popin_active = mark_id
+
+    --printf("[%s] do_marker_popin: start %sx%s end %sx%s dur %sms", time_global(), w_start, h_start, w_end, h_end, duration)
+    local mark      = hmm:GetMarker(mark_id)
+    if not mark then return end
+
+    local start_time= time_global()
+    local end_time  = time_global() + duration
+    easing_func = easing_func or function(x) return x end
+    active_anims[mark_id] = {
+        mark_id     = mark_id,
+        anim_id     = anim_id,
+        start_time  = start_time,
+        end_time    = end_time,
+        active      = true,
+        w_start     = function(mark) return mark and mark.is_active and mark.args.width or w_start or 0 end,
+        w_end       = function(mark) return mark and mark.is_active and mark.active_swap.width or mark.args.width or w_end or 0 end,
+        h_start     = function(mark) return mark and mark.is_active and mark.args.height or h_start or 0 end,
+        h_end       = function(mark) return mark and mark.is_active and mark.active_swap.height or mark.args.height or h_end or 0 end,
+    }
+    
+    
+    --printf("Creating popin time event %s", mark_id)
+    CreateTimeEvent("animate_popin_"..mark_id, time_global(), 0, 
+        function()
+            local abort = abort_func and abort_func()
+            if abort then
+                --printf("Received anim abort for %s", mark_id)
+                anim_state = 1
+            elseif start_time - end_time > 5000 then
+                --printf("Timeout, aborting event %s", mark_id)
+                anim_state = 1
+            else
+                local anim = active_anims[mark_id]
+                local mark = hmm:GetMarker(mark_id)
+                if not (mark and mark.is_shown) then
+                    anim_state = 1
+                elseif mark and anim and anim.active then
+                    if mark.is_active then
+                        local x = easing_func(anim_state)
+                        anim.w = lerp(anim.w_start(mark), anim.w_end(mark), x)
+                        anim.h = lerp(anim.h_start(mark), anim.h_end(mark), x)
+                        --printf("[%s] Popin time event: setting base width for %s to %s", time_global(), anim_id, mark.base_w)
+                    else
+                        --printf("[%s] Mark %s is no longer active, canceling animation and reverting to base", time_global(), mark_id)
+                        anim_state = 1
+                    end
+                    mark.base_w = anim.w or anim.w_end(mark)
+                    mark.base_h = anim.h or anim.h_end(mark)
+                    set_final_marker_size(mark_id)
+                else
+                    --printf("Event conditions for %s cleared, aborting", mark_id)
+                    anim_state = 1
+                end
+            end
+
+            if (anim_state == 1) then
+                --printf("Popin animation %s completed at %s", mark_id, time_global())
+                if on_finish_func then on_finish_func() end
+                active_anims[mark_id] = nil
+                popin_active = nil
+                return true
+            end
+            anim_state = math.min(1, normalize(time_global(), start_time, end_time))
+        end
+    )
 end
 
 function can_actor_see_artefact(obj)
@@ -1044,7 +1228,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
     self.card_val:InitTexture("ui_catsy_card_drop")
     self.card_val:SetTextureColor(getargb( cfg.colors.clr_card_drop ))
     self.card_sp_icon = self.xml:InitStatic("box", self.itemcard)
-    self.longest_card = greater_of(weight_w, value_w)
+    self.longest_card = math.max(weight_w, value_w)
 
     self:UpdateFaveJunkIcon()
 
@@ -1752,7 +1936,20 @@ function is_pickup_targeted()
     return not not pickup
 end
 
+function get_target_container()
+    local body, box
+    local obj   = get_current_target_obj()
+    local id    = obj and obj:id()
+    local mark  = id and cfg.markers[id]
+    body        = mark and mark.is_stalker and not mark.is_alive
 
+    if not body then
+        local cls   = obj and obj:clsid()
+        box         = cls and IsInvbox(nil, cls)
+    end
+
+    return body or box
+end
 
 function state_monitor(tid)
     local state = tid and modxml_tutorial_hooks and modxml_tutorial_hooks.monitors and modxml_tutorial_hooks.monitors[tid] and modxml_tutorial_hooks.monitors[tid].state
@@ -1799,24 +1996,56 @@ function get_args_for_valid_objects(obj)
     local id = obj:id()
     local cls = obj:clsid()
     local sec = obj:section()
+    local kind = get_obj_kind(obj)
+
     --vl("get_args_for_valid_objects: %s (%s) - clsid %s", obj:name(), id, cls)
-    if is_blacklisted(id, cls, sec) then return end
+    if is_blacklisted(id, cls, sec, kind) then return end
 
     local args = { logged_type = "something else", section = sec, clsid = cls }
 
-    for item_class, enabled in pairs(cfg.scan) do
-        --vl("Checking %s against category %s", obj:name(), item_class)
-        if cfg.is_item[item_class](obj) then
-            args = get_cfg_for_type("args", item_class, obj) or {}
-            args.id = id
-            args.clsid = cls
-            args.hidden = (not enabled) or nil
-            args.has_power = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
-            break
+    local ktype = get_type_for_kind(kind)
+
+    local function setup_item_args(iclass)
+        args = get_cfg_for_type("args", iclass, obj) or {}
+        args.id = id
+        args.clsid = cls
+        args.hidden = not cfg.scan[iclass]
+        args.has_power = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
+    end
+
+    printf("wtf debugging is_item")
+    for k,v in pairs(cfg.scan) do
+        printf("%s = %s", k, cfg.is_item[k])
+    end
+
+    if ktype then
+        --printf("Type for kind %s: %s", kind, ktype)
+        setup_item_args(ktype)
+    else
+        for item_class, enabled in pairs(cfg.scan) do
+            printf("Checking %s against category %s", obj:name(), item_class)
+            if cfg.is_item[item_class](obj) then
+                --printf("Type found: %s", item_class)
+                setup_item_args(item_class)
+                break
+            end
         end
     end
 
+    if not args.texture then
+        local pid = cfg.available_pickup
+        if (id == pid) then
+            printf("! Obj %s (%s) failed classification, but is detected by engine as a pickup!\n"..
+                "Classifying \"Misc\" as a fallback, investigate: section %s | clsid %s | kind %s",
+                obj:name(), id, sec, cls, kind
+            )
+            setup_item_args("Misc")
+        else
+            return
+        end
+    end
     if not args.texture then return end
+
     vl("get_args_for_valid_objects: %s (%s) is %s", obj:name(), obj:id(), args.logged_type)
     return args
 end
@@ -1919,7 +2148,8 @@ function setup_sec_interact_prompt(mark)
             )
             func = take_all_from_box
         end
-    elseif section and (IsItem("eatable", section)) then
+    --elseif section and (IsItem("eatable", section)) then
+    elseif cfg.is_item.Consumables(obj) then
         -- Consumable
         int_text        = string.format(gts("st_alti_prompt_eatable"),
             gts("st_alti_consume_food"),
@@ -2035,7 +2265,7 @@ function obj_has_available_sec_interact(obj, id, mark)
             is_consumable or
             is_readable or
             is_invbox
-        )
+        ) and (not (mark and mark.no_sec))
 
     vl("obj_has_available_sec_interact: %s | %s (%s) | ammo %s | eatable %s | readable %s | money %s",
         has_interact,
@@ -2077,7 +2307,7 @@ function scan_nearby_object(obj)
         --vl("[ID %s] Existing marker found for mark_id %s, skipping", id, m_id)
     else
         scanned[id] = name
-        vl("scanning unmarked object %s (%s) | cls %s | dist %s", name, id, cls)
+        printf("scanning unmarked object %s (%s) | cls %s | dist %s", name, id, cls)
         local args  = get_args_for_valid_objects(obj)
         if not args then return end
 
@@ -2085,6 +2315,7 @@ function scan_nearby_object(obj)
         args            = args or {}
         args.id         = id
         args.mark_id    = m_id
+        args.kind       = kind
         args.name       = get_localization(obj, nil, sec) or nil
         args.preset     = "dotmark"
 
@@ -2108,8 +2339,8 @@ function scan_nearby_object(obj)
         if not mark.active_swap then
             mark.active_swap = {
                 texture     = cfg.marker_dotactive or cfg.marker_dotmark or "",
-                width       = 10,
-                height      = 10,
+                width       = 12,
+                height      = 12,
                 line_adj_x  = 2,
                 line_adj_h  = -6,
                 line_adj_y  = 6,
@@ -2133,7 +2364,7 @@ end
 
 
 function dot_eye(position)
-    -- Taken from Crook's Faction ID
+    -- Taken from Crofok's Faction ID
     local toPoint = vector():set(position):sub(device().cam_pos):normalize()
     local toEye = device().cam_dir
     local dot = toPoint:dotproduct(toEye)
@@ -2540,7 +2771,7 @@ function ea_on_item_anim_stop()
 end
 
 function cycle_targeted_pickup(dir)
-    dl("cycle_targeted_pickup: %s | locked %s | target %s", dir and (dir > 0) and "next" or "previous", locked_id, targeted_id)
+    vl("cycle_targeted_pickup: %s | locked %s | target %s", dir and (dir > 0) and "next" or "previous", locked_id, targeted_id)
     if not (dir and get_current_target()) then return end
     local max       = size_table(nearby_pickups)
     vl("max %s | in_pickup_range %s", max, size_table(cfg.in_pickup_range))
@@ -2592,7 +2823,7 @@ function update_nearby_pickups()
 end
 
 function setup_tutorial_prompt(tutorial)
-    printf("Need to set up a new interact UI for tutorial %s", tutorial)
+    vl("Need to set up a new interact UI for tutorial %s", tutorial)
     local args = get_cfg_for_type("args", "Tutorials") or {}
     --args.preset             = "dotmark"
     args.tutorial           = tutorial
@@ -2696,23 +2927,28 @@ function on_key_release(key)
     if key == cfg.held_mod then cfg.held_mod = nil end
     if (key == cfg.held_key) then
         if (key == use_dik) then
-            local pickup = get_target_pickup()
+            local pickup, container
+            pickup = get_target_pickup()
+            if not pickup then
+                container = get_target_container()
+            end
             cfg.use_released = cfg.use_released or time_global()
             local dur = cfg.holding and cfg.holding.peak_hold
             local time = cfg.holding and cfg.holding.hold_time
             --printf("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
             cfg.held_key = nil
 
-            if pickup and not (dur and time and (dur >= time)) then
-                cfg.use_released = nil
-                --printf("No completed hold action, item pickup should occur", time)
-                force_actor_to_take(pickup)
+            if not (dur and time and (dur >= time)) then
+                if pickup then
+                    cfg.use_released = nil
+                    --printf("No completed hold action, item pickup should occur", time)
+                    force_actor_to_take(pickup)
+                elseif container then
+                    cfg.use_released = nil
+                end
             end
-
         end
-        
     end
-    
 end
 
 function actor_on_update_pickup(obj)
@@ -2731,11 +2967,13 @@ function actor_on_item_take(obj)
 end
 
 function on_mouse_wheel(scroll_dir, flags)
-    if not cfg.wheel_cycles_pickups then return end
-    if not get_current_target() then return end
-    if actor_menu.inventory_opened() then return end
-    if item_device and item_device.is_pda_active() then return end
-    if ui_workshop.GUI and ui_workshop.GUI:IsShown() then return end
+    if  (not cfg.wheel_cycles_pickups) or
+        (not get_current_target()) or
+        actor_menu.inventory_opened() or
+        (item_device and item_device.is_pda_active()) or
+        (ui_workshop.GUI and ui_workshop.GUI:IsShown()) or
+        axr_main.binoc_is_zoomed or axr_main.scoped_weapon_is_zoomed then
+    return end
 
     local direction         = (scroll_dir > 0) and 1 or -1
     vl("on_mouse_wheel: %s | direction: %s", scroll_dir, direction)
@@ -2795,9 +3033,9 @@ function parse_file_data()
         if fd.guide then    cfg.vendors[fd.guide]     = "guide" end
     end
     if debug_dump then
-        printf("Loaded NPC vendors:")
+        vl("Loaded NPC vendors:")
         for k,v in pairs(cfg.vendors) do
-            printf("|| %s = %s", k,v)
+            vl("|| %s = %s", k,v)
         end
     end 
 end

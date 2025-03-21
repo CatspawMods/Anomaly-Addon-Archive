@@ -4,9 +4,9 @@
     PRE-RELEASE TEST BUILD - THIS IS A WORK IN PROGRESS
 
 -- ===================================================================--]]
-script_name     = "dotmarks_cfg"
-script_version  = "0.8-b8"
-release_date    = 20250320
+script_name     = "dotmarks_main"
+script_version  = "0.8-b10"
+release_date    = 20250321
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -69,6 +69,7 @@ dotmarks_config_file    = "scripts\\dotmarks_defaults.ltx"
 local strbool           = utils_catspaw_common.strbool
 local is_living_thing   = utils_catspaw_common.is_living_thing
 local safeid            = utils_catspaw_common.safeid
+local get_obj_kind      = utils_catspaw_common.get_obj_kind
 local safename          = utils_catspaw_text.safename
 local get_argb          = utils_catspaw_mapspots.get_argb
 local paw               = tasks_placeable_waypoints
@@ -110,6 +111,9 @@ local base_config = {
         Weapons = (
             function(obj) return obj and (IsWeapon(nil, obj:clsid()) or (obj:clsid() == clsid.wpn_binocular_s)) end -- also catches binocs
         ),
+        Attachments = (
+            function(obj) return obj and (get_type_for_kind(get_obj_kind(obj)) == "Attachments") end
+        ),
         Grenades = (
             function(obj) return obj and IsGrenade(nil, obj:clsid()) end
         ),
@@ -127,6 +131,8 @@ local base_config = {
         ),
         Consumables = (
             function(obj) 
+                if obj and cfg.is_item.Attachments(obj) then return end
+
                 local cls = obj and obj:clsid()
                 if (cls and (cls == clsid.obj_food)) then
                     return true
@@ -140,13 +146,15 @@ local base_config = {
             end
         ),
         Tools = (
-            function(obj) return obj and IsItem("tool", obj:section()) end
+            function(obj)
+                return obj and IsItem("tool", obj:section()) and not cfg.is_item.Quest(obj)
+            end
         ),
         Devices = (
             function(obj) return obj and IsItem("device", obj:section()) end
         ),
         Quest = (
-            function(obj) return obj and IsItem("quest", obj:section()) end
+            function(obj, sec) return obj and IsItem("quest", sec or obj:section()) end
         ),
         Campfires = (
             function(obj) return obj and (obj:clsid() == clsid.zone_campfire) end
@@ -167,10 +175,12 @@ local base_config = {
         ),
         Misc = (
             function(obj) 
-                return obj and (
-                    (obj:clsid() == clsid.obj_attachable) or
-                    (obj:clsid() == clsid.equ_backpack)
-                )
+                local cls = obj and obj:clsid()
+                return cls and (
+                    (cls == clsid.obj_attachable) or
+                    (cls == clsid.equ_backpack) or
+                    (cls == clsid.obj_bolt)
+                ) and not (cfg.is_item and cfg.is_item.Quest(obj))
             end
         ),
         Workshops = (
@@ -247,8 +257,8 @@ local base_config = {
                     -- The original values are restored when it is no longer targeted.
                     args.active_swap = {
                         texture     = service_icon,
-                        width       = 16,   -- marker width
-                        height      = 16,   -- marker height
+                        width       = 18,   -- marker width
+                        height      = 18,   -- marker height
                         line_adj_x  = 4,    -- x position of the white line
                         line_adj_y  = 11,   -- y position of the white line
                         line_adj_h  = -11,  -- height of the white line
@@ -389,16 +399,33 @@ local base_config = {
                     -- if ammo_count and ammo_count > 0, unload-ammo secondary action will be shown
                     clsid           = obj:clsid(),
                     section         = obj:section(),
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                    hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        ),
+    -- =======================================================================    
+        Attachments = (
+            function(obj)
+                return obj and {
+                    logged_type     = "an attachable item",
+                    pickup          = true,
+                    is_attach       = true,
+                    --no_sec          = true,
+                    clsid           = obj:clsid(),
+                    section         = obj:section(),
+                    texture         = get_cfg_for_type("tex", "Attachments") or cfg.marker_dotmark,
+                    hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
         ),
     -- =======================================================================    
         Grenades = (
             function(obj)
-                return {
+                return obj and {
                     logged_type     = "a grenade",
                     pickup          = true,
+                    clsid           = obj:clsid(),
+                    section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Grenades") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -431,7 +458,7 @@ local base_config = {
                     logged_type     = "an outfit",
                     pickup          = true,
                     has_parts       = true, -- Item has component parts with condition
-                    bone            = "joint1",
+                    --bone            = "joint1",
                     texture         = get_cfg_for_type("tex", "Outfits") or cfg.marker_dotmark,
                     clsid           = obj:clsid(),
                     section         = obj:section(),
@@ -448,7 +475,7 @@ local base_config = {
                     logged_type     = "headgear",
                     pickup          = true,
                     has_parts       = true,
-                    bone            = "joint1",
+                    --bone            = "joint1",
                     clsid           = obj:clsid(),
                     section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Headgear") or cfg.marker_dotmark,
@@ -737,6 +764,10 @@ function refresh_main_config()
     cfg = ui_hud_dotmarks.cfg
 end
 
+function get_type_for_kind(kind)
+    return kind and cfg.kinds and cfg.kinds[kind]
+end
+
 function near_scan_radius()
     return (cfg.near_scan_radius or 4) + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
 end
@@ -817,10 +848,11 @@ function is_body_claimed(id)
     return false
 end
 
-function is_blacklisted(id, cls, sec)
+function is_blacklisted(id, cls, sec, kind)
     return (cls and cfg.blacklisted_clsids and cfg.blacklisted_clsids[cls]) or
             (id and cfg.blacklisted_ids and cfg.blacklisted_ids[id]) or
-            (sec and cfg.blacklisted_sections and cfg.blacklisted_sections[sec])
+            (sec and cfg.blacklisted_sections and cfg.blacklisted_sections[sec]) or
+            (kind and cfg.blacklisted_kind and cfg.blacklisted_kind[kind])
 end
 
 function get_val_or_funcval(val_or_func, ...)

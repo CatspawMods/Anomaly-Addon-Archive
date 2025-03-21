@@ -62,6 +62,9 @@ item_use_delay 				= 0.5
 ; Delay between taking an item and trying to use it 
 ; Required to give FDDA animation time to begin
 long_press_delay 			= 1000
+; Inputs on the primary interact will be ignored for this many ms after a completed long press of the same
+popin_anim_dur 				= 1000
+; Duration of the elastic "pop-in" animation effect when switching item focus, zero disables
 alti_show_during_anim 		= true
 ; Whether to show prompts during FDDA animations
 alti_busy_during_anim 		= true
@@ -104,7 +107,7 @@ font_item_card				= 0
 ui_scale 					= 1
 ; Multiplier for UI element size and position calculations
 ; WIP, not enabled yet
-interact_drop_alpha 		= 0.55
+interact_drop_alpha 		= 0.65
 ; Opacity of the interaction drop shadows
 dot_marker_size 			= 1
 ; Scale multiplier for the size of the dot markers
@@ -202,6 +205,7 @@ Bodies      = true
 Ammo        = true
 Stashes     = true
 Weapons     = true
+Attachments = true
 Grenades    = true
 Explosive   = false
 Outfits     = true
@@ -235,11 +239,12 @@ far_hide_dist       = 0.5 	; dotmarks hide this far past the far_fade_dist (base
 los_dist_min        = 0.15	; any closer than this and LOS is assumed true
 lost_los_dist 		= 0.5 	; LOS smoothing (LOS result cache) is disabled beyond this distance
 lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
-width               = 5		; texture width (in canvas units)
-height              = 5		; texture height (in canvas units)
+width               = 6		; texture width (in canvas units)
+height              = 6		; texture height (in canvas units)
 update_int          = 15	; update interval in ms for the marker itself
 skip_online_checks 	= true 	; Optimization, skips the step of checking for online status and same-map
 skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
+skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
 ;facing_check 		= true 	; experimental optimization feature
 
 [tutorial_hints]
@@ -308,6 +313,7 @@ mechanic	= ui_catsy_marker_mech
 medic		= ui_catsy_marker_medic
 barman		= ui_catsy_marker_trade
 guide 		= ui_catsy_marker_guide
+leader 		= ui_catsy_marker_leader
 
 [display_cases]
 ; Containers with a section listed here will be treated as Hideout Furniture display cases
@@ -336,11 +342,12 @@ colors
 display_cases
 door_visuals
 dotmark_preset
+gettable_types
+grenade_ammo_clsids
 in_pickup_range
 input_filters ; WIP
 invboxes
-gettable_types
-grenade_ammo_clsids
+kinds
 markers
 mcm_paths
 monitors
@@ -447,6 +454,7 @@ item_card_icon_x 		= dotmarks/dmarkadv/
 item_card_icon_y 		= dotmarks/dmarkadv/
 sp_icon_pos_x 			= dotmarks/dmarkadv/
 sp_icon_pos_y 			= dotmarks/dmarkadv/
+popin_anim_dur 			= dotmarks/dmarkadv/
 ; Objects menu
 disable_icon_boom		= dotmarks/dmarkobjs/
 disable_icon_box		= dotmarks/dmarkobjs/
@@ -460,3 +468,94 @@ show_parts_armor		= item_icon_info/part_dots/show_on_armor
 parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
 parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
 parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
+
+[kinds]
+i_arty_junk   	= Artefacts
+i_arty     		= Artefacts
+ARTEFACT    	= Artefacts
+SCRPTART    	= Artefacts
+i_arty_cont     = Artefacts
+i_mutant_cooked = Consumables
+i_mutant_raw    = Consumables
+i_food    		= Consumables
+II_FOOD     	= Consumables
+S_FOOD      	= Consumables
+i_drink    		= Consumables
+II_BOTTL    	= Consumables
+i_medical    	= Consumables
+II_BANDG    	= Consumables
+II_MEDKI    	= Consumables
+II_ANTIR    	= Consumables
+i_device    	= Devices
+DET_SIMP    	= Devices
+DET_ADVA    	= Devices
+DET_ELIT    	= Devices
+DET_SCIE    	= Devices
+i_kit      		= Tools
+i_tool      	= Tools
+i_repair    	= Tools
+i_upgrade 	    = Tools
+i_part 	    	= Misc
+i_mutant_part   = Misc
+i_misc 	    	= Misc
+II_DOC      	= Misc
+EQ_PATCH    	= Misc
+II_ATTCH    	= Misc
+II_BTTCH    	= Misc
+D_FLALIT    	= Misc
+S_PDA       	= Misc
+D_PDA       	= Misc
+i_letter    	= Misc
+i_quest			= Quest
+o_helmet    	= Headgear
+E_HLMET     	= Headgear
+EQU_HLMET   	= Headgear
+i_mutant_belt   = Attachments
+i_attach     	= Attachments
+i_backpack   	= Attachments
+EQ_BAKPK    	= Attachments
+w_misc   		= Attachments
+WP_SCOPE    	= Attachments
+WP_SILEN    	= Attachments
+WP_GLAUN    	= Attachments
+S_WPN_MISC  	= Attachments
+WP_BINOC    	= Attachments
+II_BOLT     	= Attachments
+o_light 		= Outfits
+E_STLK      	= Outfits
+EQU_STLK    	= Outfits
+o_medium   		= Outfits
+o_sci   		= Outfits
+o_heavy   		= Outfits
+w_ammo        	= Ammo
+AMMO        	= Ammo
+AMMO_S      	= Ammo
+S_OG7B      	= Ammo
+S_VOG25     	= Ammo
+S_M209      	= Ammo
+w_melee     	= Weapons
+WP_KNIFE    	= Weapons
+w_pistol    	= Weapons
+WP_HPSA     	= Weapons
+WP_PM       	= Weapons
+WP_USP45    	= Weapons
+w_shotgun   	= Weapons
+WP_ASHTG    	= Weapons
+WP_BM16     	= Weapons
+w_smg       	= Weapons
+w_rifle     	= Weapons
+WP_AK74     	= Weapons
+WP_GROZA    	= Weapons
+WP_LR300    	= Weapons
+WP_VAL      	= Weapons
+w_sniper    	= Weapons
+WP_SVD      	= Weapons
+WP_SVU      	= Weapons
+w_explosive 	= Weapons
+WP_RG6      	= Weapons
+WP_RPG7     	= Weapons
+G_F1_S      	= Weapons
+G_RGD5_S    	= Weapons
+G_F1 	    	= Weapons
+G_RGD5 	    	= Weapons
+		

@@ -38,5 +38,5 @@ elseif fdda_oibp then
 end
 
 function get_fdda_oibp_callback()
-    return patched and (liz_fdda_redone_item_pickup.actor_on_item_before_pickup or take_item_anim.actor_on_item_before_pickup) or nil
+    return patched and (liz_fdda_redone_item_pickup and liz_fdda_redone_item_pickup.actor_on_item_before_pickup or take_item_anim and take_item_anim.actor_on_item_before_pickup) or nil
 end
