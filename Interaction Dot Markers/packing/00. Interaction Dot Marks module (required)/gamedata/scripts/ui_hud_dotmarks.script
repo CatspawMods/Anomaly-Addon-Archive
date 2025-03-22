@@ -2013,11 +2013,6 @@ function get_args_for_valid_objects(obj)
         args.has_power = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
     end
 
-    printf("wtf debugging is_item")
-    for k,v in pairs(cfg.scan) do
-        printf("%s = %s", k, cfg.is_item[k])
-    end
-
     if ktype then
         --printf("Type for kind %s: %s", kind, ktype)
         setup_item_args(ktype)

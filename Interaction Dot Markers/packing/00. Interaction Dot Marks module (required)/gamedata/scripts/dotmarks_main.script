@@ -5,7 +5,7 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.8-b10"
+script_version  = "0.8-b11"
 release_date    = 20250321
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -335,8 +335,6 @@ local base_config = {
     -- =======================================================================    
         Stashes = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 local sec = obj and obj:section()
                 return obj and {
                     logged_type     = "a stash",
@@ -358,11 +356,9 @@ local base_config = {
     -- =======================================================================    
         Ammo = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 return obj and {
                     logged_type     = "ammo",
-                    bone            = "link",
+                    --bone            = "link",
                     pickup          = true,     -- object is a gettable inventory item
                     texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
@@ -452,8 +448,6 @@ local base_config = {
     -- =======================================================================    
         Outfits = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 return obj and {
                     logged_type     = "an outfit",
                     pickup          = true,
@@ -557,8 +551,6 @@ local base_config = {
     -- =======================================================================    
         Devices = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 return obj and {
                     logged_type     = "a device",
                     pickup          = true,
