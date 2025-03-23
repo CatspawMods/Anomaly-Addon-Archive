@@ -5,7 +5,7 @@ b
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.9-b1"
+script_version  = "0.9-b2"
 release_date    = 20250323
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
