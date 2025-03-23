@@ -26,6 +26,10 @@
 		<text>Использовать</text>
 	</string>
 
+	<string id="st_alti_smokeout">
+		<text>Курите</text>
+	</string>
+
 	<string id="st_alti_takeuse">
 		<text>Поднять и используйте</text>
 	</string>
@@ -98,7 +102,7 @@
 		<text>%s %s (%s) %s %s</text>
 	</string>
 
-	<string id="st_alti_prompt_eatable">
+	<string id="st_alti_prompt_usable">
 		<text>%s %s %s</text>
 	</string>
 
@@ -458,6 +462,14 @@
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom_desc">
 		<text>Если эта опция включена, взрывоопасные объекты будут использовать стандартный точечный маркер вместо специального значка «Я могу взорваться».
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash">
+		<text>Отключить специальный значок для тайников</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash_desc">
+		<text>Если эта опция включена, тайники будут использовать стандартный точечный маркер, когда их основная подсказка активна, вместо классического значка тайника.
 		</text>
 	</string>
 

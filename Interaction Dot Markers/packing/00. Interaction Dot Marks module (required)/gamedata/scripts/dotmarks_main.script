@@ -1,12 +1,12 @@
 -- =======================================================================
 --[[    Interaction Dot Marks ("DotMarks")
-
+b
     PRE-RELEASE TEST BUILD - THIS IS A WORK IN PROGRESS
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.8-b11"
-release_date    = 20250321
+script_version  = "0.8-b14"
+release_date    = 20250323
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -213,7 +213,7 @@ local base_config = {
                     is_npc         = true, -- these three flags should be obvious
                     is_alive       = true, -- utilized during main loop to speed up checks
                     is_stalker     = true, -- passed through via args to the interaction prompts
-                    section         = sec,
+                    section        = sec,
                     bone           = "bip01_spine1",
                     -- causes marker position to be based on this bone
                     pos_adjust     = vector():set(0, 0.1, 0),
@@ -335,22 +335,37 @@ local base_config = {
     -- =======================================================================    
         Stashes = (
             function(obj)
-                local sec = obj and obj:section()
-                return obj and {
+                if not obj then return end
+                local sec           = obj:section()
+                local name          = obj:name()
+                --local is_tb         = name and name:find("^tb_")
+                local unknown       = (gts("st_paw_unknown").." "..gts("st_paw_stash"))
+                local args = {
                     logged_type     = "a stash",
                     is_stash        = true,
                     is_backpack     = (sec == "inv_backpack"),
+                    --name            = is_tb and unknown or nil,
                     is_display      = cfg.display_cases[sec] or nil,
-                    has_items       = obj and not obj:is_inv_box_empty(),
-                    texture         = get_cfg_for_type("tex", "Stashes") or cfg.marker_dotmark,
-                    los_pos_adjust  = vector():set(0, 0.5, 0),
-                    --pos_adjust      = vector():set(0, 0.4, 0),
+                    has_items       = not obj:is_inv_box_empty(),
+                    texture         = cfg.marker_dotmark,
+                    --los_pos_adjust  = vector():set(0, 0.5, 0),
                     hint_filters   = {
                         ["inventory_box_use"]       = "inventory_box_use",
                         ["actor_inventory_box_use"] = "actor_inventory_box_use",
                         ["st_search_treasure"]      = "st_search_treasure",
                     },
                 }
+                if not cfg.disable_icon_stash then
+                    args.active_swap = {
+                        texture     = get_cfg_for_type("tex", "Stashes"),
+                        width       = 14,
+                        height      = 14,
+                        line_adj_x  = 4, 
+                        line_adj_y  = 10,
+                        line_adj_h  = -10,
+                    }
+                end
+                return args
             end
         ),
     -- =======================================================================    
@@ -360,8 +375,9 @@ local base_config = {
                     logged_type     = "ammo",
                     --bone            = "link",
                     pickup          = true,     -- object is a gettable inventory item
+                    no_sec          = true,
                     texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                    hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
         ),
@@ -420,6 +436,7 @@ local base_config = {
                 return obj and {
                     logged_type     = "a grenade",
                     pickup          = true,
+                    no_sec          = true,
                     clsid           = obj:clsid(),
                     section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Grenades") or cfg.marker_dotmark,
@@ -430,12 +447,14 @@ local base_config = {
     -- =======================================================================    
         Explosive = (
             -- This seems to be explosive barrels and the like
+            -- Need to track down others in this class if it's going to stay
             function(obj)
                 local visual        = obj and obj:get_visual_name()
                 return obj and {
                     logged_type     = "an explosive object",
                     texture         = (not cfg.disable_icon_boom) and get_cfg_for_type("tex", "Explosive") or cfg.marker_dotmark,
                     visual          = visual,
+                    physics_obj     = true,
                     no_pri          = true,
                     line_adj_x      = 2,
                     line_adj_h      = -8,
@@ -452,6 +471,7 @@ local base_config = {
                     logged_type     = "an outfit",
                     pickup          = true,
                     has_parts       = true, -- Item has component parts with condition
+                    no_sec          = true,
                     --bone            = "joint1",
                     texture         = get_cfg_for_type("tex", "Outfits") or cfg.marker_dotmark,
                     clsid           = obj:clsid(),
@@ -469,6 +489,7 @@ local base_config = {
                     logged_type     = "headgear",
                     pickup          = true,
                     has_parts       = true,
+                    no_sec          = true,
                     --bone            = "joint1",
                     clsid           = obj:clsid(),
                     section         = obj:section(),
@@ -483,6 +504,7 @@ local base_config = {
                 return obj and {
                     logged_type     = "an artefact",
                     pickup          = true,
+                    no_sec          = true,
                     is_arty         = true,
                     texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
@@ -520,6 +542,7 @@ local base_config = {
                     logged_type     = money and "money (under consumables)" or "food, drugs, or drink",
                     pickup          = true,
                     money           = money or nil,
+                    no_sec          = money and true or nil,
                     name            = name or nil,
                     --bone            = "bone01",
                     multi_uses      = multi_uses,
@@ -542,6 +565,9 @@ local base_config = {
                     logged_type     = "a tool",
                     pickup          = true,
                     multi_uses      = multi_uses,
+                    manual_use      = true,
+                    use_verb        = "st_alti_takeuse",
+                    --no_sec          = true,
                     section         = section,
                     texture         = get_cfg_for_type("tex", "Tools") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
@@ -570,6 +596,7 @@ local base_config = {
                 return obj and {
                     logged_type     = "a quest item",
                     pickup          = true,
+                    no_sec          = true,
                     section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
@@ -583,10 +610,11 @@ local base_config = {
                     logged_type     = "a campfire",
                     texture         = cfg.marker_dotmark,
                     is_campfire     = true,
+                    no_sec          = true,
                     name            = gts("st_itm_campfire"),
                     --los_pos_adjust  = vector():set(0, 0, 0),
                     -- Changes the world coordinates used for LOS checks
-                    pos_adjust      = vector():set(0, 0.25, 0),
+                    pos_adjust      = vector():set(0, 0, 0),
                     no_pri          = true, -- Do not display a primary interaction prompt
                     -- This is because campfire interactions are shown via the
                     -- tutorial system, and are handled as a fixed-position
@@ -608,6 +636,7 @@ local base_config = {
                     logged_type         = "a door",
                     texture             = cfg.marker_dotmark,
                     is_door             = true,
+                    no_sec              = true,
                     bone                = "lock",
                     pos_adjust          = vector():set(0, vadjust, 0),
                     scheme              = ph_door,
@@ -640,6 +669,7 @@ local base_config = {
                 return {
                     logged_type     = "a breakable box",
                     texture         = (not cfg.disable_icon_box) and get_cfg_for_type("tex", "Boxes") or cfg.marker_dotmark,
+                    physics_obj     = true,
                     visual          = visual,
                     no_pri          = true,
                     line_adj_x      = 2,
@@ -664,6 +694,7 @@ local base_config = {
                     -- Used for further object type detection
                     pickup          = true,
                     --bone            = name:find("patch" and "joint1" or "link"),
+                    no_sec          = cfg.useless_shit[section] and true or nil,
                     section         = section,
                     is_readable     = kind and (kind == "i_letter") or nil,
                     -- Book or letter that can be picked up and read as a secondary action
@@ -694,6 +725,7 @@ local base_config = {
                     logged_type         = "game_tutorials.xml pop-up",
                     texture             = "",
                     fixed               = true,
+                    no_sec              = true,
                     los_check_int       = -1,
                     locked_screen_pos   = vector2():set(x, y),
                 }
@@ -708,6 +740,7 @@ local base_config = {
                     logged_type         = "a workshop bench",
                     texture             = get_cfg_for_type("tex", "Workshops") or cfg.marker_dotmark,
                     visual              = visual,
+                    no_sec              = true,
                     section             = obj:section(),
                     interact_dist       = 1.5,
                     refresh_text        = true,
@@ -732,18 +765,12 @@ local base_config = {
         ["tutorial_campfire_ignite"]    = ( 
             function()
                 return not is_nearest_campfire_lit()
-                --local fire = bind_campfire.get_nearby_campfire(2.5, true)
-                --if type(fire) == "boolean" then return not fire end
-                --return fire and not fire:is_on()
             end
         ),
         -- Check whether campfire is authoritatively on or off
         ["tutorial_campfire_extinguish"]= ( 
             function() 
                 return is_nearest_campfire_lit()
-                --local fire = bind_campfire.get_nearby_campfire(2.5, true)
-                --if type(fire) == "boolean" then return fire end
-                --return fire and fire:is_on()
             end 
         ),
     },
@@ -757,7 +784,11 @@ function refresh_main_config()
 end
 
 function get_type_for_kind(kind)
-    return kind and cfg.kinds and cfg.kinds[kind]
+    return kind and cfg.kind_lookup and cfg.kind_lookup[kind]
+end
+
+function get_type_for_section(section)
+    return section and cfg.section_lookup and cfg.section_lookup[section]
 end
 
 function near_scan_radius()
@@ -770,7 +801,7 @@ end
 
 function is_fdda_installed()
     local monkey = z_fdda_pickup_intercept_dotmarks
-    return not not (monkey and (monkey.fddar_oibp or fdda_oibp))
+    return not not (monkey and (monkey.fddar_oibp or monkey.fdda_oibp))
 end
 
 function csv_argb_to_tbl(csv)
@@ -808,8 +839,19 @@ function getargb(clr_tbl)
     return clr_tbl and get_argb( clr_tbl.a, clr_tbl.r, clr_tbl.g, clr_tbl.b )
 end
 
-function get_nearby_campfire(dist)
-    return bind_campfire.get_nearby_campfire(dist or 2.5, true)
+function get_nearby_campfire(dist, fire_or_obj)
+    if fire_or_obj == nil then fire_or_obj = true end
+    return bind_campfire.get_nearby_campfire(dist or 2.5, fire_or_obj)
+end
+
+function get_campfire_binder(id)
+    return id and bind_campfire.campfires_all and bind_campfire.campfires_all[id]
+end
+
+function get_nearest_campfire_binder(dist)
+    local obj = get_nearby_campfire(dist, false)
+    local id = obj and obj:id()
+    return get_campfire_binder(id)
 end
 
 function is_nearest_campfire_lit()
@@ -844,7 +886,7 @@ function is_blacklisted(id, cls, sec, kind)
     return (cls and cfg.blacklisted_clsids and cfg.blacklisted_clsids[cls]) or
             (id and cfg.blacklisted_ids and cfg.blacklisted_ids[id]) or
             (sec and cfg.blacklisted_sections and cfg.blacklisted_sections[sec]) or
-            (kind and cfg.blacklisted_kind and cfg.blacklisted_kind[kind])
+            (kind and cfg.blacklisted_kinds and cfg.blacklisted_kinds[kind])
 end
 
 function get_val_or_funcval(val_or_func, ...)

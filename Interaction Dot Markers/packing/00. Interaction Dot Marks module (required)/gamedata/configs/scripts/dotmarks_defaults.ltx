@@ -5,11 +5,47 @@
 ; Further massaging done by ui_hud_dotmarks.parse_file_data()
 ; =================================================================================
 
-; All of the config settings for DotMarks are stored in the ui_hud_dotmarks.cfg table.
-; This main table loads all of its values from [default_settings] below, and will 
-; dynamically create and populate subtables based on the [setting_tables] and its 
-; related sections below.
+; All of the config settings for DotMarks are stored in the ui_hud_dotmarks.cfg 
+; table. This main table loads all of its values from [default_settings] below, and 
+; will dynamically create and populate subtables based on the [setting_tables] and 
+; its related sections below.
 
+; =================================================================================
+[setting_tables]
+; A list of tables to instantiate and populate with values at runtime
+; Never remove or alter ANY content in this section, you WILL crash your game
+blacklisted_clsids
+blacklisted_ids
+blacklisted_kinds
+blacklisted_sections
+breakable_box_visuals
+colors
+display_cases
+door_visuals
+dotmark_preset
+grenade_ammo_clsids
+in_pickup_range
+invboxes
+kind_lookup
+manual_use
+markers
+mcm_paths
+monitors
+notable_npcs
+tutorial_hints
+prompts
+racked_items
+scan
+section_lookup
+service_icons
+smokables
+state_conds
+tex
+useless_shit
+vendors
+weight_colors
+
+; =================================================================================
 [default_settings]
 ; Any setting here will be loaded as part of the main cfg table
 ; Any non-table key in the cfg table that is defined in the mcm_paths table 
@@ -58,9 +94,13 @@ icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
 ; Texture used for the main prompt drop shadow
 target_lenience 			= 0.95
 ; How far from center the crosshair can be for old targeting method
-item_use_delay 				= 0.5
+fddar_multipickup 			= false
+fddar_pickup_anim 			= false
+fdda_pickup_anim 			= false
+; These should get populated at runtime with the current value from FDDA's MCM settings
+item_use_delay 				= 0.75
 ; Delay between taking an item and trying to use it 
-; Required to give FDDA animation time to begin
+; Required to give FDDA pickup animation time to complete
 long_press_delay 			= 1000
 ; Inputs on the primary interact will be ignored for this many ms after a completed long press of the same
 popin_anim_dur 				= 1000
@@ -187,6 +227,17 @@ item_card_icon_x    		= 4
 item_card_icon_y    		= 0
 sp_icon_pos_x 				= 10
 sp_icon_pos_y				= 1
+; =================================================================================
+assert_modded_exes 			= true
+; Forces the script to quit if an outdated modded exes version is found, with an
+; informative error message about where to get current modded exes.
+
+; DotMarks does not officially support any version earlier than 20250306, and
+; more recent is better. If you are on an older version and want to force it to
+; run anyway, this switch will let you do it--but you are completely on your own,
+; it will probably crash, and I absolutely guarantee that many things will not work
+; well, if at all.
+; =================================================================================
 
 [tex]
 ; Icon texture overrides for certain types to use instead of the default dot marker
@@ -195,6 +246,7 @@ Boxes 		= ui_catsy_marker_breakable
 Doors 		= ui_catsy_marker_door
 Stalkers 	= ui_catsy_marker_talk
 Explosive 	= ui_catsy_marker_explosive
+Stashes 	= ui_catsy_marker_stash
 ; The tex table is mostly empty by default, but can be used to override the
 ; icon texture used for most objects defined in the [scan] section below.
 
@@ -322,7 +374,12 @@ placeable_weapon_rack 		= true
 placeable_pistol_shelf 		= true
 
 [useless_shit]
-; TODO: add section names of things like matches that can't be used from the ground
+; Section names of things like matches that shouldn't have a secondary interact
+; This probably needs many more entries than it currently has
+matches
+compression_bag
+bolts_pack
+artefact_container
 
 ; ================================================================================
 ; 	DON'T TOUCH BELOW THIS LINE
@@ -332,36 +389,27 @@ placeable_pistol_shelf 		= true
 ; add support for new items from other addons, which is best done by the addon
 ; author through DLTX. I can't help with anything that happens if you change them.
 
-[setting_tables]
-; Never remove or alter ANY values from this section, you WILL crash your game
-blacklisted_clsids
-blacklisted_ids
-blacklisted_sections
-breakable_box_visuals
-colors
-display_cases
-door_visuals
-dotmark_preset
-gettable_types
-grenade_ammo_clsids
-in_pickup_range
-input_filters ; WIP
-invboxes
-kinds
-markers
-mcm_paths
-monitors
-notable_npcs
-tutorial_hints
-prompts
-racked_items
-scan
-service_icons
-state_conds
-tex
-useless_shit
-vendors
-weight_colors
+[blacklisted_clsids]
+script_actor
+torrid_zone
+zone_ameba_s
+zone_bfuzz_s
+zone_galant_s
+zone_mbald_s
+zone_mincer_s
+zone_nograv_s
+zone_radio_s
+zone_torrid_s
+zone_acid_fog
+ameba_zone
+zone_bfuzz
+zone_dead
+zone_galantine
+zone_mosquito_bald
+zone_mincer
+nogravity_zone
+zone_radioactive
+zone_rusty_hair
 
 [grenade_ammo_clsids]
 ; Defines which clsids are classified as GL ammo for the purposes of scan detection
@@ -376,7 +424,24 @@ wpn_ammo_vog25 		= true
 ; Defines which object visuals are classified as breakable boxes, no other way to detect
 dynamics\box\box_wood_01 	= true
 ;dynamics\box\box_wood_02 	= true ; this seems to pick up non-breakable boxes in Meadows
+; Need to confirm that
 dynamics\box\box_metall_01	= true
+
+[smokables]
+cigar
+cigar1
+cigar2
+cigar3
+cigarettes
+cigarettes_lucky
+cigarettes_russian
+joint
+marijuana
+tobacco
+hand_rolling_tobacco
+
+[manual_use]
+joint
 
 [door_visuals]
 ; Defines which object visuals are classified as which type of door, and their marker pos adjustment
@@ -385,6 +450,7 @@ dynamics\door\shkaf_work_01_door= 0
 
 [prompts]
 ; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
+; Need to confirm if this is still needed after the hint_filter changes
 item_take 	= inventory_item_use
 npc_talk 	= character_use
 open_door 	= car_character_use
@@ -393,83 +459,9 @@ ws_noaccess = st_tiski_no_info
 ws_use 		= st_tiski
 ws_repair 	= st_awr_tiski
 
-[mcm_paths]
-; The paths below allow better iteration through the config table to get MCM settings.
-; Main menu
-show_item_card  		= dotmarks/dmarkmain/
-show_item_charge 		= dotmarks/dmarkmain/
-show_multi_uses 		= dotmarks/dmarkmain/
-sp_flag_favejunk		= dotmarks/dmarkmain/
-show_item_condition 	= dotmarks/dmarkmain/
-show_condition_color 	= dotmarks/dmarkmain/
-wheel_cycles_pickups 	= dotmarks/dmarkmain/
-dot_marker_size 		= dotmarks/dmarkmain/
-interact_drop_alpha 	= dotmarks/dmarkmain/
-; Secondary menu
-bind_sec_interact 		= dotmarks/dmarksec/
-modk_sec_interact 		= dotmarks/dmarksec/
-imod_sec_interact 		= dotmarks/dmarksec/
-long_press_delay 		= dotmarks/dmarksec/
-; Advanced menu
-hide_interaction_dots 	= dotmarks/dmarkadv/
-hide_connecting_line 	= dotmarks/dmarkadv/
-hide_pri_interact_ui 	= dotmarks/dmarkadv/
-hide_sec_interact_ui 	= dotmarks/dmarkadv/
-hide_van_interact_ui 	= dotmarks/dmarkadv/
-pri_use_x_offset 		= dotmarks/dmarkadv/
-pri_use_y_offset 		= dotmarks/dmarkadv/
-sec_use_x_offset 		= dotmarks/dmarkadv/
-sec_use_y_offset 		= dotmarks/dmarkadv/
-fixed_screen_pos 		= dotmarks/dmarkadv/
-near_scan_interval 		= dotmarks/dmarkadv/
-early_scan_interval 	= dotmarks/dmarkadv/
-near_scan_radius 		= dotmarks/dmarkadv/
-early_scan_radius 		= dotmarks/dmarkadv/
-alti_show_during_anim 	= dotmarks/dmarkadv/
-alti_busy_during_anim 	= dotmarks/dmarkadv/
-item_use_delay	 		= dotmarks/dmarkadv/
-use_skill_system 		= dotmarks/dmarkadv/
-skill_upd_interval 		= dotmarks/dmarkadv/
-haru_skill_name 		= dotmarks/dmarkadv/
-haru_skill_coef 		= dotmarks/dmarkadv/
-keybind_bg_style 		= dotmarks/dmarkadv/
-sp_hide_junk_items		= dotmarks/dmarkadv/
-hidden_show_prompts		= dotmarks/dmarkadv/
-bodies_use_paw_patches	= dotmarks/dmarkadv/
-bodies_use_mpda_rules 	= dotmarks/dmarkadv/
-prompt_fade_in_time		= dotmarks/dmarkadv/
-prompt_fade_out_time	= dotmarks/dmarkadv/
-font_main_prompt 		= dotmarks/dmarkadv/
-font_item_card 			= dotmarks/dmarkadv/
-parts_dot_pos_x 		= dotmarks/dmarkadv/
-parts_dot_pos_y 		= dotmarks/dmarkadv/
-item_card_icon_sz 		= dotmarks/dmarkadv/
-item_card_pos_x 		= dotmarks/dmarkadv/
-item_card_pos_y 		= dotmarks/dmarkadv/
-item_card_text_y 		= dotmarks/dmarkadv/
-item_card_elem_x 		= dotmarks/dmarkadv/
-item_card_elem_y 		= dotmarks/dmarkadv/
-item_card_elem_h 		= dotmarks/dmarkadv/
-item_card_icon_x 		= dotmarks/dmarkadv/
-item_card_icon_y 		= dotmarks/dmarkadv/
-sp_icon_pos_x 			= dotmarks/dmarkadv/
-sp_icon_pos_y 			= dotmarks/dmarkadv/
-popin_anim_dur 			= dotmarks/dmarkadv/
-; Objects menu
-disable_icon_boom		= dotmarks/dmarkobjs/
-disable_icon_box		= dotmarks/dmarkobjs/
-disable_icon_door		= dotmarks/dmarkobjs/
-disable_icon_talk		= dotmarks/dmarkobjs/
-disable_icon_services	= dotmarks/dmarkobjs/
-; From other addons
-fddar_multipickup 		= fddar/pickup/multipickup
-show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
-show_parts_armor		= item_icon_info/part_dots/show_on_armor
-parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
-parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
-parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
-
-[kinds]
+[kind_lookup]
+; More or less lifted entirely from the debug menu
+; For quicker lookup than iterating through the entire category-checking loop
 i_arty_junk   	= Artefacts
 i_arty     		= Artefacts
 ARTEFACT    	= Artefacts
@@ -558,4 +550,109 @@ G_F1_S      	= Weapons
 G_RGD5_S    	= Weapons
 G_F1 	    	= Weapons
 G_RGD5 	    	= Weapons
-		
+
+[section_lookup]
+hand_watch      = Devices
+wpn_binoc_inv   = Devices
+lead_box        = Tools
+csky_patch      = Misc
+dolg_patch      = Misc
+ecolog_patch    = Misc
+freedom_patch   = Misc
+stalker_patch   = Misc
+bandit_patch    = Misc
+monolith_patch  = Misc
+army_patch      = Misc
+killer_patch    = Misc
+renegade_patch  = Misc
+isg_patch       = Misc
+greh_patch      = Misc
+af_misery_bread = Artefacts
+
+; =================================================================================
+[mcm_paths]
+; The paths below allow better iteration through the config table to get MCM settings.
+; Paths with "/" at the end will have the key name appended to get the final path
+; Otherwise the path will be used as-is, which allows support for other addon settings
+; =================================================================================
+; Main menu
+show_item_card  		= dotmarks/dmarkmain/
+show_item_charge 		= dotmarks/dmarkmain/
+show_multi_uses 		= dotmarks/dmarkmain/
+sp_flag_favejunk		= dotmarks/dmarkmain/
+show_item_condition 	= dotmarks/dmarkmain/
+show_condition_color 	= dotmarks/dmarkmain/
+wheel_cycles_pickups 	= dotmarks/dmarkmain/
+dot_marker_size 		= dotmarks/dmarkmain/
+interact_drop_alpha 	= dotmarks/dmarkmain/
+; =================================================================================
+; Secondary menu
+bind_sec_interact 		= dotmarks/dmarksec/
+modk_sec_interact 		= dotmarks/dmarksec/
+imod_sec_interact 		= dotmarks/dmarksec/
+long_press_delay 		= dotmarks/dmarksec/
+; =================================================================================
+; Advanced menu
+; Bloated, a bunch of these probably need their own menu
+hide_interaction_dots 	= dotmarks/dmarkadv/
+hide_connecting_line 	= dotmarks/dmarkadv/
+hide_pri_interact_ui 	= dotmarks/dmarkadv/
+hide_sec_interact_ui 	= dotmarks/dmarkadv/
+hide_van_interact_ui 	= dotmarks/dmarkadv/
+pri_use_x_offset 		= dotmarks/dmarkadv/
+pri_use_y_offset 		= dotmarks/dmarkadv/
+sec_use_x_offset 		= dotmarks/dmarkadv/
+sec_use_y_offset 		= dotmarks/dmarkadv/
+fixed_screen_pos 		= dotmarks/dmarkadv/
+near_scan_interval 		= dotmarks/dmarkadv/
+early_scan_interval 	= dotmarks/dmarkadv/
+near_scan_radius 		= dotmarks/dmarkadv/
+early_scan_radius 		= dotmarks/dmarkadv/
+alti_show_during_anim 	= dotmarks/dmarkadv/
+alti_busy_during_anim 	= dotmarks/dmarkadv/
+item_use_delay	 		= dotmarks/dmarkadv/
+use_skill_system 		= dotmarks/dmarkadv/
+skill_upd_interval 		= dotmarks/dmarkadv/
+haru_skill_name 		= dotmarks/dmarkadv/
+haru_skill_coef 		= dotmarks/dmarkadv/
+keybind_bg_style 		= dotmarks/dmarkadv/
+sp_hide_junk_items		= dotmarks/dmarkadv/
+hidden_show_prompts		= dotmarks/dmarkadv/
+bodies_use_paw_patches	= dotmarks/dmarkadv/
+bodies_use_mpda_rules 	= dotmarks/dmarkadv/
+prompt_fade_in_time		= dotmarks/dmarkadv/
+prompt_fade_out_time	= dotmarks/dmarkadv/
+font_main_prompt 		= dotmarks/dmarkadv/
+font_item_card 			= dotmarks/dmarkadv/
+parts_dot_pos_x 		= dotmarks/dmarkadv/
+parts_dot_pos_y 		= dotmarks/dmarkadv/
+item_card_icon_sz 		= dotmarks/dmarkadv/
+item_card_pos_x 		= dotmarks/dmarkadv/
+item_card_pos_y 		= dotmarks/dmarkadv/
+;item_card_text_y 		= dotmarks/dmarkadv/ ; not currently in MCM
+;item_card_elem_x 		= dotmarks/dmarkadv/
+;item_card_elem_y 		= dotmarks/dmarkadv/
+;item_card_elem_h 		= dotmarks/dmarkadv/
+;item_card_icon_x 		= dotmarks/dmarkadv/
+;item_card_icon_y 		= dotmarks/dmarkadv/
+sp_icon_pos_x 			= dotmarks/dmarkadv/
+sp_icon_pos_y 			= dotmarks/dmarkadv/
+popin_anim_dur 			= dotmarks/dmarkadv/
+; =================================================================================
+; Objects menu
+disable_icon_boom		= dotmarks/dmarkobjs/
+disable_icon_box		= dotmarks/dmarkobjs/
+disable_icon_door		= dotmarks/dmarkobjs/
+disable_icon_talk		= dotmarks/dmarkobjs/
+disable_icon_services	= dotmarks/dmarkobjs/
+disable_icon_stash		= dotmarks/dmarkobjs/
+; =================================================================================
+; From other addons
+fddar_multipickup 		= fddar/pickup/multipickup
+fddar_pickup_anim 		= fddar/pickup/enable
+fdda_pickup_anim 		= EA_settings/take_item_anim
+show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
+show_parts_armor		= item_icon_info/part_dots/show_on_armor
+parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
+parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
+parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange

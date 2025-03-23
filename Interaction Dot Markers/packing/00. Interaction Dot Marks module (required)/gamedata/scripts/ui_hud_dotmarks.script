@@ -41,9 +41,11 @@ script_name     = "ui_hud_dotmarks"
     TODO:
     -   Need to optimize and clean up a whole lot of WIP code
     -   Test with EVERY distinct type of item
-    -   Campfire interact sometimes gets stuck
-    -   Breakable boxes stopped self-destroying their markers
-    -   Explosive detection doesn't detect all explosive objects
+    -   Keep an eye out for explodey things that aren't IsExplosive
+    -   Dropped roubles showing "consume" prompt again
+    -   So does M17 glue tube
+    -   No localized name for Agroprom stash
+            agr_smart_terrain_4_4_n_3_box
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -117,18 +119,21 @@ local set_color_token   = utils_catspaw_text.set_color_token
 local int_to_rgba       = utils_catspaw_text.int_to_rgba
 local first_lower       = utils_catspaw_text.first_lower
 local first_upper       = utils_catspaw_text.first_upper
+local nameid            = utils_catspaw_text.obj_name_and_id
 local get_argb          = utils_catspaw_mapspots.get_argb
 local is_already_target = utils_catspaw_hudmarks.is_object_already_targeted
---local paw               = tasks_placeable_waypoints
 local is_favorite       = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_favorite
 local is_junk           = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_junk
+local fdda_pickup       = z_fdda_pickup_intercept_dotmarks
 local gts               = game.translate_string
 -- ======================================================================
 local config_file       = dotmarks_main.dotmarks_config_file
 get_type_for_kind       = dotmarks_main.get_type_for_kind
+get_type_for_section    = dotmarks_main.get_type_for_section
 near_scan_radius        = dotmarks_main.near_scan_radius
 early_scan_radius       = dotmarks_main.early_scan_radius
 get_nearby_campfire     = dotmarks_main.get_nearby_campfire
+get_nearest_firebinder  = dotmarks_main.get_nearest_campfire_binder
 get_val_or_funcval      = dotmarks_main.get_val_or_funcval
 get_cfg_for_type        = dotmarks_main.get_cfg_for_type
 is_fdda_installed       = dotmarks_main.is_fdda_installed
@@ -163,6 +168,7 @@ local next_skill_upd    = 0
 local next_near_scan    = 0
 local next_early_scan   = 0
 local next_tut_check    = 0
+
 -- ======================================================================
 --      HUD MARKER PRESET PATCH
 --  Set up "dotmark" preset and patch it into utils_catspaw_hudmarks
@@ -205,25 +211,13 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     local now           = time_global()
                     local id            = mark and mark.id
                     local hide          = mark and mark.hidden
-                    local _             = debug_dump and vl("[%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
+                    local _             = debug_dump and printf("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
                     local obj           = id and get_object_by_id(id)
                     if not obj then return end
-                    if mark.is_campfire and (not get_nearby_campfire(early_scan_radius())) then
-                        if not hide then dl("Stuck campfire %s cleared at %s", id, now) end
-                        unregister_scanned_entity(id)
-                        -- Check for stuck campfire prompts
-                        --mark:Destroy()
-                        --cfg.markers[id] = nil
-                        return
-                    elseif mark.is_arty and (not can_actor_see_artefact(obj)) then
+                    
+                    if mark.is_arty and (not can_actor_see_artefact(obj)) then
                         -- Check whether object is an artefact that is not currently visible
                         hide            = true
-                    end
-                    local can_show      = false
-
-                    local targeted      = is_current_target(id)
-                    if mark.is_stalker then
-                        if targeted then can_show = true end
                     end
                     -- ================================================================================
                     -- Check whether this marker is for a junk object
@@ -236,6 +230,9 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     end
                     -- ================================================================================
                     -- Check whether any logic has shut off interaction prompts entirely
+                    local targeted      = is_current_target(id)
+                    local show_pri      = targeted
+                    local show_sec      = false
                     if (hide and not cfg.hidden_show_prompts) then
                         --printf("Aborting all prompt display")
                         _ = mark.use_pri and mark.use_pri:ShowPrompt(false)
@@ -248,22 +245,11 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                         --local in_pickup_range = cfg.in_pickup_range[id]
                         -- ================================================================================
                         -- Check availability of primary interact prompt
-                        if (not hide) and mark.use_pri then
+                        if (not hide) and mark.use_pri and mark.use_pri.init_done then
                             --printf("pri interact check")
-                            local _ = debug_dump and vl("Checking whether to show pri interact prompt for %s | targeted %s", mark.name, targeted)
+                            local _ = debug_dump and printf("[DotMarks] Checking whether to show pri interact prompt for %s | targeted %s", mark.name, targeted)
                             if obj and mark.is_npc then
                                 --printf("obj is NPC")
-                                --[[
-                                if mark.is_alive and (not obj:alive()) then
-                                    -- If an NPC dies, convert it to a body marker
-                                    vl("NPC is now dead, recreating marker as body")
-                                    mark.use_pri:ShowPrompt(false)
-                                    mark:Destroy()
-                                    cfg.markers[id] = nil
-                                    scan_nearby_object(obj)
-                                    return
-                                elseif (not mark.is_alive) then
-                                --]]
                                 if (not mark.is_alive) then
                                     --printf("obj is dead body | mpda rules: %s | empty %s", cfg.bodies_use_mpda_rules, is_empty_mutant_corpse(obj))
                                     local tracked = true
@@ -284,16 +270,13 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     end
                                 elseif mark.is_stalker then
                                     --printf("%s is stalker", mark.name)
-                                    --can_show = can_show or targeted
                                     if (not obj:is_talk_enabled()) then
-                                        --printf("%s does not have talk enabled", mark.name)
-                                        -- Living NPC who can't engage in conversation
+                                        --printf("Living NPC %s can't have conversation", mark.name)
                                         mark.use_pri:ShowPrompt(false)
                                         return
                                     end
                                 end
                             elseif (not mark.is_display) and (mark.is_stash or (mark.is_stalker and not mark.is_alive)) then
-                                --printf("is_inv_container")
                                 -- Update contents of inventory containers
                                 mark.has_items = not obj:is_inv_box_empty()
                                 local text = nil
@@ -320,21 +303,20 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                             --printf("passed NPC and container checks")
                             if mark.pickup then
                                 --printf("Mark is an item pickup")
-                                can_show = targeted
                                 if cfg.show_item_card then
                                     mark.use_pri:UpdateWeightColor()
                                 end
-                            elseif (not can_show) then
+                            elseif (not show_pri) then
                                 local available_pickup = mark.pickup and cfg.available_pickup and (mark.id == cfg.available_pickup)
                                 local not_hidden_by_anim = (cfg.alti_show_during_anim or not anim_playing)
                                 -- If nothing else has allowed visibility yet, final checks
-                                can_show = (
+                                show_pri = (
                                     (locked_id and targeted) or
                                     (available_pickup and not locked_id) or
                                     ((not mark.pickup) and (targeted)) and
                                     (dist < 5) and
                                     not_hidden_by_anim
-                                ) 
+                                )
                             end
                             if mark.condition then
                                 -- Update condition for degradable objects
@@ -345,80 +327,43 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     mark.use_pri:SetPrompt()
                                 end
                             end
-                            vl("can_show %s (%s): %s", mark.name, mark.id, can_show)
-                            mark.use_pri:ShowPrompt(can_show)
+                            --printf("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id), show_pri)
+                            mark.use_pri:ShowPrompt(show_pri)
                             -- ================================================================================
                             -- Check availability of secondary interact prompt
                             if mark.alt_interact then
-                                if cfg.hide_sec_interact_ui then
-                                    local _ = debug_dump and vl("Secondary interactions disabled via config, hiding UI for %s", mark.name)
-                                    mark.alt_interact:ShowPrompt(false)
-                                else
-                                    if mark.ammo_count and (mark.ammo_count == 0) then
-                                        can_show = false
-                                    elseif mark.has_battery and mark.condition and (mark.condition < 0.01) then
-                                        can_show = false
-                                    elseif mark.is_stash or (mark.is_npc and not mark.is_alive) then
-                                        can_show = can_show and mark.has_items
+                                show_sec = show_pri
+                                if show_sec then
+                                    if cfg.hide_sec_interact_ui then
+                                        show_sec        = false
+                                        local _         = debug_dump and vl("Secondary interactions disabled via config, hiding UI for %s", mark.name)
+                                    else
+                                        if mark.ammo_count and (mark.ammo_count == 0) then
+                                            show_sec    = false
+                                        elseif mark.has_battery and mark.condition and (mark.condition < 0.01) then
+                                            show_sec    = false
+                                        elseif mark.is_stash or (mark.is_npc and not mark.is_alive) then
+                                            show_sec    = show_pri and mark.has_items
+                                        end
+                                        local _ = debug_dump and vl("[DotMarks] Checking whether to show alt interact prompt for %s | show_pri %s | targeted %s", mark.name, show_pri, targeted)
                                     end
-                                    local _ = debug_dump and vl("Checking whether to show alt interact prompt for %s | can_show %s | targeted %s", mark.name, can_show, targeted)
-                                    mark.alt_interact:ShowPrompt(can_show)
                                 end
+                                mark.alt_interact:ShowPrompt(show_sec)
                             end
                         end
                     end
+                    _ = debug_dump and vl("[%s][%s] Done with both prompt checks:\n* show_pri %s | show_sec %s | hide %s | pri prompt %s", time_global(), mark.name, show_pri, show_sec, hide, (mark.use_pri ~= nil) and "exists")
                     -- ================================================================================
                     local texture = mark.texture or ""
-                    if not mark.base_w then mark.base_w = mark.args.width end
-                    if not mark.base_h then mark.base_h = mark.args.height end
 
                     if (not hide) and (mark.use_pri and mark.active_swap) then
-                        --mark:ActiveSwap(can_show)
-                        --[-[
-                        for k,v in pairs(mark.active_swap) do
-                            if can_show then
-                                if (popin_active ~= mark.mark_id) then
-                                    --printf("[%s][%s] Active swap: %s = %s", time_global(), mark.name, k, v)
-                                    mark[k] = v
-                                    mark.use_pri.args[k] = v
-                                end
-                            else
-                                mark.popin_done = false
-                                mark[k] = mark.args[k]
-                                mark.use_pri.args[k] = mark.args[k]
-                                --printf("[%s][%s] Inactive revert: %s = %s", time_global(), mark.name, k, mark.args[k])
-                            end
-                            mark.base_w = mark.width
-                            mark.base_h = mark.height
-                        end
-                        if mark.is_active ~= can_show then
-                            --printf("[%s][%s] Mark active status changed to %s (was %s)", time_global(), mark.name, can_show, mark.is_active)
-                            mark.last_active_state = mark.is_active
-                            mark.is_active = can_show
-                            mark.next_update = 0
-                        end
-                        --]]
+                        mark:ActiveSwap(show_pri)
                         texture = mark.texture
                         mark.use_pri:SetupConnectingLine()
 
-                        if can_show and cfg.popin_anim_dur and (cfg.popin_anim_dur > 0) and not (popin_active or mark.popin_done) then
+                        if show_pri and can_start_popin_anim(mark) then
                             --printf("Trying to begin popin effect | active %s | done %s", popin_active, mark.popin_done)
-                            do_marker_popin(
-                                mark.mark_id,
-                                mark.args.width, mark.args.height,
-                                mark.active_swap.width, mark.active_swap.height,
-                                cfg.popin_anim_dur,
-                                easeOutElastic,
-                                (function()
-                                    mark.next_update = 0
-                                    mark.popin_done = true
-                                    popin_active = nil
-                                end),
-                                (function() 
-                                    --printf("[%s][%s][abort func] popin_active: %s | mark texture: \"%s\"", time_global(), mark.mark_id, popin_active, mark.texture)
-                                    return (not popin_active) or (popin_active ~= mark.mark_id) or (not mark.texture) or (mark.texture ~= mark.active_swap.texture)
-                                end)
-                            )
+                            init_active_marker_popin(mark)
                         end
                     end
 
@@ -431,13 +376,11 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                         mark.width = mark.base_w * (cfg.dot_marker_size or 1)
                         mark.height = mark.base_h * (cfg.dot_marker_size or 1)
 
-                        --printf("[%s][%s] Calling ScaleMarkerByDistance from main dotmarks loop: [%s x %s]", time_global(), mark.name, dec2(mark.width), dec2(mark.height))
-                        --printf("[%s][%s] Setting marker width manually from main dotmarks loop: [%s x %s]", time_global(), mark.name, dec2(mark.width), dec2(mark.height))
                         mark:ScaleMarkerByDistance()
                         --printf("Base size is %sx%s, setting to %sx%s after UI scaling", mark.base_w, mark.base_h, mark.width, mark.height)
                     end
                     mark.loop_num = mark.loop_num and (mark.loop_num + 1) or 0
-                    --printf("[%s][%s] End of main update loop %s | Final size: [%s x %s]", time_global(), mark.name, mark.loop_num, dec2(mark.width), dec2(mark.height))
+                    _ = debug_dump and vl("[DotMarks] [%s][%s] End of main update loop %s | Final size: [%s x %s]", time_global(), mark.name, mark.loop_num, dec2(mark.width), dec2(mark.height))
                     mark.marker:InitTexture(texture)
 
                 end
@@ -449,7 +392,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             --  Force LOS check to succeed if the marked object is the current interact target
             -- ================================================================================
                 function(mark, args)
-                    if not (mark.pickup or mark.is_stalker) then return end
+                    if not (mark.pickup or mark.is_stalker or mark.is_stash) then return end
                     local pri_shown = (mark and mark.use_pri and mark.use_pri.wnd and mark.use_pri.wnd:IsShown())
                     --printf("Overriding LOS check while primary prompt is shown")
                     return pri_shown and true or nil
@@ -470,50 +413,64 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
         return preset_args
     end
 )
-
+-- ======================================================================
+--      ACTIVE SWAP OF MARKER ATTRIBUTES
+--  Monkeypatches utils_catspaw_hudmarks to add support for hotswapping
+--  the marker texture and other parameters on the fly
+-- ======================================================================
 function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
-    if self.destroyed or not (self.active_swap and self.use_pri) then return end
-    if state == nil then state = not self.disabled end
-    if state ~= self.is_active then
-        self.last_active_state = self.is_active
-        self.is_active = state
-        self.next_update = 0
+    --printf("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
+    if self.destroyed or not self.active_swap then return end
 
-        local anim_args = {
-            ["width"] = true,
-            ["height"] = true,
-        }
+    if state == nil then state = is_current_target(self.id) end
+    local _
+    for k,v in pairs(self.active_swap) do
         if state then
-            if not popin_active then
-                --printf("Active swap:")
-                for k,v in pairs(self.active_swap) do
-                    --printf("|| %s = %s", k, v)
-                    self[k] = v
+            if (popin_active ~= self.mark_id) then
+                _ = debug_dump and vl("[%s][%s][Swap on] Setting: %s = %s", time_global(), self.name, k, v)
+                self[k] = v
+                if self.use_pri then
                     self.use_pri.args[k] = v
                 end
             end
         else
-            --printf("Inactive, reverting to:")
             self.popin_done = false
-            for k,v in pairs(self.active_swap) do
-                --printf("|| %s = %s", k, v)
-                self[k] = self.args[k]
+            self[k] = self.args[k]
+            if self.use_pri then
                 self.use_pri.args[k] = self.args[k]
             end
-
+            _ = debug_dump and vl("[%s][%s][Swap off] Reverting: %s = %s", time_global(), self.name, k, self.args[k])
         end
-    end
-    if not popin_active then
         self.base_w = self.width
         self.base_h = self.height
     end
+    if self.is_active ~= state then
+        vl("[%s][%s] Mark active status changed to %s (was %s)", time_global(), self.name, state, self.is_active)
+        self.last_active_state = self.is_active
+        self.is_active = state
+        self.next_update = 0
+    end
+end
+
+-- ======================================================================
+
+function get_fdda_callback()
+    --local anim_en = (cfg.fdda_pickup_anim or cfg.fddar_pickup_anim) or nil
+    --printf("Animations enabled: %s | FDDA %s | FDDAR %s", anim_en, cfg.fdda_pickup_anim, cfg.fddar_pickup_anim)
+    --fdda_callback = anim_en and fdda_pickup and fdda_pickup.get_fdda_oibp_callback() or nil
+    fdda_callback = fdda_pickup and fdda_pickup.get_fdda_oibp_callback() or nil
+    return fdda_callback
+end
+
+function fdda_handles_pickups()
+    return get_fdda_callback() and (cfg.fdda_pickup_anim or cfg.fddar_pickup_anim)
 end
 
 function item_pickup_intercept(obj, flags)
     -- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
     -- Called by my monkeypatch of FDDA/FDDAR's pickup if they are
     local now = time_global()
-    vl("[%s][item_pickup_intercept] %s (%s)", now, obj and obj:name(), obj and obj:id())
+    vl("[%s][item_pickup_intercept] %s - ret %s | force %s", now, nameid(obj), flags.ret_value, flags.force)
     if flags.force then
         --printf("Skipping all long-press checks")
     else
@@ -526,22 +483,17 @@ function item_pickup_intercept(obj, flags)
                 --printf("[%s][item_pickup_intercept] Actor just released use key at %s, aborting pickup of %s", now, cfg.use_released, obj and obj:name())
                 flags.ret_value = false
                 return
-            else
-                --printf("[%s] Not interfering with pickup | use key timeout %s | released %s", now, cfg.long_press_delay, cfg.use_released)
             end
-        else
-            --printf("[%s] Intercept fired but no pre-action taken | use %s | watch %s", now, (cfg.held_key == use_dik), cfg.watch_use)
         end
     end
 
-    local taken_obj
-    vl("[%s][item_pickup_intercept] Actor tried to take item %s (%s)", now, obj and obj:name(), obj and obj:id())
+    vl("[%s][item_pickup_intercept] Actor tried to take item %s", now, nameid(obj))
     local curr_target = get_current_target()
     --vl("Current target: %s", curr_target)
-    taken_obj = curr_target and get_object_by_id(curr_target)
-    local anim_delay = false
+    local taken_obj = curr_target and get_object_by_id(curr_target)
+    
     if taken_obj then
-        vl("Forcing actor to take %s (%s) instead", taken_obj:name(), taken_obj:id())
+        vl("[%s][item_pickup_intercept] Forcing actor to take %s", now, nameid(taken_obj))
         if cfg.markers[curr_target] then
             cfg.markers[curr_target]:HideAll("dotmarks taking item")
         end
@@ -549,6 +501,7 @@ function item_pickup_intercept(obj, flags)
         -- The monkeypatch in z_fdda_pickup_intercept_dotmarks sets flags.ret_value to false
         -- if flags.ret_value is already false when it gets to DotMarks, DotMarks will assume
         -- that FDDA is handling the pickup part
+        -- However, some items don't appear to respond to this handling, so we use them manually
             flags.ret_value = false
             db.actor:take_item(taken_obj)
         end
@@ -562,7 +515,7 @@ function easeOutElastic(x)
     return x == 0 and 0 or (x == 1 and 1 or 2 ^ (-10 * x) * math.sin((x * 10 - 0.75) * c4) + 1)
 end
 
-function set_final_marker_size(mark_id)
+function set_adjusted_marker_size(mark_id)
     local mark = hmm:GetMarker(mark_id)
     if not mark then return end
     mark.width = mark.base_w * (cfg.dot_marker_size or 1)
@@ -635,7 +588,7 @@ function do_marker_popin(
                     end
                     mark.base_w = anim.w or anim.w_end(mark)
                     mark.base_h = anim.h or anim.h_end(mark)
-                    set_final_marker_size(mark_id)
+                    set_adjusted_marker_size(mark_id)
                 else
                     --printf("Event conditions for %s cleared, aborting", mark_id)
                     anim_state = 1
@@ -652,6 +605,37 @@ function do_marker_popin(
             anim_state = math.min(1, normalize(time_global(), start_time, end_time))
         end
     )
+end
+
+function init_active_marker_popin(mark)
+    if type(mark) == "string" then
+        -- Assume a mark_id got passed instead of the mark itself
+        mark = hmm:GetMarker(mark)
+    end
+    if not (mark and mark.mark_id) then return end
+
+    do_marker_popin(
+        mark.mark_id,
+        mark.args.width * 0.5, mark.args.height * 0.5,
+        mark.active_swap.width, mark.active_swap.height,
+        cfg.popin_anim_dur,
+        easeOutElastic,
+        (function()
+            mark.next_update = 0
+            mark.popin_done = true
+            popin_active = nil
+        end),
+        (function() 
+            return  (not popin_active) or
+                    (not mark.texture) or
+                    (popin_active ~= mark.mark_id) or
+                    (mark.texture ~= mark.active_swap.texture)
+        end)
+    )
+end
+
+function can_start_popin_anim(mark)
+    return cfg.popin_anim_dur and (cfg.popin_anim_dur > 0) and not (popin_active or mark.popin_done)
 end
 
 function can_actor_see_artefact(obj)
@@ -844,8 +828,7 @@ function InteractPrompt:__init(anchor, args) super()
         local ydiff = syoff - pyoff
         args.yoffset = args.yoffset - ydiff + fontscale(ydiff)
     end
-    --args.xoffset= args.xoffset or (args.pri and cfg.pri_use_x_offset or cfg.sec_use_x_offset) or 0
-    --args.yoffset= args.yoffset or (args.pri and cfg.pri_use_y_offset or cfg.sec_use_y_offset) or 0
+
     args.act    = args.act or ""
     args.name   = args.name or ""
     args.fixed  = ((args.fixed ~= nil) and args.fixed) or cfg.fixed_screen_pos
@@ -886,18 +869,21 @@ function InteractPrompt:__init(anchor, args) super()
     self.active_prompt      = args.active_prompt or args.text   or (args.tutorial and trimmed_prompt(gts(args.tutorial))) or ""
     self.active_suffix      = args.active_suffix or args.suffix or ""
     self.args               = args
-
+    if self.args.tutorial and (self.args.tutorial:find("campfire")) then
+        self.campfire_tut   = true
+    end
     self.last_state         = false
     self:on_option_change()
     self:BusyState(false)
-    self:ShowPrompt(false)
+    self:ShowPrompt(false, "init")
 
     RegisterScriptCallback("on_option_change", self)
     RegisterScriptCallback("actor_on_update", self)
     RegisterScriptCallback("actor_on_net_destroy", self)
 
-    self.init_done = true
-    vl("[InteractPrompt] Completed setup for prompt: %s", self:GetFullPrompt())
+    self.init_done = time_global()
+    
+    vl("[%s][InteractPrompt] Completed setup for prompt: %s", self.init_done, self:GetFullPrompt())
 end
 
 
@@ -1018,12 +1004,14 @@ function InteractPrompt:BuildUI()
         self.longpress  = xml:InitProgressBar("prog_longpress", self.prompt)
         self.longpress:SetColor(getargb(self.progress_color))
         self.longpress:SetProgressPos(0)
+        --[[
         cfg.input_filters[self.args.id] = {
             key     = self.args.key,
             mod     = self.args.mod,
             mode    = self.args.mode,
             ctrl    = self
         }
+        --]]
     end
 
     -- Set up text drop shadows
@@ -1653,19 +1641,46 @@ function InteractPrompt:RegisterScriptCallbacks(tf)
     end
 end
 
-function InteractPrompt:ShowPrompt(tf)
+function InteractPrompt:OnVisibilityChange(state, reason)
+    local _ = debug_dump and vl("[%s][InteractPrompt:OnVisibilityChange] to %s%s", time_global(), state, reason)
+
+    self:RegisterScriptCallbacks(state)
+
+    if self.campfire_tut then
+        _ = debug_dump and vl("Checking campfire state for %s", self.args.tutorial)
+        local obj = get_nearby_campfire(5, false)
+        if obj then
+            local id = obj:id()
+            self.mark = id and cfg.markers[id]
+            if self.mark then
+                self.mark:ActiveSwap(state)
+                if state and can_start_popin_anim(self.mark) then
+                    init_active_marker_popin(self.mark)
+                end
+            end
+        else
+            dl("Clearing stuck tutorial %s at %s", self.tutorial, time_global())
+            self:Destroy()
+        return end
+    end
+end
+
+function InteractPrompt:ShowPrompt(tf, reason)
     if (tf and self.destroyed) then return end
     tf = not not tf
+    reason = reason and (" (" .. reason .. ")") or ""
     self.peak_hold = nil
-    local _ = debug_dump and vl("ShowPrompt %s: %s", self.active_prompt, tf)
-    --printf("[%s][InteractPrompt:ShowPrompt] %s: %s", self.args.id, self.active_prompt, tf)
+    local _ = debug_dump and vl("ShowPrompt %s: %s%s", self.active_prompt, tf, reason)
+    --printf("[%s][%s][InteractPrompt:ShowPrompt] %s: %s", time_global(), self.args.id, self.active_prompt, tf)
     self.line:SetProgressPos(tf and (not cfg.hide_connecting_line) and 1 or 0)
     if self.longpress and not tf then
         self.longpress:SetProgressPos(0)
     end
-    self:RegisterScriptCallbacks(tf)
     self.disabled = not tf
-    self.last_state = (not self.disabled)
+    if self.last_state ~= self.disabled then
+        self.last_state = self.disabled
+        self:OnVisibilityChange(tf, reason)
+    end
     self:AnimateFade(tf)
     if not self.fading_out then
         self:UpdatePromptVisibility(tf)
@@ -1700,12 +1715,10 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
         plain_text = parse_colors(new_text, nil, false)
     end
     local _ = debug_dump and vl("InteractPrompt:SetPrompt(%s, %s, %s) | %s", new_prefix, new_prompt, new_suffix, new_text)
-    --printf("[%s][%s][InteractPrompt:SetPrompt](%s, %s, %s) | %s", self.args.id, self.args.event, new_prefix, new_prompt, new_suffix, new_text)
     self.label:TextControl():SetText(color_text or new_text)
     self.label_sh:TextControl():SetText(plain_text or new_text)
     self.lref:TextControl():SetText(plain_text or new_text)
     self.lref:AdjustWidthToText()
-    --local pos = self.lref:GetWidth()
     local pos = self:UpdatePromptLength()
     self.drop:SetWndSize(vector2():set(pos + fontscale(55), fontscale(22)))
 end
@@ -1714,7 +1727,6 @@ function InteractPrompt:GetQuickHelp()
     local hint = maingameui.UIStaticQuickHelp:GetText()
     if (hint == "") or (hint == " ") then hint = nil end
     --printf("Contents of QuickHelp static: \"%s\"", hint)
-    --return hint or (self.args.is_door and self.door_cache) or nil
     return hint or nil
 end
 
@@ -1770,10 +1782,8 @@ end
 function InteractPrompt:UpdateDoorState()
     local hint  = self:GetQuickHelp()
     if self.door and self.door.tip then
-        --printf("Handling door")
         local tip   = self.door.tip()
         local msg   = tip and gts(tip)
-        --printf("InteractPrompt:DoorStateUpdates: msg %s | hint %s", msg, hint)
         if hint and msg and (hint == msg) then
             if is_vanilla_ui_hidden() then
                 --printf("Hiding vanilla hint")
@@ -1797,7 +1807,7 @@ function InteractPrompt:actor_on_update()
     end
 
     if (self.args.tutorial or self.args.is_stalker) then
-        _ = (not self.init_done) and vl("Updates for this prompt are handled in main loop", self.args.tutorial)
+        _ = (not self.init_done) and vl("Updates for this type are handled in main loop")
         return
     end
 
@@ -1879,6 +1889,8 @@ function is_dead_mutant(args)
 end
 
 function can_chop_body(section)
+    -- Don't think this is working with the "knife in inventory" flavor of mod
+    -- Need to figure out why
     if not section then return end
     local result, tip
     if (item_knife.is_equipped()) then
@@ -1973,9 +1985,11 @@ function actor_on_first_update()
         "! ERROR: The Hud Mark Manager could not be found! Something must be seriously wrong with utils_catspaw_hudmarks!\n\n"
     )
     if not cfg.markers then cfg.markers = {} end
-    if not db.actor.get_actor_object_looking_at then
-        printf("! WARNING: The function 'db.actor.get_actor_object_looking_at' does not exist, falling back to old targeting method. You should update your modded exes to 20250306 or newer.")
-    end
+    assert(db.actor.get_actor_object_looking_at or (not cfg.assert_modded_exes),
+        "! ERROR: The function `db.actor.get_actor_object_looking_at` does not exist, which means the `actor_on_update_pickup` callback doesn't either. Both are required for DotMarks to function.\n" ..
+        "\nYou must update to modded exes 20250306 or newer. Get them here:\n" ..
+        "https://github.com/themrdemonized/xray-monolith"
+    )
     maingameui = ActorMenu.get_maingame()
     xml = CScriptXmlInit()
     CreateTimeEvent("dotmark_scan_delay", time_global(), cfg.scan_start_delay, start_scanning)
@@ -1998,12 +2012,12 @@ function get_args_for_valid_objects(obj)
     local sec = obj:section()
     local kind = get_obj_kind(obj)
 
-    --vl("get_args_for_valid_objects: %s (%s) - clsid %s", obj:name(), id, cls)
-    if is_blacklisted(id, cls, sec, kind) then return end
+    --vl("get_args_for_valid_objects: %s - clsid %s", nameid(nil, id), cls)
+    if is_blacklisted(id, cls, sec, kind) then
+        vl("Object matched one or more blacklists: id %s | cls %s | sec %s | kind %s", cfg.blacklisted_ids[id], cfg.blacklisted_clsids[cls], cfg.blacklisted_sections[sec], cfg.blacklisted_kinds[kind])
+    return end
 
     local args = { logged_type = "something else", section = sec, clsid = cls }
-
-    local ktype = get_type_for_kind(kind)
 
     local function setup_item_args(iclass)
         args = get_cfg_for_type("args", iclass, obj) or {}
@@ -2013,26 +2027,33 @@ function get_args_for_valid_objects(obj)
         args.has_power = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
     end
 
+    local ktype = get_type_for_kind(kind)
     if ktype then
-        --printf("Type for kind %s: %s", kind, ktype)
+        vl("Kind %s found in lookup: %s", kind, ktype)
         setup_item_args(ktype)
     else
-        for item_class, enabled in pairs(cfg.scan) do
-            printf("Checking %s against category %s", obj:name(), item_class)
-            if cfg.is_item[item_class](obj) then
-                --printf("Type found: %s", item_class)
-                setup_item_args(item_class)
-                break
+        local stype = get_type_for_section(sec)
+        if stype then
+            vl("Section %s found in lookup: %s", sec, stype)
+            setup_item_args(stype)
+        else
+            for item_class, enabled in pairs(cfg.scan) do
+                --printf("Checking %s against category %s", obj:name(), item_class)
+                if cfg.is_item[item_class](obj) then
+                    vl("Type found via iteration: %s", item_class)
+                    setup_item_args(item_class)
+                    break
+                end
             end
         end
     end
-
+    
     if not args.texture then
         local pid = cfg.available_pickup
         if (id == pid) then
-            printf("! Obj %s (%s) failed classification, but is detected by engine as a pickup!\n"..
-                "Classifying \"Misc\" as a fallback, investigate: section %s | clsid %s | kind %s",
-                obj:name(), id, sec, cls, kind
+            printf("! Obj %s failed classification, but is detected by engine as a pickup!\n"..
+                "$ Classifying \"Misc\" as a fallback, investigate: section %s | clsid %s | kind %s",
+                nameid(nil, id), sec, cls, kind
             )
             setup_item_args("Misc")
         else
@@ -2041,7 +2062,7 @@ function get_args_for_valid_objects(obj)
     end
     if not args.texture then return end
 
-    vl("get_args_for_valid_objects: %s (%s) is %s", obj:name(), obj:id(), args.logged_type)
+    dl("get_args_for_valid_objects: %s is %s", nameid(obj), args.logged_type)
     return args
 end
 
@@ -2144,16 +2165,30 @@ function setup_sec_interact_prompt(mark)
             func = take_all_from_box
         end
     --elseif section and (IsItem("eatable", section)) then
+    elseif cfg.is_item.Tools(obj) then
+        -- Usable tool
+        local verb      = mark.use_verb or "st_alti_takeuse"
+        int_text        = string.format(gts("st_alti_prompt_usable"),
+            gts(verb),
+            mark.name,
+            gts("st_alti_now")
+        )
+
     elseif cfg.is_item.Consumables(obj) then
         -- Consumable
-        int_text        = string.format(gts("st_alti_prompt_eatable"),
-            gts("st_alti_consume_food"),
+        local verb      = mark.use_verb or (
+            (mark.kind == "i_medical") and "st_alti_use_booster" or
+            (cfg.smokables[section] and "st_alti_smokeout") or
+            "st_alti_consume_food"
+        )
+        int_text        = string.format(gts("st_alti_prompt_usable"),
+            gts(verb),
             mark.name,
             gts("st_alti_now")
         )
     elseif (mark.kind == "i_letter") then
         -- Readable
-        int_text        = string.format(gts("st_alti_prompt_eatable"),
+        int_text        = string.format(gts("st_alti_prompt_usable"),
             gts("st_alti_read"),
             mark.name,
             gts("st_alti_now")
@@ -2162,7 +2197,7 @@ function setup_sec_interact_prompt(mark)
     elseif section and IsItem("device", section) then
         -- Device with battery power
         --printf("setting up secondary interact for device")
-        int_text        = string.format(gts("st_alti_prompt_eatable"),
+        int_text        = string.format(gts("st_alti_prompt_usable"),
             first_upper(gts("st_item_unpack_battery")),
             gts("st_alti_from"),
             mark.name
@@ -2226,7 +2261,7 @@ function unregister_scanned_entity(id)
     end
     scanned[id] = nil
 
-    vl("Unregistering scanned entity for %s (%s) and nulling all pointers to it", name, id)
+    vl("Unregistering scanned entity for %s and nulling all pointers to it", nameid(name, id))
 end
 
 
@@ -2241,35 +2276,41 @@ function obj_has_available_sec_interact(obj, id, mark)
 
     id = id or (obj and safeid(obj))
     obj = obj or (id and get_object_by_id(id))
-    local cls = obj:clsid()
-    if not cls then return end
+    if not obj then return end
     if cfg.useless_shit[obj:section()] then return end
 
-    local has_ammo = marked_obj_has_ammo(id)
-    local is_melee = IsMelee(nil, cls)
+    local cls           = obj and obj:clsid()
+    local is_melee      = IsMelee(nil, cls)
+    local has_ammo      = marked_obj_has_ammo(id) and not is_meele
     local is_consumable = cfg.is_item.Consumables(obj)
-    local is_readable   = mark and mark.is_readable
-    local has_batteries = mark and mark.has_battery
-    local is_backpack   = mark and mark.is_backpack
-    local is_invbox     = IsInvbox(nil, cls) or is_backpack
+    local is_readable   = (mark and mark.is_readable)
+    local has_batteries = (mark and mark.has_battery)
+    local is_backpack   = (mark and mark.is_backpack)
+    local is_invbox     = (mark and mark.is_stash) or is_backpack
 
-    local has_interact = (not mark.money) and
-        (
-            (has_ammo and not is_melee) or
-            has_batteries or
-            is_consumable or
-            is_readable or
-            is_invbox
-        ) and (not (mark and mark.no_sec))
+    local required      = (
+        is_consumable or
+        has_batteries or
+        is_readable or
+        has_ammo or
+        is_invbox
+    )
 
-    vl("obj_has_available_sec_interact: %s | %s (%s) | ammo %s | eatable %s | readable %s | money %s",
-        has_interact,
-        obj and obj:name(),
-        id,
-        has_ammo,
-        is_consumable,
-        is_readable,
+    local banned        = (
         mark.money
+    )
+
+    local has_interact = required and not banned
+
+    local _ = debug_dump and (
+        vl("obj_has_available_sec_interact: %s | %s | ammo %s | eatable %s | readable %s | money %s",
+            has_interact,
+            nameid(obj, id),
+            has_ammo,
+            is_consumable,
+            is_readable,
+            mark.money
+        )
     )
     return has_interact
 end
@@ -2283,13 +2324,13 @@ function scan_nearby_object(obj)
     if scanned[id] then
         -- Skip previously-scanned IDs if their name matches, otherwise clear the table entry assuming it's a reused ID
         if scanned[id] == name then
-            --vl("%s (%s) has already been scanned, skipping", name, id)
+            --vl("%s has already been scanned, skipping", nameid(name, id))
         return end
         vl("%s has a new name, assuming the ID has been reused and clearing entry", id)
         scanned[id] = nil
     end
 
-    --printf("scanning %s (%s)", name, id)
+    --printf("scanning %s", nameid(name, id))
 
     local m_id  = "dotmark_" .. tostring(id)
     hmm = hmm or utils_catspaw_hudmarks.get_hud_mark_manager()
@@ -2302,11 +2343,11 @@ function scan_nearby_object(obj)
         --vl("[ID %s] Existing marker found for mark_id %s, skipping", id, m_id)
     else
         scanned[id] = name
-        printf("scanning unmarked object %s (%s) | cls %s | dist %s", name, id, cls)
+        dl("scanning unmarked object %s | cls %s | dist %s", nameid(name, id), cls)
         local args  = get_args_for_valid_objects(obj)
         if not args then return end
 
-        vl("Trying to add dotmark marker for %s (%s)", obj:name(), id)
+        vl("Trying to add dotmark marker for %s", nameid(obj, id))
         args            = args or {}
         args.id         = id
         args.mark_id    = m_id
@@ -2387,25 +2428,9 @@ function update_targeted_object()
     elseif db.actor.get_actor_object_looking_at then
         -- 20250225 modded exes required for this method
         target = db.actor:get_actor_object_looking_at()
-        --printf("update_targeted_object: get_actor_object_looking_at is %s", target and target:id())
-        --[[
     else
-        -- No exes support for doing this the clean, efficient way
-        -- Fall back to old, janky, inaccurate method of getting current target
-        -- Seriously conisider deprecating this, it's just adding bloat
-
+        -- Vanilla but very finicky, requires the object to be precisely under the crosshair
         target = level.get_target_obj()
-        if targeted_id and not target then
-            local obj = get_object_by_id(targeted_id)
-            local pos = obj and obj:center()
-            local dot = pos and dot_eye(pos) or 0
-            if dot < cfg.target_lenience then
-                targeted_id = nil
-            else
-                return
-            end
-        end
-        --]]
     end
     local id = target and target:id()
     if cfg.racked_items[id] then
@@ -2630,7 +2655,7 @@ function eject_mag_from_ground(wpn)
 end
 
 function unload_and_take_ammo(wpn)
-    wpn = wpn or level.get_target_obj()
+    --wpn = wpn or level.get_target_obj()
     if not (wpn and IsWeapon(wpn)) then return end
     local count = wpn:get_ammo_in_magazine()
     if count < 1 then return end
@@ -2690,13 +2715,15 @@ function is_busy_with_anim()
     return not cfg.alti_busy_during_anim
 end
 
-function delay_consume_action(id)
-    if fdda_callback and anim_playing then return end
+function delay_consume_action(id, manual_use)
+    if fdda_callback and anim_playing then return true end
     local obj = id and get_object_by_id(id)
-    vl("delay_consume_action: %s (%s)", obj and obj:name(), id)
-    if enhanced_animations and ea_enabled then
+    if not obj then return true end
+    if (enhanced_animations and ea_enabled and not manual_use) then
+        vl("[%s][delay_consume_action] passing %s to FDDA", time_global(), nameid(obj, id))
         SendScriptCallback("actor_on_item_before_use", obj, {ret_value = true})
     else
+        vl("[%s][delay_consume_action] causing actor to consume/use %s", time_global(), nameid(obj, id))
         db.actor:eat(obj)
     end
     return true
@@ -2705,7 +2732,7 @@ end
 function force_actor_to_take(obj)
     vl("Forcing actor to take %s via active pickup callback", obj and obj:name())
     local send_pickup_callback = fdda_callback or item_pickup_intercept
-    send_pickup_callback(obj, {force = true, ret_value = not not fdda_callback})
+    send_pickup_callback(obj, {force = true, ret_value = true})
 end
 
 function take_and_use(obj)
@@ -2713,15 +2740,23 @@ function take_and_use(obj)
     force_actor_to_take(obj)
     local id = obj:id()
     if id then
-        CreateTimeEvent("delayed_actor_use", time_global(), cfg.item_use_delay, delay_consume_action, id)
+        local manual_use = is_item_manual_use(obj)
+        CreateTimeEvent("delayed_actor_use", time_global(), cfg.item_use_delay, delay_consume_action, id, manual_use)
     end
 end
 
+function is_item_manual_use(obj, mark)
+    local id    = obj and obj:id()
+    local mark  = mark or (id and cfg.markers[id]) or {}
+    local sec   = mark.section or (obj and obj:section())
+    vl("[%s][is_item_manual_use] %s: manual_use from mark %s | from cfg %s", time_global(), mark.name or (obj and obj:name()), mark.manual_use, cfg.manual_use[sec])
+    return mark.manual_use or cfg.manual_use[sec]
+end
 
 function delay_read_action(id)
     if fdda_callback and anim_playing then return end
     local obj = id and get_object_by_id(id)
-    vl("delay_read_action: %s (%s)", obj and obj:name(), id)
+    vl("delay_read_action: %s", nameid(obj, id))
     item_recipe.func_recipe(obj)
     return true
 end
@@ -2870,38 +2905,66 @@ function dump_monitor_states()
     end
 end
 
+function update_skill_bonus_range()
+    local skill = haru_skills and cfg.haru_skill_name and haru_skills.skills_levels[cfg.haru_skill_name]
+    local sklev = skill and skill.current_level or 0
+    cfg.skill_bonus_range = sklev * (cfg.haru_skill_coef or 0)
+    return cfg.skill_bonus_range
+end
+
+-- =======================================================================
+--      MAIN SCAN LOOP
+-- =======================================================================
 function actor_on_update()
     if not scanning then return end
-    --if debug_dump then dump_monitor_states() end
-    dotmarks_main.in_sleep_zone = is_actor_in_sleep_zone()
+    -- ===================================================================
+    --  Tutorial monitors
+    --  Watches for state flags set by modxml_tutorial_hooks.script
+    -- ===================================================================
     if cfg.tut_check_interval then
+        --if debug_dump then dump_monitor_states() end
         if (next_tut_check <= time_global()) then
             next_tut_check = get_next_check(cfg.tut_check_interval)
+            dotmarks_main.in_sleep_zone = is_actor_in_sleep_zone()
             check_tutorial_states()
         end
     end
-    
+    -- ===================================================================
+    --  Update pickups and current target
+    --  Critical, should never be throttled at all
+    -- ===================================================================    
     update_nearby_pickups()
     if locked_id then
         local _ = debug_dump and vl("locked_id is %s, skipping target updates and scans", locked_id)
         return
     end
     update_targeted_object()
-
+    -- ===================================================================
+    --  Skill system updates
+    --  Rare, skillups don't occur often
+    --  Needs to run before near_scan so that it applies radius changes
+    -- ===================================================================
     if cfg.skill_upd_interval then
         if (next_skill_upd <= time_global()) then
             next_skill_upd  = get_next_check(cfg.skill_upd_interval)
-            local skill = haru_skills and cfg.haru_skill_name and haru_skills.skills_levels[cfg.haru_skill_name]
-            local sklev = skill and skill.current_level or 0
-            cfg.skill_bonus_range = sklev * (cfg.haru_skill_coef or 0)
+            update_skill_bonus_range()
         end
     end
+    -- ===================================================================
+    --  Near scan - iterate objects within near_scan_radius
+    --  Frequent
+    -- ===================================================================
     if cfg.near_scan_interval then
         if (next_near_scan <= time_global()) then
             next_near_scan   = get_next_check(cfg.near_scan_interval)
             scan_nearby_entities(near_scan_radius())
         end
     end
+    -- ===================================================================
+    --  Early scan - iterate within near_scan_radius + early_scan_radius
+    --  Instantiates markers for objects before they would become visible
+    --  Less frequent
+    -- ===================================================================
     if cfg.early_scan_interval then
         if (next_early_scan <= time_global()) then
             next_early_scan   = get_next_check(cfg.early_scan_interval)
@@ -2909,10 +2972,12 @@ function actor_on_update()
         end
     end
 end
+-- =======================================================================
 
 function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
         cfg.use_released = nil
+        cfg.block_loot_window = true
         --printf("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
         cfg.held_key = key
     end
@@ -2940,6 +3005,7 @@ function on_key_release(key)
                     force_actor_to_take(pickup)
                 elseif container then
                     cfg.use_released = nil
+                    cfg.block_loot_window = nil
                 end
             end
         end
@@ -2956,8 +3022,16 @@ end
 
 function actor_on_item_take(obj)
     local id = obj and obj:id()
-    if cfg.markers[id] then
+    if id and cfg.markers[id] then
         unregister_scanned_entity(id)
+    end
+end
+
+function handle_npc_death(npc)
+    local id = npc and npc:id()
+    if id and cfg.markers[id] then
+        unregister_scanned_entity(id)
+        scan_nearby_object(npc)
     end
 end
 
@@ -3035,16 +3109,11 @@ function parse_file_data()
     end 
 end
 
-function handle_npc_death(npc)
-    local id = npc and npc:id()
-    if cfg.markers[id] then
-        --local mark = cfg.markers[id]
-        --if mark.use_pri then mark.use_pri:Destroy() end
-        --if mark.alt_interact then mark.alt_interact:Destroy() end
-        unregister_scanned_entity(id)
-        --mark:Destroy()
-        --cfg.markers[id] = nil
-        scan_nearby_object(npc)
+function set_item_pickup_callbacks()
+    if not get_fdda_callback() then
+        RegisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
+        vl("No form of FDDA installed, registering internal pickup callback")
+        cfg.pickup_callback_set = true
     end
 end
 
@@ -3058,7 +3127,8 @@ function on_option_change()
     for k,v in pairs(cfg) do
         if type(v) ~= "table" then
             local mcm_path = cfg.mcm_paths[k]
-            if mcm_path and (#mcm_path < 20) then
+            --if mcm_path and (#mcm_path < 20) then
+            if mcm_path and mcm_path:find("/$") then
                 mcm_path = mcm_path .. k
             end
             if mcm_path then
@@ -3078,6 +3148,7 @@ function on_option_change()
         cfg.scan[k] = get_mcm("dotmarks/dmarkobjs/scan_" .. string.lower(k), cfg.scan[k])
         _ = debug_dump and vl("Scanning %s = %s", k, v)
     end
+
     debuglogs       = get_mcm("dotmarks/dmarkadv/debuglogs", debuglogs)
     verbose         = get_mcm("dotmarks/dmarkadv/verbose", verbose)
     _uiscale        = get_mcm("dotmarks/dmarkadv/ui_scale", _uiscale)
@@ -3094,6 +3165,7 @@ function on_option_change()
             cfg.markers[k]:Destroy()
         end
     end
+    --set_item_pickup_callbacks()
 end
 
 function on_game_start()
@@ -3102,13 +3174,8 @@ function on_game_start()
     if dotmarks_main.load_file_data(config_file, this.cfg) then
         parse_file_data()
         dotmarks_main.refresh_main_config()
+        set_item_pickup_callbacks()
         RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
-        --local fdda_callback = (z_fdda_pickup_intercept_dotmarks and (z_fdda_pickup_intercept_dotmarks.fddar_oibp or z_fdda_pickup_intercept.fdda_oibp))
-        fdda_callback = z_fdda_pickup_intercept_dotmarks and z_fdda_pickup_intercept_dotmarks.get_fdda_oibp_callback()
-        if not fdda_callback then
-            vl("No form of FDDA installed, registering internal pickup callback")
-            RegisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
-        end
         RegisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
         RegisterScriptCallback("actor_on_update", actor_on_update)
         RegisterScriptCallback("actor_on_item_take", actor_on_item_take)

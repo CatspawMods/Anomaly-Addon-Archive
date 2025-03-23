@@ -432,6 +432,15 @@ function generate_objs_menu()
 			icon_y = 8,
 		},
 
+		{ id = "disable_icon_stash", 		type = "check", val = 1, def = cfg.disable_icon_stash,
+			ui_hook_functor = {dotmarks_mcm.init_simple_icon},
+			icon = cfg.tex.Stashes or "",
+			icon_w = 24,
+			icon_h = 24,
+			icon_x = 450,
+			icon_y = 11,
+		},
+
 		{ id = "disable_icon_box", 		type = "check", val = 1, def = cfg.disable_icon_box,
 			ui_hook_functor = {dotmarks_mcm.init_simple_icon},
 			icon = cfg.tex.Boxes or "",

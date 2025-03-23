@@ -1,0 +1,23 @@
+-- =======================================================================
+--[[    Interaction Dot Marks ("DotMarks")
+-- =======================================================================
+		CONTAINER INTERACTION CONTROL - LOOT WINDOW MONKEYPATCH
+
+    Intercepts attempts to open a loot window for a container, and checks
+    for conditions that would block access to an inventory container.
+
+    Unless that one specific runtime flag is on, all other calls will be
+    passed through untouched.
+-- =====================================================================]]
+
+ local base_ui_inventory_start = ui_inventory.start
+ function ui_inventory.start(mode, obj)
+ 	if ui_hud_dotmarks and (mode == 2) then
+ 		if ui_hud_dotmarks.cfg.block_loot_window then
+ 			local _ = DEV_DEBUG and printf("[z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", obj and obj:name(), obj and obj:id())
+ 			return
+ 		end
+ 	end
+ 	base_ui_inventory_start(mode, obj)
+ end
+ 

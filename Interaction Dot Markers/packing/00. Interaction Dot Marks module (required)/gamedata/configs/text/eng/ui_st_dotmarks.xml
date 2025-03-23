@@ -26,6 +26,10 @@
 		<text>Use</text>
 	</string>
 
+	<string id="st_alti_smokeout">
+		<text>Smoke</text>
+	</string>
+
 	<string id="st_alti_takeuse">
 		<text>Take and use</text>
 	</string>
@@ -98,7 +102,7 @@
 		<text>%s %s (%s) %s %s</text>
 	</string>
 
-	<string id="st_alti_prompt_eatable">
+	<string id="st_alti_prompt_usable">
 		<text>%s %s %s</text>
 	</string>
 
@@ -461,6 +465,14 @@
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom_desc">
 		<text>If this option is enabled, explosive objects will use the standard dot marker instead of their special "I explode" icon.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash">
+		<text>Disable special icon for stashes</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash_desc">
+		<text>If this option is enabled, stashes will use the standard dot marker when their primary prompt is active, instead of the classic stash icon.
 		</text>
 	</string>
 

@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.6"
-release_date    = 20250321
+script_version  = "0.7"
+release_date    = 20250322
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -346,7 +346,7 @@ function scale_by_dist(element, dist, w, h, min, mid, max, up_amt, dn_amt, unsqu
         nw = nw * unsquish_ratio
     end
     --printf("scale_by_dist for %sx%s element:\nw %s -> nw %s | h %s -> nh %s | ratio: %s",element:GetWidth(),element:GetHeight(),w,nw,h,nh,unsquish_ratio)
-
+    
     return nw,nh
 end
 
@@ -952,6 +952,13 @@ function UIHUDMarker:InitSettings(args)
     local se_obj        = id and alife_object(id)
     local _
     self:LoadPassedArgs(args)
+    if not (self.locked_world_pos or self.locked_screen_pos) then
+        local lname     = se_obj and alife():level_name(game_graph():vertex(se_obj.m_game_vertex_id):level_id())
+        if lname ~= level.name() and not self.living_thing then
+            vl("%s se_obj level name %s is not actor map %s, destroying marker", se_obj and se_obj:name() or "Missing", lname, level.name())
+            self:Destroy()
+        return end
+    end
 
     self.start          = get_time_elapsed()
     self.name           = self.name or (id and safename and safename(id)) or (se_obj and (se_obj.character_name and se_obj:character_name() or se_obj:name())) or ""
@@ -984,16 +991,8 @@ function UIHUDMarker:InitSettings(args)
     self.med_hint_font  = self.med_hint_font or (ui_options.curr_localization() == "rus")
     self.update_int     = self.update_int or 100
     self.next_update    = time_global()
-
-    if se_obj and not self.locked_world_pos then
-
-        local level_name    = alife():level_name(game_graph():vertex(se_obj.m_game_vertex_id):level_id())
-        if level_name ~= level.name() and not self.living_thing then
-            vl("se_obj level_name %s is not actor map %s, destroying marker", level_name, level.name())
-            self:Destroy()
-        return end
-    end
-
+    self:UpdateBaseMarkerSize()
+    
     if debug_dump then dl(logdiv .. "-[UIHUDMarker:InitSettings] for %s (%s) [m_id %s] completed at %s:\n" ..
         "=| pin %s | wp %s | preset %s | %s | texture %s\n" ..
         "=| min_x %s y %s | max_x %s y %s | ARGB %s,%s,%s,%s\n" ..
@@ -1111,7 +1110,7 @@ function UIHUDMarker:SetMarkerSize(w, h, scale)
 end
 
 function UIHUDMarker:ScaleMarkerByDistance(w, h, dist, scale)
-    --vl("[%s][%s] ScaleMarkerByDistance: %sx%s | dist %s | scale %s", time_global(), self.name or self.mark_id, w and dec2(w), h and dec2(h), dec2(dist or self.last_dist or 0), scale)
+    --printf("[%s][%s] ScaleMarkerByDistance: %sx%s | dist %s | scale %s", time_global(), self.name or self.mark_id, w and dec2(w), h and dec2(h), dec2(dist or self.last_dist or 0), scale)
     self:UpdateBaseMarkerSize(w, h)
     w, h = scale_by_dist(
                 self.marker, dist or self.last_dist or 0,
