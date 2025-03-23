@@ -44,8 +44,6 @@ script_name     = "ui_hud_dotmarks"
     -   Keep an eye out for explodey things that aren't IsExplosive
     -   Dropped roubles showing "consume" prompt again
     -   So does M17 glue tube
-    -   No localized name for Agroprom stash
-            agr_smart_terrain_4_4_n_3_box
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -403,7 +401,11 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             -- ================================================================================
             --  When any marker is destroyed, unregister that ID and clear its metadata
             -- ================================================================================
-                function(mark) this.unregister_scanned_entity(mark and mark.id) end
+                function(mark)
+                    if not (mark and mark.id) then return end
+                    vl("Marker for %s destroyed, unregistering", mark.id)
+                    this.unregister_scanned_entity(mark.id) 
+                end
             ),
         }
         -- Most static values are loaded from the cfg.dotmark_preset table, thus loaded from the config file
@@ -1992,7 +1994,18 @@ function actor_on_first_update()
     )
     maingameui = ActorMenu.get_maingame()
     xml = CScriptXmlInit()
-    CreateTimeEvent("dotmark_scan_delay", time_global(), cfg.scan_start_delay, start_scanning)
+    CreateTimeEvent("dotmark_scan_delay", 0, cfg.scan_start_delay, start_scanning)
+    CreateTimeEvent("check_for_pickup_callback", 0, 0.1, (
+        -- This should bomb out if they're running old exes or have stale DB files
+        function()
+            assert(cfg.update_pickup_firing,
+                "! ERROR: The callback `actor_on_update_pickup` does not exist, and it is required for DotMarks to function!\n" ..
+                "\nYou must update to modded exes 20250306 or newer. Get them here:\n" ..
+                "https://github.com/themrdemonized/xray-monolith\n" ..
+                "\nIf you think you have updated and are still getting this error, then you MUST perform a clean reinstall of the modded exes from scratch, because you still have outdated DB files."
+            )
+        end
+    ))
 end
 
 function start_scanning()
@@ -2020,11 +2033,13 @@ function get_args_for_valid_objects(obj)
     local args = { logged_type = "something else", section = sec, clsid = cls }
 
     local function setup_item_args(iclass)
-        args = get_cfg_for_type("args", iclass, obj) or {}
-        args.id = id
-        args.clsid = cls
-        args.hidden = not cfg.scan[iclass]
-        args.has_power = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
+        args            = get_cfg_for_type("args", iclass, obj) or {}
+        args.id         = id
+        args.clsid      = cls
+        args.kind       = kind
+        args.section    = sec
+        args.hidden     = not cfg.scan[iclass]
+        args.has_power  = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
     end
 
     local ktype = get_type_for_kind(kind)
@@ -2261,7 +2276,7 @@ function unregister_scanned_entity(id)
     end
     scanned[id] = nil
 
-    vl("Unregistering scanned entity for %s and nulling all pointers to it", nameid(name, id))
+    vl("[%s] Unregistering scanned entity for %s and nulling all pointers to it", time_global(), nameid(name, id))
 end
 
 
@@ -2302,15 +2317,17 @@ function obj_has_available_sec_interact(obj, id, mark)
 
     local has_interact = required and not banned
 
-    local _ = debug_dump and (
-        vl("obj_has_available_sec_interact: %s | %s | ammo %s | eatable %s | readable %s | money %s",
-            has_interact,
-            nameid(obj, id),
-            has_ammo,
-            is_consumable,
-            is_readable,
-            mark.money
-        )
+    vl("[obj_has_available_sec_interact] %s: %s\n" ..
+        "^ Required: box %s | batt %s | ammo %s | eatable %s | readable %s\n" ..
+        "~ Banned: money %s",
+        nameid(obj, id),
+        has_interact,
+        is_invbox,
+        has_batteries,
+        has_ammo,
+        is_consumable,
+        is_readable,
+        mark.money
     )
     return has_interact
 end
@@ -2351,9 +2368,9 @@ function scan_nearby_object(obj)
         args            = args or {}
         args.id         = id
         args.mark_id    = m_id
-        args.kind       = kind
         args.name       = get_localization(obj, nil, sec) or nil
         args.preset     = "dotmark"
+        args.is_grenade = args.pickup and (args.kind == "w_explosive")
 
         if debug_dump then
             vl("Passing the following args to utils_catspaw_hudmarks:")
@@ -3013,6 +3030,7 @@ function on_key_release(key)
 end
 
 function actor_on_update_pickup(obj)
+    cfg.update_pickup_firing = true
     cfg.last_pickup = cfg.available_pickup
     cfg.available_pickup = obj and obj:id() or nil
     if cfg.last_pickup and cfg.available_pickup and (cfg.last_pickup ~= cfg.available_pickup) then
@@ -3023,6 +3041,7 @@ end
 function actor_on_item_take(obj)
     local id = obj and obj:id()
     if id and cfg.markers[id] then
+        vl("Actor just took %s, unregistering scanned object", nameid(obj, id))
         unregister_scanned_entity(id)
     end
 end
@@ -3030,6 +3049,7 @@ end
 function handle_npc_death(npc)
     local id = npc and npc:id()
     if id and cfg.markers[id] then
+        vl("NPC %s has died, unregistering them and re-registering as corpse object", nameid(npc))
         unregister_scanned_entity(id)
         scan_nearby_object(npc)
     end

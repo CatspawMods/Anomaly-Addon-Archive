@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7"
-release_date    = 20250322
+script_version  = "0.7.1"
+release_date    = 20250323
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -479,10 +479,11 @@ function HUDMarkerManager:RegisterCallbacks()
     RegisterScriptCallback("actor_on_update_pickup", self)
     RegisterScriptCallback("GUI_on_show", self)
     RegisterScriptCallback("GUI_on_hide", self)
+    return true
 end
 
 function HUDMarkerManager:actor_on_update()
-    vl("[HUDMarkerManager:actor_on_update]")
+    --vl("[HUDMarkerManager:actor_on_update]")
     local obj = level.get_target_obj()
     self.last_crosshair     = self.current_crosshair
     self.current_crosshair  = obj and obj:id() or nil
@@ -501,7 +502,7 @@ end
 
 
 function HUDMarkerManager:actor_on_update_pickup(obj)
-    vl("[HUDMarkerManager:actor_on_update_pickup]")
+    --vl("[HUDMarkerManager:actor_on_update_pickup]")
     self.last_pickup     = self.current_pickup
     self.current_pickup  = obj and obj:id() or nil
     --vl("Current pickup target: %s", self.current_pickup)
@@ -590,7 +591,7 @@ end
 
 function HUDMarkerManager:HoverIn(mark)
     if not mark then return end
-    vl("[HUDMarkerManager:HoverIn] Best hovered marker is now %s | %s", mark.mark_id, mark.last_hover)
+    --vl("[HUDMarkerManager:HoverIn] Best hovered marker is now %s | %s", mark.mark_id, mark.last_hover)
     self.best_hover_mk  = mark.mark_id
     self.best_hover_id  = mark.id
     self.best_hover_dp  = mark.last_hover
@@ -599,7 +600,7 @@ end
 
 function HUDMarkerManager:HoverOut(mark)
     if not mark then return end
-    vl("[HUDMarkerManager:HoverOut] %s is no longer the best hovered marker | dist %s | dp %s", mark.mark_id, mark.last_dist, mark.last_hover)
+    --vl("[HUDMarkerManager:HoverOut] %s is no longer the best hovered marker | dist %s | dp %s", mark.mark_id, mark.last_dist, mark.last_hover)
     if (mark.mark_id == self.best_hover_mk) then
         self.best_hover_mk  = nil
         self.best_hover_id  = nil
@@ -952,10 +953,10 @@ function UIHUDMarker:InitSettings(args)
     local se_obj        = id and alife_object(id)
     local _
     self:LoadPassedArgs(args)
-    if not (self.locked_world_pos or self.locked_screen_pos) then
-        local lname     = se_obj and alife():level_name(game_graph():vertex(se_obj.m_game_vertex_id):level_id())
-        if lname ~= level.name() and not self.living_thing then
-            vl("%s se_obj level name %s is not actor map %s, destroying marker", se_obj and se_obj:name() or "Missing", lname, level.name())
+    if not (self.skip_online_checks or self.locked_world_pos or self.locked_screen_pos) then
+        local level_name= se_obj and alife():level_name(game_graph():vertex(se_obj.m_game_vertex_id):level_id())
+        if level_name ~= level.name() and not self.living_thing then
+            vl("%s se_obj level name %s is not actor map %s, destroying marker", se_obj and se_obj:name() or "Missing", level_name, level.name())
             self:Destroy()
         return end
     end
@@ -1201,7 +1202,7 @@ end
 function UIHUDMarker:actor_on_update()
     if self.next_update > time_global() then return end
     self.next_update = get_next_check(self.update_int)
-    vl("[UIHUDMarker:actor_on_update][%s] tg %s | next_update %s", self.mark_id, time_global(), self.next_update)
+    --vl("[UIHUDMarker:actor_on_update][%s] tg %s | next_update %s", self.mark_id, time_global(), self.next_update)
     --vl("[UIHUDMarker:actor_on_update] Time to update %s", self.id)
     self:Update()
 end
@@ -1405,7 +1406,8 @@ function UIHUDMarker:Update()
         return
     end
 
-    self.last_dist  = dist or self.last_dist
+    self.dist_delta = (math.abs(dist - self.last_dist))
+    self.last_dist  = dist
 
     if self.los_check_int then
         -- Check for line-of-sight to marker if an interval is set in los_check_int

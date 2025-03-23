@@ -5,7 +5,7 @@ b
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.8-b14"
+script_version  = "0.9-b1"
 release_date    = 20250323
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -213,7 +213,7 @@ local base_config = {
                     is_npc         = true, -- these three flags should be obvious
                     is_alive       = true, -- utilized during main loop to speed up checks
                     is_stalker     = true, -- passed through via args to the interaction prompts
-                    section        = sec,
+                    --section        = sec,
                     bone           = "bip01_spine1",
                     -- causes marker position to be based on this bone
                     pos_adjust     = vector():set(0, 0.1, 0),
@@ -290,7 +290,7 @@ local base_config = {
                 local args = {
                     is_npc          = true,
                     comm            = get_object_community(obj) or nil,
-                    section         = obj:section(),
+                    --section         = obj:section(),
                     bone            = "bip01_spine1",
                     hint_filters = {
                         ["dead_character_use"]          = "dead_character_use",
@@ -409,8 +409,8 @@ local base_config = {
                     bone            = "wpn_body",
                     ammo_count      = count,
                     -- if ammo_count and ammo_count > 0, unload-ammo secondary action will be shown
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
+                    --clsid           = obj:clsid(),
+                    --section         = obj:section(),
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -423,8 +423,8 @@ local base_config = {
                     pickup          = true,
                     is_attach       = true,
                     --no_sec          = true,
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
+                    --clsid           = obj:clsid(),
+                    --section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Attachments") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -437,8 +437,8 @@ local base_config = {
                     logged_type     = "a grenade",
                     pickup          = true,
                     no_sec          = true,
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
+                    --clsid           = obj:clsid(),
+                    --section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Grenades") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -474,8 +474,8 @@ local base_config = {
                     no_sec          = true,
                     --bone            = "joint1",
                     texture         = get_cfg_for_type("tex", "Outfits") or cfg.marker_dotmark,
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
+                    --clsid           = obj:clsid(),
+                    --section         = obj:section(),
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -491,8 +491,8 @@ local base_config = {
                     has_parts       = true,
                     no_sec          = true,
                     --bone            = "joint1",
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
+                    --clsid           = obj:clsid(),
+                    --section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Headgear") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -515,25 +515,8 @@ local base_config = {
         Consumables = (
             function(obj)
                 local section       = obj and obj:section()
-                local multi_uses    = nil
-                local money         = nil
                 local name          = nil
-
-                if section:find("^money_") then
-                    money           = ini_sys:r_string_ex(section, "money_amount") or nil
-                    --printf("money amount: %s", money)
-                    local pre       = ""
-                    if money and money:find(",") then
-                        money       = str_explode(money, ",")
-                        money       = money[1] and money[2] and math.floor((tonumber(money[1]) + tonumber(money[2])) * 0.5)
-                        pre         = "~"
-                    elseif not money then
-                        money       = ini_sys:r_float_ex(section, "cost") or nil
-                        --printf("no money_amount found, cost is %s", money)
-                    end
-                    money           = money and (pre .. tostring(money) .. " " .. gts("st_roubles"))
-                end
-                
+                local multi_uses    = nil
                 if section and IsItem("multiuse", section, obj) then
                     multi_uses = obj:get_remaining_uses()
                 end
@@ -541,13 +524,13 @@ local base_config = {
                 return obj and {
                     logged_type     = money and "money (under consumables)" or "food, drugs, or drink",
                     pickup          = true,
-                    money           = money or nil,
+                    money           = get_cash_quantity_string(section) or nil,
                     no_sec          = money and true or nil,
                     name            = name or nil,
                     --bone            = "bone01",
                     multi_uses      = multi_uses,
                     -- if multi_uses and multi_uses > 1, the number of uses will be suffixed to the prompt
-                    section         = section,
+                    --section         = section,
                     texture         = get_cfg_for_type("tex", "Consumables") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -561,14 +544,16 @@ local base_config = {
                 if section and IsItem("multiuse", section, obj) then
                     multi_uses = obj:get_remaining_uses()
                 end
+
                 return obj and {
                     logged_type     = "a tool",
                     pickup          = true,
                     multi_uses      = multi_uses,
+                    money           = get_cash_quantity_string(section) or nil,
                     manual_use      = true,
                     use_verb        = "st_alti_takeuse",
                     --no_sec          = true,
-                    section         = section,
+                    --section         = section,
                     texture         = get_cfg_for_type("tex", "Tools") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -583,8 +568,8 @@ local base_config = {
                     has_battery     = true,
                     has_power       = true,
                     bone            = "wpn_body",
-                    clsid           = obj:clsid(),
-                    section         = obj:section(),
+                    --clsid           = obj:clsid(),
+                    --section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Devices") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -597,7 +582,7 @@ local base_config = {
                     logged_type     = "a quest item",
                     pickup          = true,
                     no_sec          = true,
-                    section         = obj:section(),
+                    --section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -695,7 +680,7 @@ local base_config = {
                     pickup          = true,
                     --bone            = name:find("patch" and "joint1" or "link"),
                     no_sec          = cfg.useless_shit[section] and true or nil,
-                    section         = section,
+                    --section         = section,
                     is_readable     = kind and (kind == "i_letter") or nil,
                     -- Book or letter that can be picked up and read as a secondary action
                     is_backpack     = (obj:clsid() == clsid.equ_backpack),
@@ -741,7 +726,7 @@ local base_config = {
                     texture             = get_cfg_for_type("tex", "Workshops") or cfg.marker_dotmark,
                     visual              = visual,
                     no_sec              = true,
-                    section             = obj:section(),
+                    --section             = obj:section(),
                     interact_dist       = 1.5,
                     refresh_text        = true,
                     -- Forces the prompt text to check for changes on every update
@@ -776,6 +761,27 @@ local base_config = {
     },
 }
 -- =======================================================================    
+
+function get_cash_quantity_string(section)
+    local money
+    if section and section:find("^money_") then
+        money           = ini_sys:r_string_ex(section, "money_amount") or nil
+        --printf("money amount: %s", money)
+        local pre       = ""
+        if money and money:find(",") then
+            money       = str_explode(money, ",")
+            money       = money[1] and money[2] and math.floor((tonumber(money[1]) + tonumber(money[2])) * 0.5)
+            pre         = "~"
+        elseif not money then
+            money       = ini_sys:r_float_ex(section, "cost") or nil
+            --printf("no money_amount found, cost is %s", money)
+        end
+        money           = money and (pre .. tostring(money) .. " " .. gts("st_roubles"))
+    end
+    --printf("get_cash_quantity_string for section %s: %s", section, money)
+    return money
+end
+
 
 function get_base_config_table() return base_config end
 
