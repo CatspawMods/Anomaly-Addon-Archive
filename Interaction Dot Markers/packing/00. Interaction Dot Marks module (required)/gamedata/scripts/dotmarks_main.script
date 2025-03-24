@@ -5,8 +5,8 @@ b
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.9-b2"
-release_date    = 20250323
+script_version  = "0.9-b3"
+release_date    = 20250324
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -38,7 +38,7 @@ release_date    = 20250323
     reinstall of the modded exes from scratch.
 
     If it's even older than that, some stuff may not work at all. You
-    should update your modded exes ASAP.    
+    should update your modded exes ASAP.
 -- =====================================================================]]
 assert(utils_catspaw_common, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist!\n\n"
@@ -71,6 +71,7 @@ local is_living_thing   = utils_catspaw_common.is_living_thing
 local safeid            = utils_catspaw_common.safeid
 local get_obj_kind      = utils_catspaw_common.get_obj_kind
 local safename          = utils_catspaw_text.safename
+local nameid            = utils_catspaw_text.obj_name_and_id
 local get_argb          = utils_catspaw_mapspots.get_argb
 local paw               = tasks_placeable_waypoints
 local gts               = game.translate_string
@@ -213,11 +214,11 @@ local base_config = {
                     is_npc         = true, -- these three flags should be obvious
                     is_alive       = true, -- utilized during main loop to speed up checks
                     is_stalker     = true, -- passed through via args to the interaction prompts
-                    --section        = sec,
+                    -- Other object classes use similar flags to speed up looping checks.
                     bone           = "bip01_spine1",
-                    -- causes marker position to be based on this bone
+                    -- Causes marker position to be based on this bone
                     pos_adjust     = vector():set(0, 0.1, 0),
-                    -- adjust final marker world pos additively by this value
+                    -- Adjust final marker world pos additively by this value
                     texture        = cfg.marker_dotmark,
                     -- The get_cfg_for_type call for the "tex" type returns the contents of
                     -- the cfg.tex table for the specified object class.
@@ -230,8 +231,9 @@ local base_config = {
                     if cfg.vendors[sec] then
                         vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
                         args.service_type   = cfg.vendors[sec]
-                        -- Service NPCs (e.g. traders, mechancis) show a special icon instead of
-                        -- the dot marker when they are targeted for interaction.
+                        -- Service NPCs (e.g. traders, mechancis) use an active_swap to show
+                        -- a special icon instead of the dot marker when they are targeted
+                        -- for interaction.
                         -- killswitched by cfg.disable_icon_services
                     end
                     if not args.service_type then
@@ -252,28 +254,16 @@ local base_config = {
                 if args.service_type then
                     local service_icon = args.service_type and cfg.service_icons[args.service_type] or nil
                     vl("Found NPC service icon %s, enabling active swap", service_icon)
-                    -- The active_swap arg specifies a list of args that are swapped in
+                    -- The active_swap specifies a list of args that are swapped in
                     -- whenever the marker becomes the current active target.
                     -- The original values are restored when it is no longer targeted.
-                    args.active_swap = {
-                        texture     = service_icon,
-                        width       = 18,   -- marker width
-                        height      = 18,   -- marker height
-                        line_adj_x  = 4,    -- x position of the white line
-                        line_adj_y  = 11,   -- y position of the white line
-                        line_adj_h  = -11,  -- height of the white line
-                    }
+                    -- All of these are loaded from tables in dotmarks_defaults.
+                    args.active_swap = cfg.swap_service
+                    args.active_swap.texture = service_icon
                 elseif not cfg.disable_icon_talk then
                     local texture = get_cfg_for_type("tex", "Stalkers")
                     vl("Stalker talk icon %s enabled for active swap", texture)
-                    args.active_swap = {
-                        texture     = texture,
-                        width       = 16,
-                        height      = 16,
-                        line_adj_x  = 4,
-                        line_adj_h  = -11,
-                        line_adj_y  = 11,
-                    }
+                    args.active_swap = cfg.swap_talk
                 end
 
                 return args
@@ -290,7 +280,7 @@ local base_config = {
                 local args = {
                     is_npc          = true,
                     comm            = get_object_community(obj) or nil,
-                    --section         = obj:section(),
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     bone            = "bip01_spine1",
                     hint_filters = {
                         ["dead_character_use"]          = "dead_character_use",
@@ -338,17 +328,21 @@ local base_config = {
                 if not obj then return end
                 local sec           = obj:section()
                 local name          = obj:name()
-                --local is_tb         = name and name:find("^tb_")
-                local unknown       = (gts("st_paw_unknown").." "..gts("st_paw_stash"))
+                --local unknown       = (gts("st_paw_unknown").." "..gts("st_paw_stash"))
                 local args = {
                     logged_type     = "a stash",
                     is_stash        = true,
+                    bone            = get_best_pos_bone(obj) or nil,
+                    -- By default, marker position is by obj:center(), which is the center of
+                    -- the physics shell.
+                    -- However, obj:center() doesn't update Lua often in the engine, while
+                    -- bone position is updated extremely frequently. So try to get a good
+                    -- bone pos if possible.
+                    -- Uses the obj:list_bones() method added in 20250315 modded exes.
                     is_backpack     = (sec == "inv_backpack"),
-                    --name            = is_tb and unknown or nil,
                     is_display      = cfg.display_cases[sec] or nil,
                     has_items       = not obj:is_inv_box_empty(),
                     texture         = cfg.marker_dotmark,
-                    --los_pos_adjust  = vector():set(0, 0.5, 0),
                     hint_filters   = {
                         ["inventory_box_use"]       = "inventory_box_use",
                         ["actor_inventory_box_use"] = "actor_inventory_box_use",
@@ -356,14 +350,7 @@ local base_config = {
                     },
                 }
                 if not cfg.disable_icon_stash then
-                    args.active_swap = {
-                        texture     = get_cfg_for_type("tex", "Stashes"),
-                        width       = 14,
-                        height      = 14,
-                        line_adj_x  = 4, 
-                        line_adj_y  = 10,
-                        line_adj_h  = -10,
-                    }
+                    args.active_swap = cfg.swap_stash
                 end
                 return args
             end
@@ -373,9 +360,10 @@ local base_config = {
             function(obj)
                 return obj and {
                     logged_type     = "ammo",
-                    --bone            = "link",
+                    bone            = get_best_pos_bone(obj) or nil,
                     pickup          = true,     -- object is a gettable inventory item
-                    no_sec          = true,
+                    no_sec          = true,     -- don't bother checking for secondary action
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -385,13 +373,13 @@ local base_config = {
         Weapons = (
             function(obj)
                 if weapon_showcase and not is_empty(weapon_showcase.weapon_displays) then
+                    -- Ignore weapons in Hideout Furniture display cases
                     local id = obj and obj:id()
                     for case_id, case_guns in pairs(weapon_showcase.weapon_displays) do
                         for item_id, world_id in pairs(case_guns) do
                             if (id == item_id) or (id == world_id) then
                                 cfg.racked_items[world_id] = case_id
                                 --printf("%s: case %s | item_id %s | world_id %s", obj:name(), case_id, item_id, world_id)
-                                -- Ignore weapons in Hideout Furniture display cases
                                 return nil
                             end
                         end
@@ -404,13 +392,10 @@ local base_config = {
                     has_parts       = true,
                     pickup          = true,
                     texture         = get_cfg_for_type("tex", "Weapons") or cfg.marker_dotmark,
-                    --pos_adjust      = vector():set(0, 0.15, 0),
-                    -- adjusts world coordinates of the marker itself
                     bone            = "wpn_body",
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     ammo_count      = count,
-                    -- if ammo_count and ammo_count > 0, unload-ammo secondary action will be shown
-                    --clsid           = obj:clsid(),
-                    --section         = obj:section(),
+                    -- if ammo_count > 0, unload-ammo secondary action will be shown
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -422,9 +407,8 @@ local base_config = {
                     logged_type     = "an attachable item",
                     pickup          = true,
                     is_attach       = true,
-                    --no_sec          = true,
-                    --clsid           = obj:clsid(),
-                    --section         = obj:section(),
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Attachments") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -437,8 +421,8 @@ local base_config = {
                     logged_type     = "a grenade",
                     pickup          = true,
                     no_sec          = true,
-                    --clsid           = obj:clsid(),
-                    --section         = obj:section(),
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Grenades") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -448,6 +432,7 @@ local base_config = {
         Explosive = (
             -- This seems to be explosive barrels and the like
             -- Need to track down others in this class if it's going to stay
+            -- Some explosive pickups get miscategorized as this, and need section lookups
             function(obj)
                 local visual        = obj and obj:get_visual_name()
                 return obj and {
@@ -472,10 +457,9 @@ local base_config = {
                     pickup          = true,
                     has_parts       = true, -- Item has component parts with condition
                     no_sec          = true,
-                    --bone            = "joint1",
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.1, 0),
                     texture         = get_cfg_for_type("tex", "Outfits") or cfg.marker_dotmark,
-                    --clsid           = obj:clsid(),
-                    --section         = obj:section(),
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -483,16 +467,14 @@ local base_config = {
     -- =======================================================================    
         Headgear = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 return obj and {
                     logged_type     = "headgear",
                     pickup          = true,
                     has_parts       = true,
                     no_sec          = true,
-                    --bone            = "joint1",
-                    --clsid           = obj:clsid(),
-                    --section         = obj:section(),
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
+                    bone            = get_best_pos_bone(obj) or nil,
                     texture         = get_cfg_for_type("tex", "Headgear") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -506,6 +488,8 @@ local base_config = {
                     pickup          = true,
                     no_sec          = true,
                     is_arty         = true,
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -527,7 +511,8 @@ local base_config = {
                     money           = get_cash_quantity_string(section) or nil,
                     no_sec          = money and true or nil,
                     name            = name or nil,
-                    --bone            = "bone01",
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     multi_uses      = multi_uses,
                     -- if multi_uses and multi_uses > 1, the number of uses will be suffixed to the prompt
                     --section         = section,
@@ -551,9 +536,9 @@ local base_config = {
                     multi_uses      = multi_uses,
                     money           = get_cash_quantity_string(section) or nil,
                     manual_use      = true,
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     use_verb        = "st_alti_takeuse",
-                    --no_sec          = true,
-                    --section         = section,
                     texture         = get_cfg_for_type("tex", "Tools") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -568,8 +553,6 @@ local base_config = {
                     has_battery     = true,
                     has_power       = true,
                     bone            = "wpn_body",
-                    --clsid           = obj:clsid(),
-                    --section         = obj:section(),
                     texture         = get_cfg_for_type("tex", "Devices") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -582,7 +565,7 @@ local base_config = {
                     logged_type     = "a quest item",
                     pickup          = true,
                     no_sec          = true,
-                    --section         = obj:section(),
+                    bone            = get_best_pos_bone(obj) or nil,
                     texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -597,13 +580,13 @@ local base_config = {
                     is_campfire     = true,
                     no_sec          = true,
                     name            = gts("st_itm_campfire"),
-                    --los_pos_adjust  = vector():set(0, 0, 0),
-                    -- Changes the world coordinates used for LOS checks
                     pos_adjust      = vector():set(0, 0, 0),
                     no_pri          = true, -- Do not display a primary interaction prompt
                     -- This is because campfire interactions are shown via the
                     -- tutorial system, and are handled as a fixed-position
                     -- screen prompt
+                    -- Now that I have a hook between campfire and prompt via
+                    -- the active swap, investigate fully hooking them in
                 }
             end
         ),
@@ -632,14 +615,7 @@ local base_config = {
                     -- Doors can be interacted with from a greater than normal distance
                 }
                 if use_icon then
-                    args.active_swap = {
-                        texture     = get_cfg_for_type("tex", "Doors"),
-                        width       = 20,
-                        height      = 20,
-                        line_adj_x  = 4,
-                        line_adj_h  = -12,
-                        line_adj_y  = 12,
-                    }
+                    args.active_swap = cfg.swap_door
                 end
                 return args
             end
@@ -647,8 +623,6 @@ local base_config = {
     -- =======================================================================    
         Boxes = (
             function(obj)
-                --get_bones_for_obj(obj)
-
                 if not obj then return end
                 local visual = obj:get_visual_name()
                 return {
@@ -669,18 +643,15 @@ local base_config = {
         Misc = (
             function(obj)
                 if not obj then return end
-                --get_bones_for_obj(obj)
                 local name = obj:name()
                 local section = obj:section()
                 local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
                 --printf("Misc loot %s has condition: %s", obj:name(), utils_item.is_degradable(nil, section))
                 return {
-                    kind            = kind,
-                    -- Used for further object type detection
                     pickup          = true,
-                    --bone            = name:find("patch" and "joint1" or "link"),
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
                     no_sec          = cfg.useless_shit[section] and true or nil,
-                    --section         = section,
                     is_readable     = kind and (kind == "i_letter") or nil,
                     -- Book or letter that can be picked up and read as a secondary action
                     is_backpack     = (obj:clsid() == clsid.equ_backpack),
@@ -795,6 +766,24 @@ end
 
 function get_type_for_section(section)
     return section and cfg.section_lookup and cfg.section_lookup[section]
+end
+
+function get_bone_list(obj, hudmodel)
+    if not (obj and obj.list_bones) then return end
+    return obj:list_bones(hudmodel)
+end
+
+function get_best_pos_bone(obj)
+    local bones = get_bone_list(obj)
+    if not bones then return end
+    printf("get_best_pos_bone found %s bones on %s", size_table(bones), nameid(obj))
+    for k,v in pairs(bones) do
+        printf("Parsing bone %s: %s", k, v)
+        if cfg.bones[v] then
+            printf("Found match for %s in cfg.bones", v)
+            return v, k
+        end
+    end
 end
 
 function near_scan_radius()
@@ -943,6 +932,7 @@ function load_file_data(ini_name, cfg_table)
     local function load_table_values(from_tbl, to_tbl)
         if not to_tbl then to_tbl = {} end
         for k,v in pairs(from_tbl) do
+            printf("|!| %s = %s", k, v)
             local template = false
             if tonumber(v) then
                 to_tbl[k] = tonumber(v)

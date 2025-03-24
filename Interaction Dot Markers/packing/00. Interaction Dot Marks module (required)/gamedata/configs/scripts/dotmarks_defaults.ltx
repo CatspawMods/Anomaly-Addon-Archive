@@ -17,6 +17,7 @@ blacklisted_clsids
 blacklisted_ids
 blacklisted_kinds
 blacklisted_sections
+bones
 breakable_box_visuals
 colors
 display_cases
@@ -43,6 +44,14 @@ tex
 useless_shit
 vendors
 weight_colors
+
+[template_tables]
+; Like above, but loaded first and are populated with the section by the same name
+swap_door
+swap_dotactive
+swap_service
+swap_stash
+swap_talk
 
 ; =================================================================================
 [default_settings]
@@ -161,6 +170,7 @@ tutorial_prompt_y 			= 600
 ; Screen pos for the "tutorial" prompts at the bottom of the screen
 disable_icon_activedot 		= false
 ; Disable the ringed dot that a dotmark changes to when active
+; Need to add this to MCM
 disable_icon_box 			= false
 ; Disables the special "breakable item" icon used for physics boxes
 disable_icon_door 			= false
@@ -227,15 +237,18 @@ item_card_icon_y    		= 0
 sp_icon_pos_x 				= 10
 sp_icon_pos_y				= 1
 ; =================================================================================
-callback_assert_delay 		= 1
-assert_modded_exes 			= true
-; Forces the script to quit if an outdated modded exes version is found, with an
+killswitch_all 				= false
+killswitch_pickup 			= false
+;killswitch_markers 			= false ; not implemented yet
+; =================================================================================
+warn_modded_exes 			= true
+; Displays an in-game tip if an outdated modded exes version is found, with an
 ; informative error message about where to get current modded exes.
 
 ; DotMarks does not officially support any version earlier than 20250306, and
 ; more recent is better. If you are on an older version and want to force it to
-; run anyway, this switch will let you do it--but you are completely on your own,
-; it will probably crash, and I absolutely guarantee that many things will not work
+; run anyway, you can turn off this warning--but you are completely on your own, it
+; will probably crash, and I absolutely guarantee that many things will not work
 ; well, if at all.
 ; =================================================================================
 
@@ -329,7 +342,7 @@ bridge_up_red_forest 			= bridge_up_red_forest_tips
 
 ; It's probably best not to mess with these unless you know what you're doing with ARGB values.
 
-clr_dmark_norm 	= 255,220,220,220
+clr_dmark_norm 	= 255,255,255,255
 ; Base color of the marker itself - not yet used
 clr_wpo_red		= 255,196,18,18
 clr_wpo_orn 	= 255,238,153,26
@@ -383,6 +396,47 @@ bolts_pack
 artefact_container
 explo_balon_gas
 explo_jerrycan_fuel
+explosive_mobiltank
+explosive_tank
+
+[swap_dotactive]
+texture 	= ui_catsy_marker_dotactive
+width       = 12
+height      = 12
+line_adj_h  = -11
+line_adj_x  = 3.25
+line_adj_y  = 10
+
+[swap_door]
+texture     = ui_catsy_marker_door
+width       = 20
+height      = 20
+line_adj_x  = 4
+line_adj_h  = -12
+line_adj_y  = 12
+
+[swap_stash]
+texture     = ui_catsy_marker_stash
+width       = 14
+height      = 14
+line_adj_h  = -13
+line_adj_x  = 3
+line_adj_y  = 12
+
+[swap_talk]
+texture     = ui_catsy_marker_talk
+width       = 16
+height      = 16
+line_adj_x  = 4
+line_adj_h  = -11
+line_adj_y  = 11
+
+[swap_service]
+width       = 18
+height      = 18
+line_adj_x  = 4
+line_adj_y  = 11
+line_adj_h  = -11
 
 ; ================================================================================
 ; 	DON'T TOUCH BELOW THIS LINE
@@ -448,8 +502,9 @@ joint
 
 [door_visuals]
 ; Defines which object visuals are classified as which type of door, and their marker pos adjustment
-dynamics\door\door_trader 		= 0.6
-dynamics\door\shkaf_work_01_door= 0
+dynamics\door\door_trader 				= 0.6
+dynamics\door\shkaf_work_01_door		= 0
+dynamics\door\door_old_wood_120x240_01 	= 0
 
 [prompts]
 ; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
@@ -555,22 +610,34 @@ G_F1 	    	= Weapons
 G_RGD5 	    	= Weapons
 
 [section_lookup]
-hand_watch      = Devices
-wpn_binoc_inv   = Devices
-lead_box        = Tools
-csky_patch      = Misc
-dolg_patch      = Misc
-ecolog_patch    = Misc
-freedom_patch   = Misc
-stalker_patch   = Misc
-bandit_patch    = Misc
-monolith_patch  = Misc
-army_patch      = Misc
-killer_patch    = Misc
-renegade_patch  = Misc
-isg_patch       = Misc
-greh_patch      = Misc
-af_misery_bread = Artefacts
+hand_watch      	= Devices
+wpn_binoc_inv   	= Devices
+lead_box        	= Tools
+csky_patch      	= Misc
+dolg_patch      	= Misc
+ecolog_patch    	= Misc
+freedom_patch   	= Misc
+stalker_patch   	= Misc
+bandit_patch    	= Misc
+monolith_patch  	= Misc
+army_patch      	= Misc
+killer_patch    	= Misc
+renegade_patch  	= Misc
+isg_patch       	= Misc
+greh_patch      	= Misc
+af_misery_bread 	= Artefacts
+explosive_mobiltank	= Tools
+explosive_tank 		= Tools
+
+[bones]
+; List of valid bones to use for positioning
+bone01
+joint
+joint1
+link
+lock
+patch
+wpn_body
 
 ; =================================================================================
 [mcm_paths]

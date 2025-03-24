@@ -785,4 +785,36 @@
 		<text>The duration of the elastic pop-in animation that plays when focus is transferred to a marker. Can be up to 2000ms. Setting to zero will disable the feature.</text>
 	</string>
 
+	<string id="st_dotmarks_epicfail_error">
+		<text>$clr_redERROR!$clr_wht DotMarks depdendency failure!\n</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_noexes">
+		<text>\n$clr_lblInteraction Dot Marks$clr_def could not initialize because it $clr_gldrequires the most recent modded exes$clr_def based on the Anomaly 1.5.3 binaries by TheMrDemonized. These binaries fix vanilla bugs, add many engine features and graphical improvements, and are a superior experience over vanilla in every way.</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_oldexes">
+		<text>\n$clr_yelInteraction Dot Marks$clr_def could not initialize because it requires a modded exes version of $clr_grn%s$clr_def or newer, and yours is $clr_red%s$clr_def.\n
+		\n$clr_def</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_staledbs">
+		<text>\n$clr_yelInteraction Dot Marks$clr_def could not initialize because it requires the $clr_yelactor_on_update_pickup$clr_def callback, added in exes version $clr_grn20250306$clr_def. Your modded exes are release %s, but the callback is missing!\n
+			$clr_def
+			\nIf you're seeing this message, it means that you've updated the exe files but are still using old DB files. You must perform a clean reinstall of the modded exes, from scratch.</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_nohmm">
+		<text>\n$clr_yelInteraction Dot Marks$clr_def could not initialize because it couldn't find the HUD Mark Manager, which it requires.\n
+
+		\nThat means that $clr_gldutils_catspaw_hudmarks$clr_def has completely shit the bed somehow. Please download the most recent version of my core utility scripts here:\n
+
+        \n$clr_lblhttps://github.com/CatspawMods/Anomaly-Addon-Archive/tree/main/Modding%20Tools/Catsy%20Utils</text>
+	</string>
+
+	<string id="st_get_modded_exes">
+		<text>\nYou can download the most up-to-date version here:\n 
+        \nhttps://github.com/themrdemonized/xray-monolith</text>
+    </string>
+
 </string_table>

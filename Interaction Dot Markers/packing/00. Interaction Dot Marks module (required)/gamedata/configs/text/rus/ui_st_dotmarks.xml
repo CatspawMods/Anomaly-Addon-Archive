@@ -781,5 +781,36 @@
 		<text>Длительность анимации эластичного всплытия, которая воспроизводится при переносе фокуса на маркер. Может составлять до 2000 мс. При установке нуля функция будет отключена.</text>
 	</string>
 
+	<string id="st_dotmarks_epicfail_error">
+		<text>$clr_redERROR!$clr_wht DotMarks depdendency failure!\n</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_noexes">
+		<text>\n$clr_lblInteraction Dot Marks не смог инициализироваться, потому что $clr_gldему требуются$clr_def самые последние модифицированные экзы, основанные на двоичных файлах Anomaly 1.5.3 от TheMrDemonized. Эти файлы исправляют ошибки ванильной версии, добавляют множество функций движка и графических улучшений, и во всех отношениях превосходят ванильную версию.</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_oldexes">
+		<text>\n$clr_yelInteraction Dot Marks$clr_def не удалось инициализировать, поскольку для этого требуется модифицированная версия двоичных файлов $clr_grn%s$clr_def или новее, а ваша версия $clr_red%s$clr_def.\n
+		\n$clr_def</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_staledbs">
+		<text>\n$clr_yelInteraction Dot Marks$clr_def не удалось инициализировать, потому что для этого требуется обратный вызов $clr_yelactor_on_update_pickup$clr_def, добавленный в exes версии $clr_grn20250306$clr_def. Ваши модифицированные exes имеют релиз %s, но обратный вызов отсутствует!\n
+			$clr_def
+			\nЕсли вы видите это сообщение, это означает, что вы обновили exe-файлы, но все еще используете старые файлы DB. Чтобы этот аддон работал правильно, вам $clr_yelmust$clr_def выполнить полную чистую переустановку модных экзешников.</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_nohmm">
+		<text>\n$clr_yelInteraction Dot Marks$clr_def не смог инициализироваться, потому что не смог найти HUD Mark Manager, который ему требуется.\n
+
+		\nЭто означает, что $clr_gldutils_catspaw_hudmarks$clr_def каким-то образом полностью испортился. Пожалуйста, скачайте последнюю версию моих основных скриптов утилиты здесь:\n
+
+        \n$clr_lblhttps://github.com/CatspawMods/Anomaly-Addon-Archive/tree/main/Modding%20Tools/Catsy%20Utils</text>
+	</string>
+
+	<string id="st_get_modded_exes">
+		<text>\nСамую последнюю версию можно скачать здесь:\n 
+        \nhttps://github.com/themrdemonized/xray-monolith</text>
+    </string>
 
 </string_table>
