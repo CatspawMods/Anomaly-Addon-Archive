@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.8.2"
-release_date    = 20250322
+script_version 	= "1.9"
+release_date    = 20250323
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -112,6 +112,7 @@ engine_features = {
 	cmcolor 	= { ver = 20240523, gamma = true, name = "Context menu colors"},
 	-- Enabling color in context menus can have undesirable side effects across the entire game
 	dxml_cache 	= { ver = 20250228, gamma = false, name = "DXML on_xml_read cacheing"},
+	pickup_cb 	= { ver = 20250306, gamma = false, name = "actor_on_update_pickup callback"},
 }
 
 local game_version  = gts("ui_st_game_version")
