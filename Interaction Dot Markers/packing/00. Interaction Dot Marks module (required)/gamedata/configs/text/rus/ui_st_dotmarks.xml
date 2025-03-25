@@ -505,6 +505,14 @@
 		</text>
 	</string>
 	
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks">
+		<text>Отключить специальный значок для целей миссии</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks_desc">
+		<text>Если эта опция включена, объекты, являющиеся целью текущей активной задачи, будут использовать стандартный точечный маркер вместо своих специальных значков маркеров задач.
+		</text>
+	</string>
+	
 	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_in_time">
 		<text>Продолжительность появления подсказки</text>
 	</string>

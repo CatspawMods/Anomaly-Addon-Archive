@@ -16,8 +16,10 @@
 		<texture id = "ui_catsy_icon_sortplus_fave" x="448" y="320" width="64" height="64" />
 		<texture id = "ui_catsy_icon_sortplus_junk" x="512" y="320" width="64" height="64" />
 		<texture id = "ui_catsy_marker_explosive" x="576" y="320" width="64" height="64" />
-		<texture id = "ui_catsy_main_drop" x="334" y="0" width="690" height="128" />
-		<texture id = "ui_catsy_card_drop" x="334" y="128" width="690" height="128" />
+		<texture id = "ui_catsy_marker_task_pri" x="704" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_task_sec" x="768" y="320" width="64" height="64" />
+		<texture id = "ui_dotmarks_main_drop" x="334" y="0" width="690" height="128" />
+		<texture id = "ui_dotmarks_card_drop" x="334" y="128" width="690" height="128" />
 
 		<texture id = "ui_catsy_keybind_bg_single_v0" x="0" y="0" width="1" height="1" />
 		<texture id = "ui_catsy_keybind_bg_left_v0" x="0" y="0" width="1" height="1" />

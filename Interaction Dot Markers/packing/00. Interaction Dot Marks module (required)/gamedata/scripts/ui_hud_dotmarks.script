@@ -91,7 +91,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
     if (verbose_en ~= nil) then verbose = verbose_en end
     if (dump_en ~= nil) then debug_dump = dump_en end
 end
---set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 -- First two values will be overridden by MCM once the game loads
 
 -- ======================================================================
@@ -208,6 +208,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             --  Updates condition/ammo and other metadata that are visible on prompts
             -- ================================================================================
                 function(mark, args)
+                    if cfg.killswitch_markloop then
+                        mark:HideAll("killswitch_markloop")
+                        return
+                    end
                     local now           = time_global()
                     local id            = mark and mark.id
                     local hide          = mark and mark.hidden
@@ -356,6 +360,11 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     -- ================================================================================
                     local texture = mark.texture or ""
 
+                    if (id == cfg.active_task_target_id) then
+
+
+                    end
+
                     if (not hide) and (mark.use_pri and mark.active_swap) then
                         mark:ActiveSwap(show_pri)
                         texture = mark.texture
@@ -423,13 +432,16 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 --  the marker texture and other parameters on the fly
 -- ======================================================================
 function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
-    --printf("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
-    if self.destroyed or not self.active_swap then return end
-
+    printf("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
+    if self.destroyed or not (self.active_swap or self.task_swap) then return end
+    local is_task_target = (self.args.id == cfg.active_task_target_id) and not cfg.disable_icon_tasks
+    local last_swap = self.task_swap or self.active_swap
+    self.task_swap = is_task_target and (cfg.is_task_storyline and cfg.swap_task_pri or cfg.swap_task_sec) or nil
     if state == nil then state = is_current_target(self.id) end
     local _
-    for k,v in pairs(self.active_swap) do
-        if state then
+    if state then
+        printf("Marked target has focus, enabling active swap %s", is_task_target and (cfg.is_task_storyline and "(storyline task)" or "(secondary task") or "")
+        for k,v in pairs(self.task_swap or self.active_swap) do
             if (popin_active ~= self.mark_id) then
                 _ = debug_dump and vl("[%s][%s][Swap on] Setting: %s = %s", time_global(), self.name, k, v)
                 self[k] = v
@@ -437,7 +449,9 @@ function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
                     self.use_pri.args[k] = v
                 end
             end
-        else
+        end
+    else
+        for k,v in pairs(last_swap or self.active_swap) do
             self.popin_done = false
             self[k] = self.args[k]
             if self.use_pri then
@@ -445,9 +459,11 @@ function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
             end
             _ = debug_dump and vl("[%s][%s][Swap off] Reverting: %s = %s", time_global(), self.name, k, self.args[k])
         end
-        self.base_w = self.width
-        self.base_h = self.height
+
     end
+    self.base_w = self.width
+    self.base_h = self.height
+    
     if self.is_active ~= state then
         vl("[%s][%s] Mark active status changed to %s (was %s)", time_global(), self.name, state, self.is_active)
         self.last_active_state = self.is_active
@@ -462,9 +478,9 @@ function killswitch(feature)
     local ks = false
     if feature then
         feature = ("killswitch_" .. feature)
-        ks = cfg[feature]
+        ks = cfg[feature] or cfg.killswitch_all
     else
-        ks = (cfg.killswitch_all or cfg.killswitch_pickup or cfg.killswitch_markers)
+        ks = cfg.killswitch_all
     end
     return ks
 end
@@ -482,7 +498,7 @@ function fdda_handles_pickups()
 end
 
 function item_pickup_intercept(obj, flags)
-    if killswitch() or killswitch("pickup") then return end
+    if killswitch("pickup") then return end
     -- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
     -- Called by my monkeypatch of FDDA/FDDAR's pickup if they are
     local now = time_global()
@@ -1205,7 +1221,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 
     local weight_w = offset + self.card_wgt_text:GetWidth()
     self.card_wgt:SetWndSize(vector2():set(weight_w + 6, elem_h))
-    self.card_wgt:InitTexture("ui_catsy_card_drop")
+    self.card_wgt:InitTexture("ui_dotmarks_card_drop")
     self.card_wgt:SetTextureColor(getargb( cfg.colors.clr_card_drop ))
 
     offset = elem_x
@@ -3001,8 +3017,8 @@ function actor_on_update()
         end
     end
     -- ===================================================================
-    --  Update pickups and current target
-    --  Critical, should never be throttled at all
+    --  Update pickups and current target/task target
+    --  Critical, should happen as often as possible
     -- ===================================================================    
     update_nearby_pickups()
     if locked_id then
@@ -3010,6 +3026,7 @@ function actor_on_update()
         return
     end
     update_targeted_object()
+    update_current_task_target()
     -- ===================================================================
     --  Skill system updates
     --  Rare, skillups don't occur often
@@ -3044,6 +3061,42 @@ function actor_on_update()
     end
 end
 -- =======================================================================
+
+function update_current_task_target()
+    local task_info = task_manager.get_task_manager().task_info
+
+    if (task_info) then
+        if (cfg.active_task_id) then
+            local task = task_info[cfg.active_task_id]
+            if (task and db.actor:is_active_task(task.t)) then
+                if (cfg.active_task_target_id ~= tonumber(task.current_target)) then
+                    cfg.active_task_target_id = tonumber(task.current_target)
+                end
+                return
+            else
+                cfg.active_task_id = nil
+                cfg.active_task_target_id = nil
+            end
+        end
+        
+        if (cfg.active_task_id == nil) then
+            for task_id, task in pairs(task_info) do
+                if (task and task.t and db.actor:is_active_task(task.t)) then
+                    if (cfg.active_task_id ~= task_id) then
+                        cfg.active_task_id = task_id
+
+                        cfg.is_task_storyline = task_manager.task_ini:r_string_ex(cfg.active_task_id, "storyline")
+                    end
+                    
+                    if (cfg.active_task_target_id ~= tonumber(task.current_target)) then
+                        cfg.active_task_target_id = tonumber(task.current_target)
+                    end
+                end
+            end
+        end
+    end
+end
+
 
 function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
@@ -3184,10 +3237,9 @@ function parse_file_data()
 end
 
 function set_item_pickup_callbacks(kill)
-    if kill then
+    if kill or killswitch("pickup") then
         UnregisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
-    end
-    if not get_fdda_callback() then
+    elseif not get_fdda_callback() then
         RegisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
         vl("No form of FDDA installed, registering internal pickup callback")
         cfg.pickup_callback_set = true
@@ -3197,18 +3249,22 @@ end
 function set_handler_callbacks(kill)
     if kill or killswitch() then
         UnregisterScriptCallback("actor_on_update", actor_on_update)
+        UnregisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
+        UnregisterScriptCallback("on_key_release", on_key_release)
+        UnregisterScriptCallback("on_before_key_press", on_before_key_press)
+        UnregisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
+
         if kill then
-            UnregisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
-            UnregisterScriptCallback("on_key_release", on_key_release)
-            UnregisterScriptCallback("on_before_key_press", on_before_key_press)
-            UnregisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
             UnregisterScriptCallback("on_option_change", on_option_change)
         end
     else
         RegisterScriptCallback("actor_on_update", actor_on_update)
+        RegisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
+        RegisterScriptCallback("on_key_release", on_key_release)
+        RegisterScriptCallback("on_before_key_press", on_before_key_press)
+        RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
     end
-    set_item_pickup_callbacks()
-
+    set_item_pickup_callbacks(kill)
 end
 
 function on_option_change()

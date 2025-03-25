@@ -441,7 +441,7 @@ function get_screen_coords(args)
         dist_coef       = args.dist_easing and args.dist_easing(dist_prog) or dist_prog
         -- linear by default, but you can pass an easing function in args
         -- testing stuff below:
-        --dist_coef       = math.cos(((1 - dist_prog) * math.pi) / 2) -- eastInSine - this one works ok
+        --dist_coef       = math.cos(((1 - dist_prog) * math.pi) / 2) -- easeInSine - this one works ok
         --dist_coef       = math.sin((dist_prog * math.pi) / 2) -- easeOutSine
         --dist_coef       = math.abs(math.sqrt(math.pow(dist_prog, 2)))
         vert_adj        = near_adj + (dist_coef * far_adj)

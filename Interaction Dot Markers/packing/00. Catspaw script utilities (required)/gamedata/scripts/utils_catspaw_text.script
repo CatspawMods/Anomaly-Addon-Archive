@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.6.1"
-release_date    = 20250323
+script_version 	= "1.7"
+release_date    = 20250324
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -34,11 +34,13 @@ assert(utils_catspaw_common,
 -- 		LOGGING
 -- =======================================================================
 local dl, vl
-debuglogs   = false
-verbose     = false
+debuglogs       = false
+verbose         = false
+logprefix       = "[CatsyText] "
+vprefix         = ""
 
 function allow_local_logging(onoff)
-    -- By default, logging in this script inherits its settings from utils_catspaw_common
+    -- By default, logging in this script inherits its debuglogs/verbose settings from utils_catspaw_common
     -- This function allows anyone to switch on debug logging for this script's operations only
     if onoff then
         dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
@@ -74,6 +76,7 @@ local DIK_name          = ui_mcm and ui_mcm.display_key or (function() return ""
 -- =======================================================================
 -- 		TEXT SUBSTITUTION
 -- =======================================================================
+tokens_generated 		= false
 local female_names		= {}
 local default_tokens 	= {}
 local game_tokens = {
@@ -141,7 +144,8 @@ function refresh_tokens(args)
 	local tokens 		= {}
 
 	if db.actor then
-		local actor_name 	= alife():actor():character_name()
+		vl("Refreshing actor tokens")
+		local actor_name 	= db.actor:character_name()
 		local afirst, alast	= get_firstname_lastname()
 		local actor_comm 	= gameplay_disguise.get_default_comm()
 		local disg_comm 	= db.actor:character_community()
@@ -158,20 +162,15 @@ function refresh_tokens(args)
 		-- a particular location at a point, e.g. "in Cordon, east of the Rookie Village"
 	end
 
-
 	if args then
-		local function add_tokens_from_args()
-			-- Refresh token tables with any existing token names also present in args
-			for k,v in pairs(args) do
-				if type(v) == "string" then
-					if actor_tokens[k] then actor_tokens[k] = v end
-					if game_tokens[k] then game_tokens[k] = v end
-					if obj_tokens[k] then obj_tokens[k] = v end
-				end
+		-- Refresh token tables with any existing token names also present in args
+		for k,v in pairs(args) do
+			if type(v) == "string" then
+				if actor_tokens[k] then actor_tokens[k] = v end
+				if game_tokens[k] then game_tokens[k] = v end
+				if obj_tokens[k] then obj_tokens[k] = v end
 			end
 		end
-
-		add_tokens_from_args()
 
 		if args.first_init or args.force_refresh then
 			dl("Refreshing standard text substitution tokens")
@@ -194,9 +193,26 @@ function refresh_tokens(args)
 				obj_tokens.firstname= first
 				obj_tokens.lastname = last
 				obj_tokens.location = dynamic_news_helper.GetPointDescription(npc_gobj)
+				for k,v in pairs(obj_tokens) do
+					game_tokens[k] 	= v
+				end
 			end
 		end
 	end
+end
+
+function get_default_tokens(actor_t, game_t, skip_refresh)
+	if not skip_refresh then
+		refresh_tokens()
+	end
+	if object_t then return object_tokens end
+	if actor_t then return actor_tokens end
+	if game_t then return game_tokens end
+	if not skip_refresh then
+		for k,v in pairs(actor_tokens) do default_tokens[k] = v end
+		for k,v in pairs(game_tokens) do default_tokens[k] = v end
+	end
+	return default_tokens
 end
 
 local parse_colors 		= true
@@ -347,6 +363,41 @@ end
 -- =======================================================================
 -- 		OBJECT NAMES
 -- =======================================================================
+
+function obj_name_and_id(obj_or_string, id, use_section)
+	-- I very frequently log objects by noting their name and id like so: esc_trader24869 (24869)
+	-- This requires nil-checking and has let crash errors slip through before just from logging
+	-- So I can alias this function to something short and use it for safe logging
+	local obj, name
+	id 			= tonumber(id)
+	if obj_or_string and (type(obj_or_string) == "string") then
+		name 	= obj_or_string
+	else
+		obj 	= obj_or_string or (id and get_object_by_id(id))
+		id 		= id or (obj_or_string and obj_or_string:id())
+		name 	= obj and (use_section and obj:section() or obj:name())
+	end
+	return string.format("%s (%s)", name, id)
+end
+
+function load_female_name_strings()
+	if not getstrtbl_support() then
+		dl("load_female_name_strings: function get_string_table is unsupported by GAMMA or vanilla, aborting")
+	return end
+	-- Compile list of female names starting with "name_woman_"
+	-- Mainly for Dux's character kit
+	dl("load_female_name_strings: parsing any recognized female names in the character list")
+    local t = get_string_table()
+    if not female_names then female_names = {} end
+    for k, v in pairs(t) do
+        if k:find("name_woman_") then
+        	local name = str_explode(v," ")
+            female_names[k] = name[1]
+            --This log line will be very noisy on every load, only enable for targeted troubleshooting
+            --vl("Found female name: %s = %s", k, v)
+        end
+    end
+end
 
 function inventory_name(obj, section)
 	section = section or (obj and obj:section())
@@ -519,22 +570,6 @@ function safename(id)
 
     dl("safename returns %s for %s", text, name)
     return text
-end
-
-function obj_name_and_id(obj_or_string, id, use_section)
-	-- I very frequently log objects by noting their name and id like so: esc_trader24869 (24869)
-	-- This requires nil-checking and has let crash errors slip through before just from logging
-	-- So I can alias this function to something short and use it for safe logging
-	local obj, name
-	id 			= tonumber(id)
-	if obj_or_string and (type(obj_or_string) == "string") then
-		name 	= obj_or_string
-	else
-		obj 	= obj_or_string or (id and get_object_by_id(id))
-		id 		= id or (obj_or_string and obj_or_string:id())
-		name 	= obj and (use_section and obj:section() or obj:name())
-	end
-	return string.format("%s (%s)", name, id)
 end
 
 function load_female_name_strings()

@@ -102,11 +102,11 @@ function init_simple_icon(anchor, handlers, opts, flags)
 	return ctrl
 end
 
-function init_service_icons(anchor, handlers, opts, flags)
-	table.sort(cfg.service_icons)
+function init_icon_list(anchor, handlers, opts, flags)
+	local icons = opts and opts.icon_list or cfg.service_icons
 	local used = {}
 	local i = 0
-	for k,v in spairs(cfg.service_icons) do
+	for k,v in spairs(icons) do
 		if not used[v] then
 			local x = opts.icon_x + ((opts.icon_w + 2) * i)
 			local ctrl = xml:InitStatic("box", anchor)
@@ -407,11 +407,21 @@ function generate_objs_menu()
 		},
 
 		{ id = "disable_icon_services", type = "check", val = 1, def = cfg.disable_icon_services,
-			ui_hook_functor = {dotmarks_mcm.init_service_icons},
-			icon_w = 32,
-			icon_h = 32,
-			icon_x = 450,
-			icon_y = 8,
+			ui_hook_functor = {dotmarks_mcm.init_icon_list},
+			icon_list 	= cfg.service_icons,
+			icon_w 		= 32,
+			icon_h 		= 32,
+			icon_x 		= 450,
+			icon_y 		= 8,
+		},
+
+		{ id = "disable_icon_tasks", type = "check", val = 1, def = cfg.disable_icon_tasks,
+			ui_hook_functor = {dotmarks_mcm.init_icon_list},
+			icon_list 	= cfg.task_icons,
+			icon_w 		= 32,
+			icon_h 		= 32,
+			icon_x 		= 450,
+			icon_y 		= 8,
 		},
 
 		{ id = "disable_icon_talk", 	type = "check", val = 1, def = cfg.disable_icon_talk,

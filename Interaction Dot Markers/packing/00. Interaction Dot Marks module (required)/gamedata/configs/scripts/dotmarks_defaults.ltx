@@ -40,6 +40,7 @@ section_lookup
 service_icons
 smokables
 state_conds
+task_icons
 tex
 useless_shit
 vendors
@@ -47,11 +48,18 @@ weight_colors
 
 [template_tables]
 ; Like above, but loaded first and are populated with the section by the same name
+; These can be used as values in another table, and load_file_data will load the
+; contents of the "template" table by that name instead.
+
+; At the moment in DotMarks it's mostly just used to set apart the active swap
+; property lists.
 swap_door
 swap_dotactive
 swap_service
 swap_stash
 swap_talk
+swap_task_pri
+swap_task_sec
 
 ; =================================================================================
 [default_settings]
@@ -60,16 +68,18 @@ swap_talk
 ; below will query MCM during every on_option_change for an override (if any)
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
+; Unusual numbers are chosen for all intervals as a way of avoiding stacking updates
 near_scan_interval          = 104
 ; Interval in ms between nearby-object scans
 early_scan_interval         = 2457
 ; Interval in ms between faraway-object scans
-; Unusual numbers are chosen as a way of avoiding stacking updates
 skill_upd_interval          = 29711
 ; Interval in ms between Skill System updates
 ; These can be very infrequent, since skill level-ups are usually rare
 tut_check_interval 			= 49
 ; Interval in ms between tutorial checks, needs to be responsive
+task_check_interval 		= 1382
+; Interval in ms between refreshes of the active task state
 near_scan_radius            = 4
 ; Radius in meters of the near scan (affects many other things)
 early_scan_radius           = 2
@@ -89,23 +99,29 @@ modk_sec_interact 			= 0
 ; Modifier key of alt interact
 imod_sec_interact 			= 2
 ; Input mode of alt interact
+; 0 - simple press
+; 1 - double-tap
+; 2 - long press/hold
 sec_interact_dist 			= 2.5
-; Distance in meters of the alt interact (don't increase)
+; Distance in meters of the alt interact (don't increase, things may break)
 interact_uifile 			= ui_dotmarks.xml
 ; Contains UI element definitions
 marker_dotmark 				= ui_catsy_marker_intdot
 ; Texture for the marker dots themselves
 marker_dotactive 			= ui_catsy_marker_dotactive
-main_drop_texture 			= ui_catsy_main_drop
+; Texture for the "active" object that currently has interact focus
+main_drop_texture 			= ui_dotmarks_main_drop
+; Texture used for the main prompt drop shadow
 icon_sp_fave_texture 		= ui_catsy_icon_sortplus_fave
 icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
-; Texture used for the main prompt drop shadow
+; Textures for Sorting Plus integration
 target_lenience 			= 0.95
 ; How far from center the crosshair can be for old targeting method
+; Need to look into whether and how much this is still needed
 fddar_multipickup 			= false
 fddar_pickup_anim 			= false
 fdda_pickup_anim 			= false
-; These should get populated at runtime with the current value from FDDA's MCM settings
+; These should get populated at runtime with the current values from FDDA's MCM settings
 item_use_delay 				= 0.75
 ; Delay between taking an item and trying to use it 
 ; Required to give FDDA pickup animation time to complete
@@ -118,19 +134,20 @@ alti_show_during_anim 		= true
 alti_busy_during_anim 		= true
 ; Whether visible prompts are disabled during FDDA animations
 hide_interaction_dots 		= false
-; Killswitch for whether to show dots at all
+; Disable showing dots (or other marker icons) at all
 hide_connecting_line 		= false 
-; Killswitch for the animated white line that appears
+; Disable the animated white line that appears
 hide_pri_interact_ui 		= false
-; Killswitch for the replacement primary interact UI
-; Note that if you enable this and hide the vanilla UI, you may not have interact prompts at all!
-; I try to prevent this, but it's not my fault if you do silly things with the settings
+; Disable the replacement primary interact UI
+; Note that if you enable this option and hide the vanilla UI, you may not have interact 
+; prompts at all! I try to prevent this, but it's not my fault if you do silly things 
+; with the settings.
 hide_sec_interact_ui 		= false
-; Killswitch for whether to display secondary action prompts
+; Disable secondary action prompts and their actions
 hide_van_interact_ui		= true
-; Whether to hide the vanilla interaction prompts
+; Disable the vanilla interaction prompts
 hide_drop_shadow 			= false
-; Whether to hide the drop shadow beneath prompts
+; Disable the drop shadow beneath prompts
 pri_use_x_offset 			= -10
 pri_use_y_offset 			= 28
 sec_use_x_offset 			= -10
@@ -145,7 +162,7 @@ keybind_bg_style 			= 3
 ; 	0 = no icon
 ;	1 =	white outline
 ; 	2 = black and white 3D
-; 	3 = worn appearance
+; 	3 = worn appearance 3D
 font_main_prompt 			= 2
 ; Font to use for the main prompt text
 ; The UI tries to adapt, but some fonts work better than others
@@ -171,6 +188,8 @@ tutorial_prompt_y 			= 600
 disable_icon_activedot 		= false
 ; Disable the ringed dot that a dotmark changes to when active
 ; Need to add this to MCM
+disable_icon_task 			= false
+; Disables the special task marker icon
 disable_icon_box 			= false
 ; Disables the special "breakable item" icon used for physics boxes
 disable_icon_door 			= false
@@ -237,8 +256,17 @@ item_card_icon_y    		= 0
 sp_icon_pos_x 				= 10
 sp_icon_pos_y				= 1
 ; =================================================================================
+; To enable any killswitch in-game, you can either set it using the debug menu, 
+; or use something like this in the console:
+
+; run_string ui_hud_dotmarks.cfg.killswitch_pickup = true
+
+; That would completely shut off any pickup handling until you set it to false or
+; reload your game/change maps.
+
 killswitch_all 				= false
 killswitch_pickup 			= false
+killswitch_markloop 		= false
 ;killswitch_markers 			= false ; not implemented yet
 ; =================================================================================
 warn_modded_exes 			= true
@@ -295,22 +323,21 @@ texture             = ui_catsy_marker_intdot
 show_dist           = false ; disables always-on display of marker distance
 show_hint           = false ; disables always-on display of marker hint
 managed_hover       = true 	; tells marker manager to handle hover logic
-hint_on_hover       = false	; only show hint when this is best hovered marker
-hover_dist 			= 3 	; distance up to which a mark can be hovered
+hint_on_hover       = false	; only show hint when this is best hovered marker (closest to crosshair)
+hover_dist 			= 3 	; distance in meters within which a mark can be hovered
 near_fade_dist      = 0 	; dotmarks shouldn't fade out when close
 near_hide_dist      = -1	; dotmarks shouldn't disappear completely when close
 near_end_dist       = -1	; dotmarks don't terminate on proximity
-far_hide_dist       = 0.5 	; dotmarks hide this far past the far_fade_dist (based on med_scan_radius)
+far_hide_dist       = 0.5 	; dotmarks hide this far past the far_fade_dist (based on near_scan_radius)
 los_dist_min        = 0.15	; any closer than this and LOS is assumed true
 lost_los_dist 		= 0.5 	; LOS smoothing (LOS result cache) is disabled beyond this distance
 lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
 width               = 6		; texture width (in canvas units)
 height              = 6		; texture height (in canvas units)
 update_int          = 15	; update interval in ms for the marker itself
-skip_online_checks 	= true 	; Optimization, skips the step of checking for online status and same-map
+skip_online_checks 	= true 	; Optimization, we can assume markers will always be online and on the same map
 skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
 skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
-;facing_check 		= true 	; experimental optimization feature
 
 [tutorial_hints]
 ; Used internally to generate the appropriate text based on the active tutorial state
@@ -399,6 +426,10 @@ explo_jerrycan_fuel
 explosive_mobiltank
 explosive_tank
 
+[task_icons]
+pri 		= ui_catsy_marker_task_pri
+sec 		= ui_catsy_marker_task_sec
+
 [swap_dotactive]
 texture 	= ui_catsy_marker_dotactive
 width       = 12
@@ -437,6 +468,23 @@ height      = 18
 line_adj_x  = 4
 line_adj_y  = 11
 line_adj_h  = -11
+
+[swap_task_pri]
+texture 	= ui_catsy_marker_task_pri
+width       = 18
+height      = 18
+line_adj_x  = 4
+line_adj_y  = 11
+line_adj_h  = -11
+
+
+[swap_task_sec]
+texture 	= ui_catsy_marker_task_sec
+width       = 18
+height      = 18
+line_adj_x  = 4
+line_adj_y  = 13
+line_adj_h  = -13
 
 ; ================================================================================
 ; 	DON'T TOUCH BELOW THIS LINE
@@ -710,6 +758,7 @@ sp_icon_pos_y 			= dotmarks/dmarkadv/
 popin_anim_dur 			= dotmarks/dmarkadv/
 ; =================================================================================
 ; Objects menu
+disable_icon_task 		= dotmarks/dmarkobjs/
 disable_icon_boom		= dotmarks/dmarkobjs/
 disable_icon_box		= dotmarks/dmarkobjs/
 disable_icon_door		= dotmarks/dmarkobjs/

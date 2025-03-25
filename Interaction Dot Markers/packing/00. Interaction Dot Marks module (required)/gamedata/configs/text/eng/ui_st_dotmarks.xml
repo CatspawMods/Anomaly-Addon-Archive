@@ -508,6 +508,14 @@
 		</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks">
+		<text>Disable special icon for task objectives</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks_desc">
+		<text>If this option is enabled, objects that are the target of the current active task will use the standard dot marker instead of their special task marker icons.
+		</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkadv_prompt_fade_in_time">
 		<text>Prompt fade-in duration</text>
 	</string>
