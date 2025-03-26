@@ -3,7 +3,7 @@
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
 script_version 	= "1.9"
-release_date    = 20250323
+release_date    = 20250325
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -112,7 +112,6 @@ engine_features = {
 	cmcolor 	= { ver = 20240523, gamma = true, name = "Context menu colors"},
 	-- Enabling color in context menus can have undesirable side effects across the entire game
 	dxml_cache 	= { ver = 20250228, gamma = false, name = "DXML on_xml_read cacheing"},
-	pickup_cb 	= { ver = 20250306, gamma = false, name = "actor_on_update_pickup callback"},
 }
 
 local game_version  = gts("ui_st_game_version")
@@ -375,6 +374,19 @@ function get_stash_hint(id)
 	return se_load_var(id, nil, "stash_hint_text")
 end
 
+function get_actor_weight_class(comp_weight)
+    if not db.actor then return end
+	-- wclass returns as 2 if overweight, 1 if 10kg more will put actor overweight, 0 if ok
+	-- If comp_weight is passed, evaluation assumes the actor picks up comp_weight in kg
+	-- If nothing is passed, evaluate actor's current weight state
+    local max_weight = get_actor_max_weight()
+    local curr_weight = db.actor:get_total_weight()
+    local current = (comp_weight or curr_weight)
+    local threshold = comp_weight and (max_weight - curr_weight) or max_weight
+    local wclass = ((current > threshold) and 2)  or ((current + 10 > threshold) and 1) or 0
+    --vl("actor_weight_class: %s | max %s | curr %s | comp %s | threshold %s", wclass, max_weight, curr_weight, comp_weight, threshold)
+    return wclass, curr_weight, max_weight
+end
 
 -- ======================================================================
 -- 		SETTINGS MANAGEMENT

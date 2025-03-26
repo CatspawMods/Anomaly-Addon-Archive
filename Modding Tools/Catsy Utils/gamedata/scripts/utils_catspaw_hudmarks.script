@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.1"
-release_date    = 20250323
+script_version  = "0.7.2"
+release_date    = 20250325
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -441,7 +441,7 @@ function get_screen_coords(args)
         dist_coef       = args.dist_easing and args.dist_easing(dist_prog) or dist_prog
         -- linear by default, but you can pass an easing function in args
         -- testing stuff below:
-        --dist_coef       = math.cos(((1 - dist_prog) * math.pi) / 2) -- eastInSine - this one works ok
+        --dist_coef       = math.cos(((1 - dist_prog) * math.pi) / 2) -- easeInSine - this one works ok
         --dist_coef       = math.sin((dist_prog * math.pi) / 2) -- easeOutSine
         --dist_coef       = math.abs(math.sqrt(math.pow(dist_prog, 2)))
         vert_adj        = near_adj + (dist_coef * far_adj)
@@ -1125,6 +1125,7 @@ function UIHUDMarker:ScaleMarkerByDistance(w, h, dist, scale)
                 self.correct_aspect
             )
     self:SetMarkerSize(w, h, scale)
+    return w, h
 end
 
 
@@ -1498,45 +1499,35 @@ function UIHUDMarker:Update()
 
             self.timestamp = time_global()
             --printf("[%s] width %s | height %s | timestamp %s", self.mark_id, self.width, self.height, self.timestamp)
-            --vl("scaling by distance and aspect")
-            --[[
-            local szx,szy   = scale_by_dist(
-                                self.marker, dist, 
-                                self.width or 24, 
-                                self.height or 24, 
-                                self.scale_dist_min or 10,
-                                self.scale_dist_mid or 20,
-                                self.scale_dist_max or 50,
-                                self.scale_up_amt,
-                                self.scale_dn_amt,
-                                unsquish
-                            )
-            self.marker:SetWndSize(vector2():set(szx, szy))
-            --]]
             --printf("[%s][%s] Calling ScaleMarkerByDistance from UIHUDMarker loop: %sx%s", time_global(), self.name, dec2(self.width), dec2(self.height))
-            self:ScaleMarkerByDistance()--self.width, self.height, self.last_dist)
-
-            local m_nhide   = self.near_hide_dist
-            local m_near    = self.near_fade_dist
-            local m_far     = self.far_fade_dist
-            local m_fhide   = self.far_hide_dist
-            local h_nhide   = self.h_near_hide_dist or self.near_hide_dist
-            local h_near    = self.h_near_fade_dist or self.near_fade_dist
-            local h_far     = self.h_far_fade_dist or self.far_fade_dist
-            local h_fhide   = self.h_far_hide_dist or self.far_hide_dist
-            local d_nhide   = self.d_near_hide_dist or self.near_hide_dist
-            local d_near    = self.d_near_fade_dist or self.near_fade_dist
-            local d_far     = self.d_far_fade_dist or self.far_fade_dist
-            local d_fhide   = self.d_far_hide_dist or self.far_hide_dist
+            local szx, szy  = self:ScaleMarkerByDistance()--self.width, self.height, self.last_dist)
             local colors    = self.custom_argb and (not is_empty(self.custom_argb)) and self.custom_argb or {a=255,r=255,g=255,b=255}
 
             local c = {}
-            c = get_argb(fade_by_dist(nil, dist, m_nhide, m_near, m_far, m_fhide, colors.a, colors.r, colors.g, colors.b) or c)
+            c = get_argb(fade_by_dist(nil, dist,
+                self.near_hide_dist,
+                self.near_fade_dist,
+                self.far_fade_dist,
+                self.far_hide_dist,
+                colors.a, colors.r, colors.g, colors.b) or c
+            )
             self.marker:SetTextureColor(c)
-            c = get_argb(fade_by_dist(nil, dist, h_nhide, h_near, h_far, h_fhide, 255, 230, 230, 230) or c)
+            c = get_argb(fade_by_dist(nil, dist,
+                self.h_near_hide_dist or self.near_hide_dist,
+                self.h_near_fade_dist or self.near_fade_dist,
+                self.h_far_fade_dist or self.far_fade_dist,
+                self.h_far_hide_dist or self.far_hide_dist,
+                255, 230, 230, 230) or c
+            )
             self.label:TextControl():SetTextColor(c)
             self.dist:TextControl():SetTextColor(c)
-            c = get_argb(fade_by_dist(nil, dist, h_nhide, h_near, h_far, h_fhide, 255, 0, 0, 0) or c)
+            c = get_argb(fade_by_dist(nil, dist,
+                self.d_near_hide_dist or self.near_hide_dist,
+                self.d_near_fade_dist or self.near_fade_dist,
+                self.d_far_fade_dist or self.far_fade_dist,
+                self.d_far_hide_dist or self.far_hide_dist,
+                255, 0, 0, 0) or c
+            )
             self.label_sh:TextControl():SetTextColor(c)
             self.dist_sh:TextControl():SetTextColor(c)
 
