@@ -1,0 +1,44 @@
+<!-- ====================================================================
+	Tactical Compass Adaptive Marker System
+    Author: Catspaw
+    Permission granted to freely translate this file into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+	<string id="ui_st_compsettings">
+		<text>Compass settings for %s"%s"</text>
+	</string>
+
+	<string id="ui_st_blacklist_add">
+		<text>Add to blacklist - %s %s</text>
+	</string>
+	<string id="ui_st_blacklist_rem">
+		<text>Remove blacklist - %s %s </text>
+	</string>
+
+	<string id="ui_st_blname_id">
+		<text>object ID:</text>
+	</string>
+	<string id="ui_st_blname_clsid">
+		<text>objects with CLSID:</text>
+	</string>
+	<string id="ui_st_blname_section">
+		<text>objects with section name:</text>
+	</string>
+	<string id="ui_st_blname_mapspot">
+		<text>markers with mapspot icon:</text>
+	</string>
+
+	<string id="st_paw_stash">
+		<text>stash</text>
+	</string>
+
+	<string id="st_paw_squad">
+		<text>squad</text>
+	</string>
+
+	<string id="st_body_is_claimed">
+		<text>Claimed</text>
+	</string>
+
+</string_table>

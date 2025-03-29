@@ -1,0 +1,183 @@
+; Tactical Compass Adaptive Marker System
+; Main configuration settings
+; Loaded on startup by: ui_hud_tcams_compass.load_file_data()
+;
+; All of the config settings for the Marker System are stored in the ui_hud_tcams_compass.cfg
+; table. This main table loads all of its settings from default_settings below, and additionally
+; will dynamically create and populate subtables based on the template_tables and setting_tables
+; sections below.
+
+[template_tables]
+; Any name here will be created and populated first as a subtable of the "cfg" table.
+; It will load each table's contents from the section named after that table, further below.
+; This is used for creating reusable templates that members of setting_tables can reference.
+template_corpse
+template_enemy
+template_stalker
+template_map_poi
+
+[setting_tables]
+; Any name here will be created and populated second, and can reference any template_table.
+; If a section named after the table exists, its contents will be preloaded into that table.
+; If a string with the substring "template" is ever found as a subtable value, load_file_data() 
+; will first try to find a cfg subtable named that, and will load the values from it.
+; Example: see further below how clsid_overrides and mapspot_overrides refernce template_stalker
+clsid_overrides
+blacklisted_clsids
+blacklisted_ids
+blacklisted_mapspots
+blacklisted_sections
+mapspot_preset
+mapspot_priorities
+mapspot_overrides
+markers
+
+[default_settings]
+; Any setting here will be loaded as part of the main cfg table
+scanning_enabled 	= true 	; Whether to run the main object-scanning loops
+show_compass        = true 	; Whether to show the compass UI at all - requires Tactical Compass
+link_compass_mmap 	= true 	; Whether the compass state is linked with Anomaly's minimap setting
+show_aggro_frame    = true 	; Whether to show detection/combat state on the compass frame
+show_aggro_wave 	= true 	; Whether to show detection/combat state as a S2-style waveform
+show_detection      = true 	; Whether to show detection progress as well
+combat_vis_decay 	= 5000 	; Time in ms since last being seen after which combat state will begin to fade
+combat_vis_timeout 	= 25000	; Time in ms since combat_vis_decay after which combat state will fade out completely
+show_nearby_contacts= true 	; Center readout will show number of nearby stalkers instead of bearing
+nearby_contact_dist = 50 	; Radius within which a stalker contact is considered "nearby"
+use_contact_sounds 	= true 	; Play online_contact_snd and offline_contact_snd when nearby contacts increase/decrease
+aggro_wave_pos_x 	= 105 	; X position of the detection waveform
+aggro_wave_pos_y 	= 24 	; Y position of the detection waveform
+aggro_wave_w 		= 590 	; Base width of the detection waveform
+aggro_wave_h 		= 8 	; Base height of the detection waveform
+compass_sh_w		= 620 	; Width of the compass drop shadow element
+compass_sh_h		= 85 	; Height of the compass drop shadow element
+compass_sh_pos_x 	= 68 	; X position of the compass drop shadow element
+compass_sh_pos_y 	= -35 	; Y position of the compass drop shadow element
+compass_sh_alpha 	= 0.45 	; Transparency of compass drop shadow
+compass_dialog_w 	= 600 	; Width of the main compass dialog window
+compass_dialog_h 	= 20 	; Height of the main compass dialog window (not currently used)
+compass_pos_y 		= 31 	; Current Y screen position of compass dialog (changes based on below)
+compass_pos_y_btm 	= 712 	; Compass Y pos when at screen bottom
+compass_pos_y_top 	= 31 	; Compass Y pos when at screen top
+scan_start_delay    = 0.25 	; Seconds after actor_on_first_update to begin scanning
+compass_update_int 	= 25
+paw_scan_interval   = 2000 	; Interval in ms between scans of PAW's pin table
+fast_scan_interval 	= 500 	; Interval in ms between fast (short-range) level.iterate_nearest scans
+med_scan_interval   = 5000	; Interval in ms between med (medium-range) level.iterate_nearest scans
+big_scan_interval   = 10000 ; Interval in ms between big (long-range) level.iterate_nearest scans
+id_scan_interval    = 200 	; Interval in ms between chunks of raw ID scans
+id_scan_chunk       = 1000 	; How many IDs to scan per chunk
+preload_id_chunk 	= 20000	; Preload the first N object IDs during actor_on_first_update
+; preload_id_chunk trades a slightly longer saveload time for fewer updates during gameplay
+paw_scan_radius     = 200 	; Radius in which to scan for PAW pins
+fast_scan_radius    = 15 	; Radius for fast scan
+med_scan_radius     = 100 	; Radius for med scan
+big_scan_radius     = 250 	; Radius for big scan
+mark_height         = 16 	; Default marker height (adjusted for distance and relative icon size)
+mark_width          = 16 	; Default marker width (adjusted for distance and relative icon size)
+mark_pos_y          = 15 	; Current Y screen position of marks (changes based on below)
+mark_pos_y_btm 		= 696 	; Mark Y pos when compass is at screen bottom
+mark_pos_y_top 		= 14 	; Mark Y pos when compass is at screen top
+compass_rclick_en 	= true 	; Allow right-clicking on mapspots to manage compass blacklists
+compass_rclick_mod	= 2 	; Hold Ctrl key while right-clicking a mapspot
+aggro_wave_tex 		= ui_catsy_compass_aggro
+compass_tex_scroll 	= ui\ui_tactic_compass\HypeR_compass
+compass_tex_frame 	= catsy\ui_compass_frame
+compass_tex_bg 		= ui_catsy_compass_bg_full
+compass_safe_color 	= 255,200,255,255
+online_contact_snd 	= og_stalker\contact_1
+offline_contact_snd = og_stalker\contact_2
+st_compass_settings = ui_st_compsettings
+st_add_blacklist 	= ui_st_blacklist_add
+st_rem_blacklist 	= ui_st_blacklist_rem
+st_bl_id_name 		= ui_st_blname_id
+st_bl_clsid_name 	= ui_st_blname_clsid
+st_bl_section_name 	= ui_st_blname_section
+st_bl_mapspot_name 	= ui_st_blname_mapspot
+
+[mapspot_preset]
+xmlfile             = ui_hud_marker.xml
+managed_hover       = true 	; tells marker manager to handle hover logic
+dist_on_center_x    = true 	; show dist if the x screen coordinate is centered
+skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
+near_fade_dist      = 0 	; default compass marks shouldn't fade out when close
+near_hide_dist      = -1 	; default compass marks shouldn't disappear completely when close
+near_end_dist       = -1 	; default compass marks don't terminate on proximity
+width               = 16 	; texture width (in canvas units)
+height              = 16 	; texture height (in canvas units)
+update_int          = 50 	; update interval in ms for the marker itself
+lock_y              = 15 	; Default marker position at top of screen
+min_x               = 295
+max_x               = 735
+hide_when_oob       = true 	; Hide markers as soon as they're outside of min_x / max_x
+dist_y_adj          = 2
+hint_y_adj          = 84
+
+[template_corpse]
+; Template for when a living thing switches to a dead state, becoming a body marker
+; Used by the marker's func_on_update logic
+far_fade_dist       = 20 	; Distance beyond which the marker will begin to fade out
+far_hide_dist       = 5 	; Distance beyond the far_fade_dist when the marker is hidden
+near_fade_dist      = 0.5 	; Any closer and the marker will begin to fade out
+near_hide_dist      = 0 	; When this close or closer, marker is hidden
+managed_hover       = false ; No need to have the Mark Manager waste cycles on corpses
+show_dist           = false ; Hide the distance label for body markers
+show_hint           = false ; Hide hint text altogether
+dist_on_center_x    = false ; Disable showing distance when marker is centered
+;hint_on_center_x    = false ; Disable showing hint text when marker is centered
+mark_pos_y_adj 		= 16 	; Move corpse markers slightly below to set them apart from other markers
+
+[template_enemy]
+; Fade settings template used as override for enemy NPCs
+far_fade_dist       = 45
+far_hide_dist       = 5
+near_fade_dist      = 0
+near_hide_dist      = -1
+
+[template_stalker]
+; Fade settings template used by default for all stalker NPCs
+far_fade_dist       = 45
+far_hide_dist       = 5
+near_fade_dist      = 5
+near_hide_dist      = 2
+
+[template_map_poi]
+; Fade settings template used for fast_travel mapspots
+far_fade_dist       = 75
+far_hide_dist       = 25
+near_fade_dist      = 2
+near_hide_dist      = 0
+
+[blacklisted_clsids]
+; Any clsid with a true value will be ignored by the compass
+; clsids can be specified either as a number or by their display name (without the clsid. prefix)
+poltergeist            	= true
+poltergeist_s           = true
+psy_dog_phantom         = true
+psy_dog_phantom_s       = true
+obj_breakable           = true
+obj_phys_destroyable	= true
+
+[blacklisted_mapspots]
+; Any mapspot with a true value here will be ignored by the compass
+primary_object      	= true ; don't show the big white circle "area" markers
+mp_hit_sector_location 	= true ; hit markers seem to be detected as mapspots
+
+[mapspot_priorities]
+; For when multiple mapspots are on the same object, defaults to 0, higher numbers take precedence
+ui_pda2_companion_location 	= 999
+secondary_task_location 	= 9999
+storyline_task_location 	= 99999
+
+[clsid_overrides]
+; Setting overrides on a per-clsid basis
+stalker                 = template_stalker
+script_stalker          = template_stalker
+trader                  = template_stalker
+script_trader           = template_stalker
+online_offline_group    = template_stalker
+online_offline_group_s  = template_stalker
+
+[mapspot_overrides]
+; Setting overrides on a per-mapspot basis
+fast_travel             = template_map_poi

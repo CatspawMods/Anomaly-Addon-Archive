@@ -1,0 +1,15 @@
+<w>
+	<file name ="catsy\ui_compass_bg">
+		<texture id = "ui_catsy_compass_bg_full" x="0" y="0" width="610" height="85" />
+	</file>
+	<file name ="catsy\ui_compass_marks">
+		<texture id = "ui_catsy_marker_intdot" x="0" y="0" width="64" height="64" />
+		<texture id = "ui_catsy_marker_elev_tick_up" x="0" y="64" width="64" height="32" />
+		<texture id = "ui_catsy_marker_elev_tick_dn" x="0" y="96" width="64" height="32" />
+		<texture id = "ui_catsy_marker_npc_chevron" x="64" y="0" width="64" height="64" />
+	</file>
+	<file name ="catsy\waveform">
+		<texture id = "ui_catsy_compass_aggro" x="0" y="12" width="610" height="13" />
+	</file>
+</w>
+

@@ -1,0 +1,1143 @@
+-- =======================================================================
+--[[    Tactical Compass Adaptive Marker System for Anomaly 1.5.3
+-- ===================================================================--]]
+script_name     = "ui_hud_tcams_compass"
+script_version  = "0.4-b1"
+release_date    = 20250328
+--[[======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+    Overlays markers in the form of a horizontal compass for all mapspots
+    and other important objects. REQUIRES MODDED EXES 20241104 or newer:
+
+    https://github.com/themrdemonized/xray-monolith
+
+    Uses the Tactical Compass addon for its rotating compass element:
+
+    https://www.moddb.com/mods/stalker-anomaly/addons/tactical-compass
+
+    However, this script will perform a monkeypatch of that addon to:
+
+        * Disable its marker scan code and replace it with adaptive 
+            scanning logic that should be compatible with virtually any 
+            addon or modpack, due to the use of modded exe functions to 
+            capture all of the mapspots that exist on any object. 
+            Integrates with my PAW and Milspec PDA addons.
+
+        * Enhance its already-excellent compass overlay with new features
+            and functionality. Whenever you're in combat, part of the 
+            compass frame will pulse red in a way similar to Stalker 2,
+            but you can turn that off if you prefer. Markers will show 
+            whether the object is above or beow you, and the most-centered 
+            markers in your view will show a distance indicator.
+
+    If you don't use the Tactical Compass addon, the enhanced markers and 
+    all of those features will still be available, just without the nice 
+    compass overlay that the author of that addon borrowed from Anthology.
+
+    I don't have MCM set up yet, but that'll be added.
+
+-- ===================================================================--]]
+--  DEPENDENCIES
+-- =======================================================================
+assert(utils_catspaw_common, "\n\n"..
+    "! ui_hud_tcams_compass requires utils_catspaw_common, which does not exist!\n\n"
+)
+assert(utils_catspaw_mapspots, "\n\n"..
+    "! ui_hud_tcams_compass requires utils_catspaw_mapspots, which does not exist!\n\n"
+)
+assert(utils_catspaw_text, "\n\n"..
+    "! ui_hud_tcams_compass requires utils_catspaw_text, which does not exist!\n\n"
+)
+assert(utils_catspaw_hudmarks, "\n\n"..
+    "! ui_hud_tcams_compass requires utils_catspaw_hudmarks, which does not exist!\n\n"
+)
+
+-- =======================================================================
+--  LOGGING
+-- =======================================================================
+local dl, vl, xml
+logprefix   = "[TCAMS] "
+debug_dump  = false
+debuglogs   = false
+verbose     = false
+
+function allow_local_logging(onoff)
+    -- By default, logging in this script inherits its settings from utils_catspaw_common
+    -- This function allows anyone to switch on debug logging for this script's operations only
+    if onoff then
+        dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+    else
+        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+    end
+end
+allow_local_logging(true)
+
+function set_debug_logging(debug_en, verbose_en, dump_en)
+    if (debug_en ~= nil) then debuglogs = debug_en end
+    if (verbose_en ~= nil) then verbose = verbose_en end
+    if (debug_dump ~= nil) then debug_dump = dump_en end
+end
+set_debug_logging(true, true, true) --uncomment this line to enable all logging
+
+-- =======================================================================
+--  SHORTCUTS AND TABLE DEFS
+-- =======================================================================
+local get_next_check    = utils_catspaw_common.get_next_tg_interval
+local valid_id          = utils_catspaw_common.valid_id
+local safeid            = utils_catspaw_common.safeid
+local strbool           = utils_catspaw_common.strbool
+local is_living_thing   = utils_catspaw_common.is_living_thing
+local greater_of        = utils_catspaw_common.greater_of
+local load_file_data    = utils_catspaw_common.load_file_data
+local safename          = utils_catspaw_text.safename
+local nameid            = utils_catspaw_text.obj_name_and_id
+local get_argb          = utils_catspaw_mapspots.get_argb
+local get_all_mapspots  = utils_catspaw_mapspots.get_all_mapspots
+local get_mapspot_icons = utils_catspaw_mapspots.get_mapspot_icon_list
+local get_mapspot_texd  = utils_catspaw_mapspots.get_mapspot_texture_data
+-- =======================================================================
+local paw               = tasks_placeable_waypoints
+local gts               = game.translate_string
+local cfg_filename      = "scripts\\tcams_defaults.ltx"
+local scanned           = {}
+local tally_scanned, tally_skipped
+local id_scan_curr      = 1
+local actively_scanning = false
+local hmm               = nil
+local nearby
+
+-- =======================================================================
+--  HUD MARKER PRESET AND FUNCTORS
+-- =======================================================================
+utils_catspaw_hudmarks.marker_presets["mapspot"] = (
+    function(args)
+        local preset_args = {
+            -- Anything static that can be loaded from the mapspot_preset
+            -- section in the config file, is
+            far_fade_dist       = cfg.med_scan_radius,
+            far_hide_dist       = (cfg.big_scan_radius or 999) - cfg.med_scan_radius,
+            far_end_dist        = ((cfg.big_scan_radius or 999)  + 25),
+            lock_y              = cfg.mark_pos_y or 15,
+            hint_font           = GetFontLetterica18Russian(),
+            coord_args = { -- zero out all default screen coordinate adjustments
+                near_adj = 0, 
+                far_adj = 0,
+                base_y = 0,
+            },
+            -- =======================================================================
+            --  MAIN HUD MARKER UPDATE LOOP
+            --  Probably needs optimization with what I learned from making DotMarks
+            -- =======================================================================
+            func_on_update = (
+                function(mark, args)
+                    if not mark then return end
+                    args = args or {}
+                    if cfg.suspend_markers or mark.suspended then
+                        args.ret_value = false
+                        return
+                    end
+                    
+                    local id = mark.id
+                    --vl("Doing mapspot %s existence and pre-update checks on %s", mark.mapspot, id)
+                    if (not id) then
+                        mark:Destroy()
+                        return
+                    end
+                    local idmark = cfg.markers[id]
+                    local idmarkspot = idmark and mark.mapspot and idmark[mark.mapspot]
+                    if not idmarkspot then
+                        return
+                    end
+
+                    local spots = get_mapspot_icons(id)
+                    if not (spots and spots[mark.mapspot]) then
+                        mark:Destroy()
+                        idmarkspot = nil
+                        return
+                    end
+
+                    local se_obj = alife_object(id)
+                    if idmark.living then
+                        if se_obj:alive() then
+                            idmark.is_combatant    = is_fighting(id) and true or false
+                        elseif cfg.template_corpse then
+                            vl("[%s] %s is dead, switching to corpse marker overrides", mark.mark_id, mark.name)
+                            idmark.living = false
+                            for k,v in pairs(cfg.template_corpse) do
+                                if debug_dump then vl("%s is now %s", k, v) end
+                                mark[k] = v
+                            end
+                        end
+                    end
+
+                    mark.lock_y = cfg.mark_pos_y or 15
+                    if mark.mark_pos_y_adj then
+                        mark.lock_y = mark.lock_y + mark.mark_pos_y_adj
+                        vl("adjusting marker locked y pos by %s | now: %s", mark.mark_pos_y_adj, mark.lock_y)
+                    end
+
+                    local pri = mark.spot_pri or 0
+                    if (mark.clsid == 99) or (mark.clsid == 98) then
+                        local sl_id = se_obj:commander_id()
+                        if cfg.markers[sl_id] then
+                            -- This isn't working right, needs attention
+                            vl("Existing marker %s is the squad leader of %s, checking priorities", sl_id, id)
+                            for slspot, slmarkspot in pairs(cfg.markers[sl_id]) do
+                                if type(slmarkspot) == "table" then
+                                    local slpri = (slmarkspot.spot_pri or 0)
+                                    if pri > slpri then
+                                        slmarkspot.best_spot_pri = pri
+                                        local slmark = slmarkspot.mark
+                                        slmark:HideAll("lower-priority mapspot")
+                                    elseif slpri > pri then
+                                        idmarkspot.best_spot_pri = slpri
+                                        mark:HideAll("lower-priority mapspot")
+                                        return
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    --vl("Mapspot %s has priority %s | curr best %s", mark.mapspot, pri, idmarkspot and idmarkspot.best_spot_pri)
+                    if (not idmarkspot.best_spot_pri) or (pri > idmarkspot.best_spot_pri) then
+                        idmarkspot.best_spot_pri = pri
+                        return
+                    end
+                    if (pri < idmarkspot.best_spot_pri) then
+                        mark:HideAll("lower-priority mapspot")
+                        return
+                    end
+                end
+            ),
+            -- =======================================================================
+            func_on_update_end = (
+                function(mark)
+                    if not mark then return end
+                    --vl("Doing mapspot %s elevation and post-update checks", mark.mapspot)
+                    if not xml then
+                        xml = CScriptXmlInit()
+                    end
+                    if not mark.elevation_mark_init_done then
+                        --vl("Initializing elevation marker for mapspot %s", mark.mapspot)
+                        xml:ParseFile(mark.xmlfile)
+                        mark.elev   = xml:InitStatic("marker", mark.marker)
+                        mark.elevation_mark_init_done = true
+                    end
+                    local id        = mark.id
+                    local act_pos   = db.actor and db.actor:position()
+                    local act_ele   = math.floor(act_pos and act_pos.y or 0)
+                    local mark_pos  = mark:GetPos()
+                    local mark_ele  = math.floor(mark_pos and mark_pos.y or 0)
+                    local ele_diff  = act_ele - mark_ele
+                    --vl("elevation check: actor pos %s | mark pos %s | actor ele %s | mark ele %s | diff %s", act_pos, mark_pos, act_ele, mark_ele, ele_diff)
+                    local function update_mark(texture, above)
+                        if texture then
+                            mark.elev:InitTexture(texture)
+                            local w     = mark.marker:GetWidth() * 0.5
+                            local h     = w * 0.5
+                            local y     = above and -(h * 1.2) or (w * 4)
+                            --vl("update_mark_size_and_pos: %sx%s | y %s | ele_diff %s", w, h, y, ele_diff)
+                            utils_catspaw_hudmarks.fade_by_dist(
+                                mark.elev,
+                                mark.last_dist,
+                                mark.near_hide_dist,
+                                mark.near_fade_dist,
+                                mark.far_fade_dist,
+                                mark.far_hide_dist
+                            )
+                            mark.elev:SetWndSize(vector2():set(w, h))
+                            mark.elev:SetWndPos(vector2():set(w, y))
+                            mark.elev:Show(true)
+                        end
+                    end
+
+                    if ele_diff < -2 then
+                        --vl("Mapspot is above, showing mark")
+                        update_mark("ui_catsy_marker_elev_tick_up", true)
+                    elseif ele_diff > 2 then
+                        --vl("Mapspot is below, showing mark")
+                        update_mark("ui_catsy_marker_elev_tick_dn", false)
+                    else
+                        --vl("Mapspot is level, hiding mark")
+                        mark.elev:Show(false)
+                    end
+
+                    cfg.markers[id].last_dist = mark.last_dist
+                end
+            ),
+        }
+        for k,v in pairs(cfg.mapspot_preset) do
+            preset_args[k] = v
+        end
+        return preset_args
+    end
+)
+
+-- =======================================================================
+--  TACTICAL COMPASS MONKEYPATCHES
+-- =======================================================================
+dl("ui_hud_tcams_compass is monkeypatching Tactical Compass: marker.script and compass.script")
+-- =======================================================================
+if compass and compass.UIFlatCompass then
+    function compass.UIFlatCompass:InitControls()
+        --if not cfg.show_compass then return end
+        self:SetAutoDelete(true)
+        self.xml = CScriptXmlInit()
+        self.xml:ParseFile("tactic_compass.xml")
+        self:NextUpdate(0)
+        self.compass_scroll = {
+            x = "0",
+            y = "0",
+            w = 2400,
+            h = 100,
+        }
+        self.last_nearby_contacts = 0
+        local usr = cfg.unsquish_ratio or 1
+        self.compass_dialog = self.xml:InitStatic("frame", self)
+        if cfg.compass_tex_bg then
+            self.compass_shadow = self.xml:InitStatic("frame", self.compass_dialog)
+            self.compass_shadow:SetWndSize(vector2():set(cfg.compass_sh_w * usr, cfg.compass_sh_h))
+            self.compass_shadow:SetWndPos(vector2():set(cfg.compass_sh_pos_x, cfg.compass_sh_pos_y))
+            self.compass_shadow:SetTextureColor(GetARGB((cfg.compass_sh_alpha or 1) * 255, 255, 255, 255))
+            self.compass_shadow:InitTexture(cfg.compass_tex_bg)
+        end
+        self.compass_frame = self.xml:InitStatic("frame", self.compass_dialog)
+        self.aggro_wave = self.xml:InitStatic("frame", self.compass_dialog)
+        self.aggro_wave:InitTexture(cfg.aggro_wave_tex)
+        self.aggro_wave:Show(false)
+        self.aggro_wave:SetWndSize(vector2():set(cfg.aggro_wave_w * usr, cfg.aggro_wave_h))
+        self.aggro_wave:SetWndPos(vector2():set(cfg.aggro_wave_pos_x * usr, cfg.aggro_wave_pos_y))
+        self.aggro_wave:SetTextureColor(GetARGB(255, 255, 0, 0))
+
+        self.line_compass_dialog = self.xml:InitStatic("line_compass", self.compass_dialog)
+        self.line_compass_dialog:InitTexture(cfg.compass_tex_scroll)
+        self.line_compass_texture = self.xml:InitStatic("line_compass_texture", self.compass_dialog)
+        self.line_compass_texture:InitTexture(cfg.compass_tex_frame)
+        self.line_compass_radian = self.xml:InitTextWnd("line_compass_radian", self.line_compass_dialog)
+        self.compass_frame:Show(cfg.show_compass)
+        self.line_compass_texture:Show(cfg.show_compass)
+        self.line_compass_radian:Show(cfg.show_compass)
+    end
+    
+    -- =======================================================================
+    
+    function compass.UIFlatCompass:UpdateCombatDetState(color)
+        if color then
+            if cfg.show_aggro_frame then
+                self.line_compass_texture:SetTextureColor(GetARGB(color.a, color.r, color.g, color.b))
+            end
+            if cfg.show_aggro_wave then
+                local usr = cfg.unsquish_ratio or 1
+                self.aggro_wave:Show(true)
+                self.aggro_wave:SetWndSize(vector2():set(self.wave_curr_w * usr, self.wave_curr_h))
+                self.aggro_wave:SetWndPos(vector2():set(self.wave_curr_x * usr, cfg.aggro_wave_pos_y))
+                self.aggro_wave:SetTextureColor(GetARGB(color.a, color.r, color.g, color.b))
+            else
+                self.aggro_wave:Show(false)
+            end
+        else
+            self.aggro_wave:Show(false)
+            color = {}
+            if cfg.compass_safe_color then
+                color = str_explode(cfg.compass_safe_color, ",")
+            end
+            self.line_compass_texture:SetTextureColor(GetARGB(
+                tonumber(color[1]) or 255,
+                tonumber(color[2]) or 255,
+                tonumber(color[3]) or 255,
+                tonumber(color[4]) or 255
+            ))
+        end
+    end
+    
+    -- =======================================================================
+    
+    function compass.UIFlatCompass:Refresh()
+        if not cfg.show_compass then return end
+        local now       = time_global()
+        local lum_avail = db.actor.get_actor_ui_luminosity ~= nil
+        cfg.last_lum    = clamp(get_actor_luminosity() or 0, 0.0, 1.0)
+
+        if cfg.last_lum < 0.001 then cfg.last_lum = 0 end
+        -- luminosity returns crazy tiny numbers after it ticks back down, treat these as zero
+
+        local actor_dir = device().cam_dir
+        local dir_x     = actor_dir.x
+        local dir_z     = actor_dir.z
+        local radians   = math.atan2(dir_x, dir_z)
+        local angle     = math.deg(radians)
+
+        if angle < 0 then
+            angle = angle + 360
+        end
+
+        if cfg.show_nearby_contacts and cfg.nearby_contacts_curr then
+            if cfg.nearby_contacts_curr > 0 then
+                self.line_compass_radian:SetText(cfg.nearby_contacts_curr)
+            else
+                self.line_compass_radian:SetText("")
+            end
+        else
+            self.line_compass_radian:SetText(math.floor(angle + 0.5))
+        end
+
+        local slice_x   = tostring(self.compass_scroll.x + angle * 10)
+        local slice_y   = tostring(self.compass_scroll.y)
+        local x2        = slice_x + self.compass_scroll.w
+        local y2        = slice_y + self.compass_scroll.h
+        
+        self.compass_dialog:SetWndPos(vector2():set(512 - cfg.compass_dialog_w / 2, cfg.compass_pos_y))
+        self.line_compass_dialog:SetTextureRect(Frect():set(slice_x, slice_y, x2, y2))
+        self.line_compass_dialog:SetStretchTexture(true)
+
+        if (cfg.show_aggro_frame or cfg.show_aggro_wave) then
+            cfg.any_curr_vis        = (cfg.last_lum > 0.01)
+            cfg.last_vis_time       = (cfg.any_curr_vis and now) or cfg.last_vis_time or 0
+            
+            
+            local current_combat    = is_fighting()
+            if current_combat and lum_avail and cfg.combat_vis_decay and cfg.combat_vis_timeout then
+                local diff = (now - cfg.last_vis_time)
+                if (diff > cfg.combat_vis_decay) then
+                    local delta     = diff - cfg.combat_vis_decay
+                    local decay     = 1 - (delta / cfg.combat_vis_timeout)
+                    if decay < 0 then
+                        decay       = 0
+                    end
+                    cfg.last_lum    = greater_of(decay, cfg.last_lum)
+                    current_combat  = false
+                    cfg.any_curr_vis= true
+                    if debug_dump then vl("[%s] Enemies lost sight of actor at %s | diff %s | delta %s | timeout %s | aggro decay: %s | new last_lum %s", now, cfg.last_vis_time, diff, delta, cfg.combat_vis_timeout, decay, cfg.last_lum) end
+                end
+            end
+
+            self.wave_curr_x    = cfg.aggro_wave_pos_x
+            self.wave_curr_w    = cfg.aggro_wave_w
+            self.wave_curr_h    = cfg.aggro_wave_h
+
+            if current_combat then
+                local cycle = (time_global() % 1000) * 0.001
+                if (cycle > 0.5) then
+                    cycle   = (1 - cycle)
+                end
+                local coef  = utils_catspaw_common.easing.OutSine(cycle)
+                
+                self.combat_color = {
+                    a   = 100 + (coef * 100),
+                    r   = 205 + (coef * 50),
+                    g   = clamp(100 - (coef * 255), 0, 255),
+                    b   = 0,
+                }
+                local h = (self.wave_curr_h / 2)
+                self.wave_curr_h = h + (coef * h)
+                if debug_dump then vl("[UIFlatCompass:Refresh] [tg %s] Actor is fighting | color %s,%s,%s,%s", now, color.a, color.r, color.g, color.b) end
+                self:UpdateCombatDetState(self.combat_color)
+                return
+            end
+
+
+            if cfg.show_detection and cfg.any_curr_vis then
+                local detection     = utils_catspaw_common.easing.OutSine(cfg.last_lum)
+                self.wave_curr_h    = cfg.aggro_wave_h * detection
+                self.wave_curr_w    = cfg.aggro_wave_w * detection
+                self.wave_curr_x    = cfg.aggro_wave_pos_x + ((cfg.aggro_wave_w - self.wave_curr_w) / 2)
+                local color = {
+                    a   = 220,
+                    r   = clamp(200 + (cfg.last_lum * 255), 0, 255),
+                    g   = 255 - (cfg.last_lum * 255),--(cfg.last_lum * 105),
+                    b   = 0,
+                }
+
+                if debug_dump then vl("[tg %s] Actor detection: %s | color %s,%s,%s,%s", time_global(), cfg.last_lum, color.a, color.r, color.g, color.b) end
+                self:UpdateCombatDetState(color)
+                return
+            end
+        end
+        self:UpdateCombatDetState()
+    end
+    
+    -- =======================================================================
+    function compass.UIFlatCompass:NextUpdate(next)
+        if next then
+            self.next_update = tonumber(next)
+        end
+        return (self.next_update or 0)
+    end
+
+    function compass.UIFlatCompass:Update()
+        if not cfg.show_compass then return end
+        if time_global() < self:NextUpdate() then return end
+        self:NextUpdate(get_next_check(cfg.compass_update_int))
+        self:Refresh()
+        CUIScriptWnd.Update(self)
+        if main_hud_shown() then
+            self.compass_dialog:Show(true)
+        else
+            self.compass_dialog:Show(false)
+        end
+    end
+    
+    -- =======================================================================
+    
+    compass.actor_on_first_update = function() end
+    -- We're handling actor_on_first_update tasks for the compass now
+end
+-- =======================================================================
+if marker and marker.on_game_start then
+    -- Disable the marker code from Tactical Compass, while leaving its very nice compass UI
+    marker.deactivate_markers = function() end
+    marker.activate_markers = function() end
+    marker.update_markers = function() end
+    marker.on_game_start = function() end
+end
+-- =======================================================================
+function set_compass_state(onoff)
+    if not compass then return end
+    -- Refactored this out into its own function so that it can be called on startup
+    if onoff then
+        compass.activate_compass()
+    else
+        compass.deactivate_compass()
+    end
+    vl("Setting compass enabled state to %s", onoff)
+end
+-- =======================================================================
+function set_marker_state(onoff)
+    cfg.suspend_markers = not onoff
+    vl("Setting marker enabled state to %s", cfg.suspend_markers)
+end
+-- =======================================================================
+if compass_mcm and compass_mcm.toggle_compass then
+    function compass_mcm.toggle_compass()
+        vl("cfg.show_compass was %s, toggling", cfg.show_compass)
+        if cfg.link_compass_minimap then
+            local minimap_enabled = ui_options.get("video/hud/show_minimap")
+            ui_options.set("video/hud/show_minimap", not minimap_enabled)
+
+            local maingameui = ActorMenu.get_maingame()
+            if maingameui and maingameui.UIZoneMap then
+                maingameui.UIZoneMap.disabled = minimap_enabled
+                maingameui.UIMotionIcon:Show(maingameui.UIZoneMap.disabled == false)
+            end
+            cfg.show_compass = minimap_enabled
+        else
+            cfg.show_compass = not cfg.show_compass
+        end
+        set_marker_state(cfg.show_compass)
+        set_compass_state(cfg.show_compass)
+    end
+end
+-- =======================================================================
+
+
+-- =======================================================================
+--  SUPPORT FUNCTIONS
+-- =======================================================================
+
+
+
+function is_blacklisted_id(id)
+    return cfg and id and cfg.blacklisted_ids and cfg.blacklisted_ids[id]
+end
+
+function is_blacklisted_clsid(cls)
+    return cfg and cls and cfg.blacklisted_clsids and cfg.blacklisted_clsids[cls]
+end
+
+function is_blacklisted_section(sec)
+    return cfg and sec and cfg.blacklisted_sections and cfg.blacklisted_sections[sec]
+end
+
+function is_blacklisted_mapspot(spot)
+    return cfg and spot and cfg.blacklisted_mapspots and cfg.blacklisted_mapspots[spot]
+end
+
+function is_blacklisted(id, cls, sec, spot)
+    return (id and is_blacklisted_id(id)) or
+            (cls and is_blacklisted_clsid(cls)) or
+            (sec and is_blacklisted_section(sec)) or
+            (spot and is_blacklisted_mapspot(spot))
+end
+
+function is_fighting(id)
+    if id then
+        return xr_combat_ignore.fighting_with_actor_npcs[id]
+    else
+        return not is_empty(xr_combat_ignore.fighting_with_actor_npcs)
+    end
+end
+
+function is_actor_enemy(comm)
+    return comm and db.actor and game_relations.is_factions_enemies(get_actor_true_community(), comm)
+end
+
+function is_actor_ally(comm)
+    return comm and db.actor and (comm == get_actor_true_community())
+end
+
+function start_scanning()
+    actively_scanning = true
+    RegisterScriptCallback("actor_on_update", actor_on_update)
+    RegisterScriptCallback("actor_on_net_destroy", actor_on_net_destroy)
+    return true
+end
+
+function stop_scanning()
+    actively_scanning = false
+    UnregisterScriptCallback("actor_on_update", actor_on_update)
+    UnregisterScriptCallback("actor_on_net_destroy", actor_on_net_destroy)
+    return true
+end
+
+local function tally_skip()
+    tally_skipped = tally_skipped + 1
+end
+
+function get_actor_luminosity()
+    return db.actor and db.actor.get_actor_ui_luminosity and db.actor:get_actor_ui_luminosity()
+end
+
+function get_nearby_object(obj)
+    -- Ensure that all operations are valid for both server and game objects
+    local id = safeid(obj)
+    if not valid_id(id) then
+        tally_skip()
+    return end
+    if scanned[id] then
+        tally_skip()
+        --vl("get_nearby_object: ID %s is already scanned, skipping", id)
+    return end
+    scanned[id] = true
+    local name = obj and obj:name()
+    local blacklisted = is_blacklisted_id(id)
+    if blacklisted then
+        if name and (name == blacklisted) then
+            --vl("get_nearby_object: ID %s is blacklisted, skipping", id)
+            tally_skip()
+            return
+        else
+            cfg.blacklisted_ids[id] = nil
+        end
+    end
+
+    local cls = obj:clsid()
+    if is_blacklisted_clsid(cls) then
+        cfg.blacklisted_ids[id] = name
+        tally_skip()
+        --vl("get_nearby_object: clsid %s is blacklisted, skipping", cls)
+    return end    
+    
+    local sec = obj.section and obj:section() or obj:section_name()
+    if is_blacklisted_section(sec) then
+        cfg.blacklisted_ids[id] = name
+        tally_skip()
+        --vl("get_nearby_object: section %s is blacklisted, skipping", sec)
+    return end
+
+    local is_combatant = is_fighting(id) and true or false
+    local spots = get_all_mapspots(id)
+    if (not spots) or (is_empty(spots)) then
+        if is_combatant and cfg.tag_nearby_enemies then
+            -- not ready yet
+        else
+            tally_skip()
+            return
+        end
+    end
+
+    tally_scanned = tally_scanned + 1
+    vl("%s mapspots found for %s (%s):", #spots, obj:name(), id)
+
+    hmm = hmm or utils_catspaw_hudmarks.get_hud_mark_manager()
+    if not hmm then return end
+
+    for i, ms in ipairs(spots) do
+        if is_blacklisted_mapspot(ms.spot_type) then
+            --vl("get_nearby_object: mapspot %s is blacklisted, skipping", ms.spot_type)
+        else
+            if not cfg.markers[id] then cfg.markers[id] = {} end
+            if not cfg.markers[id][ms.spot_type] then cfg.markers[id][ms.spot_type] = {} end
+
+            local m_id = "mapspot_" .. tostring(id) .. "_" .. (ms.spot_type or "")
+            if hmm:GetMarker(m_id) then
+                --vl("[ID %s] Existing marker found for mark_id %s, skipping", id, m_id)
+            else
+                local name, comm, argb, rel, height, width, living, is_stalker
+                local mapspot   = ms and ms.spot_type
+                texd      = mapspot and get_mapspot_texd(mapspot)
+                if not texd then break end
+                if texd.a or texd.r or texd.g or texd.b then
+                    argb = {
+                        a = texd.a or 255,
+                        r = texd.r or 255,
+                        g = texd.g or 255,
+                        b = texd.b or 255
+                    }
+                end
+                if (texd.h and texd.w) then
+                    width   = (texd.w / cfg.mark_width) * cfg.mark_width
+                    height  = (texd.h / cfg.mark_height) * cfg.mark_height
+                end
+                local argblog = ""
+                if argb then
+                    argblog = string.format("(ARGB %s,%s,%s,%s)", argb.a, argb.r, argb.g, argb.b)
+                end
+                
+                dl("[%s] Initializing spot %s: %s (%s) as %s\n" .. "= Texture: %s %s", id, i, mapspot, ms.text, m_id, texd.t, argblog)
+                name            = ms.text
+                local se_obj    = alife_object(id)
+                if is_living_thing(obj) then
+                    living = true
+                    if IsMonster(nil, cls) then
+                        name        = safename and safename(id) or (se_obj.character_name and se_obj:character_name())
+                        rel         = "m"
+                    elseif IsStalker(nil, cls) then
+                        is_stalker  = true
+                        name        = se_obj:character_name()
+                        comm        = get_object_community(obj)
+                        rel         = ((is_actor_enemy(comm) or is_combatant) and "e") or (is_actor_ally(comm) and "f") or "n"
+                    end
+                end
+
+                local pri       = cfg.mapspot_priorities and cfg.mapspot_priorities[mapspot] or 0
+
+                local args = {
+                    id          = id,
+                    clsid       = cls,
+                    section     = sec,
+                    mark_id     = m_id,
+                    mapspot     = mapspot,
+                    name        = name,
+                    preset      = "mapspot",
+                    texture     = texd.t,
+                    width       = width,
+                    height      = height,
+                    spot_pri    = pri,
+                    custom_argb = argb or nil,
+                }
+                
+                if cfg.clsid_overrides and cfg.clsid_overrides[cls] then
+                    vl("[%s] Loading per-clsid overrides for %s", id, cls)
+                    for k,v in pairs(cfg.clsid_overrides[cls]) do
+                        args[k] = v
+                        if debug_dump then vl("* args[%s] = %s", k, v) end
+                    end
+                end
+                if cfg.mapspot_overrides and cfg.mapspot_overrides[mapspot] then
+                    vl("[%s] Loading per-mapspot overrides for %s", id, mapspot)
+                    for k,v in pairs(cfg.mapspot_overrides[mapspot]) do
+                        args[k] = v
+                        if debug_dump then vl("* args[%s] = %s", k, v) end
+                    end
+                end
+                if (not cfg.markers[id][mapspot].best_spot_pri) or (pri > cfg.markers[id][mapspot].best_spot_pri) then
+                    cfg.markers[id][mapspot].best_spot_pri = pri
+                end
+                if is_stalker and cfg.template_enemy and ((rel == "e") or (rel == "m")) then
+                    vl("[%s] %s is an enemy, loading enemy object overrides", id, name)
+                    for k,v in pairs(cfg.template_enemy) do
+                        args[k] = v
+                        if debug_dump then vl("* args[%s] = %s", k, v) end
+                    end
+                end
+
+                if cfg.suspend_markers then
+                    vl("Markers suspended, aborting before new marker init")
+                return end
+
+                cfg.markers[id][mapspot].mark   = hmm:AddMarker(args)
+                cfg.markers[id].living          = living
+                cfg.markers[id].is_stalker      = is_stalker
+                cfg.markers[id].relation        = rel
+                cfg.markers[id].is_combatant    = is_combatant
+                cfg.markers[id].name            = cfg.markers[id].name or name
+
+                return cfg.markers[id][mapspot].mark
+            end
+        end
+    end
+end
+
+
+function scan_nearby_entities(scan_radius, paw_scan)
+    local pos = db.actor and db.actor:position()
+    if not pos then return end
+
+    vl("ui_hud_tcams_compass.scan_nearby_entities in %sm @ %s", scan_radius, time_global())
+
+    if paw and paw_scan then
+        local curr_wp_id = paw.get_current_waypoint()
+        local wp_obj = curr_wp_id and alife_object(curr_wp_id)
+        if wp_obj then
+            local mark = get_nearby_object(wp_obj)
+            if mark then mark.is_wp = true end
+        end
+        local pins = paw.pins or {}
+        local szt = paw.script_zones or {}
+        for id,pin in pairs(pins) do
+            if id and szt[id] then
+                local sz_obj = alife_object(id)
+                if sz_obj.online and (pos:distance_to(sz_obj.position) <= scan_radius) then
+                    local mark = get_nearby_object(sz_obj)
+                    if mark then mark.is_pin = true end
+                end
+            end
+        end
+    else
+        level.iterate_nearest(pos, scan_radius, get_nearby_object)
+    end
+end
+
+
+function scan_id_chunk(curr, chunk)
+    --vl("scan_id_chunk(%s, %s) | id_scan_curr %s | cfg.id_scan_chunk %s", curr, chunk, id_scan_curr, cfg.id_scan_chunk)
+    local pos = db.actor and db.actor:position()
+    if not pos then return end
+    curr = curr or id_scan_curr
+    chunk = chunk or cfg.id_scan_chunk
+
+    for id = curr, curr + (chunk - 1) do
+        if (id > 65534) then
+            id_scan_curr = 1
+            return
+        end
+        if not scanned[id] then
+            --vl("ID %s is not yet scanned on this pass", id)
+            local se_obj = alife_object(id)
+            if se_obj and se_obj.online then
+                --vl("se_obj for %s is online", id)
+                get_nearby_object(se_obj)
+            end
+        end
+    end
+    id_scan_curr = id_scan_curr + chunk
+end
+
+
+function actor_on_first_update()
+    hmm = utils_catspaw_hudmarks and utils_catspaw_hudmarks.get_hud_mark_manager()
+    if not hmm then return end
+    if not cfg then return end
+    --if not cfg then this.cfg = {} end
+    --if not cfg.markers then cfg.markers = {} end
+    --if not cfg.blacklisted_ids then cfg.blacklisted_ids = {} end
+    -- Get current game settings
+    on_option_change()
+    -- Set scanning to begin after a short delay
+    if cfg.scanning_enabled then
+        CreateTimeEvent("compass_scan_delay", time_global(), cfg.scan_start_delay, start_scanning)
+    end
+end
+
+
+local next_fast_scan    = 0
+local next_med_scan     = 0
+local next_big_scan     = 0
+local next_paw_scan     = 0
+local next_id_scan      = 0
+local last_contact_cnt  = 0
+
+function actor_on_update()
+    local dump_stats = false
+    if not actively_scanning then return end
+    local _ = debug_dump and vl("Starting actor_on_update scan at %s", time_global())
+    tally_scanned = 0
+    tally_skipped = 0
+    if cfg.fast_scan_interval and (next_fast_scan <= time_global()) and not (ui_hud_dotmarks) then
+        next_fast_scan      = time_global() + cfg.fast_scan_interval
+        _ = debug_dump and vl("Time for fast scan (%sm) - next at %s", cfg.fast_scan_radius, next_fast_scan)
+        scan_nearby_entities(cfg.fast_scan_radius)
+    end
+    if cfg.med_scan_interval and (next_med_scan <= time_global()) then
+        next_med_scan       = get_next_check(cfg.med_scan_interval)
+        _ = debug_dump and vl("Time for med scan (%sm) - next at %s", cfg.med_scan_radius, next_med_scan)
+        scan_nearby_entities(cfg.med_scan_radius)
+        dump_stats = true
+    end
+    if cfg.big_scan_interval and (next_big_scan <= time_global()) then
+        next_big_scan       = get_next_check(cfg.big_scan_interval)
+        _ = debug_dump and vl("Time for big scan (%sm) - next at %s", cfg.big_scan_radius, next_big_scan)
+        scan_nearby_entities(cfg.big_scan_radius)
+    end
+    if cfg.paw_scan_interval and (next_paw_scan <= time_global()) then
+        next_paw_scan       = get_next_check(cfg.paw_scan_interval)
+        _ = debug_dump and vl("Time for paw scan (%sm) - next at %s", cfg.paw_scan_radius, next_paw_scan)
+        scan_nearby_entities(cfg.paw_scan_radius, true)
+    end
+    if cfg.id_scan_interval then
+        if cfg.preload_id_chunk and not cfg.first_scan then
+            vl("cfg.preload_id_scan is true - preloading all unscanned IDs")
+            cfg.first_scan = true
+            local chunk = tonumber(cfg.preload_id_chunk) or 65534
+            scan_id_chunk(1, chunk)
+        elseif (next_id_scan <= time_global()) then
+            next_id_scan    = get_next_check(cfg.id_scan_interval)
+            if debug_dump then vl("Time for to scan next chunk of %s ids - next scan at %s", cfg.id_scan_chunk, next_id_scan) end
+            scan_id_chunk()
+        end
+    end
+    scanned = {}
+    if dump_stats then
+        if (debug_dump and ((tally_scanned + tally_skipped) > 0)) then
+            dl("Final tally for actor_on_update %s: %s objs | %s scanned | %s skipped due to optimizations", time_global(), tally_scanned + tally_skipped, tally_scanned, tally_skipped)
+        end
+        local visible = 0
+        for k,v in pairs(cfg.markers) do
+            if v.is_shown and not (v.destroying or v.killswitched) then
+                visible = visible + 1
+            end
+        end
+        printf(logprefix .. "[%s] %s of %s markers currently onscreen", time_global(), visible, size_table(cfg.markers))
+    end
+    if cfg.show_nearby_contacts and cfg.nearby_contact_dist then
+        local last_curr = cfg.nearby_contacts_curr or 0
+        cfg.nearby_contacts_curr = 0
+        for id,t in pairs(cfg.markers) do
+            local last_dist = cfg.markers[id].last_dist
+            if t.living and last_dist and (last_dist <= cfg.nearby_contact_dist) then
+                --local npc = id and get_object_by_id(id)
+                --local see = npc and npc:see(db.actor)
+                --printf("Living thing %s | last_dist %s | is_stalker %s | see %s | curr nearby %s", npc and npc:name(), last_dist, t.is_stalker, see, cfg.nearby_contacts_curr)
+                if t.is_stalker or cfg.inc_mutant_contacts then
+                    cfg.nearby_contacts_curr = cfg.nearby_contacts_curr + 1
+                end
+            end
+        end
+        if cfg.use_contact_sounds then
+            local snd
+            if (cfg.nearby_contacts_curr > last_contact_cnt) then
+                snd = cfg.online_contact_snd
+            elseif (cfg.nearby_contacts_curr < last_contact_cnt) then
+                snd = cfg.offline_contact_snd
+            end
+            if snd then
+                xr_effects.play_snd(db.actor, nil, {[1] = snd})
+            end
+        end
+        last_contact_cnt = cfg.nearby_contacts_curr
+        if debug_dump then vl("Found %s living contacts nearby on this scan cycle", last_contact_cnt) end
+    end
+end
+
+function actor_on_net_destroy() stop_scanning() end
+
+function check_for_blacklisted_markers(check_type, value, state)
+    if not (check_type and value) then return end
+    for id, idmark in pairs(cfg.markers) do
+        for spot,def in pairs(idmark) do
+            if type(def) == "table" then
+                --vl("Checking for blacklisted markers on %s | spot %s | check_type %s | value %s | state %s", id, spot, check_type, value, state)
+                local mark = def.mark
+                local mattr = mark and mark[check_type]
+                if mark and mattr == value then
+                    vl("Mark %s attr %s matches value %s, setting suspended to %s", mark.mark_id, mattr, value, state)
+                    mark.suspended = state
+                end
+            end
+        end
+    end
+end
+
+function add_context_menu_options(property_ui, id)
+    vl("add_context_menu_options: generating options for %s", id)
+    local idmark = cfg.markers[id]
+    local mod_held = (ui_mcm and ui_mcm.get_mod_key(cfg.compass_rclick_mod or 0))
+    if not (mod_held or not cfg.compass_rclick_mod) then
+        return
+    end
+    local se_obj    = alife_object(id)
+    if not se_obj then return end
+    local cls       = se_obj and se_obj:clsid()
+    local st_obj    = (
+        (((cls == 99) or (cls == 98)) and gts("st_paw_squad")) or
+        (IsInvbox(nil, cls) and gts("st_paw_stash"))
+    ) or nil
+    st_obj          = st_obj and (st_obj .. " ") or ""
+    local loc       = cfg.st_compass_settings
+    local name      = (idmark and idmark.name) or safename(id)
+    local opt       = ">> " .. string.format(gts(loc), st_obj, name) .. ":"
+    if not cfg.tmp then
+        cfg.tmp     = {}
+    end
+    cfg.tmp.opts = {
+        [0]         = {loc = loc, text = opt}
+    }
+    local opts      = cfg.tmp.opts
+    local st_add    = gts(cfg.st_add_blacklist)
+    local st_rem    = gts(cfg.st_rem_blacklist)
+    local hidden    = is_blacklisted_id(id)
+    opt             = hidden and st_rem or st_add
+    loc             = cfg.st_bl_id_name
+    opts[1] = {
+        hide        = not hidden,
+        loc         = loc,
+        --tbl         = "blacklisted_ids",
+        check       = "id",
+        val         = id,
+        text        = string.format(opt, gts(loc), id)
+    }
+
+    hidden          = is_blacklisted_clsid(cls)
+    opt             = hidden and st_rem or st_add
+    opts[2] = {
+        hide        = not hidden,
+        loc         = loc,
+        --tbl         = "blacklisted_clsids",
+        check       = "clsid",
+        val         = cls,
+        text        = string.format(opt, gts(cfg.st_bl_clsid_name), cls)
+    }
+
+    local sec       = se_obj and se_obj:section_name()
+    hidden          = is_blacklisted_section(sec)
+    opt             = hidden and st_rem or st_add
+    opts[3] = {
+        hide        = not hidden,
+        loc         = loc,
+        --tbl         = "blacklisted_sections",
+        check       = "section",
+        val         = sec,
+        text        = string.format(opt, gts(cfg.st_bl_section_name), sec)
+    }
+    
+    local spots = get_all_mapspots(id)
+    if spots and (#spots > 0) then
+        for i,ms in ipairs(spots) do
+            local spot  = ms.spot_type--spots[i] and spots[i].spot_type
+            hidden      = is_blacklisted_mapspot(spot)
+            opt         = hidden and st_rem or st_add
+            loc         = cfg.st_bl_mapspot_name
+            opts[i + 3] = {
+                hide    = not hidden,
+                loc     = loc,
+                --tbl     = "blacklisted_mapspots",
+                check   = "mapspot",
+                val     = spot,
+                text    = string.format(opt, gts(loc), spot)
+            }
+        end
+    end
+
+    for i = 0, #opts do
+        property_ui:AddItem(opts[i].text)
+    end
+end
+
+function map_spot_menu_add_property(property_ui, id)
+    if not valid_id(id) then return end
+    add_context_menu_options(property_ui, id)
+end
+
+function map_spot_menu_property_clicked(property_ui, id, level_name, prop)
+    vl("map_spot_menu_property_clicked: %s | %s | %s", id, level_name, prop)
+    if not valid_id(id) then return end
+    if not prop then return end
+    local opts = cfg.tmp and cfg.tmp.opts or {}
+    for i = 1, #opts do
+        local opt = opts[i]
+        if opt and (prop == opt.text) then
+            local tbl = "blacklisted_" .. (opt.check or "") .. "s"
+            if not (tbl and cfg[tbl]) then return end
+            local hide = opt.hide and true or nil
+            cfg[tbl][opt.val] = hide
+            vl("Option clicked | %s | setting cfg.%s[%s] to %s", opt.text, tbl, opt.val, cfg[tbl][opt.val])
+            check_for_blacklisted_markers(opt.check, opt.val, hide)
+        end
+    end
+end
+
+function on_option_change()
+    -- compass/marker startup states aren't working right
+    local compass_pos       = compass_mcm and compass_mcm.get_config("tc_main/compass_sc_pos")
+    cfg.mark_pos_y          = compass_pos and (compass_pos == 1) and cfg.mark_pos_y_btm or cfg.mark_pos_y_top
+    cfg.compass_pos_y       = compass_pos and (compass_pos == 1) and cfg.compass_pos_y_btm or cfg.compass_pos_y_top
+    cfg.unsquish_ratio      = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
+    if cfg.link_compass_mmap then
+        cfg.show_compass    = ui_options.get("video/hud/show_minimap")
+        vl("cfg.link_compass_mmap | setting cfg.show_compass to minimap state: %s", cfg.show_compass)
+    end
+    local hud_state = ui_options.get("video/hud/show_hud")
+    set_marker_state(hud_state and (cfg.show_compass or not (compass and compass.UIFlatCompass)))
+    set_compass_state(hud_state and cfg.show_compass)
+end
+--[[
+function load_file_data()
+    local ini_name  = "scripts\\tcams_defaults.ltx"
+    local def_ini   = ini_file_ex(ini_name)
+    if not def_ini then
+        printf("ui_hud_tcams_compass could not find config file %s\n" ..
+                "! ERROR: TCAMS startup aborted, no callbacks will be registered", ini_name)
+        return false
+    end
+
+    dl("Loading file data and populating tables")
+    local function load_table_values(from_tbl, to_tbl)
+        if not to_tbl then to_tbl = {} end
+        for k,v in pairs(from_tbl) do
+            local template = false
+            if tonumber(v) then
+                to_tbl[k] = tonumber(v)
+            elseif (v == "true") or (v == "false") then
+                to_tbl[k] = strbool(v)
+            else
+                if (type(v) == "string") and v:find("template") then
+                    vl("Loading values for %s from template table %s", k, v)
+                    to_tbl[k] = {}
+                    load_table_values(cfg[v], to_tbl[k])
+                    template = true
+                else
+                    to_tbl[k] = v
+                end
+            end
+            if (debug_dump and verbose and not template) then printf("* Loaded: %s = %s", k, v) end
+        end
+    end
+    local function load_config_tables(from_tbl)
+        if not from_tbl then return end
+        for k,v in pairs(from_tbl) do
+            vl("Initializing new config subtable %s", k)
+            if not cfg[k] then cfg[k] = {} end
+            local tbl_ltx = def_ini:collect_section(k)
+            if tbl_ltx then
+                local tbl = {}
+                if k:find("clsid") then
+                    for k1, v1 in pairs(tbl_ltx) do
+                        local i = tonumber(k1) or clsid[k1] or k1
+                        tbl[i] = v1
+                    end
+                else
+                    tbl = tbl_ltx
+                end
+                vl("Populating values for config subtable %s", k)
+                load_table_values(tbl, cfg[k])
+            end
+        end
+    end
+
+    if not cfg then this.cfg = {} end
+    local def_ltx   = def_ini and def_ini:get_sections(true)
+    local dts_ltx   = def_ini:collect_section("default_settings")
+    vl("Populating default settings")
+    load_table_values(dts_ltx, cfg)
+    load_config_tables(def_ini:collect_section("template_tables"))
+    load_config_tables(def_ini:collect_section("setting_tables"))
+    cfg.unsquish_ratio = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
+    return true
+end
+--]]
+
+function on_game_start()
+    this.cfg = load_file_data(cfg_filename, nil, {logging = true, called_by = nameid(script_name, release_date)})
+    if cfg then
+        RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+        RegisterScriptCallback("on_option_change", on_option_change)
+        if cfg.compass_rclick_en then
+            RegisterScriptCallback("map_spot_menu_add_property", map_spot_menu_add_property)
+            RegisterScriptCallback("map_spot_menu_property_clicked", map_spot_menu_property_clicked)
+        end
+    end
+end 

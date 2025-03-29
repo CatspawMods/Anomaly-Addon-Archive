@@ -1,0 +1,571 @@
+-- ======================================================================
+--[[	Catsy's commonly-used functions
+-- ===================================================================--]]
+script_name 	= "utils_catspaw_common"
+script_version 	= "1.9.2"
+release_date    = 20250328
+--[[======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+	There are a bunch of functions that I use across my addons, and over
+	time they've added up to a fair bit of duplicated code that I have to
+	update in multiple places anytime they get revised.
+
+	This is an attempt at centralizing them, and unifying some functions
+	that I'd like to be more consistent across my addons (like color and
+	text tokenization).
+
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+-- ===================================================================--]]
+-- 		SHORTCUTS AND STRINGS
+-- ======================================================================
+local gts 				= game.translate_string
+local floor 			= math.floor
+local abs 				= math.abs
+local rand 				= math.random
+MAX_ID 					= 65535 
+-- Future-proofing against the unlikely event that the engine ID limit 
+-- ever actually does get updated to 32-bit.
+
+-- ======================================================================
+-- 		LOGGING
+-- ======================================================================
+-- I use variations on these logging functions in pretty much all of my 
+-- addons. 
+-- ======================================================================
+function dlog(caller, logtext, ...)
+	-- Debug logging, printed to log only if debuglogs is true
+	if not logtext then return end
+	caller = caller or utils_catspaw_common
+	if logtext and caller.debuglogs then
+        printf((caller.logprefix or logprefix) .. logtext, ...)
+	end
+end
+
+function vlog(caller, logtext, ...)
+	-- Verbose logging, printed to log only if debuglogs and verbose are both true
+	if not logtext then return end
+	caller = caller or utils_catspaw_common
+	if logtext and caller.debuglogs and caller.verbose then
+        printf((caller.logprefix or logprefix) .. (caller.vprefix or vprefix) .. logtext, ...)
+	end
+end
+
+function plog(raw_prefix, caller, logtext, ...)
+	-- Debug logging with a custom prefix, intended for use with log color codes
+	-- rarely needed but sometimes useful
+	if not logtext then return end
+	caller = caller or utils_catspaw_common
+	if logtext and caller.debuglogs then
+        printf((raw_prefix or "") .. logtext, ...)
+	end
+end
+-- ======================================================================
+-- To use them in yours, copy the following four lines to your script,
+-- changing "logprefix" to something different that identifies your 
+-- addon (or blank) and choosing any values you wish for the others:
+debuglogs 		= false
+verbose 		= false
+logprefix 		= "[CatsyUtils] " -- gets prefixed, optional
+vprefix 		= "[V] " -- gets added to verbose log entries, optional
+-- ======================================================================
+-- Then define shortcuts in your script like so:
+local dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+-- The syntax of dl and vl, as defined above, is identical to printf.
+-- But the output will show or not based on the debuglogs and verbose
+-- variables in the calling script, respectively, and will be prefixed 
+-- automatically with text that identifies the addon doing the logging.
+
+-- The following functions control debug logging for this utility script
+-- and any that call the above functions without passing a caller.
+
+-- In practice, please always pass your script as caller if you make any
+-- external use of the logging functions, so that anyone reading the log 
+-- knows which addon is responsible for the text.
+
+function set_debug_logging(debug_en, verbose_en)
+	if (debug_en ~= nil) then debuglogs = debug_en end
+	if (verbose_en ~= nil) then verbose = verbose_en end
+end
+
+function enable_all_logging() set_debug_logging(true, true) end
+function disable_all_logging() set_debug_logging(false, false) end
+
+logdiv = "~ ------------------------------------------------------------------------\n"
+
+-- ===================================================================--]]
+-- 		ENGINE FEATURE COMPATIBILITY
+-- ======================================================================
+-- Feature flags for demonized modded binaries
+engine_features = {
+	mwheel 		= { ver = 20230701, gamma = true, name = "Mouse wheel scripting"},
+	rclick 		= { ver = 20230922, gamma = true, name = "Right-click on PDA map"},
+	getstrtbl 	= { ver = 20240507, gamma = true, name = "Func get_string_table"},
+	-- GAMMA is based on recent binaries, but doesn't yet support get_string_table()
+	cmcolor 	= { ver = 20240523, gamma = true, name = "Context menu colors"},
+	-- Enabling color in context menus can have undesirable side effects across the entire game
+	dxml_cache 	= { ver = 20250228, gamma = false, name = "DXML on_xml_read cacheing"},
+}
+
+local game_version  = gts("ui_st_game_version")
+local exes_version 	= MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version())
+using_gamma_modpack = game_version:find("G.A.M.M.A.") and true or false
+-- GAMMA is based on demonized binaries, but missing the MODDED_EXES_VERSION variable
+using_modded_exes 	= using_gamma_modpack or exes_version and true or false
+
+local function setup_engine_features()
+
+	for k,v in pairs(engine_features) do
+		v.enabled 	= (v.gamma and using_gamma_modpack) or (exes_version and exes_version >= v.ver)
+		local func 	= "exe_" .. k .. "_support"
+		v.func 		= function() return v.enabled end
+		utils_catspaw_common[func] = v.func
+	end		
+
+	if not using_modded_exes then
+		printf(	"! Modded exes not detected! No extra features available.\n" ..
+				"Anomaly game version: %s | modded_exes_version: %s",
+				game_version, exes_version
+		)
+	return end
+
+	printf(logdiv .. "@ Modded exes %s feature support (GAMMA: %s)", exes_version, using_gamma_modpack)
+	for k,v in pairs(engine_features) do
+		printf("%s %s (added %s): %s", v.enabled and "-" or "!", v.name, v.ver, v.func())
+	end
+	printf(logdiv)
+end
+setup_engine_features()
+
+-- ======================================================================
+-- 	GENERAL UTILITY
+-- ======================================================================
+function valid_id(id)
+	return id and (id > 0) and (id < MAX_ID)
+end
+
+function get_obj_section(obj)
+ 	return obj and (obj.section and obj:section() or obj:section_name())
+end
+
+function get_obj_kind(obj)
+	return obj and SYS_GetParam(0, get_obj_section(obj), "kind") or "na"
+end
+
+function var_from_str_path(str)
+	-- Retrieves a variable value whose script.varname path is stored in a string
+	local res = nil
+    if str then
+		str = str_explode(str,"%.")
+		if str[1] and str[2] and _G[ str[1] ] and _G[ str[1] ][ str[2] ] then
+			res = _G[ str[1] ][ str[2] ]
+		else
+			dl("No content found for %s", str)
+		end
+	end
+	return res
+end
+
+function exec(str, ...)
+	-- Executes a script.functor name stored in a string
+	local res = var_from_str_path(str)
+	if res then
+		return res(...)
+	else
+		dl("Could not exec function %s", str)
+	end
+end
+
+function get_time_elapsed()
+	-- Total game seconds elapsed since character's life in the Zone began
+	-- persistent across saves/sessions, unlike time_global
+	return floor(game.get_game_time():diffSec(level.get_start_time()))
+end
+
+function strbool(s)
+	-- Returns boolean value whether it was stored as a string or bool
+	return ((s == "true") or (s == true)) and true or false
+end
+
+function to_bool(b)
+	if (b == nil) or (type(b) == "boolean") then
+		return b
+	elseif type(b) == "function" then
+		return b()
+	elseif type(b) == "string" then
+		return strbool(b)
+	elseif type(b) == "number" then
+		return (b ~= 0)
+	end
+end
+
+function round100(num)
+	-- nice round numbers to 100s
+	if (num or 0) == 0 then return 0 end
+	return floor(num * 0.01) * 100
+end
+
+function round10(num)
+	-- nice round numbers to 10s
+	if (num or 0) == 0 then return 0 end
+	return floor(num * 0.1) * 10
+end
+
+function dec2(num)
+	if (num or 0) == 0 then return 0 end
+	return math.floor(num * 100) / 100
+end
+
+function greater_of(n1, n2)
+	-- Basically a wrapper with failsafes
+	return n1 and n2 and math.max(tonumber(n1) or 0, tonumber(n2) or 0)
+end
+
+function lesser_of(n1, n2)
+	-- Basically a wrapper with failsafes
+	return n1 and n2 and math.min(tonumber(n1) or 0, tonumber(n2) or 0)
+end
+
+function lerp(a, b, f)
+	-- linear interpolation
+    if a and b and f then
+        return a + f * (b - a)
+    else
+        return a or b or 0
+    end
+end
+
+easing = {
+	-- Easing functions for progression along a curve
+	InSine 	= (function(x) return 1 - math.cos((x * math.pi) / 2) end),
+	OutSine = (function(x) return math.sin((x * math.pi) / 2) end),
+	InQuint = (function(x) if not x then return end return x * x * x * x * x end),
+	OutQuint = (function(x) if not x then return end return 1 - math.pow(1 - x, 5) end),
+	easeOutElastic = (
+		function(x)
+    		local c4 = 2 * math.pi / 3
+    		return x == 0 and 0 or (x == 1 and 1 or 2 ^ (-10 * x) * math.sin((x * 10 - 0.75) * c4) + 1)
+		end
+	)    		
+}
+
+function roll(chance)
+	-- chance is 0 to 1, does a coin flip if no chance passed
+	local r = math.random()
+	return r <= (chance or 0.5), r
+	-- first return value is the boolean result, second value is the actual roll
+end
+
+function get_next_avail_index(t, first, last, step)
+	if not (t and (type(t) == "table")) then return end
+	if is_empty(t) then return 0 end
+	for i = first or 1, last or MAX_ID, step or 1 do
+		if not t[i] then return i end
+	end
+end
+
+function get_next_tg_interval(interval, variance, stamp)
+	-- For throttling looping functions to not act on every tick
+	-- Randomizes the next check by 5% of the interval to avoid stacking updates
+	interval 	= tonumber(interval) or 1000
+	variance 	= tonumber(variance) or (interval * 0.05)
+	stamp 		= tonumber(stamp) or time_global()
+	return stamp + interval + rand(variance) - (variance * 0.5)
+end
+
+function level_name_for_gvid(gvid)
+    local gg = game_graph()
+    local gv = gg:vertex(gvid)
+    return alife():level_name(gv:level_id())
+end
+
+function dotip(tiptext, dur, src, beep, icon, snd)
+    vl("Tip call received: dur %s | src \"%s\" | beep %s\n\"%s\"",dur,src,beep,tiptext)
+    if tiptext == nil then return end
+    db.actor:give_game_news(src, tiptext, icon, 0, dur or 5000)
+
+    if beep then
+        xr_sound.set_sound_play(AC_ID, snd or "pda_tips")
+    end
+end
+
+function sort_table(tbl, desc)
+	-- Basic table sort with descending option
+	if not tbl then return end
+	if desc then
+		table.sort(tbl, function(a, b) return a < b end)
+	else
+		table.sort(tbl, function(a, b) return a > b end)
+	end
+end
+
+function sort_alpha_by_subkey(tbl, key, desc)
+	-- Like sort_alpha, but to compare key values when a and b are tables
+	if not (tbl and key) then return end
+	if desc then
+		table.sort(tbl, function(a, b) return a[key] < b[key] end)
+	else
+		table.sort(tbl, function(a, b) return a[key] > b[key] end)
+	end
+end
+
+function to360(h)
+	-- Converts -180/180 angles to 0/360
+    if h < 0 then
+        h = h + 360
+    end
+    return h
+end
+
+function get_angle_for_pos(pos)
+	-- Courtesy of demonized
+    if not pos then return end
+    local dirToPos = pos:sub(device().cam_pos):normalize()
+    local dir = device().cam_dir
+    local dirToPosH = to360(-math.deg(dirToPos:getH()))
+    local dirH = to360(-math.deg(dir:getH()))
+    local degree = to360(dirH - dirToPosH)
+    return degree
+end
+
+-- ======================================================================
+-- 		OBJECTS AND ACTOR
+-- ======================================================================
+function safeid(obj, def_actor)
+	-- Returns object ID whether it is game or server object
+	-- defaults to actor ID instead of nil if no valid obj passed and def_actor is true
+	if not obj then return def_actor and AC_ID or nil end
+	return (type(obj.id) == "function") and obj:id() or obj.id
+end
+
+function actor_loaded()
+	return (db.actor ~= nil)
+end
+
+function is_living_thing(obj)
+    return IsStalker(obj) or IsMonster(obj)
+end
+
+function who_npc(a, b)
+	-- like who_is_npc, but won't break if only a is passed
+	return a and b and dialogs.who_is_npc(a, b) or a
+end
+
+function get_comm(a, b)
+	-- get community either from single object or from NPC side of conversation call
+	return get_object_community(who_npc(a, b))
+end
+
+function set_stash_hint(id, name)
+	if not id then return end
+	name = name or ""
+	se_save_var(id, nil, "stash_hint_text", name)
+end
+
+function get_stash_hint(id)
+	if not id then return end
+	return se_load_var(id, nil, "stash_hint_text")
+end
+
+function get_actor_max_weight()
+	-- Returns actor max weight after accounting for all modifiers
+    if not db.actor then return end
+    local outfit = db.actor:item_in_slot(7)
+    local backpack = db.actor:item_in_slot(13)
+    
+    local max_weight = db.actor:get_actor_max_weight()
+
+    -- Additional weight from outfit
+    max_weight = max_weight + (outfit and outfit:get_additional_max_weight() or 0)
+    
+    -- Additional weight from backpack
+    max_weight = max_weight + (backpack and backpack:get_additional_max_weight() or 0)
+    
+    -- Additional weight from artefacts
+    db.actor:iterate_belt( function(owner, obj)
+        local c_arty = obj:cast_Artefact()
+        max_weight = max_weight + (c_arty and c_arty:AdditionalInventoryWeight() or 0)
+    end)
+    
+    -- Additional weight from buffs
+    db.actor:cast_Actor():conditions():BoosterForEach( 
+        function(booster_type, booster_time, booster_value)
+            if (booster_type == 4) then --eBoostMaxWeight
+                max_weight = max_weight + booster_value
+            end
+        end
+    )
+    return max_weight
+end
+
+function get_actor_weight_class(comp_weight)
+    if not db.actor then return end
+	-- wclass returns int:
+	--		2 if overweight
+	--		1 if 10kg more will put actor overweight
+	-- 		0 if ok
+
+	-- If comp_weight is passed, evaluation assumes the actor picks up comp_weight in kg
+	-- If nothing is passed, evaluate actor's current weight state
+    local max_weight = get_actor_max_weight()
+    local curr_weight = db.actor:get_total_weight()
+    local current = (comp_weight or curr_weight)
+    local threshold = comp_weight and (max_weight - curr_weight) or max_weight
+    local wclass = ((current > threshold) and 2)  or ((current + 10 > threshold) and 1) or 0
+    --vl("actor_weight_class: %s | max %s | curr %s | comp %s | threshold %s", wclass, max_weight, curr_weight, comp_weight, threshold)
+    return wclass, curr_weight, max_weight
+end
+
+-- ======================================================================
+-- 		SETTINGS MANAGEMENT
+-- ======================================================================
+
+function get_mcm_or_default_val(path, default)
+	-- I often need to get an MCM value, but have it default to something
+	-- else if it comes back as nil. Because false can be a valid value to
+	-- load, I can't just do "return foo or bar". This function simplifies
+	-- that frequently-repeated task.
+	local val 	= ui_mcm and ui_mcm.get(path)
+	if val ~= nil then return val end
+	return default
+end
+
+function load_file_data(ini_name, cfg_table, args)
+	--[[
+   	Parameterized loading of settings from LTX into a table with a structured
+   	set of subtables, template support, and other features I've found useful.
+   	The only required parameter is ini_name, the LTX filename to load.
+
+   	args is an optional table that can contain any or none of the following:
+   		.logging 			Enables debug logging of settings loaded and other actions.
+   		
+   		.called_by 			String name of the calling script for logging purposes.
+   		
+   		.ignore_clsid 		Don't parse the contents of tables with "clsid" in the 
+   							name as if they are clsid names.
+   		
+   		.default_section 	Section name from which to load the basic "root level" settings
+   							If the settings table is named "cfg", then a setting loaded from
+   							this section with key name "foo" would be loaded into "cfg.foo".
+   							Default name: [default_settings]
+   		
+   		.table_section		Section name from which a list of tables will be loaded. Each table
+   							name in this list will be instantiated as a subtable of the config
+   							table. If a section by the same name as the table exists in the 
+   							config file, its contents will be loaded into the newly-created
+   							subtable.
+   							Default name: [setting_tables]
+
+   		.template_section 	Section name from which a list of template names will be loaded.
+   							These are additional subtables of the config table that are 
+   							loaded first, before anything else. Those "template" tables
+   							can then have their names used as the value for any setting,
+   							and that setting will be loaded with the contents of that 
+   							template table.
+   							Default name: [template_tables]
+	--]]
+    local def_ini = ini_name and ini_file_ex(ini_name)
+    args = args or {}
+
+    if not def_ini then
+    	printf("! ERROR: no INI filename passed to %s.load_file_data%s, cannot continue!", script_name, args.called_by and (" by " ..args.called_by) or "")
+    	return false
+    end
+
+    local log = args.logging
+    local function dl(s, ...) return log and printf(s, ...) end
+	--I use this here rather than my usual logging functions
+	--because this loading operation often takes place before the
+	--user's debuglogs/verbose settings have loaded from MCM.
+    dl("$ [load_file_data] Populating config tables from %s", ini_name)
+
+    local function load_table_values(from_tbl, to_tbl)
+        if not to_tbl then
+        	dl("+ Passed config table does not exist, creating")
+        	to_tbl = {}
+        end
+        for k,v in pairs(from_tbl) do
+            local template = false
+            if tonumber(v) then
+            	-- Value loaded is assumed to be numeric
+                to_tbl[k] = tonumber(v)
+            elseif (v == "true") or (v == "false") then
+                -- Value loaded is assumed to be boolean
+                to_tbl[k] = strbool(v)
+            else
+            	-- Value loaded is assumed to be string, and checked for patterns
+                if (type(v) == "string") and v:find("template") then
+                	-- If the loaded value contains the substring "template", and
+                	-- a subtable by that name exists in the config table, then instead
+                	-- of the string value, the value loaded into this key is the contents
+                	-- of the named table.
+
+                	-- In this way you can automatically populate subtables with a table
+                	-- value, and even use them as templates (if for example the same list
+                	-- of settings needs to get loaded for multiple types of thing).
+                    dl("= Trying to load values for %s from template table %s", k, v)
+                    to_tbl[k] = {}
+                    load_table_values(cfg_table[v], to_tbl[k])
+                    template = true
+                else
+                    to_tbl[k] = v
+                end
+            end
+            if not template then dl("* Loaded: %s = %s", k, v) end
+        end
+    end
+
+    local function load_config_tables(from_tbl)
+        if not from_tbl then return end
+        for k,v in pairs(from_tbl) do
+            dl("- Initializing new config subtable %s", k)
+            if not cfg_table[k] then cfg_table[k] = {} end
+            local tbl_ltx = def_ini:collect_section(k)
+            if tbl_ltx then
+                local tbl = {}
+                if k:find("clsid") and not args.ignore_clsid then
+					-- By default any key names containing "clsid" are assumed to contain a
+					-- list of clsid names, and will parse them into their numeric constant
+					-- values before loading them into the config table. The ignore_clsid
+					-- arg disables this behavior.
+                    for k1, v1 in pairs(tbl_ltx) do
+                        local i = tonumber(k1) or clsid[k1] or k1
+                        tbl[i] = v1
+                    end
+                else
+                    tbl = tbl_ltx
+                end
+                dl("^ Populating values for config subtable %s", k)
+                load_table_values(tbl, cfg_table[k])
+            end
+        end
+    end
+
+    dl("$ Populating default settings")
+    if not cfg_table then cfg_table = {} end
+    local def_ltx       = def_ini and def_ini:get_sections(true)
+    local dts_ltx       = def_ini:collect_section(args.default_section or "default_settings")
+    -- Collect the contents of the default settings section
+    load_table_values(dts_ltx, cfg_table)
+    -- Load those root-level values into the config table directly
+    load_config_tables(def_ini:collect_section(args.template_section or "template_tables"))
+    -- Load the template tables section, create subtables for each, and populate them if
+    -- a section exists with the same name as the table.
+    load_config_tables(def_ini:collect_section(args.table_section or "setting_tables"))
+    -- Then do the same thing for the setting tables section, creating new subtables for
+    -- each and populating them with values from the named section if it exists.
+    dl("$ [load_file_data] Completed settings load for %s%s", ini_name, args.called_by and ", called by " .. tostring(args.called_by))
+    
+    -- If you pass a config table to this function, it will get populated with the values
+    -- that this function loads. However, you can also use the return value from the 
+    -- function as a trigger for logic that (correctly) assumes a nil return value means 
+    -- the load operation failed. And, for example, disable callbacks and throw an error.
+    return cfg_table and (not is_empty(cfg_table)) and cfg_table or nil
+end
