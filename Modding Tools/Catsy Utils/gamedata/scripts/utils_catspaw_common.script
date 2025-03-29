@@ -2,7 +2,7 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.9"
+script_version 	= "1.9.1"
 release_date    = 20250328
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
@@ -70,8 +70,8 @@ end
 -- To use them in yours, copy the following four lines to your script,
 -- changing "logprefix" to something different that identifies your 
 -- addon (or blank) and choosing any values you wish for the others:
-debuglogs 		= true
-verbose 		= true
+debuglogs 		= false
+verbose 		= false
 logprefix 		= "[CatsyUtils] " -- gets prefixed, optional
 vprefix 		= "[V] " -- gets added to verbose log entries, optional
 -- ======================================================================
