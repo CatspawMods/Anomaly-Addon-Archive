@@ -2,7 +2,7 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.9.1"
+script_version 	= "1.9.2"
 release_date    = 20250328
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
@@ -501,7 +501,7 @@ function load_file_data(ini_name, cfg_table, args)
                 to_tbl[k] = strbool(v)
             else
             	-- Value loaded is assumed to be string, and checked for patterns
-                if (type(v) == "string") and v:find("template") and to_tbl[v] then
+                if (type(v) == "string") and v:find("template") then
                 	-- If the loaded value contains the substring "template", and
                 	-- a subtable by that name exists in the config table, then instead
                 	-- of the string value, the value loaded into this key is the contents
