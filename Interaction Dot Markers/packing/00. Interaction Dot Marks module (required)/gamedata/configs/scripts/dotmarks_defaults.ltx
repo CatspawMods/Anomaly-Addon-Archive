@@ -38,6 +38,7 @@ racked_items
 scan
 section_lookup
 service_icons
+setting_icons
 smokables
 state_conds
 task_icons
@@ -51,8 +52,8 @@ weight_colors
 ; These can be used as values in another table, and load_file_data will load the
 ; contents of the "template" table by that name instead.
 
-; At the moment in DotMarks it's mostly just used to set apart the active swap
-; property lists.
+; At the moment in DotMarks it's mostly used to set apart the active swap property 
+; lists.
 swap_door
 swap_dotactive
 swap_service
@@ -68,9 +69,9 @@ swap_task_sec
 ; below will query MCM during every on_option_change for an override (if any)
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
-; Unusual numbers are chosen for all intervals as a way of avoiding stacking updates
 near_scan_interval          = 104
 ; Interval in ms between nearby-object scans
+; Unusual numbers are chosen for all intervals as a way of avoiding stacking updates
 early_scan_interval         = 2457
 ; Interval in ms between faraway-object scans
 skill_upd_interval          = 29711
@@ -78,8 +79,6 @@ skill_upd_interval          = 29711
 ; These can be very infrequent, since skill level-ups are usually rare
 tut_check_interval 			= 49
 ; Interval in ms between tutorial checks, needs to be responsive
-task_check_interval 		= 1382
-; Interval in ms between refreshes of the active task state
 near_scan_radius            = 4
 ; Radius in meters of the near scan (affects many other things)
 early_scan_radius           = 2
@@ -185,21 +184,20 @@ prompt_fade_out_time 		= 150
 tutorial_prompt_x 			= 512
 tutorial_prompt_y 			= 600
 ; Screen pos for the "tutorial" prompts at the bottom of the screen
-disable_icon_activedot 		= false
-; Disable the ringed dot that a dotmark changes to when active
-; Need to add this to MCM
-disable_icon_task 			= false
-; Disables the special task marker icon
-disable_icon_box 			= false
-; Disables the special "breakable item" icon used for physics boxes
-disable_icon_door 			= false
-; Disables the special icon used for doors
 disable_icon_services 		= false
 ; Disables the special icon used when interacting with a service NPC
+disable_icon_tasks 			= false
+; Disables the special task marker icon
+disable_icon_targetdot 		= false
+; Disable the ringed dot that a dotmark changes to when active
 disable_icon_talk 			= false
 ; Disables the special icon used for talking to other stalkers
+disable_icon_box 			= false
+; Disables the special "breakable item" icon used for physics boxes
 disable_icon_boom 			= false
 ; Disables the special icon used for some explosive objects
+disable_icon_door 			= false
+; Disables the special icon used for doors
 sp_hide_junk_items 			= true
 ; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
 sp_flag_favejunk 			= true
@@ -406,6 +404,13 @@ medic		= ui_catsy_marker_medic
 barman		= ui_catsy_marker_trade
 guide 		= ui_catsy_marker_guide
 leader 		= ui_catsy_marker_leader
+
+[setting_icons]
+;disable_icon_targetdot 		= 
+disable_icon_box 			= Boxes
+disable_icon_door 			= Doors
+disable_icon_talk 			= Stalkers
+disable_icon_boom 			= Explosive
 
 [display_cases]
 ; Containers with a section listed here will be treated as Hideout Furniture display cases
@@ -758,7 +763,7 @@ sp_icon_pos_y 			= dotmarks/dmarkadv/
 popin_anim_dur 			= dotmarks/dmarkadv/
 ; =================================================================================
 ; Objects menu
-disable_icon_task 		= dotmarks/dmarkobjs/
+disable_icon_tasks 		= dotmarks/dmarkobjs/
 disable_icon_boom		= dotmarks/dmarkobjs/
 disable_icon_box		= dotmarks/dmarkobjs/
 disable_icon_door		= dotmarks/dmarkobjs/

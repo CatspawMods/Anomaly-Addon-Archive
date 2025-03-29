@@ -7,10 +7,14 @@
 assert(utils_catspaw_common, "\n\n"..
     "! dotmarks_mcm requires utils_catspaw_common, which does not exist!\n\n"
 )
+assert(utils_catspaw_text, "\n\n"..
+    "! dotmarks_mcm requires utils_catspaw_text, which does not exist!\n\n"
+)
 assert(dotmarks_main, "\n\n"..
     "! dotmarks_mcm requires dotmarks_main, which does not exist!\n\n"
 )
 
+local debuglogs 	= false
 local exes_version 	= MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version())
 local header_desc 	= "ui_mcm_dotmarks_header_main"
 local xml 			= CScriptXmlInit()
@@ -21,11 +25,15 @@ local sfind 		= string.find
 local ssub 			= string.sub
 local lang 			= "eng"
 local psk 			= utils_data.parse_string_keys
-local ver 			= dotmarks_main.script_version or "ersion not found!"
-local rel 			= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
-local rel_version 	= string.format("$clr_tgrv%s (rel %s)", ver, rel)
-dotmarks_main.load_file_data("scripts\\dotmarks_defaults.ltx", cfg)
-cfg.colors.clr_dmark_norm = dotmarks_main.csv_argb_to_tbl(cfg.colors["clr_dmark_norm"])
+--local unsquish 		= dotmarks_main.unsquish
+local play_snd_path = dotmarks_main.play_snd_path
+script_version 		= dotmarks_main.script_version or "ersion not found!"
+release_date		= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
+local rel_version 	= string.format("$clr_tgrv%s (rel %s)", script_version, release_date)
+script_name 		= "dotmarks_mcm"
+utils_catspaw_common.load_file_data("scripts\\dotmarks_defaults.ltx", cfg, {logging = debuglogs, called_by = script_name})
+--dotmarks_main.load_file_data("scripts\\dotmarks_defaults.ltx", cfg)
+cfg.colors.clr_dmark_norm = utils_catspaw_text.csv_argb_to_tbl(cfg.colors["clr_dmark_norm"])
 
 color_tokens = {
     ["clr_lbl"] = "%" .. "%c[255,0,200,220]",
@@ -43,23 +51,362 @@ local pre 	= {}
 local wnds 	= {}
 local cache = {}
 
+function unsquish(width)
+    return (width or 0) * (cfg.unsquish_ratio or 1)
+end
+
 local function prefetch_mcm_val(path, typ)
 	return axr_main.config:r_value(path, {val = typ or 0})
 end
 
 function init_preview(anchor, handlers, opts, flags)
 	pre.main = xml:InitStatic("box", anchor)
-	pre.main:SetWndSize(vector2():set(300 * cfg.unsquish_ratio, 190))
-	pre.main:SetWndPos(vector2():set(430 * cfg.unsquish_ratio, (lang == "rus") and 210 or 180))
+	pre.main:SetWndSize(vector2():set(unsquish(300), 190))
+	pre.main:SetWndPos(vector2():set(unsquish(430), (lang == "rus") and 210 or 180))
 
 	pre.bg 	= xml:InitStatic("box", pre.main)
 	pre.bg:InitTexture("ui_mcm_dmarks_preview_static")
-	pre.bg:SetWndSize(vector2():set(300 * cfg.unsquish_ratio, 190))
+	pre.bg:SetWndSize(vector2():set(unsquish(300), 190))
 
 	pre.fr 	= xml:InitStatic("box", pre.bg)
 	pre.fr:InitTexture("ui_mcm_dmarks_preview_frame")
-	pre.fr:SetWndSize(vector2():set(300 * cfg.unsquish_ratio, 190))
+	pre.fr:SetWndSize(vector2():set(unsquish(300), 190))
 end
+
+function init_simple_icon(anchor, handlers, opts, flags)
+	flags.icon_w 	= flags.icon_w or opts.icon_w
+	flags.icon_h 	= flags.icon_h or opts.icon_h or flags.icon_w
+	flags.icon_x 	= flags.icon_x or opts.icon_x
+	flags.icon_y 	= flags.icon_y or opts.icon_y
+	local icon 		= flags.icon or opts.icon
+	local ctrl 		= xml:InitStatic("box", anchor)
+	ctrl:InitTexture(opts.icon)
+	ctrl:SetWndSize(vector2():set((flags.icon_w or 0) * cfg.unsquish_ratio, flags.icon_h or 0))
+	ctrl:SetWndPos(vector2():set((flags.icon_x or 0) * cfg.unsquish_ratio, flags.icon_y or 0))
+	return ctrl
+end
+
+
+function init_icon_list(anchor, handlers, opts, flags)
+	printf("init_icon_list start")
+	local icons = opts and opts.icon_list or cfg.service_icons
+	local used = {}
+	local i = 0
+	for k,v in spairs(icons) do
+		if not used[v] then
+			local x = opts.icon_x + ((opts.icon_w + 2) * i)
+			local ctrl = xml:InitStatic("box", anchor)
+			ctrl:InitTexture(v)
+			ctrl:SetWndSize(vector2():set((opts.icon_w or 0) * cfg.unsquish_ratio, opts.icon_h or opts.icon_w or 0))
+			ctrl:SetWndPos(vector2():set((x or 0) * cfg.unsquish_ratio, opts.icon_y or 0))
+			i = i + 1
+			used[v] = ctrl
+		end
+	end
+	wnds[opts.id] 		= used
+	wnds[opts.id].opts 	= opts
+	return wnds[opts.id]
+end
+
+
+
+function init_interactive_icon(anchor, handlers, opts, flags)	
+	local icon = init_simple_icon(anchor, handlers, opts, flags)
+	local ctrl 		= SimpleButton(icon, flags.ctrl_id, {
+		xmlfile 	= "ui_dotmarks.xml",
+		xmlnode 	= "btn_open_argb",
+		texture 	= "ui_beltbut_plus",
+		width 		= 24,
+		height 		= 25,
+		snd_onclick = cfg.snd_path_blip,
+		func_onclick= (
+			function(self)
+				printf("Button %s clicked at %s", flags.ctrl_id, time_global())
+				self.open = not self.open
+				self["btn_"..flags.ctrl_id]:InitTexture(self.open and "ui_beltbut_min" or "ui_beltbut_plus")
+			end
+		)
+	})
+end
+
+function show_argb_control(anchor, opts, flags)
+	printf("show_argb_control start")
+	local ctrl_id = flags and flags.ctrl_id
+	if not (anchor and ctrl_id) then return end
+    printf("show_argb_control(%s)", ctrl_id)
+	if not wnds[ctrl_id] then
+    	wnds[ctrl_id] = UIARGBControl(anchor, opts, flags)
+    	if not wnds[ctrl_id] then return end
+    end
+    wnds[ctrl_id]:InitControls()
+    Register_UI("UIARGBControl", ctrl_id)
+	printf("show_argb_control complete")
+	return ctrl
+end
+
+function hide_argb_control(ctrl_id)
+	local ctrl = ctrl_id and wnds[ctrl_id]
+    if (ctrl ~= nil) then
+    	printf("hide_argb_control(%s)", ctrl_id)
+        ctrl:HideControls()
+		Unregister_UI("UIARGBControl")
+    end
+end
+
+function init_icon_argb_customization(anchor, handlers, opts, flags)
+	printf("init_icon_argb_customization")
+	if not (anchor and opts and flags) then return end
+
+	flags.ctrl_id 		= ui_mcm.cc(flags.path or opts.argb_path, flags.opt or opts.argb_opt)
+	wnds[flags.ctrl_id] = {}
+
+	local function init_icon(anch, icon)
+		printf("init_icon start")
+		--flags.icon 		= icon
+		local ctrl_id 	= flags.ctrl_id .. "_icon"
+		printf("ctrl_id is %s", ctrl_id)
+		--init_interactive_icon(anch, handlers, opts, flags)	
+		wnds[ctrl_id] 	= SimpleButton(anch, flags.ctrl_id, { 
+			ctrl_id 	= ctrl_id,
+			xmlfile 	= "ui_dotmarks.xml",
+			xmlnode 	= "btn_open_argb",
+			texture 	= "ui_catsy_button_worn60",
+			pos_x 		= 302,
+			snd_onclick = cfg.snd_path_blip,
+			func_onclick= (
+				function(self)
+					self.open = not self.open
+					--self.btn:InitTexture(self.open and "ui_beltbut_min" or "ui_beltbut_plus")
+					printf("Button %s clicked %s at %s", self.flags.ctrl_id, self.open and "on" or "off", time_global())
+					if self.open then
+						show_argb_control(wnds[ctrl_id], self.opts, self.flags)
+					else
+						hide_argb_control(self.flags.ctrl_id)
+					end
+				end
+			)
+		})
+
+		return wnds[ctrl_id]
+	end
+
+	--[[
+	if opts.icon_list and (type(opts.icon_list) == "table") then
+		local used 	= {}
+		local i 	= 0
+		for k,v in pairs(icon_list) do
+			flags.ctrl_id = flags.ctrl_id .. "_" .. k
+			if (not wnds[flags.ctrl_id]) then
+				flags.icon_x		= opts.icon_x + ((opts.icon_w + 2) * i)
+				wnds[flags.ctrl_id] = init_simple_icon(anchor, handlers, opts, flags)
+
+
+
+				i = i + 1
+				init_icon(anchor, flags.ctrl_id, icon)
+			end
+		end
+
+		return
+	end
+--]]
+	local icon_ctrl 				= init_icon(anchor, opts.icon)
+	wnds[flags.ctrl_id] 			= UIARGBControl(anchor, opts, flags)
+	wnds[flags.ctrl_id].icon_ctrl	= icon_ctrl
+end
+
+
+-- ======================================================================
+
+class "SimpleButton" (CUIScriptWnd)
+
+function SimpleButton:__init(anchor, button, flags) super()
+	if not (button and flags and flags.xmlfile and flags.xmlnode) then return end
+	--self:SetWndRect(Frect():set(0,0,1024,768))
+	self:SetAutoDelete(true)
+	self.xml = CScriptXmlInit()
+	self.xml:ParseFile(flags.xmlfile)
+
+    local buttonx = "btn_" .. button
+
+    self.btn = self.xml:Init3tButton(flags.xmlnode, anchor or self)
+    self:Register(self.btn, buttonx)
+    if flags.texture then
+    	self.btn:InitTexture(flags.texture)
+    end
+
+    if flags.pos_x or flags.pos_y then
+		self.btn:SetWndPos(vector2():set(flags.pos_x or 0, flags.pos_y or 0))
+    end
+
+   	self.flags = flags or {}
+   	self:AddCallback(buttonx, ui_events.BUTTON_CLICKED, self.OnClick, self)
+end
+
+function SimpleButton:OnClick()
+	if self.flags.func_onclick then
+		self.flags.func_onclick(self)
+	end
+	if self.flags.snd_onclick then
+		play_snd_path(self.flags.snd_onclick)
+	end
+end
+
+-- ======================================================================
+
+class "UIARGBControl" (CUIScriptWnd)
+
+function UIARGBControl:Update()
+    CUIScriptWnd.Update(self)
+end
+
+function UIARGBControl:__init(anchor, opts, flags) super()
+	self:SetAutoDelete(true)
+	self:SetWndRect(Frect():set(0,0,1024,768))
+	self.anchor 	= anchor
+  	self.argb 		= opts.argb_list or {a=255,r=255,g=0,b=255} -- purple for testing
+    self.argb_box 	= {}
+    self.opts 		= opts or {}
+    self.flags 		= flags or {}
+
+    printf("UIARGBControl init complete")
+end
+
+function UIARGBControl:InitControls()
+    printf("UIARGBControl:InitControls start")
+	local opts 			= self.opts
+  	local root 			= flags.xmlroot or "argb_chrome"
+  	local rootand 		= root .. ":"
+	--self:SetWndSize(vector2():set(0, 0))
+  	self.dialog 		= xml:InitStatic("argb_chrome", self.anchor or self)
+  	self.dialog:SetWndSize(vector2():set(unsquish(250), 50))
+  	--self.dialog:SetWndPos(vector2():set(512, 384))
+  	self.dialog:InitTexture("")
+
+    local function setup_argb_control(color, pos_x, pos_y)
+        local inputx = "input_"..color
+        self.argb_box[color]    = xml:InitStatic("box", self.dialog)
+        self.argb_box[color]:SetWndSize(vector2():set(unsquish(60), 50))
+        self.argb_box[color]:SetWndPos(vector2():set(pos_x, pos_y))
+        --self.argb_box[color]:InitTexture("")
+
+        self.argb_box[color].i  = xml:InitStatic(rootand .. "clr_icon_" .. color, self.argb_box[color])
+        self.argb_box[color].i:SetWndSize(vector2():set(unsquish(16), 16))
+        self.argb_box[color].i:SetWndPos(vector2():set(0, 5))
+
+        self[inputx]    = xml:InitEditBox(rootand .. "input", self.argb_box[color])
+        self[inputx]:SetWndPos(vector2():set(unsquish(20), 5))
+        self:Register(self[inputx],"fld_input_"..color)
+
+		self[inputx]:SetText(self.argb[color])
+    end
+
+	-- 					channel x pos 	y pos
+    setup_argb_control( "a",	5,     	5 )
+    setup_argb_control( "r",    65,     5 )
+    setup_argb_control( "g",    125,    5 )
+    setup_argb_control( "b",    185,    5 )
+
+    self:ShowDialog(true)
+    printf("UIARGBControl:InitControls complete")
+end
+
+
+function UIARGBControl:ShowControls()
+    self.dialog:Show(false)
+    self:ShowDialog(false)
+end
+
+function UIARGBControl:ShowControls()
+    self.dialog:Show(false)
+    self:ShowDialog(false)
+end
+
+	--]]
+
+
+
+
+
+--[[
+function UIARGBControl:Update()
+    CUIScriptWnd.Update(self)
+end
+
+
+
+function UIARGBControl:OnTextCommit(ctrl)
+	local value = ctrl:GetText()
+	if not (value and value ~= "") then
+		--ctrl:SetText( self:GetCurrentValue(path, opt, v) or self:GetDefaultValue(path, opt, v) )
+		return
+	end
+	
+	if (v.val == 2) then
+		value = tonumber(value)
+		if (not value) then
+			--ctrl:SetText( self:GetCurrentValue(path, opt, v) or self:GetDefaultValue(path, opt, v) )
+			return
+		end
+		--value = clamp(value, v.min, v.max)
+	end
+	--self:CacheValue(path, opt, value, v)
+	--ctrl:SetText(value)
+end
+
+function UIARGBControl:SetARGBVal(color, val)
+    local inputx = "input_"..color
+    printf("SetARGB method - inputx: %s | color: %s | val %s", inputx, color, val)
+    if color and val and self[inputx] then
+        --printf("Current color for %s is %s, setting to value %s",color,self[inputx]:GetText(),val)
+        self[inputx]:SetText(val)
+    end
+end
+
+
+function UIARGBControl:OnKeyboard(dik, keyboard_action)
+    local res = CUIScriptWnd.OnKeyboard(self, dik, keyboard_action)
+    if (res == false) then
+        local bind = dik_to_bind(dik)
+        if keyboard_action == ui_events.WINDOW_KEY_PRESSED then
+            if dik == DIK_keys.DIK_ESCAPE then
+                self:Close()
+            end
+        end
+    end
+    return res
+end
+
+
+--]]
+--[[
+    local function setup_checkbox(setting,pos_x,pos_y,captext)
+        local checkopt = "check_"..setting
+        vl("Initializing checkbox %s (%s) at %s,%s | %s",checkopt,setting,pos_x,pos_y,captext)
+        self[checkopt] = xml:InitCheck(check,self.dialog)
+        self:Register(self[checkopt], checkopt..self.init_time)
+        self[checkopt]:SetWndPos(vector2():set(pos_x,pos_y))
+        if captext then
+            self.cap[checkopt] = xml:InitTextWnd(caption,self[checkopt])
+            self.cap[checkopt]:SetWndPos(vector2():set(30,8))
+            self.cap[checkopt]:SetText(captext)
+            self.cap[checkopt]:SetVTextAlignment(1)
+        end
+    end
+
+
+    function setup_button(button,pos_x,pos_y,xmlnode)
+        local buttonx = "btn_"..button
+        vl("Initializing button %s (%s) at %s,%s",buttonx,button,pos_x,pos_y)
+        self[buttonx] = xml:Init3tButton(xmlnode,self.dialog)
+        self:Register(self[buttonx],buttonx)
+        self[buttonx]:SetWndPos(vector2():set(pos_x,pos_y))
+    end
+--]]
+
+-- ======================================================================
+
+local argb_ctrl
 
 function init_header_element(anchor, handlers, opts, flags)
 	handlers.desc:SetText("")
@@ -93,34 +440,6 @@ function init_header_element(anchor, handlers, opts, flags)
 	text:SetTextComplexMode(true)
 end
 
-function init_simple_icon(anchor, handlers, opts, flags)
-	local icon = opts.icon
-	local ctrl = xml:InitStatic("box", anchor)
-	ctrl:InitTexture(opts.icon)
-	ctrl:SetWndSize(vector2():set((opts.icon_w or 0) * cfg.unsquish_ratio, opts.icon_h or opts.icon_w or 0))
-	ctrl:SetWndPos(vector2():set((opts.icon_x or 0) * cfg.unsquish_ratio, opts.icon_y or 0))
-	return ctrl
-end
-
-function init_icon_list(anchor, handlers, opts, flags)
-	local icons = opts and opts.icon_list or cfg.service_icons
-	local used = {}
-	local i = 0
-	for k,v in spairs(icons) do
-		if not used[v] then
-			local x = opts.icon_x + ((opts.icon_w + 2) * i)
-			local ctrl = xml:InitStatic("box", anchor)
-			ctrl:InitTexture(v)
-			ctrl:SetWndSize(vector2():set((opts.icon_w or 0) * cfg.unsquish_ratio, opts.icon_h or opts.icon_w or 0))
-			ctrl:SetWndPos(vector2():set((x or 0) * cfg.unsquish_ratio, opts.icon_y or 0))
-			i = i + 1
-			used[v] = ctrl
-		end
-	end
-	wnds[opts.id] 		= used
-	wnds[opts.id].opts 	= opts
-	return wnds[opts.id]
-end
 
 function sync_widget_color(ctrl, colors)
 	if not (ctrl and colors) then return end
@@ -144,7 +463,7 @@ function init_dotmark_preview(anchor, handlers, opts, flags)
 	}
 	local ctrl = wnds[opts.id]
 	local size 	= prefetch_mcm_val("dotmarks/dotmain/dot_marker_size", 2) or 1
-	printf("marker size loaded: %s | base %s", size, opts.icon_w)
+	--printf("marker size loaded: %s | base %s", size, opts.icon_w)
 	local color = cfg.colors.clr_dmark_norm
 	ctrl.reg.opts = opts
 	ctrl.act.opts = opts2
@@ -166,7 +485,7 @@ function on_dotmark_size_select(path, opt, value, attrs)
 	local x 	= (opts.icon_x + diff ) * cfg.unsquish_ratio
 	local x2 	= (opts.icon_x + diff2 - 35 ) * cfg.unsquish_ratio
 	local y 	= opts.icon_y
-	printf("[%s][%s] val %s | sz %s,%s | new %s,%s | diff %s | x,y %s,%s", path,opt,value,szw,szh,w,h,diff,x,y)
+	--printf("[%s][%s] val %s | sz %s,%s | new %s,%s | diff %s | x,y %s,%s", path,opt,value,szw,szh,w,h,diff,x,y)
 	sync_widget_size(ctrl.reg, w, h)
 	sync_widget_size(ctrl.act, w * 2, h * 2)
 	ctrl.reg:SetWndPos(vector2():set(x, y + diff))
@@ -385,9 +704,9 @@ function get_adv_menu()
 
 		{id = "divider", type= "line"},
 		{ id = "near_scan_interval", 	type = "input", 	val = 2, min = 0, max = 10000, step = 1, def = cfg.near_scan_interval },
-		{ id = "early_scan_interval", 	type = "input", 	val = 2, min = 0, max = 30000, step = 1, def = cfg.far_scan_interval },
+		{ id = "early_scan_interval", 	type = "input", 	val = 2, min = 0, max = 30000, step = 1, def = cfg.early_scan_interval },
 		{ id = "near_scan_radius", 		type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.near_scan_radius },
-		{ id = "early_scan_radius", 	type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.far_scan_radius },
+		{ id = "early_scan_radius", 	type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.early_scan_radius },
 
 		{id = "divider", type= "line"},
 	}
@@ -397,6 +716,8 @@ end
 
 function generate_objs_menu()
 	local gr = {
+	-- ======================================================================
+	-- 	Main header
 		{ id = "menuslide_objs", 		type = "slide", link = "ui_mcm_dotmarks_banner_objs", size = {512,50}, spacing = 0 },
 		{ id = "objheader", 			type = "desc", text = "ui_mcm_dotmarks_objmenu",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
@@ -405,6 +726,22 @@ function generate_objs_menu()
 			dmark_text_h 	= 90,
 			dmark_text_v 	= 12
 		},
+
+--[[
+
+		{ id = "custom_argb_test", 		type = "input", val = 0, precondition = {function() end}},
+
+		{ id = "argb_test", 		type = "image", size = {512,50},
+			ui_hook_functor = {dotmarks_mcm.init_icon_argb_customization},
+			argb_path 	= "dotmarks/dmarkobjs",
+			argb_opt 	= "custom_argb_test",
+			icon_w = 24,
+			icon_h = 25,
+			icon_x = 260,
+			icon_y = 0,
+		},
+
+
 
 		{ id = "disable_icon_services", type = "check", val = 1, def = cfg.disable_icon_services,
 			ui_hook_functor = {dotmarks_mcm.init_icon_list},
@@ -447,8 +784,8 @@ function generate_objs_menu()
 			icon = cfg.tex.Stashes or "",
 			icon_w = 24,
 			icon_h = 24,
-			icon_x = 450,
-			icon_y = 11,
+			icon_x = 454,
+			icon_y = 15,
 		},
 
 		{ id = "disable_icon_box", 		type = "check", val = 1, def = cfg.disable_icon_box,
@@ -456,17 +793,18 @@ function generate_objs_menu()
 			icon = cfg.tex.Boxes or "",
 			icon_w = 24,
 			icon_h = 24,
-			icon_x = 450,
-			icon_y = 11,
+			icon_x = 454,
+			icon_y = 15,
 		},
 		{ id = "disable_icon_boom", 	type = "check", val = 1, def = cfg.disable_icon_boom,
 			ui_hook_functor = {dotmarks_mcm.init_simple_icon},
 			icon = cfg.tex.Explosive or "",
 			icon_w = 24,
 			icon_h = 24,
-			icon_x = 450,
-			icon_y = 11,
+			icon_x = 454,
+			icon_y = 15,
 		},
+
 
 		{id = "divider", type= "line"},
 
@@ -477,8 +815,70 @@ function generate_objs_menu()
 			dmark_text_h 	= 65,
 			dmark_text_v 	= 10
 		},
+--]]
 	}
+
+	-- ======================================================================
+	-- 	Inject focus icons that aren't singletons and need to be at the top
+	table.insert(gr,
+		{ id = "disable_icon_services", type = "check", val = 1, def = cfg.disable_icon_services,
+			ui_hook_functor = {dotmarks_mcm.init_icon_list},
+			icon_list 	= cfg.service_icons,
+			icon_w 		= 32,
+			icon_h 		= 32,
+			icon_x 		= 450,
+			icon_y 		= 8,
+		}
+	)
+	table.insert(gr,
+		{ id = "disable_icon_tasks", type = "check", val = 1, def = cfg.disable_icon_tasks,
+			ui_hook_functor = {dotmarks_mcm.init_icon_list},
+			icon_list 	= cfg.task_icons,
+			icon_w 		= 32,
+			icon_h 		= 32,
+			icon_x 		= 450,
+			icon_y 		= 8,
+		}
+	)
+
+	-- ======================================================================
+	-- 	Iterate the rest of the focus icons
 	local tbl = {}
+	for k,v in pairs(cfg.setting_icons) do
+		tbl[#tbl + 1] = k
+	end
+
+	table.sort(tbl, function(a, b) return a > b end)
+	for _, opt_id in spairs(tbl) do
+		local enabled = cfg[opt_id]
+		local iclass = cfg.setting_icons[opt_id]
+		local icon 	= iclass and cfg.tex[iclass]
+		table.insert(gr, 
+			{ id = opt_id, type = "check", val = 1, def = cfg[opt_id],
+				ui_hook_functor = {dotmarks_mcm.init_simple_icon},
+				icon = icon or "",
+				icon_w = 24,
+				icon_h = 24,
+				icon_x = 450,
+				icon_y = 11,
+			}
+		)
+	end
+	table.insert(gr, {id = "divider", type= "line"})
+
+	table.insert(gr,
+		{ id = "scanheader", type = "desc", text = "ui_mcm_dotmarks_scanmenu",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+			dmark_box_h 	= 70,
+			dmark_text_h 	= 65,
+			dmark_text_v 	= 10
+		}
+	)
+
+	-- ======================================================================
+	-- 	Iterate scannable objects
+	tbl = {}
 	for k,v in pairs(cfg.scan) do
 		tbl[#tbl + 1] = k
 	end

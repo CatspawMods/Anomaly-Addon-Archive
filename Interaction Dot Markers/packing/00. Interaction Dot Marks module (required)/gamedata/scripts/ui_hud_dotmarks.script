@@ -91,7 +91,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
     if (verbose_en ~= nil) then verbose = verbose_en end
     if (dump_en ~= nil) then debug_dump = dump_en end
 end
-set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 -- First two values will be overridden by MCM once the game loads
 
 -- ======================================================================
@@ -111,6 +111,7 @@ local get_stash_hint    = utils_catspaw_common.get_stash_hint
 local easeOutElastic    = utils_catspaw_common.easing.easeOutElastic
 local get_obj_kind      = utils_catspaw_common.get_obj_kind
 local dotip             = utils_catspaw_common.dotip
+local get_weight_class  = utils_catspaw_common.get_actor_weight_class
 local safename          = utils_catspaw_text.safename
 local bindtext          = utils_catspaw_text.bindtext
 local get_localization  = utils_catspaw_text.find_best_localization
@@ -120,8 +121,13 @@ local int_to_rgba       = utils_catspaw_text.int_to_rgba
 local first_lower       = utils_catspaw_text.first_lower
 local first_upper       = utils_catspaw_text.first_upper
 local nameid            = utils_catspaw_text.obj_name_and_id
+local csv_argb_to_tbl   = utils_catspaw_text.csv_argb_to_tbl
+local clr_tbl           = utils_catspaw_text.clr_tbl
+local clr_tbl_to_index  = utils_catspaw_text.clr_tbl_to_index
+local get_state_color   = utils_catspaw_text.get_state_color
 local get_argb          = utils_catspaw_mapspots.get_argb
 local is_already_target = utils_catspaw_hudmarks.is_object_already_targeted
+local get_task_target   = utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.get_active_target_id or function() end
 local is_favorite       = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_favorite
 local is_junk           = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_junk
 local fdda_pickup       = z_fdda_pickup_intercept_dotmarks
@@ -140,9 +146,7 @@ is_fdda_installed       = dotmarks_main.is_fdda_installed
 is_blacklisted          = dotmarks_main.is_blacklisted
 is_empty_mutant_corpse  = dotmarks_main.is_empty_mutant_corpse
 get_fixed_screen_pos    = dotmarks_main.get_fixed_screen_pos
-csv_argb_to_tbl         = dotmarks_main.csv_argb_to_tbl
-clr_tbl                 = dotmarks_main.clr_tbl
-clr_tbl_to_index        = dotmarks_main.clr_tbl_to_index
+play_snd_path           = dotmarks_main.play_snd_path
 getargb                 = dotmarks_main.getargb
 fonts                   = dotmarks_main.fonts
 targeted_id, locked_id  = nil
@@ -150,11 +154,11 @@ cfg                     = {}
 pickup_index            = {}
 nearby_pickups          = {}
 active_anims            = {}
+scanning                = false
 -- ======================================================================
 local st_kg             = gts("st_kg")
 local maingameui        = nil
 local hmm               = nil
-local scanning          = false
 local ea_enabled        = false
 local anim_playing      = false
 local actor_moved       = false
@@ -259,7 +263,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     local tracked = true
                                     if is_empty_mutant_corpse(obj) then
                                         --printf("mutant corpse is empty, destroying")
-                                        mark:Destroy()
+                                        destroy_marker(mark.mark_id)
                                         cfg.markers[id] = nil
                                         return
                                     elseif cfg.bodies_use_mpda_rules and item_milpda then
@@ -291,7 +295,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                 if mark.has_items and cfg.invboxes[id] and (not is_empty(cfg.invboxes[id])) then
                                     --printf("container not empty, showing prompt")
                                     mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id])
-                                    local wc = mark.weight and actor_weight_class(mark.weight)
+                                    local wc = mark.weight and get_weight_class(mark.weight)
                                     local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
                                     mark.use_pri.parse_text_colors = true
                                     text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
@@ -321,6 +325,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     (dist < 5) and
                                     not_hidden_by_anim
                                 )
+                                --printf("Last chance for show_pri: locked %s | targeted %s | avail_pickup %s | is_pickup %s", locked_id, targeted, available_pickup, mark.pickup)
                             end
                             if mark.condition then
                                 -- Update condition for degradable objects
@@ -432,15 +437,16 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 --  the marker texture and other parameters on the fly
 -- ======================================================================
 function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
-    printf("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
+    --printf("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
     if self.destroyed or not (self.active_swap or self.task_swap) then return end
-    local is_task_target = (self.args.id == cfg.active_task_target_id) and not cfg.disable_icon_tasks
-    local last_swap = self.task_swap or self.active_swap
-    self.task_swap = is_task_target and (cfg.is_task_storyline and cfg.swap_task_pri or cfg.swap_task_sec) or nil
+    local is_task_target= (self.args.id == cfg.active_task_target_id) and not cfg.disable_icon_tasks
+    local is_storyline  = utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.is_task_storyline()
+    local last_swap     = self.task_swap or self.active_swap
+    self.task_swap      = is_task_target and (is_storyline and cfg.swap_task_pri or cfg.swap_task_sec) or nil
     if state == nil then state = is_current_target(self.id) end
     local _
     if state then
-        printf("Marked target has focus, enabling active swap %s", is_task_target and (cfg.is_task_storyline and "(storyline task)" or "(secondary task") or "")
+        --printf("Marked target has focus, enabling active swap %s", is_task_target and (is_storyline and "(storyline task)" or "(secondary task") or "")
         for k,v in pairs(self.task_swap or self.active_swap) do
             if (popin_active ~= self.mark_id) then
                 _ = debug_dump and vl("[%s][%s][Swap on] Setting: %s = %s", time_global(), self.name, k, v)
@@ -473,6 +479,10 @@ function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
 end
 
 -- ======================================================================
+
+function destroy_marker(mark_id)
+    hmm:DelMarker(mark_id)
+end
 
 function killswitch(feature)
     local ks = false
@@ -754,8 +764,20 @@ end
 
 function get_condition_color(condition, section)
     if not condition then return end
-    local c = cfg.colors
-    local critical = section and item_device.dev_critical[section]
+    local args      = {}
+    local c         = cfg.colors
+    local mode      = 0
+    local crit_pwr  = section and item_device.dev_critical[section]
+    if crit_pwr then
+        mode        = 2
+        args.min = crit_pwr
+    elseif cfg.parts_wpo_colors then
+        mode        = 1
+    else
+        condition   = clamp(condition / 99, 0, 1)
+    end
+
+    --[[
     if critical then
         if (condition * 0.01) < critical then
             return c.clr_wpo_red
@@ -789,7 +811,8 @@ function get_condition_color(condition, section)
             color = c.clr_missing
         end
     end
-    return color
+    --]]
+    return get_state_color(condition, mode, args)
 end
 
 function timed_out(stamp, interval)
@@ -1007,6 +1030,7 @@ function InteractPrompt:BuildUI()
     self:SetupConnectingLine()
 
     local one_char = (#args.bind == 1)
+
     if one_char then
         self.prompt     = xml:InitStatic("alt_interact:prompt", self.wnd)
         self.prompt:InitTexture("ui_catsy_keybind_bg_single_v" .. self.args.style)
@@ -1029,6 +1053,16 @@ function InteractPrompt:BuildUI()
         self.prompt_r:SetWndPos(vector2():set(fontscale(4.78) + boxlen, 0))
         self.prompt_r:SetWndSize(vector2():set(fontscale(5.3125), fontscale(20)))
     end
+
+--[[
+    I'd love to make this a frame instead of doing it the hard way, but InitFrame is
+    fucking idiotic and doesn't understand the concept of upscaled textures
+
+    self.prompt     = xml:InitFrame("alt_interact:bindframe", self.wnd)
+    --self.prompt:InitTexture("ui_catsy_keybind_bg_single_v" .. self.args.style)
+    self.prompt:SetWndSize(vector2():set(boxlen + fontscale(10.625), fontscale(20)))
+--]]
+
     self.prompt:SetWndPos(vector2():set(boxpos or 0, 0))
 
     -- Set up long press progress indicator
@@ -1167,7 +1201,8 @@ end
 
 function InteractPrompt:UpdateWeightColor()
     if not (self.card_wgt_icon and self.card_wgt_text) then return end
-    local c = get_color_for_weight(self.weight or 0)
+    --local c = get_color_for_weight(self.weight or 0)
+    local c = get_state_color(self.weight, 3)
     --printf("Weight of %s is %s | color %s,%s,%s,%s ", self.args.name, self.weight, c.a, c.r, c.b, c.g)
     local color = getargb(c)
     self.card_wgt_icon:SetTextureColor(color)
@@ -2079,9 +2114,7 @@ end
 
 function actor_on_first_update()
     hmm = utils_catspaw_hudmarks and utils_catspaw_hudmarks.get_hud_mark_manager()
-    printf("checking for depdendencies")
     if check_for_dependencies(false) then return end
-    printf("depdendency check passed")
     CreateTimeEvent("dotmark_scan_delay", 0, cfg.scan_start_delay, start_scanning)
     maingameui = ActorMenu.get_maingame()
     xml = CScriptXmlInit()
@@ -2089,11 +2122,17 @@ end
 
 function start_scanning()
     scanning = true
+    if utils_catspaw_taskmonitor then
+        utils_catspaw_taskmonitor.set_monitor_active(true)
+    end
     return true
 end
 
 function stop_scanning()
     scanning = false
+    if utils_catspaw_taskmonitor then
+        utils_catspaw_taskmonitor.set_monitor_active(false)
+    end
     return true
 end
 
@@ -2350,7 +2389,7 @@ function unregister_scanned_entity(id)
         if mark.alt_interact then
             mark.alt_interact:Destroy("unregistering sec use")
         end
-        mark:Destroy()
+        destroy_marker(mark.mark_id)
         cfg.markers[id] = nil
     end
     scanned[id] = nil
@@ -2466,7 +2505,7 @@ function scan_nearby_object(obj)
         if obj_has_available_sec_interact(obj, id, mark) and not (args.no_sec) then
             setup_sec_interact_prompt(mark)
         end
-        if not mark.active_swap then
+        if (not mark.active_swap) and (not disable_icon_targetdot) then
             mark.active_swap = cfg.swap_dotactive
         end
         
@@ -2496,16 +2535,6 @@ function dot_eye(position)
 end
 
 
-function play_sfx(snd)
-    -- Play sound effect unless disable_all_sounds is true
-    if cfg.disable_all_sounds or not snd then return end
-    snd:play(db.actor, 0, sound_object.s2d)
-end
-
-function play_snd_path(snd_path)
-    play_sfx(snd_path and xr_sound.get_safe_sound_object(snd_path))
-end
-
 function update_targeted_object()
     --vl("update_targeted_object: %s", time_global())
     local target
@@ -2526,7 +2555,8 @@ function update_targeted_object()
         targeted_id = id
     end
 
-    if debug_dump and targeted_id then
+    cfg.active_task_target_id = get_task_target()
+    if targeted_id and debug_dump then
         target = get_object_by_id(targeted_id)
         vl("update_targeted_object: targeted_id is now %s (%s)", targeted_id, target and target:name())
     end
@@ -2554,6 +2584,7 @@ function update_actor_extra_weight()
     return extra_carry
 end
 
+--[[
 function get_actor_max_weight()
     if not db.actor then return end
     local outfit = db.actor:item_in_slot(7)
@@ -2598,11 +2629,12 @@ function actor_weight_class(comp_weight)
 end
 
 function get_color_for_weight(weight)
-    local wc, wa, wm= (weight and actor_weight_class(weight))
+    local wc, wa, wm= (weight and get_weight_class(weight))
     local clr_key   = wc and cfg.weight_colors[wc] or ""
     local color_wgt = cfg.colors[clr_key] or cfg.colors.clr_weight_ok
     return color_wgt, wa, wm
 end
+--]]
 
 function get_inventory_table(box, id)
     -- Streamlined version of the one in axr_companions
@@ -2977,7 +3009,7 @@ function check_tutorial_states()
             --printf("No active tutorial, hiding all tutorial prompts")
             for k,v in pairs(cfg.tutorial_hints) do
                 if cfg.markers[k] then
-                    cfg.markers[k]:Destroy()
+                    destroy_marker(cfg.markers[k].mark_id)
                     cfg.markers[k] = nil
                 end
             end
@@ -3026,7 +3058,7 @@ function actor_on_update()
         return
     end
     update_targeted_object()
-    update_current_task_target()
+    --update_current_task_target()
     -- ===================================================================
     --  Skill system updates
     --  Rare, skillups don't occur often
@@ -3062,6 +3094,7 @@ function actor_on_update()
 end
 -- =======================================================================
 
+--[[
 function update_current_task_target()
     local task_info = task_manager.get_task_manager().task_info
 
@@ -3096,7 +3129,7 @@ function update_current_task_target()
         end
     end
 end
-
+--]]
 
 function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
@@ -3205,6 +3238,7 @@ function parse_file_data()
     cfg.show_part_condition     = (cfg.show_parts_weapons or cfg.show_parts_armor)
     cfg.color_icon_itemcard     = clr_tbl(cfg.color_icon_itemcard)
     cfg.unsquish_ratio          = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
+    cfg.unsquish                = (function(w) return (w or 0) * (cfg.unsquish_ratio or 1) end)
     local ini_mutant            = ini_file("items\\settings\\mutant_loot.ltx")
     cfg.mutant_decay_time       = ini_mutant:r_float_ex("mutant_loot_mod","decay_time") or 7200
     local factions      = game_relations.factions_table
@@ -3277,7 +3311,6 @@ function on_option_change()
     for k,v in pairs(cfg) do
         if type(v) ~= "table" then
             local mcm_path = cfg.mcm_paths[k]
-            --if mcm_path and (#mcm_path < 20) then
             if mcm_path and mcm_path:find("/$") then
                 mcm_path = mcm_path .. k
             end
@@ -3312,7 +3345,7 @@ function on_option_change()
     cfg.watch_use   = (use_dik == cfg.bind_sec_interact) and not cfg.hide_sec_interact_ui
     if cfg.markers and not is_empty(cfg.markers) then
         for k,v in pairs(cfg.markers) do
-            cfg.markers[k]:Destroy()
+            destroy_marker(cfg.markers[k].mark_id)
         end
     end
     set_handler_callbacks()
@@ -3321,7 +3354,7 @@ end
 function on_game_start()
     cfg = dotmarks_main.get_base_config_table()
     mags_installed = (magazines and magazine_binder)
-    if dotmarks_main.load_file_data(config_file, this.cfg) then
+    if utils_catspaw_common.load_file_data(config_file, this.cfg) then
         parse_file_data()
         dotmarks_main.refresh_main_config()
         RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
