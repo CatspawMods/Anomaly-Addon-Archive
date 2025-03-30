@@ -2,7 +2,7 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.8"
+script_version 	= "1.8.1"
 release_date    = 20250329
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
@@ -396,7 +396,7 @@ end
 
 
 function lerp_color(val, mi, md, mx)
-    printf("lerp_color: %s, %s, %s, %s", val, mi, md, mx)
+    --printf("lerp_color: %s, %s, %s, %s", val, mi, md, mx)
     -- like in utils_xml, except returning a table I can do something with instead of ARGB
     local m1,m2
     if (val >= mi[5]) and (val < md[5]) then
@@ -425,7 +425,7 @@ end
 
 function get_state_color(state, mode, args)
 	args 		= args or {}
-	printf("state %s | mode %s | min %s | mid %s | max %s | crit %s", state, mode, args.min, args.mid, args.max, args.crit)
+	--printf("state %s | mode %s | min %s | mid %s | max %s | crit %s", state, mode, args.min, args.mid, args.max, args.crit)
 	--[[ 	Takes a state value in the form of a number or boolean (bool or t/f string)
 			Returns a table with keys a, r, g, b
 
