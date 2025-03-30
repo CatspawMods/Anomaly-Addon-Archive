@@ -821,4 +821,49 @@
         \nhttps://github.com/themrdemonized/xray-monolith</text>
     </string>
 
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_x">
+		<text>Текст действия X смещение</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_x_desc">
+		<text>Регулирует величину горизонтального смещения позиции текста действия. Это текст, в котором говорится о действии, например, «поднимите вещь».
+		 \n
+		\nПо умолчанию: 24</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y">
+		<text>Текст действия Y смещение</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y_desc">
+		<text>Регулирует величину вертикального смещения позиции текста действия. Это текст, в котором говорится о действии, например, «поднимите вещь».
+		 \n
+		\nПо умолчанию: 3.5</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_x">
+		<text>X-смещение для метки сопоставленной клавиши</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_x_desc">
+		<text>Регулирует величину вертикального смещения позиции текста действия. Это текст, в котором говорится о действии, например, «поднимите вещь».
+		 \n
+		\nПо умолчанию: 3</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_y">
+		<text>Y-смещение для метки сопоставленной клавиши</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_y_desc">
+		<text>Регулирует вертикальное смещение текста привязки клавиш в поле значка. Это текст, указывающий, какую клавишу или кнопку вы нажимаете, например «Т».
+		 \n
+		\nПо умолчанию: 2.5</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale">
+		<text>Шкала символов для метки привязки клавиш</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale_desc">
+		<text>Устанавливает настройку горизонтального размера блока значков привязки клавиш на каждый символ длины строки в тексте привязки.
+		 \n
+		\nПо умолчанию: 5.825</text>
+	</string>
+	
 </string_table>

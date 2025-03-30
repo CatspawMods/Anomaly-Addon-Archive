@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.2"
-release_date    = 20250328
+script_version  = "0.7.3"
+release_date    = 20250329
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -114,6 +114,7 @@ local lerp              = utils_catspaw_common.lerp
 local round10           = utils_catspaw_common.round10
 local dec2              = utils_catspaw_common.dec2
 local to360             = utils_catspaw_common.to360
+local get_game_object   = utils_catspaw_common.get_game_object
 local safename          = utils_catspaw_text.safename
 local int_to_rgba       = utils_catspaw_text.int_to_rgba
 local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
@@ -198,24 +199,13 @@ function add_marker_preset(preset_name, table_or_functor, overwrite)
 end
 -- ======================================================================
 
-function get_object_by_id(id)
-    -- Functionally identical to the one in _G, except it doesn't spam the log
-    return id and (
-        (id == AC_ID) and db.actor or
-        (   
-            db.storage[id] and db.storage[id].object or
-            level.object_by_id(id)
-        )
-    )
-end
-
 function get_object_bearing(pos, obj, id)
     -- Thanks to demonized for help with this
     -- For some reason it causes the main loop to shit the bed though
     -- Unused for now
     if not db.actor then return end
     if not pos then
-        obj         = obj or (id and get_object_by_id(id))
+        obj         = obj or (id and get_game_object(id))
         pos         = obj and obj:position()
     end
     if not pos then return end
@@ -228,7 +218,7 @@ function get_object_bearing(pos, obj, id)
 end
 
 function get_object_center(id, obj)
-    obj = obj or (id and get_object_by_id(id))
+    obj = obj or (id and get_game_object(id))
     return obj and obj:center()
 end
 
@@ -249,7 +239,7 @@ function check_los_to_obj(id, range, bone, flags, tolerance, pos_adjust)
     -- The HUD marker class has functions to smooth it out
     if not demonized_geometry_ray then return end
     if not db.actor then return end
-    local obj = id and get_object_by_id(id)
+    local obj = id and get_game_object(id)
     local pos = id and get_object_center(id)
 
     if IsStalker(obj) then
@@ -280,7 +270,7 @@ end
 
 
 function fade_by_dist(element, dist, flr, min, mid, max, alpha, r, g, b, mode)
-    printf("fade_by_dist called: dist %s | flr %s min %s mid %s max %s\ncustom_argb %s,%s,%s,%s, mode %s",dist, flr, min, mid, max, alpha, r, g, b, mode)
+    --printf("fade_by_dist called: dist %s | flr %s min %s mid %s max %s\ncustom_argb %s,%s,%s,%s, mode %s",dist, flr, min, mid, max, alpha, r, g, b, mode)
     --[[ 
     element is a valid UI element, and how the fade is done is determined by mode:
         mode 0 = fade a Static element (default)
@@ -350,7 +340,7 @@ end
 function world_to_ui(pos, obj, id, return_offscreen)
     if not pos then
         id = id or (obj and obj:id())
-        obj = obj or (id and get_object_by_id(id))
+        obj = obj or (id and get_game_object(id))
         pos = obj and obj:position()
     end
     local vec = pos and game.world2ui(vector():set(pos.x, pos.y, pos.z), return_offscreen)
@@ -657,7 +647,7 @@ end
 function HUDMarkerManager:GetBaseMarkPos(mark)
     if not mark then return end
     if mark.locked_world_pos then return mark.locked_world_pos end
-    local obj = mark.id and get_object_by_id(mark.id)
+    local obj = mark.id and get_game_object(mark.id)
     return mark:GetBonePos(mark.args.bone, obj) or get_object_center(nil, obj) or nil
 end
 
@@ -1357,19 +1347,19 @@ function UIHUDMarker:HasLOS(dist)
 end
 
 function UIHUDMarker:GetBonePos(bone, obj)
-    obj = obj or (self.id and get_object_by_id(self.id))
+    obj = obj or (self.id and get_game_object(self.id))
     bone = bone or self.args.bone
     return obj and bone and utils_obj.safe_bone_pos(obj, bone)
 end
 
 function UIHUDMarker:GetBasePos(obj)
-    obj = obj or (self.id and get_object_by_id(self.id))
+    obj = obj or (self.id and get_game_object(self.id))
     return self.args.bone and self:GetBonePos(self.args.bone, obj) or get_object_center(nil, obj) or nil
 end
 
 function UIHUDMarker:GetPos(pos_adjust, obj)
     if self.locked_world_pos then return self.locked_world_pos end
-    local obj = obj or get_object_by_id(self.id)
+    local obj = obj or get_game_object(self.id)
     local pos = self:GetBasePos(obj)--self.locked_world_pos or self:GetBonePos(self.args.bone, obj) or get_object_center(self.id)--(se_obj and se_obj.position)
     local adjtxt = ""
     if pos and pos_adjust then
@@ -1526,7 +1516,7 @@ function UIHUDMarker:Update()
         se_obj        = self:ValidateMarkerServerObj()
         if self.destroying then return end
 
-        obj           = id and get_object_by_id(id)
+        obj           = id and get_game_object(id)
         pin           = paw and self.is_pin and id and paw.pins and paw.pins[id]
         -- Destroy marker if ID's object is invalid, or if it's a pin with an invalid pin record
 

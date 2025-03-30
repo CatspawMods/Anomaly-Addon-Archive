@@ -5,8 +5,8 @@ b
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.9-b5"
-release_date    = 20250328
+script_version  = "0.9-b6"
+release_date    = 20250329
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -609,7 +609,7 @@ local base_config = {
                     texture             = cfg.marker_dotmark,
                     is_door             = true,
                     no_sec              = true,
-                    bone                = "lock",
+                    bone                = (not visual:find("cabinet_village_140x210_ph_door")) and "lock" or get_best_pos_bone(obj),
                     pos_adjust          = vector():set(0, vadjust, 0),
                     scheme              = ph_door,
                     -- The scheme is used for getting direct access to the door handlers and data

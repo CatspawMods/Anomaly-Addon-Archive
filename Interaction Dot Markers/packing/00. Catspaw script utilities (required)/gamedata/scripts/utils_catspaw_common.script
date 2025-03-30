@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.9.2"
-release_date    = 20250328
+script_version 	= "1.10"
+release_date    = 20250329
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -345,6 +345,17 @@ function safeid(obj, def_actor)
 	return (type(obj.id) == "function") and obj:id() or obj.id
 end
 
+function get_game_object(id)
+    -- Functionally identical to get_object_by_id in _G, except it doesn't spam the log when there isn't an object
+    return id and (
+        (id == AC_ID) and db.actor or
+        (   
+            db.storage[id] and db.storage[id].object or
+            level.object_by_id(id)
+        )
+    )
+end
+
 function actor_loaded()
 	return (db.actor ~= nil)
 end
@@ -426,6 +437,10 @@ end
 -- ======================================================================
 -- 		SETTINGS MANAGEMENT
 -- ======================================================================
+
+function get_main_config(path, typ)
+	return axr_main.config:r_value(path, {val = typ or 0})
+end
 
 function get_mcm_or_default_val(path, default)
 	-- I often need to get an MCM value, but have it default to something

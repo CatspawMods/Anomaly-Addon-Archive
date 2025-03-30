@@ -264,7 +264,6 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     if is_empty_mutant_corpse(obj) then
                                         --printf("mutant corpse is empty, destroying")
                                         destroy_marker(mark.mark_id)
-                                        cfg.markers[id] = nil
                                         return
                                     elseif cfg.bodies_use_mpda_rules and item_milpda then
                                         -- Hide bodies that Milspec PDA won't show
@@ -289,8 +288,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                 mark.has_items = not obj:is_inv_box_empty()
                                 local text = nil
                                 if mark.has_items and (not cfg.invboxes[id]) then
-                                    --printf("getting inv table")
+                                    mark.inv_iter_count = (mark.inv_iter_count or 0) + 1
                                     cfg.invboxes[id] = get_inventory_table(obj, id)
+                                    local items = cfg.invboxes[id] and size_table(cfg.invboxes[id])
+                                    vl("[%s] No inventory table for container %s, iterated and found %s items (times iterated so far: %s)", time_global(), mark.name, items, mark.inv_iter_count)
                                 end
                                 if mark.has_items and cfg.invboxes[id] and (not is_empty(cfg.invboxes[id])) then
                                     --printf("container not empty, showing prompt")
@@ -481,7 +482,18 @@ end
 -- ======================================================================
 
 function destroy_marker(mark_id)
-    hmm:DelMarker(mark_id)
+    local _ = debug_dump and printf("Trying to destroy marker %s", mark_id)
+    local mark = hmm:GetMarker(mark_id)
+    if mark then mark:Destroy() end
+end
+
+function destroy_prompt(tid)
+    local _ = debug_dump and printf("Trying to destroy tutorial prompt %s", tid)
+    local mark = tid and cfg.markers[tid]
+    if mark then
+        mark:Destroy()
+        cfg.markers[tid] = nil
+    end
 end
 
 function killswitch(feature)
@@ -770,7 +782,7 @@ function get_condition_color(condition, section)
     local crit_pwr  = section and item_device.dev_critical[section]
     if crit_pwr then
         mode        = 2
-        args.min = crit_pwr
+        args.crit   = crit_pwr
     elseif cfg.parts_wpo_colors then
         mode        = 1
     else
@@ -924,19 +936,21 @@ function InteractPrompt:__init(anchor, args) super()
     self.active_prompt      = args.active_prompt or args.text   or (args.tutorial and trimmed_prompt(gts(args.tutorial))) or ""
     self.active_suffix      = args.active_suffix or args.suffix or ""
     self.args               = args
-    if self.args.tutorial and (self.args.tutorial:find("campfire")) then
-        self.campfire_tut   = true
+    if self.args.tutorial then
+        if (self.args.tutorial:find("campfire")) then
+            self.campfire_tut   = true
+        elseif (self.args.tutorial == "tutorial_sleep") then
+            self.sleep_tut = true
+        end
     end
     self.last_state         = false
     self:on_option_change()
     self:BusyState(false)
     self:ShowPrompt(false, "init")
 
+    RegisterScriptCallback("actor_on_net_destroy", self)
     RegisterScriptCallback("on_option_change", self)
     RegisterScriptCallback("actor_on_update", self)
-    RegisterScriptCallback("actor_on_net_destroy", self)
-
-    self.init_done = time_global()
     
     vl("[%s][InteractPrompt] Completed setup for prompt: %s", self.init_done, self:GetFullPrompt())
 end
@@ -1008,7 +1022,7 @@ function InteractPrompt:BuildUI()
     local xml           = self.xml
     xml:ParseFile(cfg.interact_uifile)
     local args          = self.args
-    local boxlen        = fontscale(#args.bind * 5.825)
+    local boxlen        = fontscale(#args.bind * cfg.bind_char_scale)
     local boxpos        = -(boxlen - 4)
     self.args.style     = cfg.keybind_bg_style or 0
     vl("Keybind icon style is %s", self.args.style)
@@ -1084,8 +1098,8 @@ function InteractPrompt:BuildUI()
     self.bind_sh        = xml:InitStatic("alt_interact:label", self.prompt)
     self.label_sh       = xml:InitStatic("alt_interact:label", self.wnd)
     self.bind_sh:SetWndSize(vector2():set((boxlen or 0) + fontscale(15), fontscale(20)))
-    self.bind_sh:SetWndPos(vector2():set(fontscale(stretch_adj + 4.5), fontscale(3.25)))
-    self.label_sh:SetWndPos(vector2():set(fontscale(24.5), fontscale(3.25)))
+    self.bind_sh:SetWndPos(vector2():set(fontscale(stretch_adj + cfg.bind_text_pos_x + 1.5), fontscale(cfg.bind_text_pos_y - 0.25)))
+    self.label_sh:SetWndPos(vector2():set(fontscale(cfg.action_text_pos_x + 0.5), fontscale(cfg.action_text_pos_y)))
     self.bind_sh:TextControl():SetFont(get_font())
     self.label_sh:TextControl():SetFont(get_font())
 
@@ -1098,9 +1112,9 @@ function InteractPrompt:BuildUI()
 
     self.bind:SetWndSize(vector2():set((boxlen or 0) + fontscale(15), fontscale(20)))
     if one_char then
-        self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + 4.5), fontscale(2.5)))
+        self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + cfg.bind_text_pos_x + 1.5), fontscale(cfg.bind_text_pos_y)))
     else
-        self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + 3), fontscale(2.5)))
+        self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + cfg.bind_text_pos_x), fontscale(cfg.bind_text_pos_y)))
     end
 
     -- Width reference static
@@ -1110,7 +1124,7 @@ function InteractPrompt:BuildUI()
     -- Prompt text label
     self.label          = xml:InitStatic("alt_interact:label", self.wnd)
     self:eleSetBaseColorScheme(self.label, self.text_color_light)
-    self.label:SetWndPos(vector2():set(fontscale(24), fontscale(3.5)))
+    self.label:SetWndPos(vector2():set(fontscale(cfg.action_text_pos_x), fontscale(cfg.action_text_pos_y)))
     self.label:TextControl():SetFont(get_font())
 
     self:eleSetBaseColorScheme(self.bind_sh, self.text_color_dark)
@@ -1128,6 +1142,7 @@ function InteractPrompt:BuildUI()
         self:SetupUtjanPartDots(self.itemcard)
     end
     vl("Completed %sbuilding interact UI: %s", self.init_done and "re" or "", self.active_prompt)
+    self.init_done = self.init_done or time_global()
     self:actor_on_update()
 end
 
@@ -1174,8 +1189,8 @@ function InteractPrompt:SetConditionText(sec, cond)
         cond = math.floor(cond * 100)
         local c = get_condition_color(cond, sec)
         local key = "cond_" .. cond
-        local str   = string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
-        set_color_token(key, str)
+        local str   = c and string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
+        if str then set_color_token(key, str) end
         self.parse_text_colors = true
         if (cond < 0.01) and self.args.has_power then
             self.active_suffix = string.format(" ($%s%s$clr_def)", key, gts("st_alti_nopower"))
@@ -1204,7 +1219,8 @@ function InteractPrompt:UpdateWeightColor()
     --local c = get_color_for_weight(self.weight or 0)
     local c = get_state_color(self.weight, 3)
     --printf("Weight of %s is %s | color %s,%s,%s,%s ", self.args.name, self.weight, c.a, c.r, c.b, c.g)
-    local color = getargb(c)
+    local color = c and getargb(c)
+    if not color then return end
     self.card_wgt_icon:SetTextureColor(color)
     self.card_wgt_text:TextControl():SetTextColor(color)
 end
@@ -1874,6 +1890,15 @@ function InteractPrompt:actor_on_update()
     end
 
     if (self.args.tutorial or self.args.is_stalker) then
+        if self.args.tutorial and (time_global() - self.init_done > 1000) then
+            local monitor_active = state_monitor(self.args.tutorial)
+            --printf("[%s] Tutorial health check | active %s | monitor %s", self.args.tutorial, game.has_active_tutorial(), monitor_active)
+            if ((not monitor_active) or (not game.has_active_tutorial())) then
+                vl("No active tutorial, destroying prompt")
+                self:Destroy("no active tutorial for " .. self.args.tutorial)
+                return
+            end
+        end
         _ = (not self.init_done) and vl("Updates for this type are handled in main loop")
         return
     end
@@ -1910,8 +1935,9 @@ end
 
 function InteractPrompt:Destroy(reason)
     self:ShowPrompt(false)
+    self:HideDialog()
     self.hint_filters   = nil
-    self.tutorial       = nil
+    --self.tutorial       = nil
     self.destroyed      = true
     get_hud():RemoveDialogToRender(self)
     
@@ -2031,7 +2057,8 @@ function get_target_container()
 end
 
 function state_monitor(tid)
-    local state = tid and modxml_tutorial_hooks and modxml_tutorial_hooks.monitors and modxml_tutorial_hooks.monitors[tid] and modxml_tutorial_hooks.monitors[tid].state
+    if not tid then return end
+    local state = modxml_tutorial_hooks and modxml_tutorial_hooks.monitors and modxml_tutorial_hooks.monitors[tid] and modxml_tutorial_hooks.monitors[tid].state
     local conds = state and cfg.state_conds and cfg.state_conds[tid] or nil
     local cond  = true
     if state and (conds ~= nil) then
@@ -2282,7 +2309,8 @@ function setup_sec_interact_prompt(mark)
         -- Inventory box or stash
         local weight = nil
         if not obj:is_inv_box_empty() then
-            local tbl = axr_companions.get_inventory_table(obj, id, 1)
+            --local tbl = axr_companions.get_inventory_table(obj, id, 1)
+            local tbl = get_inventory_table(obj, id)
             weight = axr_companions.get_inventory_weight(tbl)
         end
         if (section == "inv_backpack") then
@@ -2374,7 +2402,7 @@ local scanned = {}
 
 function unregister_scanned_entity(id)
     if not id then return end
-    local name = scanned[id]
+    --local name = scanned[id]
     local ind = pickup_index[id]
     if ind then
         nearby_pickups[ind] = nil
@@ -2389,8 +2417,11 @@ function unregister_scanned_entity(id)
         if mark.alt_interact then
             mark.alt_interact:Destroy("unregistering sec use")
         end
-        destroy_marker(mark.mark_id)
-        cfg.markers[id] = nil
+        if mark.preset then
+            destroy_marker(mark.mark_id)
+        else
+            destroy_prompt(id)
+        end
     end
     scanned[id] = nil
 
@@ -2972,7 +3003,7 @@ function update_nearby_pickups()
 end
 
 function setup_tutorial_prompt(tutorial)
-    vl("Need to set up a new interact UI for tutorial %s", tutorial)
+    local _ = debug_dump and printf("Need to set up a new interact UI for tutorial %s", tutorial)
     local args = get_cfg_for_type("args", "Tutorials") or {}
     --args.preset             = "dotmark"
     args.tutorial           = tutorial
@@ -2990,7 +3021,6 @@ function check_tutorial_states()
             cfg.tutorials_cleared = false
             if not cfg.monitors then cfg.monitors = {} end
             for k,v in pairs(cfg.tutorial_hints) do
-                local last_state = cfg.monitors[k]
                 cfg.monitors[k] = state_monitor(k)
                 --printf("checking state for tutorial %s: %s", k, cfg.monitors[k])
                 if cfg.monitors[k] then
@@ -3009,8 +3039,7 @@ function check_tutorial_states()
             --printf("No active tutorial, hiding all tutorial prompts")
             for k,v in pairs(cfg.tutorial_hints) do
                 if cfg.markers[k] then
-                    destroy_marker(cfg.markers[k].mark_id)
-                    cfg.markers[k] = nil
+                    destroy_prompt(k)
                 end
             end
             cfg.tutorials_cleared = true
@@ -3092,44 +3121,8 @@ function actor_on_update()
         end
     end
 end
+
 -- =======================================================================
-
---[[
-function update_current_task_target()
-    local task_info = task_manager.get_task_manager().task_info
-
-    if (task_info) then
-        if (cfg.active_task_id) then
-            local task = task_info[cfg.active_task_id]
-            if (task and db.actor:is_active_task(task.t)) then
-                if (cfg.active_task_target_id ~= tonumber(task.current_target)) then
-                    cfg.active_task_target_id = tonumber(task.current_target)
-                end
-                return
-            else
-                cfg.active_task_id = nil
-                cfg.active_task_target_id = nil
-            end
-        end
-        
-        if (cfg.active_task_id == nil) then
-            for task_id, task in pairs(task_info) do
-                if (task and task.t and db.actor:is_active_task(task.t)) then
-                    if (cfg.active_task_id ~= task_id) then
-                        cfg.active_task_id = task_id
-
-                        cfg.is_task_storyline = task_manager.task_ini:r_string_ex(cfg.active_task_id, "storyline")
-                    end
-                    
-                    if (cfg.active_task_target_id ~= tonumber(task.current_target)) then
-                        cfg.active_task_target_id = tonumber(task.current_target)
-                    end
-                end
-            end
-        end
-    end
-end
---]]
 
 function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
@@ -3345,7 +3338,7 @@ function on_option_change()
     cfg.watch_use   = (use_dik == cfg.bind_sec_interact) and not cfg.hide_sec_interact_ui
     if cfg.markers and not is_empty(cfg.markers) then
         for k,v in pairs(cfg.markers) do
-            destroy_marker(cfg.markers[k].mark_id)
+            v:Destroy()
         end
     end
     set_handler_callbacks()
@@ -3354,7 +3347,7 @@ end
 function on_game_start()
     cfg = dotmarks_main.get_base_config_table()
     mags_installed = (magazines and magazine_binder)
-    if utils_catspaw_common.load_file_data(config_file, this.cfg) then
+    if utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
         parse_file_data()
         dotmarks_main.refresh_main_config()
         RegisterScriptCallback("actor_on_first_update", actor_on_first_update)

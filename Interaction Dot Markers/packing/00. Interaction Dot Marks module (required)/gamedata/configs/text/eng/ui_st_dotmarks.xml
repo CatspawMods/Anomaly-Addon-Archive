@@ -825,4 +825,49 @@
         \nhttps://github.com/themrdemonized/xray-monolith</text>
     </string>
 
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_x">
+		<text>Action text X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_x_desc">
+		<text>Adjusts the horizontal offset of the action text. This is the text that says what the interaction does, e.g. "pick up the thing".
+		 \n
+		\nDefault: 24</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y">
+		<text>Action text Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y_desc">
+		<text>Adjusts the vertical offset of the action text. This is the text that says what the interaction does, e.g. "pick up the thing".
+		 \n
+		\nDefault: 3.5</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_x">
+		<text>Keybind text X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_x_desc">
+		<text>Adjusts the horizontal offset of the keybind text within its icon box. This is the text that says what key or button you press, e.g. "T".
+		 \n
+		\nDefault: 3</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_y">
+		<text>Keybind text Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_y_desc">
+		<text>Adjusts the vertical offset of the keybind text within its icon box. This is the text that says what key or button you press, e.g. "T".
+		 \n
+		\nDefault: 2.5</text>
+	</string>	
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale">
+		<text>Keybind character scale</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale_desc">
+		<text>Sets the horizontal size adjustment of the keybind icon box, per character of string length in the keybind text.
+		 \n
+		\nDefault: 5.825</text>
+	</string>
+
 </string_table>

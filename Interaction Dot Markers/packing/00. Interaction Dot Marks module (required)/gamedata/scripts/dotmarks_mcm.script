@@ -13,25 +13,24 @@ assert(utils_catspaw_text, "\n\n"..
 assert(dotmarks_main, "\n\n"..
     "! dotmarks_mcm requires dotmarks_main, which does not exist!\n\n"
 )
-
-local debuglogs 	= false
+script_name 		= "dotmarks_mcm"
+debuglogs 			= false
 local exes_version 	= MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version())
 local header_desc 	= "ui_mcm_dotmarks_header_main"
 local xml 			= CScriptXmlInit()
-local cfg 			= {}
 local headers 		= {}
-local gts 			= game.translate_string
-local sfind 		= string.find
-local ssub 			= string.sub
-local lang 			= "eng"
-local psk 			= utils_data.parse_string_keys
---local unsquish 		= dotmarks_main.unsquish
-local play_snd_path = dotmarks_main.play_snd_path
-script_version 		= dotmarks_main.script_version or "ersion not found!"
-release_date		= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
-local rel_version 	= string.format("$clr_tgrv%s (rel %s)", script_version, release_date)
-script_name 		= "dotmarks_mcm"
-utils_catspaw_common.load_file_data("scripts\\dotmarks_defaults.ltx", cfg, {logging = debuglogs, called_by = script_name})
+
+local get_main_config 	= utils_catspaw_common.get_main_config
+local gts 				= game.translate_string
+local psk 				= utils_data.parse_string_keys
+local sfind 			= string.find
+local ssub 				= string.sub
+local lang 				= "eng"
+local play_snd_path 	= dotmarks_main.play_snd_path
+script_version 			= dotmarks_main.script_version or "ersion not found!"
+release_date			= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
+local rel_version 		= string.format("$clr_tgrv%s (rel %s)", script_version, release_date)
+local cfg 				= utils_catspaw_common.load_file_data("scripts\\dotmarks_defaults.ltx", cfg, {logging = debuglogs, called_by = script_name})
 --dotmarks_main.load_file_data("scripts\\dotmarks_defaults.ltx", cfg)
 cfg.colors.clr_dmark_norm = utils_catspaw_text.csv_argb_to_tbl(cfg.colors["clr_dmark_norm"])
 
@@ -53,10 +52,6 @@ local cache = {}
 
 function unsquish(width)
     return (width or 0) * (cfg.unsquish_ratio or 1)
-end
-
-local function prefetch_mcm_val(path, typ)
-	return axr_main.config:r_value(path, {val = typ or 0})
 end
 
 function init_preview(anchor, handlers, opts, flags)
@@ -462,7 +457,7 @@ function init_dotmark_preview(anchor, handlers, opts, flags)
 		act = init_simple_icon(anchor, handlers, opts2, flags)
 	}
 	local ctrl = wnds[opts.id]
-	local size 	= prefetch_mcm_val("dotmarks/dotmain/dot_marker_size", 2) or 1
+	local size 	= get_main_config("dotmarks/dotmain/dot_marker_size", 2) or 1
 	--printf("marker size loaded: %s | base %s", size, opts.icon_w)
 	local color = cfg.colors.clr_dmark_norm
 	ctrl.reg.opts = opts
@@ -598,9 +593,18 @@ function get_adv_menu()
 			dmark_text_h 	= 90,
 			dmark_text_v 	= 9
 		},
-		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
-		{ id = "item_card_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.item_card_pos_y },
 
+		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
+		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
+		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
+		{ id = "hide_pri_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_pri_interact_ui },
+		{ id = "hide_sec_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_sec_interact_ui },
+		{ id = "hide_van_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_van_interact_ui },
+
+		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
+
+		{id = "divider", type= "line"},
+		
 		{id = "keybind_bg_style", type= "list", val = 2, def = cfg.keybind_bg_style, 
 			content = {
 			   {3,"dmarks_kbstyle_worn"},
@@ -638,14 +642,11 @@ function get_adv_menu()
 		{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
 		{ id = "popin_anim_dur", 		type = "track",		val = 2, min = 0, step = 1, max = 2000, def = cfg.popin_anim_dur },
 
-		{id = "divider", type= "line"},
-
-		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
-		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
-		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
-		{ id = "hide_pri_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_pri_interact_ui },
-		{ id = "hide_sec_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_sec_interact_ui },
-		{ id = "hide_van_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_van_interact_ui },
+		{ id = "action_text_pos_x", 	type = "input", 	val = 2, min = -384, max = 768, def = cfg.action_text_pos_x },
+		{ id = "action_text_pos_y", 	type = "input", 	val = 2, min = -512, max = 1024, def = cfg.action_text_pos_y },
+		{ id = "bind_text_pos_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.bind_text_pos_x },
+		{ id = "bind_text_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.bind_text_pos_y },
+		{ id = "bind_char_scale", 		type = "input", 	val = 2, min = 0, max = 10, def = cfg.bind_char_scale },
 
 		{id = "divider", type= "line"},
 

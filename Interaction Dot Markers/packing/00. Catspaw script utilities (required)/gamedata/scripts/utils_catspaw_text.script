@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.7"
-release_date    = 20250325
+script_version 	= "1.8"
+release_date    = 20250329
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -217,6 +217,43 @@ function get_default_tokens(actor_t, game_t, skip_refresh)
 	return default_tokens
 end
 
+function csv_argb_to_tbl(csv)
+    local c
+    if csv and type(csv) == "string" then
+    	c = str_explode(csv, ",")
+    elseif csv and type(csv) == "table" then
+    	c = csv
+    end
+
+    return c and {
+        a = c[1] or 255,
+        r = c[2] or 255,
+        g = c[3] or 255,
+        b = c[4] or 255,
+        v = c[5] or nil -- threshold value for use in state lerping
+    } or nil
+end
+
+function clr_tbl(a, r, g, b, v)
+    return {
+        a = a,
+        r = r,
+        g = g,
+        b = b,
+        v = v
+    }
+end
+
+function clr_tbl_to_index(clr_tbl, tval)
+    return {
+        clr_tbl.a or 255,
+        clr_tbl.r or 255,
+        clr_tbl.g or 255,
+        clr_tbl.b or 255,
+        clr_tbl.v or tval or 0
+    }
+end
+
 local parse_colors 		= true
 local nocolor_tokens 	= {}
 local color_tokens 		= {
@@ -238,23 +275,52 @@ local color_tokens 		= {
     ["clr_ui8"]	= "%" .. "%c[ui_8]",			-- dialogue text: 216,186,140 - you know, that pale khaki
 }
 
+function get_color_tokens()			return color_tokens or {} end
+function get_nocolor_tokens()		return nocolor_tokens or {} end
+
+function set_color_token(k, s)
+	-- set or add a color token in the format of the color_tokens table above
+	nocolor_tokens[k] = ""
+	color_tokens[k] = "%" .. s
+	if color_tokens[k]:find("%" .. "%") then return end
+	-- to catch double parsing of %% into %
+	color_tokens[k] = "%" .. color_tokens[k]
+end
+
+function get_color_code_for_argb(a, r, g, b)
+	return "%".."%"..string.format("c[%s,%s,%s,%s]", a or 255, r or 255, g or 255, b or 255)
+end
+
+state_tokens = {}
 state_colors = {
-	["clr_wpo_red"] = "%" .. "%c[255,196,18,18]",
-	["clr_wpo_orn"] = "%" .. "%c[255,238,153,26]",
-	["clr_wpo_yel"] = "%" .. "%c[255,255,255,118]",
-	["clr_wpo_grn"] = "%" .. "%c[255,107,207,119]",
-	["clr_missing"] = "%" .. "%c[255,70,60,60]",
+	["clr_wpo_red"] = {255,196,18,18},
+	["clr_wpo_orn"] = {255,238,153,26},
+	["clr_wpo_yel"] = {255,255,255,118},
+	["clr_wpo_grn"] = {255,107,207,119},
+	["clr_missing"] = {255,70,60,60},
 	-- Weapon Parts Overhaul condition threshold colors
-	["clr_cnd_min"] = "%" .. "%c[255,196,18,18,0]",
-	["clr_cnd_mid"] = "%" .. "%c[255,255,255,118,0.5]",
-	["clr_cnd_max"] = "%" .. "%c[255,107,207,119,1]",
+	["clr_cnd_min"] = {255,196,18,18,0},
+	["clr_cnd_mid"] = {255,255,255,118,0.5},
+	["clr_cnd_max"] = {255,107,207,119,1},
 	-- Vanilla condition lerping colors
-	["clr_battery"] = "%" .. "%c[255,86,196,209]",
+	["clr_battery"] = {255,86,196,209},
 	-- Color of the battery charge bar
-	["clr_weight_ok"] = "%" .. "%c[255,255,255,255]",
-	["clr_weight_over"] = "%" .. "%c[255,255,50,0]",
-	["clr_weight_high"] = "%" .. "%c[255,200,150,0]",
+	["clr_weight_ok"] = {255,255,255,255},
+	["clr_weight_over"] = {255,255,50,0},
+	["clr_weight_high"] = {255,200,150,0},
 }
+
+function update_nocolor_tokens()
+	-- manually resync nocolor_tokens table with color_tokens
+	for k,v in pairs(color_tokens) do
+		nocolor_tokens[k] = ""
+	end
+end
+
+update_nocolor_tokens()
+for k,v in pairs(state_colors) do
+	state_tokens[k] = "%" .. get_color_code_for_argb(unpack(v))
+end
 
 wpo_thresholds = {
 	-- These are public and can be customized if need be
@@ -264,23 +330,7 @@ wpo_thresholds = {
 	red = -1
 }
 
-function get_color_tokens()			return color_tokens or {} end
-function get_nocolor_tokens()		return nocolor_tokens or {} end
 
-function update_nocolor_tokens()
-	-- manually resync nocolor_tokens table with color_tokens
-	for k,v in pairs(color_tokens) do
-		nocolor_tokens[k] = ""
-	end
-end
-
-function set_color_token(k, s)
-	-- set or add a color token in the format of the color_tokens table above
-	color_tokens[k] = "%" .. s
-	nocolor_tokens[k] = ""
-end
-
-update_nocolor_tokens()
 
 function int_to_rgba(i)
 	-- Converts integer to RGB or RGBA values
@@ -344,57 +394,9 @@ function parse_color_tokens(s, t, c)
 	return psk(s, docolor and color_tokens or nocolor_tokens)
 end
 
-local mode_colors = {
-	[-2] = {
-	},
-	[-1] = {
-
-	},
-	[0] = {
-
-	},
-	[1] = {
-
-	},
-	[2] = {
-
-	},
-}
-
-function csv_argb_to_tbl(csv)
-    local c = csv and str_explode(csv, ",")
-    return c and {
-        a = c[1] or 255,
-        r = c[2] or 255,
-        g = c[3] or 255,
-        b = c[4] or 255,
-        v = c[5] or nil -- threshold value for use in state lerping
-    } or nil
-end
-
-function clr_tbl(a, r, g, b, v)
-    return {
-        a = a,
-        r = r,
-        g = g,
-        b = b,
-        v = v
-    }
-end
-
-function clr_tbl_to_index(clr_tbl, tval)
-    return {
-        clr_tbl.a or 255,
-        clr_tbl.r or 255,
-        clr_tbl.g or 255,
-        clr_tbl.b or 255,
-        clr_tbl.v or tval or 0
-    }
-end
-
 
 function lerp_color(val, mi, md, mx)
-    --printf("lerp_color: %s, %s, %s, %s", val, mi, md, mx)
+    printf("lerp_color: %s, %s, %s, %s", val, mi, md, mx)
     -- like in utils_xml, except returning a table I can do something with instead of ARGB
     local m1,m2
     if (val >= mi[5]) and (val < md[5]) then
@@ -422,6 +424,8 @@ end
 
 
 function get_state_color(state, mode, args)
+	args 		= args or {}
+	printf("state %s | mode %s | min %s | mid %s | max %s | crit %s", state, mode, args.min, args.mid, args.max, args.crit)
 	--[[ 	Takes a state value in the form of a number or boolean (bool or t/f string)
 			Returns a table with keys a, r, g, b
 
@@ -434,7 +438,6 @@ function get_state_color(state, mode, args)
 			 3 		: Actor encumbrance, returns grn/orn/yel based on carried weight
 	--]]
 	mode 		= mode or 0
-	args 		= args or {}
 	local col 	= args.colors or state_colors
 	local wpo 	= wpo_thresholds or {}
 	local color = col.clr_missing or {}
@@ -461,11 +464,11 @@ function get_state_color(state, mode, args)
 		    		(wc > 0) and col.clr_weight_high or
 		    		col.clr_weight_ok
 		    ) or ""
-		elseif (mode > 1) then
+		elseif (mode > 1) or args.crit then
 
 			-- Mode 2: Battery power
 			-- Optionally pass the device's critical threshold as args.min
-			local crit 	= ((tonumber(state) or 0) * 0.01) < (args.min or 0.05)
+			local crit 	= ((tonumber(state) or 0) * 0.01) < (args.crit or 0.05)
 	        color 		= crit and col.clr_wpo_red or col.clr_battery
 	        r1			= crit and 1 or 0
 		elseif mode > 1 then
@@ -485,7 +488,11 @@ function get_state_color(state, mode, args)
 	        -- Accepts state values 0 to 100
 	        if state >= 0 then
 	            state 	= clamp(state / 99, 0, 1)
-	            color 	= lerp_color(state, args.min or 0, args.mid or 0.5, args.max or 1)
+	            color 	= lerp_color( state,
+	             	args.min or col.clr_cnd_min,
+	             	args.mid or col.clr_cnd_mid,
+	             	args.max or col.clr_cnd_max
+	            )
 	        end
 		end
 	end
