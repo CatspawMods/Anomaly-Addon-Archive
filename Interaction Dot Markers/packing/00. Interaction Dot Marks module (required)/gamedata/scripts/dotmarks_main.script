@@ -5,8 +5,8 @@ b
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.9-b6"
-release_date    = 20250329
+script_version  = "0.9-b8"
+release_date    = 20250331
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive

@@ -283,7 +283,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                         return
                                     end
                                 end
-                            elseif (not mark.is_display) and (mark.is_stash or (mark.is_stalker and not mark.is_alive)) then
+                            elseif (
+                                (mark.is_stash or (mark.is_stalker and not mark.is_alive)) and
+                                (cfg.show_stash_weight and not mark.is_display)
+                            ) then
                                 -- Update contents of inventory containers
                                 mark.has_items = not obj:is_inv_box_empty()
                                 local text = nil
@@ -328,7 +331,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                 )
                                 --printf("Last chance for show_pri: locked %s | targeted %s | avail_pickup %s | is_pickup %s", locked_id, targeted, available_pickup, mark.pickup)
                             end
-                            if mark.condition then
+                            if mark.condition and cfg.show_item_condition then
                                 -- Update condition for degradable objects
                                 local cond = obj:condition()
                                 if cond ~= mark.condition then

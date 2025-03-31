@@ -223,6 +223,8 @@ show_item_charge 			= true
 ; Shows the item's percentage of battery charge suffixed to the item name, if applicable
 show_condition_color 		= true
 ; Changes the color of the condition text based on the condition
+show_stash_weight 			= true
+; Iterate stash contents and show their weight on the prompt - may have performance cost
 show_parts_weapons 			= true
 ; If Utjan's Item UI is installed, shows part condition indicators for weapons
 show_parts_armor 			= true
@@ -720,6 +722,7 @@ show_multi_uses 		= dotmarks/dmarkmain/
 sp_flag_favejunk		= dotmarks/dmarkmain/
 show_item_condition 	= dotmarks/dmarkmain/
 show_condition_color 	= dotmarks/dmarkmain/
+show_stash_weight 		= dotmarks/dmarkmain/
 wheel_cycles_pickups 	= dotmarks/dmarkmain/
 dot_marker_size 		= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
@@ -729,6 +732,31 @@ bind_sec_interact 		= dotmarks/dmarksec/
 modk_sec_interact 		= dotmarks/dmarksec/
 imod_sec_interact 		= dotmarks/dmarksec/
 long_press_delay 		= dotmarks/dmarksec/
+; =================================================================================
+; Other addons menu
+use_skill_system 		= dotmarks/dmarkmods/
+bodies_use_paw_patches	= dotmarks/dmarkmods/
+bodies_use_mpda_rules 	= dotmarks/dmarkmods/
+alti_show_during_anim 	= dotmarks/dmarkmods/
+alti_busy_during_anim 	= dotmarks/dmarkmods/
+item_use_delay	 		= dotmarks/dmarkmods/
+sp_hide_junk_items		= dotmarks/dmarkmods/
+sp_icon_pos_x 			= dotmarks/dmarkmods/
+sp_icon_pos_y 			= dotmarks/dmarkmods/
+parts_dot_pos_x 		= dotmarks/dmarkmods/
+parts_dot_pos_y 		= dotmarks/dmarkmods/
+haru_skill_coef 		= dotmarks/dmarkmods/
+skill_upd_interval 		= dotmarks/dmarkmods/
+haru_skill_name 		= dotmarks/dmarkmods/
+; =================================================================================
+; Objects menu
+disable_icon_tasks 		= dotmarks/dmarkobjs/
+disable_icon_boom		= dotmarks/dmarkobjs/
+disable_icon_box		= dotmarks/dmarkobjs/
+disable_icon_door		= dotmarks/dmarkobjs/
+disable_icon_talk		= dotmarks/dmarkobjs/
+disable_icon_services	= dotmarks/dmarkobjs/
+disable_icon_stash		= dotmarks/dmarkobjs/
 ; =================================================================================
 ; Advanced menu
 ; Bloated, a bunch of these probably need their own menu
@@ -746,45 +774,22 @@ near_scan_interval 		= dotmarks/dmarkadv/
 early_scan_interval 	= dotmarks/dmarkadv/
 near_scan_radius 		= dotmarks/dmarkadv/
 early_scan_radius 		= dotmarks/dmarkadv/
-alti_show_during_anim 	= dotmarks/dmarkadv/
-alti_busy_during_anim 	= dotmarks/dmarkadv/
-item_use_delay	 		= dotmarks/dmarkadv/
-use_skill_system 		= dotmarks/dmarkadv/
-skill_upd_interval 		= dotmarks/dmarkadv/
-haru_skill_name 		= dotmarks/dmarkadv/
-haru_skill_coef 		= dotmarks/dmarkadv/
 keybind_bg_style 		= dotmarks/dmarkadv/
-sp_hide_junk_items		= dotmarks/dmarkadv/
 hidden_show_prompts		= dotmarks/dmarkadv/
-bodies_use_paw_patches	= dotmarks/dmarkadv/
-bodies_use_mpda_rules 	= dotmarks/dmarkadv/
 prompt_fade_in_time		= dotmarks/dmarkadv/
 prompt_fade_out_time	= dotmarks/dmarkadv/
 font_main_prompt 		= dotmarks/dmarkadv/
 font_item_card 			= dotmarks/dmarkadv/
-parts_dot_pos_x 		= dotmarks/dmarkadv/
-parts_dot_pos_y 		= dotmarks/dmarkadv/
 item_card_icon_sz 		= dotmarks/dmarkadv/
 item_card_pos_x 		= dotmarks/dmarkadv/
 item_card_pos_y 		= dotmarks/dmarkadv/
-;item_card_text_y 		= dotmarks/dmarkadv/ ; not currently in MCM
+;item_card_text_y 		= dotmarks/dmarkadv/ ; not in MCM
 ;item_card_elem_x 		= dotmarks/dmarkadv/
 ;item_card_elem_y 		= dotmarks/dmarkadv/
 ;item_card_elem_h 		= dotmarks/dmarkadv/
 ;item_card_icon_x 		= dotmarks/dmarkadv/
 ;item_card_icon_y 		= dotmarks/dmarkadv/
-sp_icon_pos_x 			= dotmarks/dmarkadv/
-sp_icon_pos_y 			= dotmarks/dmarkadv/
 popin_anim_dur 			= dotmarks/dmarkadv/
-; =================================================================================
-; Objects menu
-disable_icon_tasks 		= dotmarks/dmarkobjs/
-disable_icon_boom		= dotmarks/dmarkobjs/
-disable_icon_box		= dotmarks/dmarkobjs/
-disable_icon_door		= dotmarks/dmarkobjs/
-disable_icon_talk		= dotmarks/dmarkobjs/
-disable_icon_services	= dotmarks/dmarkobjs/
-disable_icon_stash		= dotmarks/dmarkobjs/
 ; =================================================================================
 ; From other addons
 fddar_multipickup 		= fddar/pickup/multipickup

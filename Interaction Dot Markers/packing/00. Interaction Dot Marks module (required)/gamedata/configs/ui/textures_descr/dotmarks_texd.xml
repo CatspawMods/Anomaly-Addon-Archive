@@ -25,11 +25,10 @@
 		<texture id = "ui_catsy_button_icon32_wht_t" x="894" y="320" width="64" height="64" />
 		<texture id = "ui_catsy_button_icon32_wht_h" x="958" y="320" width="64" height="64" />
 
-		<texture id = "ui_catsy_button_worn60_e" x="1025" y="321" width="60" height="60" />
-		<texture id = "ui_catsy_button_worn60_h" x="1025" y="382" width="60" height="60" />
-		<texture id = "ui_catsy_button_worn60_t" x="1025" y="443" width="60" height="60" />
-		<texture id = "ui_catsy_button_worn60_d" x="1025" y="504" width="60" height="60" />
-
+		<texture id = "ui_catsy_button_worn80_e" x="1024" y="320" width="80" height="80" />
+		<texture id = "ui_catsy_button_worn80_t" x="1024" y="400" width="80" height="80" />
+		<texture id = "ui_catsy_button_worn80_d" x="1024" y="480" width="80" height="80" />
+		<texture id = "ui_catsy_button_worn80_h" x="1024" y="560" width="80" height="80" />
 
 		<texture id = "ui_dotmarks_main_drop" x="334" y="0" width="690" height="128" />
 		<texture id = "ui_dotmarks_card_drop" x="334" y="128" width="690" height="128" />
@@ -77,6 +76,7 @@
 		<texture id = "ui_mcm_dotmarks_banner_sec" x="0" y="500" width="1024" height="100" />
 		<texture id = "ui_mcm_dotmarks_banner_objs" x="0" y="600" width="1024" height="100" />
 		<texture id = "ui_mcm_dotmarks_banner_adv" x="0" y="700" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_mods" x="0" y="1948" width="1024" height="100" />
 
 		<texture id = "ui_mcm_dmarks_messagebox_transbg_gen" x="0" y="800" width="512" height="30" />		
 		<texture id = "ui_mcm_dmarks_messagebox_transbg_head90" x="0" y="830" width="512" height="90" />

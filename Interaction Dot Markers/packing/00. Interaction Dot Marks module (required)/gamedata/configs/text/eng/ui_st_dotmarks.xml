@@ -195,6 +195,10 @@
 		<text>Object Settings</text>
 	</string>
 
+	<string id="ui_mcm_menu_dmarkmods">
+		<text>Other Addons</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_interval">
 		<text>Near scan interval</text>
 	</string>
@@ -229,26 +233,26 @@
 		\nThis is measured from the end of the near scan radius, but higher values may have a performance cost, and there is no benefit to setting them more than about 5m higher than the near radius.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_skill_upd_interval">
+	<string id="ui_mcm_dotmarks_dmarkmods_skill_upd_interval">
 		<text>Interval between Skill System updates</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_use_skill_system">
+	<string id="ui_mcm_dotmarks_dmarkmods_use_skill_system">
 		<text>Increase perception radius based on Skill System</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_name">
+	<string id="ui_mcm_dotmarks_dmarkmods_haru_skill_name">
 		<text>Name of the skill used for this check</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_coef">
+	<string id="ui_mcm_dotmarks_dmarkmods_haru_skill_coef">
 		<text>Scan radius multiplier per skill level</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_haru_skill_coef_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_haru_skill_coef_desc">
 		<text>If Skill System integration is enabled, this setting controls the multiplier that is applied to the near scan radius per skill level, and effectively increases the player's "perception" range--within which dot markers can appear.
 		\n 
-		\nAt Scavenging level 15 with the default multiplier of 0.5 and radius of 3, the final near scan radius would be 10.5m.
+		\nAt Scavenging level 15 with the default multiplier of 0.2 and radius of 4, the final near scan radius would be 7m. A very high near scan radius can have a performance impact.
 		</text>
 	</string>
 
@@ -307,19 +311,19 @@
 		<text>If enabled, will hide the white line connecting the dot to the interact prompt.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_alti_show_during_anim">
+	<string id="ui_mcm_dotmarks_dmarkmods_alti_show_during_anim">
 		<text>Show alt use UI during FDDA animations</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_alti_busy_during_anim">
+	<string id="ui_mcm_dotmarks_dmarkmods_alti_busy_during_anim">
 		<text>Alt use disabled during FDDA animations</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_alti_show_during_anim_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_alti_show_during_anim_desc">
 		<text>If enabled, the secondary interact UI will still be shown during FDDA animations, and the next setting below controls whether it can be used. If you want to hide the prompt entirely during animations, disable this option.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_alti_busy_during_anim_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_alti_busy_during_anim_desc">
 		<text>If this option is enabled, the secondary interact UI is disabled during FDDA animations, dimming and showing a "Too Busy" message until the current animation completes.\n
 		\n 
 		\nDisabling this option will allow "animation canceling", skipping the current animation and immediately beginning the next. The sound effects will still play.</text>
@@ -418,10 +422,10 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_hide_junk_items">
+	<string id="ui_mcm_dotmarks_dmarkmods_sp_hide_junk_items">
 		<text>Hide items marked as junk in Sorting Plus</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_hide_junk_items_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_sp_hide_junk_items_desc">
 		<text>If the Sorting Plus addon is installed, and an item has been marked as "junk", then a mark will not be shown for it.
 		</text>
 	</string>
@@ -436,10 +440,10 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_paw_patches">
+	<string id="ui_mcm_dotmarks_dmarkmods_bodies_use_paw_patches">
 		<text>Dead stalkers use PAW faction patches</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_paw_patches_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_bodies_use_paw_patches_desc">
 		<text>If my Personal Adjustable Waypoint addon (PAW) is installed, this option will cause dead stalkers to show their faction patch instead of the dot marker icon.
 		</text>
 	</string>
@@ -452,10 +456,10 @@
 		<text>Disables the subtle UI "blip" sound effect that plays when cycling the mouse wheel or during other similar events.</text>
 	</string>
 	
-	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_mpda_rules">
+	<string id="ui_mcm_dotmarks_dmarkmods_bodies_use_mpda_rules">
 		<text>Body markers obey Milspec PDA rules</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_bodies_use_mpda_rules_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_bodies_use_mpda_rules_desc">
 		<text>If my Milspec PDA addon is installed, this option will obey that addon's visibility settings for dead bodies--which will only show a marker on bodies whose map markers are visible to the player.
 		</text>
 	</string>
@@ -642,37 +646,37 @@
 	</string>	
 
 
-	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_x">
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_x">
 		<text>Part condition dots X offset</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_x_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_x_desc">
 		<text>Adjusts the horizontal offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
 		 \n
 		\nDefault: -7</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_y">
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_y">
 		<text>Part condition dots Y offset</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_parts_dot_pos_y_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_y_desc">
 		<text>Adjusts the vertical offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
 		 \n
 		\nDefault: -4</text>
 	</string>	
 
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_x">
+	<string id="ui_mcm_dotmarks_dmarkmods_sp_icon_pos_x">
 		<text>Sorting Plus icon X offset</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_x_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_sp_icon_pos_x_desc">
 		<text>Adjusts the horizontal offset for the Favorite/Junk icons added by Sorting Plus. This position is measured relative to the right end of the Item Card, which is based on the length of the longest text field: Weight or Value.
 		 \n
 		\nDefault: 10</text>
 	</string>	
 
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_y">
+	<string id="ui_mcm_dotmarks_dmarkmods_sp_icon_pos_y">
 		<text>Sorting Plus icon Y offset</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_sp_icon_pos_y_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_sp_icon_pos_y_desc">
 		<text>Adjusts the vertical offset for the Favorite/Junk icons added by Sorting Plus. This position is measured relative to the right end of the Item Card, which is based on the length of the longest text field: Weight or Value.
 		 \n
 		\nDefault: 1</text>
@@ -772,15 +776,15 @@
 		<text>Long-press stutter delay</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarksec_long_press_delay_desc">
-		<text>When a long-press (hold) action is completed, inputs from that same key will be ignored for this many milliseconds. This is to prevent the same key from incorrectly registering as a simple press just after releasing the key.\n
+		<text>When a long-press (hold) action is completed, inputs from that same key will be ignored for this many milliseconds. This is necessary to prevent the same key from incorrectly registering as a simple press just after completing the hold, because a person cannot lift their finger off the key instantaneously.\n
 		
-		\nIf you find that pressing your primary interact to pick up an item isn't registering, you can try lowering this value. It must be betweem 50 and 2000.</text>
+		\nIf you find that your primary interact isn't registering when trying to quickly pick up multiple items, you can try lowering this value. It must be between 50 and 2000.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkadv_item_use_delay">
+	<string id="ui_mcm_dotmarks_dmarkmods_item_use_delay">
 		<text>Item secondary use delay</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_item_use_delay_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_item_use_delay_desc">
 		<text>When using a secondary action on a pickup item, this is the delay in seconds between the pickup event and the secondary action.\n
 
 		\nWhen using FDDA, this is necessary in order to allow the pickup animation time to begin. This setting should have no effect without FDDA installed.</text>
@@ -802,18 +806,18 @@
 	</string>
 
 	<string id="st_dotmarks_fail_reason_oldexes">
-		<text>\n$clr_yelInteraction Dot Marks$clr_def could not initialize because it requires a modded exes version of $clr_grn%s$clr_def or newer, and yours is $clr_red%s$clr_def.\n
+		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires a modded exes version of $clr_grn%s$clr_def or newer, and yours is $clr_red%s$clr_def.\n
 		\n$clr_def</text>
 	</string>
 
 	<string id="st_dotmarks_fail_reason_staledbs">
-		<text>\n$clr_yelInteraction Dot Marks$clr_def could not initialize because it requires the $clr_yelactor_on_update_pickup$clr_def callback, added in exes version $clr_grn20250306$clr_def. Your modded exes are release %s, but the callback is missing!\n
+		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires the $clr_gldactor_on_update_pickup$clr_def callback, added in exes version $clr_grn20250306$clr_def. Your modded exes are release clr_gld%sclr_def, but the callback is missing!\n
 			$clr_def
 			\nIf you're seeing this message, it means that you've updated the exe files but are still using old DB files. You must perform a clean reinstall of the modded exes, from scratch.</text>
 	</string>
 
 	<string id="st_dotmarks_fail_reason_nohmm">
-		<text>\n$clr_yelInteraction Dot Marks$clr_def could not initialize because it couldn't find the HUD Mark Manager, which it requires.\n
+		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it couldn't find the HUD Mark Manager, which it requires.\n
 
 		\nThat means that $clr_gldutils_catspaw_hudmarks$clr_def has completely shit the bed somehow. Please download the most recent version of my core utility scripts here:\n
 
@@ -838,7 +842,7 @@
 		<text>Action text Y offset</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y_desc">
-		<text>Adjusts the vertical offset of the action text. This is the text that says what the interaction does, e.g. "pick up the thing".
+		<text>Adjusts the vertical offset . This is the text that says what the interaction does, e.g. "pick up the thing".
 		 \n
 		\nDefault: 3.5</text>
 	</string>	
@@ -868,6 +872,13 @@
 		<text>Sets the horizontal size adjustment of the keybind icon box, per character of string length in the keybind text.
 		 \n
 		\nDefault: 5.825</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmain_show_stash_weight">
+		<text>Show total weight in containers</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_show_stash_weight_desc">
+		<text>Totals up the weight of all items within marked containers, appending this information to the prompt. This feature may have a performance cost when there are many stashes or other containers nearby.</text>
 	</string>
 
 </string_table>

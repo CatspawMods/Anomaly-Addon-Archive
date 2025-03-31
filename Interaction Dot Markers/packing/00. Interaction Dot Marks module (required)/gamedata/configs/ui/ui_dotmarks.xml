@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <w>
-	<box stretch="1"/>
+	<box width="0" height="0" stretch="1"/>
 
 	<alt_interact width="400" height="100" stretch="1" alignment="l">
 
