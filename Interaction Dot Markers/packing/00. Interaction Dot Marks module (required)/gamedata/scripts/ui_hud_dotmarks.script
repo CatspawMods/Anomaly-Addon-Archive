@@ -287,30 +287,39 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                 (mark.is_stash or (mark.is_stalker and not mark.is_alive)) and
                                 (cfg.show_stash_weight and not mark.is_display)
                             ) then
+                                local is_managed_stash = not not treasure_manager.caches[mark.id]
                                 -- Update contents of inventory containers
-                                mark.has_items = not obj:is_inv_box_empty()
                                 local text = nil
-                                if mark.has_items and (not cfg.invboxes[id]) then
-                                    mark.inv_iter_count = (mark.inv_iter_count or 0) + 1
+                                if (not cfg.invboxes[id]) then
+                                    --printf("no invbox table")
                                     cfg.invboxes[id] = get_inventory_table(obj, id)
                                     local items = cfg.invboxes[id] and size_table(cfg.invboxes[id])
-                                    vl("[%s] No inventory table for container %s, iterated and found %s items (times iterated so far: %s)", time_global(), mark.name, items, mark.inv_iter_count)
+                                    _ = debug_dump and vl("[%s] No inventory table for container %s, iterated and found %s items", time_global(), mark.name, items)
+                                    if is_managed_stash and (items == 0) then
+                                        -- treasure manager stashes return as empty until searched
+                                        cfg.invboxes[id] = nil
+                                    end
                                 end
-                                if mark.has_items and cfg.invboxes[id] and (not is_empty(cfg.invboxes[id])) then
-                                    --printf("container not empty, showing prompt")
-                                    mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id])
-                                    local wc = mark.weight and get_weight_class(mark.weight)
-                                    local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
-                                    mark.use_pri.parse_text_colors = true
-                                    text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
-                                elseif treasure_manager.caches[mark.id] and not cfg.invboxes[id] then
-                                    --printf("container not yet searched")
-                                    text = " (" .. gts("st_paw_unknown") .. ")"
+                                if cfg.invboxes[id] then
+                                    --printf("inv box table exists")
+                                    mark.has_items = (not is_empty(cfg.invboxes[id]))
+                                    if mark.has_items then
+                                        --printf("container not empty, showing weight suffix")
+                                        mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id])
+                                        local wc = mark.weight and get_weight_class(mark.weight)
+                                        local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
+                                        mark.use_pri.parse_text_colors = true
+                                        text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
+                                    end
+                                elseif is_managed_stash and not cfg.invboxes[id] then
+                                    --printf("managed stash not yet searched")
+                                    text = " (" .. gts("st_paw_unknown_contents") .. ")"
                                 else
                                     --printf("container empty")
                                     text = " " .. gts("st_alti_empty")
                                 end
-                                mark.use_pri:SetPrompt(nil, nil, text or "")
+                                mark.use_pri:SetPrompt(nil, nil, text)
+                                --printf("Setting stash suffix to: %s", text)
                             end
                             --printf("passed NPC and container checks")
                             if mark.pickup then
@@ -2600,75 +2609,6 @@ end
 function actor_on_net_destroy()
     stop_scanning()
 end
-
-
-function update_actor_extra_weight()
-    local w = 0
-    local function itr(npc,itm)
-        if (npc:is_on_belt(itm)) then
-            w = w + (itm and ((ini_sys:r_float_ex(itm:section(),"additional_inventory_weight") or 0) * itm:condition()) or 0)
-        end
-    end
-
-    db.actor:iterate_inventory(itr,db.actor)
-    local bkpk = db.actor:item_in_slot(13)
-    w = w + (bkpk and ini_sys:r_float_ex(bkpk:section(),"additional_inventory_weight") or 0)
-    extra_carry = w
-
-    return extra_carry
-end
-
---[[
-function get_actor_max_weight()
-    if not db.actor then return end
-    local outfit = db.actor:item_in_slot(7)
-    local backpack = db.actor:item_in_slot(13)
-    
-    local max_weight = db.actor:get_actor_max_weight()
-
-    -- Additional weight - Outfit
-    max_weight = max_weight + (outfit and outfit:get_additional_max_weight() or 0)
-    
-    -- Additional weight - Backpack
-    max_weight = max_weight + (backpack and backpack:get_additional_max_weight() or 0)
-    
-    -- Additional weight - Artefacts
-    db.actor:iterate_belt( function(owner, obj)
-        local c_arty = obj:cast_Artefact()
-        max_weight = max_weight + (c_arty and c_arty:AdditionalInventoryWeight() or 0)
-    end)
-    
-    -- Additional weight - Booster
-    db.actor:cast_Actor():conditions():BoosterForEach( 
-        function(booster_type, booster_time, booster_value)
-            if (booster_type == 4) then --eBoostMaxWeight
-                max_weight = max_weight + booster_value
-            end
-        end
-    )
-    return max_weight
-end
-
-function actor_weight_class(comp_weight)
-    if not db.actor then return end
-
-    local max_weight = get_actor_max_weight()
-    local curr_weight = db.actor:get_total_weight()
-    local current = (comp_weight or curr_weight)
-    local threshold = comp_weight and (max_weight - curr_weight) or max_weight
-    local wclass = ((current > threshold) and 2)  or ((current + 10 > threshold) and 1) or 0
-    --printf("actor_weight_class: %s | max %s | curr %s | comp %s | threshold %s", wclass, max_weight, curr_weight, comp_weight, threshold)
-
-    return wclass, curr_weight, max_weight
-end
-
-function get_color_for_weight(weight)
-    local wc, wa, wm= (weight and get_weight_class(weight))
-    local clr_key   = wc and cfg.weight_colors[wc] or ""
-    local color_wgt = cfg.colors[clr_key] or cfg.colors.clr_weight_ok
-    return color_wgt, wa, wm
-end
---]]
 
 function get_inventory_table(box, id)
     -- Streamlined version of the one in axr_companions

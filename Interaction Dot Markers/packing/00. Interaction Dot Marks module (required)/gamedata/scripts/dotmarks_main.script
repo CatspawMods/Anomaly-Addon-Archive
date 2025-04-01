@@ -5,7 +5,7 @@ b
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.9-b8"
+script_version  = "0.9-b9"
 release_date    = 20250331
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -910,68 +910,9 @@ function add_obj_to_box_table(box, item)
     cfg.invboxes[b_id][i_id] = sec
     --printf("Adding ID %s (%s) to table for invbox %s", i_id, sec, b_id)
 end
---[[
-function load_file_data(ini_name, cfg_table)
-    -- Parameterizing this to turn it into a reusable module
-    local def_ini = ini_name and ini_file_ex(ini_name)
-    if not def_ini then return false end
 
-    dl("Loading file data and populating tables")
-    local function load_table_values(from_tbl, to_tbl)
-        if not to_tbl then to_tbl = {} end
-        for k,v in pairs(from_tbl) do
-            printf("|!| %s = %s", k, v)
-            local template = false
-            if tonumber(v) then
-                to_tbl[k] = tonumber(v)
-            elseif (v == "true") or (v == "false") then
-                to_tbl[k] = strbool(v)
-            else
-                if (type(v) == "string") and v:find("template") then
-                    vl("Loading values for %s from template table %s", k, v)
-                    to_tbl[k] = {}
-                    load_table_values(cfg_table[v], to_tbl[k])
-                    template = true
-                else
-                    to_tbl[k] = v
-                end
-            end
-            if not template then vl("* Loaded: %s = %s", k, v) end
-        end
-    end
-    local function load_config_tables(from_tbl)
-        if not from_tbl then return end
-        for k,v in pairs(from_tbl) do
-            vl("Initializing new config subtable %s", k)
-            if not cfg_table[k] then cfg_table[k] = {} end
-            local tbl_ltx = def_ini:collect_section(k)
-            if tbl_ltx then
-                local tbl = {}
-                if k:find("clsid") then
-                    for k1, v1 in pairs(tbl_ltx) do
-                        local i = tonumber(k1) or clsid[k1] or k1
-                        tbl[i] = v1
-                    end
-                else
-                    tbl = tbl_ltx
-                end
-                vl("Populating values for config subtable %s", k)
-                load_table_values(tbl, cfg_table[k])
-            end
-        end
-    end
 
-    vl("Populating default settings")
-    if not cfg_table then cfg_table = {} end
-    local def_ltx       = def_ini and def_ini:get_sections(true)
-    local dts_ltx       = def_ini:collect_section("default_settings")
-    load_table_values(dts_ltx, cfg_table)
-    load_config_tables(def_ini:collect_section("template_tables"))
-    load_config_tables(def_ini:collect_section("setting_tables"))
 
-    return true
-end
---]]
 
 -- =======================================================================
 --      FONT SETUP

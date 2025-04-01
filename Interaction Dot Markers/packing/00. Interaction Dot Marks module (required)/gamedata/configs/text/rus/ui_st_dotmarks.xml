@@ -10,6 +10,10 @@
 		<text>Неопознанный</text>
 	</string>
 
+	<string id="st_paw_unknown_contents">
+		<text>содержание неизвестно</text>
+	</string>
+
 	<string id="st_alti_unload_weapon">
 		<text>Выгрузите</text>
 	</string>
@@ -176,7 +180,7 @@
 	</string>
 
 	<string id="ui_mcm_menu_dotmarks">
-		<text>Другие аддоны</text>
+		<text>DotMarks</text>
 	</string>
 
 	<string id="ui_mcm_menu_dmarkmain">
@@ -196,7 +200,7 @@
 	</string>
 
 	<string id="ui_mcm_menu_dmarkmods">
-		<text>Other Addons</text>
+		<text>Другие аддоны</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_near_scan_interval">
@@ -582,7 +586,9 @@
 		<text>Шрифт, используемый для карточки предмета</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_font_item_card_desc">
-		<text>Некоторые шрифты будут лучше смотреться на разных разрешениях из-за того, что Аномалия неравномерно изменяет размер текста. По умолчанию для карточки предмета используется шрифт «Средний шрифт», но вы можете выбрать тот, который вам больше нравится.</text>
+		<text>Некоторые шрифты будут лучше смотреться на разных разрешениях из-за того, что Аномалия неравномерно изменяет размер текста. По умолчанию для карточки предмета используется шрифт «Средний шрифт», но вы можете выбрать тот, который вам больше нравится.
+			 \n
+			\nДополнение пытается настроить пользовательский интерфейс в зависимости от размера текста, но при использовании некоторых шрифтов может потребоваться настроить значения положения на экране для карточки товара или других элементов.</text>
 	</string>
 
 	<string id="ui_mcm_lst_dmarks_font_graf32">
@@ -740,7 +746,8 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_addons_desc">
-		<text>DotMarks поддерживает множество других аддонов, таких как «»Sorting Plus, «Utjan's Item UI Improvements», «Milspec PDA», «PAW», «Hideout Furniture» и «Mags Redux». Некоторые из этих интеграций имеют опции, которые вы можете настроить здесь.</text>
+		<text>$clr_gldПоддержка других аддонов\n
+			$clr_whtDotMarks поддерживает множество других аддонов, таких как «Sorting Plus», «Utjan's Item UI Improvements», «Milspec PDA», «PAW», «Hideout Furniture» и «Mags Redux». Некоторые из этих интеграций имеют опции, которые вы можете настроить здесь.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_scanmenu">
@@ -879,5 +886,4 @@
 		<text>Подсчитывает вес всех предметов в отмеченных контейнерах и добавляет эту информацию в подсказку. Эта функция может потребовать значительных затрат производительности, если рядом находится много тайников или других контейнеров.</text>
 	</string>
 	
-
 </string_table>

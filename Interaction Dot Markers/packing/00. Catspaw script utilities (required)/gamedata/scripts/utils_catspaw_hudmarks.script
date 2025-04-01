@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.3"
-release_date    = 20250329
+script_version  = "0.7.4"
+release_date    = 20250331
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -500,8 +500,8 @@ function HUDMarkerManager:actor_on_update()
         --vl("Actor is looking at: %s", self.current_target)
     end
     
-    if self.next_update > time_global() then return end
-    self.next_update        = time_global() + self.update_int
+    if (self.next_update or 0) > time_global() then return end
+    self.next_update        = time_global() + (self.update_int or 15)
     self:Update()
 end
 
@@ -1266,8 +1266,8 @@ end
 
 function UIHUDMarker:actor_on_update()
     --local _=met and inc_metric("mark_actor_updates", self.id)
-    if self.next_update > time_global() then return end
-    self.next_update = get_next_check(self.update_int)
+    if (self.next_update or 0) > time_global() then return end
+    self.next_update = get_next_check(self.update_int or 50)
     --vl("[UIHUDMarker:actor_on_update][%s] tg %s | next_update %s", self.mark_id, time_global(), self.next_update)
     --vl("[UIHUDMarker:actor_on_update] Time to update %s", self.id)
     self:Update()

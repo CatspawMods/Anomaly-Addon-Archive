@@ -10,6 +10,10 @@
 		<text>Unknown</text>
 	</string>
 
+	<string id="st_paw_unknown_contents">
+		<text>contents unknown</text>
+	</string>
+
 	<string id="st_alti_unload_weapon">
 		<text>Unload</text>
 	</string>
