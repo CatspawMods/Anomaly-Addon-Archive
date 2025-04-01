@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.8.1"
-release_date    = 20250329
+script_version 	= "1.8.2"
+release_date    = 20250331
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -699,7 +699,7 @@ function safename(id)
 	        local stash 	= gts("st_paw_stash")
 	        if (stash == "st_paw_stash") then stash = "stash" end
 			--text = string.format("%s%s %s", text, unknown, stash)
-			text = string.format("%s: %s %s", text, unknown, stash)
+			text = string.format("%s%s %s", text and (text..": ") or "", unknown, stash)
 
             dl("No localization found for stash %s, defaulting to \"%s\"", name, text)
             --text = paw and (gts("st_paw_unknown").." "..gts("st_paw_stash")) or "Unknown stash"
