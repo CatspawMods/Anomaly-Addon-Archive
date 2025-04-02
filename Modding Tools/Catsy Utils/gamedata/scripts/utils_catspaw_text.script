@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.8.2"
-release_date    = 20250331
+script_version 	= "1.8.3"
+release_date    = 20250402
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -293,19 +293,22 @@ end
 
 state_tokens = {}
 state_colors = {
-	["clr_wpo_red"] = {255,196,18,18},
-	["clr_wpo_orn"] = {255,238,153,26},
-	["clr_wpo_yel"] = {255,255,255,118},
-	["clr_wpo_grn"] = {255,107,207,119},
-	["clr_missing"] = {255,70,60,60},
+	["clr_rg_good"] 	= {255,0,255,0},
+	["clr_rg_bad"] 		= {255,255,0,0},
+	-- Boolean states, defaulting to full red/green for good/bad
+	["clr_wpo_red"] 	= {255,196,18,18},
+	["clr_wpo_orn"] 	= {255,238,153,26},
+	["clr_wpo_yel"] 	= {255,255,255,118},
+	["clr_wpo_grn"] 	= {255,107,207,119},
+	["clr_missing"] 	= {255,70,60,60},
 	-- Weapon Parts Overhaul condition threshold colors
-	["clr_cnd_min"] = {255,196,18,18,0},
-	["clr_cnd_mid"] = {255,255,255,118,0.5},
-	["clr_cnd_max"] = {255,107,207,119,1},
+	["clr_cnd_min"] 	= {255,196,18,18,0},
+	["clr_cnd_mid"] 	= {255,255,255,118,0.5},
+	["clr_cnd_max"] 	= {255,107,207,119,1},
 	-- Vanilla condition lerping colors
-	["clr_battery"] = {255,86,196,209},
+	["clr_battery"] 	= {255,86,196,209},
 	-- Color of the battery charge bar
-	["clr_weight_ok"] = {255,255,255,255},
+	["clr_weight_ok"] 	= {255,255,255,255},
 	["clr_weight_over"] = {255,255,50,0},
 	["clr_weight_high"] = {255,200,150,0},
 }
@@ -321,16 +324,6 @@ update_nocolor_tokens()
 for k,v in pairs(state_colors) do
 	state_tokens[k] = "%" .. get_color_code_for_argb(unpack(v))
 end
-
-wpo_thresholds = {
-	-- These are public and can be customized if need be
-	grn = 85,
-	yel = 60,
-	orn = 20,
-	red = -1
-}
-
-
 
 function int_to_rgba(i)
 	-- Converts integer to RGB or RGBA values
@@ -395,7 +388,7 @@ function parse_color_tokens(s, t, c)
 end
 
 
-function lerp_color(val, mi, md, mx)
+function lerp_color(val, mi, md, mx, as_index)
     --printf("lerp_color: %s, %s, %s, %s", val, mi, md, mx)
     -- like in utils_xml, except returning a table I can do something with instead of ARGB
     local m1,m2
@@ -419,9 +412,16 @@ function lerp_color(val, mi, md, mx)
             --printf(" [%s] %s = %s [ %s , %s ] | diff: %s - normalize: %s", self.section, i, t[i], m1[i], m2[i], (m2[i] - m1[i]), 1 - normalize(val, m1[5], m2[5]))
         end
     end
-    return clr_tbl(t[1], t[2], t[3], t[4])
+    return as_index and t or clr_tbl(t[1], t[2], t[3], t[4])
 end
 
+wpo_thresholds = {
+	-- These are public and can be customized if need be
+	grn = 85,
+	yel = 60,
+	orn = 20,
+	red = -1
+}
 
 function get_state_color(state, mode, args)
 	args 		= args or {}
@@ -446,8 +446,8 @@ function get_state_color(state, mode, args)
 	if (mode < 0) then
 		-- Mode -1: boolean
 		color 		= to_bool(state) and (
-			(args.colors and args.colors.clr_true or color_tokens.clr_grn) or
-			(args.colors and args.colors.clr_false or color_tokens.clr_red)
+			(args.colors and args.colors.clr_true or state_colors.clr_rg_good) or
+			(args.colors and args.colors.clr_false or state_colors.clr_rg_bad)
 		)
 	else
 		state 		= tonumber(state) or 0
@@ -463,7 +463,7 @@ function get_state_color(state, mode, args)
 		    		(wc > 1) and col.clr_weight_over or
 		    		(wc > 0) and col.clr_weight_high or
 		    		col.clr_weight_ok
-		    ) or ""
+		    )
 		elseif (mode > 1) or args.crit then
 
 			-- Mode 2: Battery power
@@ -471,7 +471,7 @@ function get_state_color(state, mode, args)
 			local crit 	= ((tonumber(state) or 0) * 0.01) < (args.crit or 0.05)
 	        color 		= crit and col.clr_wpo_red or col.clr_battery
 	        r1			= crit and 1 or 0
-		elseif mode > 1 then
+		elseif (mode > 0) then
 			-- WPO parts
 			-- Accepts state values -1 to 100
         	if (state >= (wpo.grn or args.t_wpo_grn or 85)) then
@@ -491,12 +491,13 @@ function get_state_color(state, mode, args)
 	            color 	= lerp_color( state,
 	             	args.min or col.clr_cnd_min,
 	             	args.mid or col.clr_cnd_mid,
-	             	args.max or col.clr_cnd_max
+	             	args.max or col.clr_cnd_max,
+	             	true
 	            )
 	        end
 		end
 	end
-    return color, r1, r2
+    return csv_argb_to_tbl(color), r1, r2
 end
 
 -- =======================================================================

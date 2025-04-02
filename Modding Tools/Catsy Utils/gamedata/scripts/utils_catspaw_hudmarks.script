@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.4"
-release_date    = 20250331
+script_version  = "0.7.5"
+release_date    = 20250402
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -647,8 +647,15 @@ end
 function HUDMarkerManager:GetBaseMarkPos(mark)
     if not mark then return end
     if mark.locked_world_pos then return mark.locked_world_pos end
-    local obj = mark.id and get_game_object(mark.id)
-    return mark:GetBonePos(mark.args.bone, obj) or get_object_center(nil, obj) or nil
+    local pos
+    if mark.args.bone then
+        local obj = mark.id and get_game_object(mark.id)
+        pos = mark:GetBonePos(mark.args.bone, obj)
+    end
+    if not pos then
+        pos = get_object_center(mark.id)
+    end
+    return pos or nil
 end
 
 function HUDMarkerManager:OnscreenCheck()
@@ -1352,15 +1359,14 @@ function UIHUDMarker:GetBonePos(bone, obj)
     return obj and bone and utils_obj.safe_bone_pos(obj, bone)
 end
 
-function UIHUDMarker:GetBasePos(obj)
-    obj = obj or (self.id and get_game_object(self.id))
-    return self.args.bone and self:GetBonePos(self.args.bone, obj) or get_object_center(nil, obj) or nil
+function UIHUDMarker:GetBasePos()
+    local obj = self.id and get_game_object(self.id)
+    return obj and (self.args.bone and self:GetBonePos(self.args.bone, obj) or get_object_center(nil, obj)) or nil
 end
 
-function UIHUDMarker:GetPos(pos_adjust, obj)
+function UIHUDMarker:GetPos(pos_adjust)
     if self.locked_world_pos then return self.locked_world_pos end
-    local obj = obj or get_game_object(self.id)
-    local pos = self:GetBasePos(obj)--self.locked_world_pos or self:GetBonePos(self.args.bone, obj) or get_object_center(self.id)--(se_obj and se_obj.position)
+    local pos = self:GetBasePos()--self.locked_world_pos or self:GetBonePos(self.args.bone, obj) or get_object_center(self.id)--(se_obj and se_obj.position)
     local adjtxt = ""
     if pos and pos_adjust then
         adjtxt = debug_dump and string.format("\n* Was: %s,%s,%s | Adjusted by: %s,%s,%s", pos.x, pos.y, pos.z, pos_adjust.x, pos_adjust.y, pos_adjust.z) or ""
@@ -1455,7 +1461,7 @@ function UIHUDMarker:GetMarkerStatic(element)
 end
 
 function UIHUDMarker:OnscreenCheck()
-    local pos           = self:GetBasePos(mark)
+    local pos           = self:GetBasePos()
     self.screen_check   = world_to_ui(pos)
     self.killswitched   = not self.screen_check
     if self.killswitched and self.is_shown then
