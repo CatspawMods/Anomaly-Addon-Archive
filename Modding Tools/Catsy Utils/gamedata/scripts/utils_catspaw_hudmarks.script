@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.5"
-release_date    = 20250402
+script_version  = "0.7.6"
+release_date    = 20250403
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -474,7 +474,6 @@ function HUDMarkerManager:__init()
     self.hover_dist         = 2
     self.best_hover_id      = nil
     self.best_hover_dp      = 0
-    self.index_chunks       = 5
 end
 
 function HUDMarkerManager:RegisterCallbacks()
@@ -504,7 +503,6 @@ function HUDMarkerManager:actor_on_update()
     self.next_update        = time_global() + (self.update_int or 15)
     self:Update()
 end
-
 
 function HUDMarkerManager:actor_on_update_pickup(obj)
     --vl("[HUDMarkerManager:actor_on_update_pickup]")
@@ -592,7 +590,7 @@ function HUDMarkerManager:DelMarker(mark_id)
     --vl("[HUDMarkerManager:DelMarker] m_id: %s", mark_id)
     if not (mark_id and markers[mark_id]) then return end
     nearest[markers[mark_id].id or 0] = nil
-    markers[mark_id]:Destroy(true)
+    markers[mark_id]:Destroy(true, "shutdown by mark manager")
     markers[mark_id] = nil
 end
 
@@ -630,55 +628,7 @@ function HUDMarkerManager:HoverTolerance(mark)
 
 end
 
-function HUDMarkerManager:RefreshMarkerIndex()
-    self.marker_index = self.marker_index or {}
-    local i = 1
-    table.sort(self.markers)
-    for k,v in pairs(self.markers) do
-        self.marker_index[i] = k
-    end
-end
-
-function HUDMarkerManager:UpdateMarkerIndex()
-    self.marker_index   = self.marker_index or {}
-    self.last_index     = self.last_index or 1
-end
-
-function HUDMarkerManager:GetBaseMarkPos(mark)
-    if not mark then return end
-    if mark.locked_world_pos then return mark.locked_world_pos end
-    local pos
-    if mark.args.bone then
-        local obj = mark.id and get_game_object(mark.id)
-        pos = mark:GetBonePos(mark.args.bone, obj)
-    end
-    if not pos then
-        pos = get_object_center(mark.id)
-    end
-    return pos or nil
-end
-
-function HUDMarkerManager:OnscreenCheck()
-    self:UpdateMarkerIndex()
-    for i = 0 + self.last_index, self.index_chunks do
-        local mark_id       = self.marker_index[i]
-        local mark          = self.markers[mark_id]
-        local pos           = mark:GetBasePos()
-
-        mark.managed_pos    = world_to_ui(pos)
-        mark.killswitched   = not mark.managed_pos
-        if mark.killswitched and mark.is_shown then
-            mark:HideAll("HMM killswitch")
-        end
-        i = i + 1
-    end
-    self.last_index = self.last_index + self.index_chunks
-end
-
 function HUDMarkerManager:Update()
-    if self.check_onscreen then
-        self:OnscreenCheck()
-    end
     for k,v in pairs(markers) do
         if v.managed_updates and not (v.killswitched or v.destroying) then
             v:Update()
@@ -1020,7 +970,7 @@ function UIHUDMarker:InitSettings(args)
         local level_name= se_obj and alife():level_name(game_graph():vertex(se_obj.m_game_vertex_id):level_id())
         if level_name ~= level.name() and not self.living_thing then
             vl("%s se_obj level name %s is not actor map %s, destroying marker", se_obj and se_obj:name() or "Missing", level_name, level.name())
-            self:Destroy()
+            self:Destroy(nil, "different map")
         return end
     end
 
@@ -1143,11 +1093,11 @@ function UIHUDMarker:InitMarker()
     get_hud():AddDialogToRender(self)
     self.init_time = time_global()
 
-    vl("[UIHUDMarker:InitMarker][%s] complete at %s | hint %s", self.mark_id, self.init_time, self.name)
+    local _ = (DEV_DEBUG or debuglogs) and printf("[UIHUDMarker:InitMarker][%s] complete at %s | hint %s", self.mark_id, self.init_time, self.name)
 end
 
 
-function UIHUDMarker:Destroy(managed)
+function UIHUDMarker:Destroy(managed, reason)
     if self.destroying then return end
     if (not managed) and hmm and hmm.markers and self.mark_id and hmm.markers[self.mark_id] then
         vl("[UIHUDMarker:Destroy][%s] Marker is managed, passing call to hud_mark_manager():DelMarker first", self.mark_id)
@@ -1155,7 +1105,7 @@ function UIHUDMarker:Destroy(managed)
         return
     end
     self.destroying = true
-    vl("[UIHUDMarker:Destroy][%s] HUD Marker", self.mark_id)
+    local _ = (DEV_DEBUG or debuglogs) and printf("[UIHUDMarker:Destroy][%s] HUD Marker %s", self.mark_id, reason and ("| " .. reason) or  "")
     if paw and self.id then paw.hide_hud_pin(self.id) end
     if self.func_on_destroy then
         vl("[UIHUDMarker:Destroy] Executing custom on_destroy functor %s", self.func_on_destroy)
@@ -1204,7 +1154,7 @@ function UIHUDMarker:physic_object_on_death_callback(victim, killer)
     --vl("[%s] UIHUDMarker:physic_object_on_death_callback")
     if victim and victim:id() and (victim:id() == self.id) then
         --vl("Destroying marker for %s (%s)", self.name, self.id)
-        self:Destroy()
+        self:Destroy(nil, "physic_object_on_death_callback")
     end
 end
 
@@ -1223,12 +1173,14 @@ end
 
 function UIHUDMarker:server_entity_on_unregister(se_obj, type_name)
     if self.id and se_obj and (se_obj.id == self.id) then
-        self:Destroy()
+        self:Destroy(nil, "server_entity_on_unregister")
     end
 end
 
 
-function UIHUDMarker:actor_on_net_destroy() self:Destroy() end
+function UIHUDMarker:actor_on_net_destroy()
+    self:Destroy(nil, "actor_on_net_destroy")
+end
 
 
 function UIHUDMarker:actor_on_item_take(obj)
@@ -1262,7 +1214,7 @@ function UIHUDMarker:actor_on_item_take(obj)
 
                 if (self.anim_take_prog == 1) then
                     vl("Take animation for %s completed at %s",self.mark_id,time_global())
-                    self:Destroy()
+                    self:Destroy(nil, "item taken, animation complete")
                     return true
                 end
                 self.anim_take_prog = math.min(1, normalize(time_global(), self.anim_take_start, self.anim_take_end))
@@ -1297,7 +1249,8 @@ end
 function UIHUDMarker:ValidateMarkerServerObj()
     local se_obj = self.id and alife_object(self.id)
     if (not se_obj) and not (self.locked_world_pos or self.locked_screen_pos) then
-        self:Destroy()
+        self:Destroy(nil, "no valid server object")
+        return
     end
     return se_obj
 end
@@ -1518,9 +1471,10 @@ function UIHUDMarker:Update()
 
 
     local se_obj, obj, pin
-    if not (self.locked_world_pos or self.locked_screen_pos) then
+    if not (self.locked_world_pos or self.locked_screen_pos or self.skip_seobj_check) then
         se_obj        = self:ValidateMarkerServerObj()
-        if self.destroying then return end
+
+        if self.destroying or not se_obj then return end
 
         obj           = id and get_game_object(id)
         pin           = paw and self.is_pin and id and paw.pins and paw.pins[id]
@@ -1528,7 +1482,7 @@ function UIHUDMarker:Update()
 
         if ((not obj) or (self.is_pin and not pin)) then
             vl("Invalid pin or game/server object, destroying HUD marker for pin %s | obj %s | se_obj %s", id or self.name or self.mark_id, obj and "exists" or nil, se_obj and "exists" or nil)
-            self:Destroy()
+            self:Destroy(nil, "invalid object or pin")
             return
         end
     end
@@ -1537,7 +1491,7 @@ function UIHUDMarker:Update()
     local dist      = mark_pos and db.actor:position():distance_to(mark_pos) or 1
     -- Destroy marker if the object falls outside of its min/max "end" distances
     if self.near_end_dist and ((dist < self.near_end_dist) or (dist > self.far_end_dist)) then
-        self:Destroy()
+        self:Destroy(nil, "end distance reached")
         return
     elseif self.near_hide_dist and (dist < self.near_hide_dist) then
         self:HideAll("too close")

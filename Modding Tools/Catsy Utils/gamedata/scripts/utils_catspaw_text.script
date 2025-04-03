@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.8.3"
-release_date    = 20250402
+script_version 	= "1.8.4"
+release_date    = 20250403
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -673,24 +673,25 @@ function safename(id)
         end
         vl("%s is NPC squad with faction %s: %s", nameid(name, id), comm, text)
     elseif IsInvbox(nil,cls) then
-        local obj 	= get_object_by_id(id)
-        local sec 	= obj and obj:section()
+    	vl("%s is an inventory box, checking for localization", nameid(name, id))
         text 		= get_stash_hint(id)
         --local pre 	= ""
         if name and (not text) or (text == "") then
+    	    local obj 	= get_object_by_id(id)
+	        local sec 	= obj and obj:section()
         	text 	= find_best_localization(obj, name, sec)
         end
 
         if (not text) or (text == name) then
+        	text = nil
         	if name then 
 	            if name:find("smart_terrain") and name:find("_box") then
 	                local smartname = name:sub(1,-5)
 	                local smartloc 	= "st_"..smartname.."_name"
 	                smartname 		= gts(smartloc)
 	                if smartloc ~= smartname then
-	                	local sname = str_explode(smartname, ".")
+	                	local sname = str_explode(smartname, "%. ")
 	                	text 		= (sname[2] or sname[1])
-	                	--pre 		= smartname:gsub("%."," -") .. ": "
 	                end
 	            end
 	        end
