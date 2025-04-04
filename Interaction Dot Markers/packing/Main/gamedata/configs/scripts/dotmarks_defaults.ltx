@@ -1,0 +1,805 @@
+; Interaction Dot Markers (DotMarks)
+; Main configuration settings
+; Loaded on startup by: dotmarks_main.load_file_data()
+; Further massaging done by ui_hud_dotmarks.parse_file_data()
+; =================================================================================
+
+; All of the config settings for DotMarks are stored in the ui_hud_dotmarks.cfg 
+; table. This main table loads all of its values from [default_settings] below, and 
+; will dynamically create and populate subtables based on the [setting_tables] and 
+; its related sections below.
+
+; =================================================================================
+[setting_tables]
+; A list of tables to instantiate and populate with values at runtime
+; Never remove or alter ANY content in this section, you WILL crash your game
+blacklisted_clsids
+blacklisted_ids
+blacklisted_kinds
+blacklisted_sections
+bones
+breakable_box_visuals
+colors
+display_cases
+door_visuals
+dotmark_preset
+grenade_ammo_clsids
+in_pickup_range
+invboxes
+kind_lookup
+manual_use
+markers
+mcm_paths
+monitors
+notable_npcs
+tutorial_hints
+prompts
+racked_items
+scan
+section_lookup
+service_icons
+setting_icons
+smokables
+state_conds
+task_icons
+tex
+useless_shit
+vendors
+weight_colors
+
+[template_tables]
+; Like above, but loaded first and are populated with the section by the same name
+; These can be used as values in another table, and load_file_data will load the
+; contents of the "template" table by that name instead.
+
+; At the moment in DotMarks it's mostly used to set apart the active swap property 
+; lists.
+swap_door
+swap_dotactive
+swap_service
+swap_stash
+swap_talk
+swap_task_pri
+swap_task_sec
+
+; =================================================================================
+[default_settings]
+; Any setting here will be loaded as part of the main cfg table
+; Any non-table key in the cfg table that is defined in the mcm_paths table 
+; below will query MCM during every on_option_change for an override (if any)
+scan_start_delay            = 0.1
+; Delay in seconds after actor_on_first_update before scanning
+near_scan_interval          = 104
+; Interval in ms between nearby-object scans
+; Unusual numbers are chosen for all intervals as a way of avoiding stacking updates
+early_scan_interval         = 2457
+; Interval in ms between faraway-object scans
+skill_upd_interval          = 29711
+; Interval in ms between Skill System updates
+; These can be very infrequent, since skill level-ups are usually rare
+tut_check_interval 			= 49
+; Interval in ms between tutorial checks, needs to be responsive
+near_scan_radius            = 4
+; Radius in meters of the near scan (affects many other things)
+early_scan_radius           = 2
+; Radius in meters beyond the near scan for the early scan
+use_skill_system            = true
+; Enable Skill System integration
+haru_skill_name             = scavenging
+; Name of related skill
+haru_skill_coef             = 0.2
+; Multiplier to near_scan_radius bonus range per skill level
+mutant_decay_time 			= 7200
+; Age after which a mutant corpse "decays" and cannot be looted
+;bind_sec_interact 			= 22
+; DIK code of alternate interact keybind
+; When commented out like this, DotMarks will try to default to your use keybind
+modk_sec_interact 			= 0
+; Modifier key of alt interact
+imod_sec_interact 			= 2
+; Input mode of alt interact
+; 0 - simple press
+; 1 - double-tap
+; 2 - long press/hold
+sec_interact_dist 			= 2.5
+; Distance in meters of the alt interact (don't increase, things may break)
+interact_uifile 			= ui_dotmarks.xml
+; Contains UI element definitions
+marker_dotmark 				= ui_catsy_marker_intdot
+; Texture for the marker dots themselves
+marker_dotactive 			= ui_catsy_marker_dotactive
+; Texture for the "active" object that currently has interact focus
+main_drop_texture 			= ui_dotmarks_main_drop
+; Texture used for the main prompt drop shadow
+icon_sp_fave_texture 		= ui_catsy_icon_sortplus_fave
+icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
+; Textures for Sorting Plus integration
+target_lenience 			= 0.95
+; How far from center the crosshair can be for old targeting method
+; Need to look into whether and how much this is still needed
+fddar_multipickup 			= false
+fddar_pickup_anim 			= false
+fdda_pickup_anim 			= false
+; These should get populated at runtime with the current values from FDDA's MCM settings
+item_use_delay 				= 0.75
+; Delay between taking an item and trying to use it 
+; Required to give FDDA pickup animation time to complete
+long_press_delay 			= 1000
+; Inputs on the primary interact will be ignored for this many ms after a completed long press of the same
+popin_anim_dur 				= 500
+; Duration of the elastic "pop-in" animation effect when switching item focus, zero disables
+alti_show_during_anim 		= true
+; Whether to show prompts during FDDA animations
+alti_busy_during_anim 		= true
+; Whether visible prompts are disabled during FDDA animations
+hide_interaction_dots 		= false
+; Disable showing dots (or other marker icons) at all
+hide_connecting_line 		= false 
+; Disable the animated white line that appears
+hide_pri_interact_ui 		= false
+; Disable the replacement primary interact UI
+; Note that if you enable this option and hide the vanilla UI, you may not have interact 
+; prompts at all! I try to prevent this, but it's not my fault if you do silly things 
+; with the settings.
+hide_sec_interact_ui 		= false
+; Disable secondary action prompts and their actions
+hide_van_interact_ui		= true
+; Disable the vanilla interaction prompts
+hide_drop_shadow 			= false
+; Disable the drop shadow beneath prompts
+pri_use_x_offset 			= -10
+pri_use_y_offset 			= 28
+sec_use_x_offset 			= -10
+sec_use_y_offset 			= 48
+; Screen positions for the primary and secondary interact prompts
+; By default these are measured from the attached interaction dot
+fixed_screen_pos 			= false
+; If enabled, screen positions will instead be measured from the upper left of the screen
+; These are canvas coordinates so 1024x768
+keybind_bg_style 			= 3
+; Visual style for the "keyboard key" icons used as background for the name of the bound key
+; 	0 = no icon
+;	1 =	white outline
+; 	2 = black and white 3D
+; 	3 = worn appearance 3D
+font_main_prompt 			= 2
+; Font to use for the main prompt text
+; The UI tries to adapt, but some fonts work better than others
+font_item_card				= 0
+; Font to use for the item card text
+; The default small font has no Cyrillic support, but it's the only one of its size
+ui_scale 					= 1
+; Multiplier for UI element size and position calculations
+; WIP, not enabled yet
+interact_drop_alpha 		= 0.65
+; Opacity of the interaction drop shadows
+dot_marker_size 			= 1
+; Scale multiplier for the size of the dot markers
+bodies_use_paw_patches 		= false
+; Integrates with my PAW addon to use its hi-res faction patch icons
+prompt_fade_in_time 		= 150
+; Time in ms for the fade-in effect on prompts
+prompt_fade_out_time 		= 150
+; Time in ms for the fade-out effect
+tutorial_prompt_x 			= 512
+tutorial_prompt_y 			= 600
+; Screen pos for the "tutorial" prompts at the bottom of the screen
+disable_icon_services 		= false
+; Disables the special icon used when interacting with a service NPC
+disable_icon_tasks 			= false
+; Disables the special task marker icon
+disable_icon_targetdot 		= false
+; Disable the ringed dot that a dotmark changes to when active
+disable_icon_talk 			= false
+; Disables the special icon used for talking to other stalkers
+disable_icon_box 			= false
+; Disables the special "breakable item" icon used for physics boxes
+disable_icon_boom 			= false
+; Disables the special icon used for some explosive objects
+disable_icon_door 			= false
+; Disables the special icon used for doors
+sp_hide_junk_items 			= true
+; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
+sp_flag_favejunk 			= true
+; If Sorting Plus is installed, dot markers for favorited items will be flagged with an appropriate icon
+hidden_show_prompts 		= true
+; Controls whether prompts still appear if a marker is hidden because of sp_hide_junk_items or hide_interaction_dots
+hidden_marks_on_disabled 	= true
+; Disabled object classes (from the scan table below) will still have a marker generated, but hidden
+; If this option is false, no marker will be generated at all, and thus no interaction prompts are possible
+wheel_cycles_pickups 		= true
+; Mouse wheel cycles through targeted pickup, if there is more than one in range
+snd_path_blip 				= catspaw\paw_blip
+; Subtle UI sound effect
+disable_all_sounds 			= false
+; Disable sound effects
+bodies_use_mpda_rules 		= true
+; If enabled, body markers will use the same visibility rules as bodies in Milspec PDA
+show_multi_uses 			= true
+; Append the number of uses to the name of multi-use items with more than one remaining charge
+show_item_condition 		= true
+; Shows the item's percentage condition suffixed to the item name, if applicable
+show_item_charge 			= true
+; Shows the item's percentage of battery charge suffixed to the item name, if applicable
+show_condition_color 		= true
+; Changes the color of the condition text based on the condition
+show_stash_weight 			= true
+; Iterate stash contents and show their weight on the prompt - may have performance cost
+show_parts_weapons 			= true
+; If Utjan's Item UI is installed, shows part condition indicators for weapons
+show_parts_armor 			= true
+; If Utjan's Item UI is installed, shows part condition indicators for outfits and headgear
+parts_wpo_colors 			= true
+; Uses Weapon Parts Overhaul condition color thresholds
+parts_dot_sep_width 		= 1
+; Spacing between the part condition dots
+parts_dot_pos_x 			= -7
+parts_dot_pos_y				= -4
+; Position of the part condition indicator, relative to the end of the prompt
+show_item_card 				= true
+; Show an item card pop-up when targeting a pickup
+item_card_icon_sz   		= 7.5
+; Item card info icon size - e.g weight, value
+item_card_pos_x 			= -9.5
+item_card_pos_y 			= 2
+; Position of the item card, relative to the end of the prompt
+; The following are a bunch of settings related to fine-tuning the position of the
+; item card elements within their containers.
+item_card_icon_weight 		= ui_catsy_marker_weight
+item_card_icon_value 		= ui_catsy_marker_ruble
+item_card_text_y    		= 1.5
+; Adjust vertical position of item card text
+item_card_elem_x    		= 7.5
+item_card_elem_y    		= 0
+item_card_elem_h    		= 10
+; Adjust position and height of the item card rows
+item_card_icon_x    		= 4
+item_card_icon_y    		= 0
+; Adjust position of the item card icons (weight, value)
+sp_icon_pos_x 				= 10
+sp_icon_pos_y				= 1
+; Adjust position of the Sorting Plus fave/junk icons
+bind_text_pos_x  			= 3
+bind_text_pos_y				= 2.5
+; Adjust position of the keybind text
+bind_char_scale 			= 5.825
+; Multiplied by the number of characters in the keybind text as part of the width of the icon
+; This value is tuned for the default font, Letterica16
+action_text_pos_x 			= 24
+action_text_pos_y 			= 3.5
+; Adjust position of the action text (e.g. "Pick up/use the thing")
+
+; =================================================================================
+; 	KILLSWITCHES
+; To enable any killswitch in-game, you can either set it using the debug menu, 
+; or use something like this in the console:
+
+; run_string ui_hud_dotmarks.cfg.killswitch_pickup = true
+
+; That would completely shut off any pickup handling until you set it to false or
+; reload your game/change maps.
+
+killswitch_all 				= false
+killswitch_pickup 			= false
+killswitch_markloop 		= false
+;killswitch_markers 			= false ; not implemented yet
+; =================================================================================
+warn_modded_exes 			= true
+; Displays an in-game tip if an outdated modded exes version is found, with an
+; informative error message about where to get current modded exes.
+
+; DotMarks does not officially support any version earlier than 20250306, and
+; more recent is better. If you are on an older version and want to force it to
+; run anyway, you can turn off this warning--but you are completely on your own, it
+; will probably crash, and I absolutely guarantee that many things will not work
+; well, if at all.
+; =================================================================================
+
+[tex]
+; Icon texture overrides for certain types to use instead of the default dot marker
+; Also used for active_swap icons
+Boxes 		= ui_catsy_marker_breakable
+Doors 		= ui_catsy_marker_door
+Stalkers 	= ui_catsy_marker_talk
+Explosive 	= ui_catsy_marker_explosive
+Stashes 	= ui_catsy_marker_stash
+; The tex table is mostly empty by default, but can be used to override the
+; icon texture used for most objects defined in the [scan] section below.
+
+[scan]
+; Defines which item categories exist, and which are scanned by default
+Stalkers 	= true
+Bodies      = true
+Ammo        = true
+Stashes     = true
+Weapons     = true
+Attachments = true
+Grenades    = true
+Explosive   = false
+Outfits     = true
+Headgear    = true
+Artefacts   = true
+Consumables = true
+Tools       = true
+Devices     = true
+Quest       = true
+Campfires   = true
+Misc    	= true
+Doors       = true
+Boxes       = false
+Workshops 	= true
+
+[dotmark_preset]
+; Static presets for the dot markers that get passed to utils_catspaw_hudmarks
+; The dotmark preset loads these static values and generates others
+; Careless edits here are likely to fuck up the way markers work, if anything still works at all
+xmlfile             = ui_hud_marker.xml
+texture             = ui_catsy_marker_intdot
+show_dist           = false ; disables always-on display of marker distance
+show_hint           = false ; disables always-on display of marker hint
+managed_hover       = true 	; tells marker manager to handle hover logic
+hint_on_hover       = false	; only show hint when this is best hovered marker (closest to crosshair)
+hover_dist 			= 3 	; distance in meters within which a mark can be hovered
+near_fade_dist      = 0 	; dotmarks shouldn't fade out when close
+near_hide_dist      = -1	; dotmarks shouldn't disappear completely when close
+near_end_dist       = -1	; dotmarks don't terminate on proximity
+far_hide_dist       = 0.5 	; dotmarks hide this far past the far_fade_dist (based on near_scan_radius)
+los_dist_min        = 0.15	; any closer than this and LOS is assumed true
+lost_los_dist 		= 0.5 	; LOS smoothing (LOS result cache) is disabled beyond this distance
+lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
+width               = 6		; texture width (in canvas units)
+height              = 6		; texture height (in canvas units)
+update_int          = 15	; update interval in ms for the marker itself
+skip_online_checks 	= true 	; Optimization, we can assume markers will always be online and on the same map
+skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
+skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
+
+[tutorial_hints]
+; Used internally to generate the appropriate text based on the active tutorial state
+; tutorial_name 				= localization_string_for_tutorial_prompt
+jup_b32_scanner 				= jup_b209_scanner_place_tips
+pri_b306_generator 				= pri_b306_generator_use
+jup_b206_plant 					= jup_b206_use_plant
+pas_b400_switcher 				= pas_b400_tip_switcher
+pri_a18_use_idol 				= pri_a18_use_idol
+jup_b209_monster_scanner_placed = jup_b209_scanner_place_tips
+jup_b9_heli_1 					= st_search_helicopter
+jup_b8_heli_4 					= st_search_helicopter
+jup_b10_ufo_tutor 				= jup_b10_ufo_searching_tips
+zat_b101_heli_5 				= st_search_helicopter
+zat_b28_heli_3 					= st_search_helicopter
+zat_b100_heli_2 				= st_search_helicopter
+zat_b33_snag_container 			= zat_b33_car_searching_tip
+tutorial_sleep 					= sleep_zone_tip
+tutorial_campfire_ignite 		= st_ignite_fire
+tutorial_campfire_extinguish 	= st_extinguish_fire
+bridge_down_red_forest 			= bridge_down_red_forest_tips
+bridge_stop_red_forest 			= bridge_stop_red_forest_tips
+bridge_up_red_forest 			= bridge_up_red_forest_tips
+
+[colors]
+; Will be ignored if the key doesn't begin with "clr_", to avoid clobbering non-color tokens
+; Fifth value in some is a threshold/breakpoint for internal use in condition color lerping
+; TODO: move the one-off colors in the config table here with careful find-replace
+
+; It's probably best not to mess with these unless you know what you're doing with ARGB values.
+
+clr_dmark_norm 	= 255,255,255,255
+; Base color of the marker itself - not yet used
+clr_wpo_red		= 255,196,18,18
+clr_wpo_orn 	= 255,238,153,26
+clr_wpo_yel 	= 255,255,255,118
+clr_wpo_grn 	= 255,107,207,119
+clr_missing 	= 255,70,60,60
+; Weapon Parts Overhaul condition threshold colors
+clr_cnd_min 	= 255,196,18,18,0
+clr_cnd_mid 	= 255,255,255,118,0.5
+clr_cnd_max 	= 255,107,207,119,1
+; Vanilla condition lerping colors
+clr_card_drop 	= 170,255,255,255
+; Sets alpha for the item card drop shadow
+clr_text_light 	= 255,240,240,240
+; Text color for light text on dark background (e.g. drop shadow)
+clr_text_busy	= 255,180,180,180
+; Text color for disabled prompts
+clr_text_dark	= 255,0,0,0
+; Text color for dark text on light background
+clr_key_hold	= 255,255,215,0
+; Color of the progress indicator that appears for longpress/key hold actions
+clr_battery 	= 255,86,196,209
+; Color of the battery charge bar
+clr_weight_ok 	= 255,255,255,255
+clr_weight_over = 255,255,50,0
+clr_weight_high = 255,200,150,0
+; Colors for inventory carry weight states
+
+[service_icons]
+; Active-swap icons used for service NPCs with an active interaction prompt
+trader 		= ui_catsy_marker_trade
+mechanic	= ui_catsy_marker_mech
+medic		= ui_catsy_marker_medic
+barman		= ui_catsy_marker_trade
+guide 		= ui_catsy_marker_guide
+leader 		= ui_catsy_marker_leader
+
+[setting_icons]
+;disable_icon_targetdot 		= 
+disable_icon_box 			= Boxes
+disable_icon_door 			= Doors
+disable_icon_talk 			= Stalkers
+disable_icon_boom 			= Explosive
+
+[display_cases]
+; Containers with a section listed here will be treated as Hideout Furniture display cases
+placeable_arti_display 		= true
+placeable_weapon_rack 		= true
+placeable_pistol_shelf 		= true
+
+[useless_shit]
+; Section names of things like matches that shouldn't have a secondary interact
+; This probably needs many more entries than it currently has
+roubles
+box_matches
+compression_bag
+bolts_pack
+artefact_container
+explo_balon_gas
+explo_jerrycan_fuel
+explosive_mobiltank
+explosive_tank
+
+[task_icons]
+pri 		= ui_catsy_marker_task_pri
+sec 		= ui_catsy_marker_task_sec
+
+[swap_dotactive]
+texture 	= ui_catsy_marker_dotactive
+width       = 12
+height      = 12
+line_adj_h  = -11
+line_adj_x  = 3.25
+line_adj_y  = 10
+
+[swap_door]
+texture     = ui_catsy_marker_door
+width       = 20
+height      = 20
+line_adj_x  = 4
+line_adj_h  = -12
+line_adj_y  = 12
+
+[swap_stash]
+texture     = ui_catsy_marker_stash
+width       = 14
+height      = 14
+line_adj_h  = -13
+line_adj_x  = 3
+line_adj_y  = 12
+
+[swap_talk]
+texture     = ui_catsy_marker_talk
+width       = 16
+height      = 16
+line_adj_x  = 4
+line_adj_h  = -11
+line_adj_y  = 11
+
+[swap_service]
+width       = 18
+height      = 18
+line_adj_x  = 4
+line_adj_y  = 11
+line_adj_h  = -11
+
+[swap_task_pri]
+texture 	= ui_catsy_marker_task_pri
+width       = 18
+height      = 18
+line_adj_x  = 4
+line_adj_y  = 11
+line_adj_h  = -11
+
+
+[swap_task_sec]
+texture 	= ui_catsy_marker_task_sec
+width       = 18
+height      = 18
+line_adj_x  = 4
+line_adj_y  = 13
+line_adj_h  = -13
+
+; ================================================================================
+; 	DON'T TOUCH BELOW THIS LINE
+; ================================================================================
+; These are critical settings that allow the addon to function properly. They are
+; not intended to be customized, and there is almost no reason to do so except to
+; add support for new items from other addons, which is best done by the addon
+; author through DLTX. I can't help with anything that happens if you change them.
+
+[blacklisted_clsids]
+script_actor
+torrid_zone
+zone_ameba_s
+zone_bfuzz_s
+zone_galant_s
+zone_mbald_s
+zone_mincer_s
+zone_nograv_s
+zone_radio_s
+zone_torrid_s
+zone_acid_fog
+ameba_zone
+zone_bfuzz
+zone_dead
+zone_galantine
+zone_mosquito_bald
+zone_mincer
+nogravity_zone
+zone_radioactive
+zone_rusty_hair
+
+[grenade_ammo_clsids]
+; Defines which clsids are classified as GL ammo for the purposes of scan detection
+wpn_ammo_m209_s 	= true
+wpn_ammo_og7b_s 	= true
+wpn_ammo_vog25_s	= true
+wpn_ammo_m209   	= true
+wpn_ammo_og7b   	= true
+wpn_ammo_vog25 		= true
+
+[breakable_box_visuals]
+; Defines which object visuals are classified as breakable boxes, no other way to detect
+dynamics\box\box_wood_01 	= true
+;dynamics\box\box_wood_02 	= true ; this seems to pick up non-breakable boxes in Meadows
+; Need to confirm that
+dynamics\box\box_metall_01	= true
+
+[smokables]
+cigar
+cigar1
+cigar2
+cigar3
+cigarettes
+cigarettes_lucky
+cigarettes_russian
+joint
+marijuana
+tobacco
+hand_rolling_tobacco
+
+[manual_use]
+joint
+
+[door_visuals]
+; Defines vertical marker pos offsets based on the door's visual model
+dynamics\door\door_trader 				= 0.6
+dynamics\door\shkaf_work_01_door		= 0
+dynamics\door\door_old_wood_120x240_01 	= 0
+dynamics\door\door_wood_130x250_01 		= 0
+dynamics\door\door_metal_220x260_01_l 	= -0.475
+dynamics\door\door_metal_220x260_01_r 	= -0.475
+
+[prompts]
+; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
+; Need to confirm if this is still needed after the hint_filter changes
+item_take 	= inventory_item_use
+npc_talk 	= character_use
+open_door 	= car_character_use
+close_door 	= tip_door_close
+ws_noaccess = st_tiski_no_info
+ws_use 		= st_tiski
+ws_repair 	= st_awr_tiski
+
+[kind_lookup]
+; More or less lifted entirely from the debug menu
+; For quicker lookup than iterating through the entire category-checking loop
+i_arty_junk   	= Artefacts
+i_arty     		= Artefacts
+ARTEFACT    	= Artefacts
+SCRPTART    	= Artefacts
+i_arty_cont     = Artefacts
+i_mutant_cooked = Consumables
+i_mutant_raw    = Consumables
+i_food    		= Consumables
+II_FOOD     	= Consumables
+S_FOOD      	= Consumables
+i_drink    		= Consumables
+II_BOTTL    	= Consumables
+i_medical    	= Consumables
+II_BANDG    	= Consumables
+II_MEDKI    	= Consumables
+II_ANTIR    	= Consumables
+i_device    	= Devices
+DET_SIMP    	= Devices
+DET_ADVA    	= Devices
+DET_ELIT    	= Devices
+DET_SCIE    	= Devices
+i_kit      		= Tools
+i_tool      	= Tools
+i_repair    	= Tools
+i_upgrade 	    = Tools
+i_part 	    	= Misc
+i_mutant_part   = Misc
+i_misc 	    	= Misc
+II_DOC      	= Misc
+EQ_PATCH    	= Misc
+II_ATTCH    	= Misc
+II_BTTCH    	= Misc
+D_FLALIT    	= Misc
+S_PDA       	= Misc
+D_PDA       	= Misc
+i_letter    	= Misc
+i_quest			= Quest
+o_helmet    	= Headgear
+E_HLMET     	= Headgear
+EQU_HLMET   	= Headgear
+i_mutant_belt   = Attachments
+i_attach     	= Attachments
+i_backpack   	= Attachments
+EQ_BAKPK    	= Attachments
+w_misc   		= Attachments
+WP_SCOPE    	= Attachments
+WP_SILEN    	= Attachments
+WP_GLAUN    	= Attachments
+S_WPN_MISC  	= Attachments
+WP_BINOC    	= Attachments
+II_BOLT     	= Attachments
+o_light 		= Outfits
+E_STLK      	= Outfits
+EQU_STLK    	= Outfits
+o_medium   		= Outfits
+o_sci   		= Outfits
+o_heavy   		= Outfits
+w_ammo        	= Ammo
+AMMO        	= Ammo
+AMMO_S      	= Ammo
+S_OG7B      	= Ammo
+S_VOG25     	= Ammo
+S_M209      	= Ammo
+w_melee     	= Weapons
+WP_KNIFE    	= Weapons
+w_pistol    	= Weapons
+WP_HPSA     	= Weapons
+WP_PM       	= Weapons
+WP_USP45    	= Weapons
+w_shotgun   	= Weapons
+WP_ASHTG    	= Weapons
+WP_BM16     	= Weapons
+w_smg       	= Weapons
+w_rifle     	= Weapons
+WP_AK74     	= Weapons
+WP_GROZA    	= Weapons
+WP_LR300    	= Weapons
+WP_VAL      	= Weapons
+w_sniper    	= Weapons
+WP_SVD      	= Weapons
+WP_SVU      	= Weapons
+w_explosive 	= Weapons
+WP_RG6      	= Weapons
+WP_RPG7     	= Weapons
+G_F1_S      	= Weapons
+G_RGD5_S    	= Weapons
+G_F1 	    	= Weapons
+G_RGD5 	    	= Weapons
+
+[section_lookup]
+hand_watch      	= Devices
+wpn_binoc_inv   	= Devices
+lead_box        	= Tools
+csky_patch      	= Misc
+dolg_patch      	= Misc
+ecolog_patch    	= Misc
+freedom_patch   	= Misc
+stalker_patch   	= Misc
+bandit_patch    	= Misc
+monolith_patch  	= Misc
+army_patch      	= Misc
+killer_patch    	= Misc
+renegade_patch  	= Misc
+isg_patch       	= Misc
+greh_patch      	= Misc
+af_misery_bread 	= Artefacts
+explosive_mobiltank	= Tools
+explosive_tank 		= Tools
+
+[bones]
+; List of valid bones to use for positioning
+bone01
+joint
+joint1
+link
+lock
+patch
+wpn_body
+
+; =================================================================================
+[mcm_paths]
+; The paths below allow better iteration through the config table to get MCM settings.
+; Paths with "/" at the end will have the key name appended to get the final path
+; Otherwise the path will be used as-is, which allows support for other addon settings
+; =================================================================================
+; Main menu
+show_item_card  		= dotmarks/dmarkmain/
+show_item_charge 		= dotmarks/dmarkmain/
+show_multi_uses 		= dotmarks/dmarkmain/
+sp_flag_favejunk		= dotmarks/dmarkmain/
+show_item_condition 	= dotmarks/dmarkmain/
+show_condition_color 	= dotmarks/dmarkmain/
+show_stash_weight 		= dotmarks/dmarkmain/
+wheel_cycles_pickups 	= dotmarks/dmarkmain/
+dot_marker_size 		= dotmarks/dmarkmain/
+interact_drop_alpha 	= dotmarks/dmarkmain/
+; =================================================================================
+; Secondary menu
+bind_sec_interact 		= dotmarks/dmarksec/
+modk_sec_interact 		= dotmarks/dmarksec/
+imod_sec_interact 		= dotmarks/dmarksec/
+long_press_delay 		= dotmarks/dmarksec/
+; =================================================================================
+; Other addons menu
+use_skill_system 		= dotmarks/dmarkmods/
+bodies_use_paw_patches	= dotmarks/dmarkmods/
+bodies_use_mpda_rules 	= dotmarks/dmarkmods/
+alti_show_during_anim 	= dotmarks/dmarkmods/
+alti_busy_during_anim 	= dotmarks/dmarkmods/
+item_use_delay	 		= dotmarks/dmarkmods/
+sp_hide_junk_items		= dotmarks/dmarkmods/
+sp_icon_pos_x 			= dotmarks/dmarkmods/
+sp_icon_pos_y 			= dotmarks/dmarkmods/
+parts_dot_pos_x 		= dotmarks/dmarkmods/
+parts_dot_pos_y 		= dotmarks/dmarkmods/
+haru_skill_coef 		= dotmarks/dmarkmods/
+skill_upd_interval 		= dotmarks/dmarkmods/
+haru_skill_name 		= dotmarks/dmarkmods/
+; =================================================================================
+; Objects menu
+disable_icon_tasks 		= dotmarks/dmarkobjs/
+disable_icon_boom		= dotmarks/dmarkobjs/
+disable_icon_box		= dotmarks/dmarkobjs/
+disable_icon_door		= dotmarks/dmarkobjs/
+disable_icon_talk		= dotmarks/dmarkobjs/
+disable_icon_services	= dotmarks/dmarkobjs/
+disable_icon_stash		= dotmarks/dmarkobjs/
+; =================================================================================
+; Advanced menu
+; Bloated, a bunch of these probably need their own menu
+hide_interaction_dots 	= dotmarks/dmarkadv/
+hide_connecting_line 	= dotmarks/dmarkadv/
+hide_pri_interact_ui 	= dotmarks/dmarkadv/
+hide_sec_interact_ui 	= dotmarks/dmarkadv/
+hide_van_interact_ui 	= dotmarks/dmarkadv/
+pri_use_x_offset 		= dotmarks/dmarkadv/
+pri_use_y_offset 		= dotmarks/dmarkadv/
+sec_use_x_offset 		= dotmarks/dmarkadv/
+sec_use_y_offset 		= dotmarks/dmarkadv/
+fixed_screen_pos 		= dotmarks/dmarkadv/
+near_scan_interval 		= dotmarks/dmarkadv/
+early_scan_interval 	= dotmarks/dmarkadv/
+near_scan_radius 		= dotmarks/dmarkadv/
+early_scan_radius 		= dotmarks/dmarkadv/
+keybind_bg_style 		= dotmarks/dmarkadv/
+hidden_show_prompts		= dotmarks/dmarkadv/
+prompt_fade_in_time		= dotmarks/dmarkadv/
+prompt_fade_out_time	= dotmarks/dmarkadv/
+font_main_prompt 		= dotmarks/dmarkadv/
+font_item_card 			= dotmarks/dmarkadv/
+item_card_icon_sz 		= dotmarks/dmarkadv/
+item_card_pos_x 		= dotmarks/dmarkadv/
+item_card_pos_y 		= dotmarks/dmarkadv/
+;item_card_text_y 		= dotmarks/dmarkadv/ ; not in MCM
+;item_card_elem_x 		= dotmarks/dmarkadv/
+;item_card_elem_y 		= dotmarks/dmarkadv/
+;item_card_elem_h 		= dotmarks/dmarkadv/
+;item_card_icon_x 		= dotmarks/dmarkadv/
+;item_card_icon_y 		= dotmarks/dmarkadv/
+popin_anim_dur 			= dotmarks/dmarkadv/
+; =================================================================================
+; From other addons
+fddar_multipickup 		= fddar/pickup/multipickup
+fddar_pickup_anim 		= fddar/pickup/enable
+fdda_pickup_anim 		= EA_settings/take_item_anim
+show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
+show_parts_armor		= item_icon_info/part_dots/show_on_armor
+parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
+parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
+parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange

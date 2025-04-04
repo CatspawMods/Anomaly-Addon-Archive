@@ -1,0 +1,147 @@
+-- ======================================================================
+--[[	Game Tutorial Hooks and Monitors - DXML Module
+-- ===================================================================--]]
+script_name 	= "modxml_tutorial_hooks"
+script_version 	= "1.2"
+release_date    = 20250307
+--[[======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- =======================================================================	
+	DEPENDENCIES:
+	This script requires the on_xml_read cache feature of the 20250228 
+	modded exes update. Get it here:
+
+	https://github.com/themrdemonized/xray-monolith
+-- =======================================================================	
+	PURPOSE:
+	Many game prompts--such as "use" prompts for campfires, sleep zones, 
+	and quest-specific interacts--are displayed using the game's 
+	"tutorial" system, which is defined in game_tutorials.xml. The text 
+	container that it writes to is NOT accessible to scripts, and there 
+	is no scripted hook to know which tutorial is active or when they 
+	start/stop.
+
+	The purpose of this script is to implement those hooks. It adds new
+	in/out functors to every node in ui\game_tutorials.xml that watches
+	for the "use" key (the <guard_key> child node). When a tutorial
+	begins or ends, the functors will fire to update the monitors table.
+
+	You can get the state of any tutorial like so:
+
+	modxml_tutorial_hooks.monitors[tutorial_name]
+
+	Where tutorial_name is the name of the node in game_tutorials.xml,
+	e.g. "tutorial_campfire_ignite" for the prompt to light a campfire.
+-- =======================================================================	
+	If another script sets replacements_enabled to false during runtime,
+	it should cause the on_xml_read to abort out, thus disabling the 
+	changes made by this script the next time a tutorial loads.
+-- =======================================================================
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+	Give your script a different name. That's all I ask.
+-- ====================================================================]]
+
+local exes_version 		= MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version())
+local dxml_cache_enabled= exes_version and (exes_version >= 20250228)
+local do_once 			= false
+local game_tutorials 	= "ui\\game_tutorials.xml"
+local xml_table
+
+-- Bomb out if your modded exes version is too old to support DXML cache
+assert(dxml_cache_enabled,
+"! ERROR: Game Tutorial Hooks and Monitors requires the DXML cache feature added by the 20250228 modded exes update. Get it here:\n" ..
+"https://github.com/themrdemonized/xray-monolith\n" ..
+"You really don't want to try using this without it.\n" ..
+"It will cause a severe lag every time you approach a campfire or sleep zone."
+)
+
+replacements_enabled 	= true
+monitors 				= {}
+
+function get_monitoring_functors(tut)
+	if not tut then return end
+	return tut and ([[
+		<function_on_start>modxml_tutorial_hooks.monitor_]] .. tut .. [[_start</function_on_start>
+		<function_on_stop>modxml_tutorial_hooks.monitor_]].. tut ..[[_stop</function_on_stop>
+		<main_wnd/>
+	]])
+end
+
+
+function query_element(xml_obj, str)
+	local res = xml_obj:query(str)
+    if res and res[1] then
+     	return res[1]
+    end
+end
+
+
+function on_xml_read()
+    RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj, flags)
+    	if not replacements_enabled then return end
+    	-- Killswitch, will take effect on next trigger if changed at runtime
+
+    	if xml_file_name ~= game_tutorials then return end
+    	if is_not_empty(flags) then
+    		-- Enable DXML cache feature
+    		flags.cache = true
+    	end
+
+		local _
+    	if do_once then
+    		--_ = DEV_DEBUG and printf("DXML for %s already ran once, passing back cached xml_table", script_name)
+    		xml_obj.xml_table.kids = xml_table.kids
+    		return
+    	end
+    	do_once = true
+
+       	_ = DEV_DEBUG and printf("Processing DXML functor hooks in %s for %s", xml_file_name, script_name)
+
+        local res = xml_obj:getRoot()
+        local root = res and res.kids
+
+        if root then
+        	local exceptions = {["totaliz_helper_mlr"]=true, ["credits_seq"]=true}
+        	-- These will cause errors if we try to process them like the others
+        	for k,v in pairs(root) do
+        		-- Iterate through each tutorial node
+        		local tut = str_explode(v.el:sub(2,#v.el), " ")[1]
+        		local textnode = (not exceptions[tut]) and query_element(xml_obj, tut .. " item guard_key")
+        		local nodetext = textnode and xml_obj:getText(textnode)
+        		if nodetext and (nodetext == "use") then
+        			-- the guard_key child node contains the text "use", meaning it traps that bind
+	            	monitors[tut] = {}
+					local text = get_monitoring_functors(tut)
+	            	local node = tut .. " item"
+					--_ = DEV_DEBUG and printf("game_tutorials_hooks: inserting functor block into node: %s\n* %s", node, text)
+					res = xml_obj:query(node)
+					if res then
+						-- Inject the XML block returned by get_monitoring_functors
+						xml_obj:insertFromXMLString(text, res[1], 1)
+					end
+					-- Procedurally generate in/out handler functions for each tutorial
+					this["monitor_" .. tut .. "_start"] = (
+						function() 
+							--_ = DEV_DEBUG and printf("Began tutorial state %s at %s", tut, time_global())
+							monitors[tut].state = true
+						end
+					)
+					this["monitor_" .. tut .. "_stop"] = (
+						function() 
+							--_ = DEV_DEBUG and printf("ended tutorial state %s at %s", tut, time_global())
+							monitors[tut].state = false
+						end
+					)
+		        end
+            end
+        end
+        -- Cache the results
+        xml_table = xml_obj.xml_table
+    end)
+end

@@ -1,0 +1,116 @@
+<w>
+	<file name ="catsy\ui_dotmarks">
+		<texture id = "ui_catsy_marker_intdot" x="0" y="0" width="64" height="64" />
+		<texture id = "ui_catsy_marker_breakable" x="0" y="64" width="64" height="64" />
+		<texture id = "ui_catsy_marker_trade" x="0" y="128" width="64" height="64" />
+		<texture id = "ui_catsy_marker_talk" x="0" y="192" width="64" height="64" />
+		<texture id = "ui_catsy_marker_door" x="0" y="256" width="64" height="64" />
+		<texture id = "ui_catsy_marker_mech" x="0" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_guide" x="192" y="256" width="64" height="64" />
+		<texture id = "ui_catsy_marker_leader" x="256" y="256" width="64" height="64" />
+		<texture id = "ui_catsy_marker_stash" x="320" y="256" width="64" height="64" />
+		<texture id = "ui_catsy_marker_medic" x="192" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_dotactive" x="256" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_weight" x="320" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_ruble" x="384" y="320" width="64" height="64" />
+
+		<texture id = "ui_catsy_icon_sortplus_fave" x="448" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_icon_sortplus_junk" x="512" y="320" width="64" height="64" />
+
+		<texture id = "ui_catsy_marker_explosive" x="576" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_task_pri" x="704" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_marker_task_sec" x="768" y="320" width="64" height="64" />
+
+		<texture id = "ui_catsy_button_icon32_wht_e" x="830" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_button_icon32_wht_t" x="894" y="320" width="64" height="64" />
+		<texture id = "ui_catsy_button_icon32_wht_h" x="958" y="320" width="64" height="64" />
+
+		<texture id = "ui_catsy_button_worn80_e" x="1024" y="320" width="80" height="80" />
+		<texture id = "ui_catsy_button_worn80_t" x="1024" y="400" width="80" height="80" />
+		<texture id = "ui_catsy_button_worn80_d" x="1024" y="480" width="80" height="80" />
+		<texture id = "ui_catsy_button_worn80_h" x="1024" y="560" width="80" height="80" />
+
+		<texture id = "ui_dotmarks_main_drop" x="334" y="0" width="690" height="128" />
+		<texture id = "ui_dotmarks_card_drop" x="334" y="128" width="690" height="128" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v0" x="0" y="0" width="1" height="1" />
+		<texture id = "ui_catsy_keybind_bg_left_v0" x="0" y="0" width="1" height="1" />
+		<texture id = "ui_catsy_keybind_bg_center_v0" x="0" y="0" width="1" height="1" />
+		<texture id = "ui_catsy_keybind_bg_right_v0" x="0" y="0" width="1" height="1" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v1" x="64" y="0" width="128" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v1" x="64" y="0" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_center_v1" x="98" y="0" width="60" height="128" />
+		<texture id = "ui_catsy_keybind_bg_right_v1" x="158" y="0" width="34" height="128" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v2" x="64" y="128" width="128" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v2" x="64" y="128" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_center_v2" x="98" y="128" width="60" height="128" />
+		<texture id = "ui_catsy_keybind_bg_right_v2" x="158" y="128" width="34" height="128" />
+
+		<texture id = "ui_catsy_keybind_bg_single_v3" x="64" y="256" width="128" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v3" x="64" y="256" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_center_v3" x="98" y="256" width="60" height="128" />
+		<texture id = "ui_catsy_keybind_bg_right_v3" x="158" y="256" width="34" height="128" />
+
+<!-- Frame not currently working, InitFrame is like InitProgressBar and can't cope with hi-res textures -->
+
+		<texture id = "ui_catsy_keybind_frame_v3_lt" x="64" y="256" width="34" height="34" />
+		<texture id = "ui_catsy_keybind_frame_v3_t" x="98" y="256" width="60" height="34" />
+		<texture id = "ui_catsy_keybind_frame_v3_rt" x="158" y="256" width="34" height="34" />
+
+		<texture id = "ui_catsy_keybind_frame_v3_l" x="64" y="256" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_frame_v3_back" x="98" y="256" width="60" height="60" />
+		<texture id = "ui_catsy_keybind_frame_v3_r" x="158" y="256" width="34" height="128" />
+
+		<texture id = "ui_catsy_keybind_frame_v3_lb" x="64" y="256" width="34" height="34" />
+		<texture id = "ui_catsy_keybind_frame_v3_b" x="98" y="256" width="60" height="34" />
+		<texture id = "ui_catsy_keybind_frame_v3_rb" x="158" y="256" width="34" height="34" />
+
+
+		<texture id = "ui_catsy_longpress_full" x="194" y="2" width="10" height="126" />
+		<texture id = "ui_catsy_longpress_bigyellow" x="192" y="128" width="128" height="128" />
+		<texture id = "ui_catsy_line_white_45deg" x="219" y="0" width="100" height="86" />
+
+		<texture id = "ui_mcm_dotmarks_banner_main" x="0" y="400" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_sec" x="0" y="500" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_objs" x="0" y="600" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_adv" x="0" y="700" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_mods" x="0" y="1948" width="1024" height="100" />
+
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_gen" x="0" y="800" width="512" height="30" />		
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_head90" x="0" y="830" width="512" height="90" />
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_head140" x="0" y="920" width="512" height="140" />		
+		<texture id = "ui_mcm_dmarks_preview_static" x="0" y="1440" width="600" height="380" />
+
+
+		<texture id = "ui_catsy_messagebox_trans_frame_lt" x="0" y="830" width="8" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_t" x="8" y="830" width="496" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_rt" x="504" y="830" width="8" height="8" />
+
+		<texture id = "ui_catsy_messagebox_trans_frame_l" x="0" y="838" width="8" height="74" />
+		<texture id = "ui_catsy_messagebox_trans_frame_back" x="8" y="838" width="496" height="74" />
+		<texture id = "ui_catsy_messagebox_trans_frame_r" x="504" y="838" width="8" height="74" />
+
+		<texture id = "ui_catsy_messagebox_trans_frame_lb" x="0" y="912" width="8" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_b" x="8" y="912" width="496" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_rb" x="504" y="912" width="8" height="8" />
+
+
+
+		<texture id = "ui_mcm_dmarks_argb_a" x="514" y="990" width="31" height="31" />
+		<texture id = "ui_mcm_dmarks_argb_r" x="545" y="990" width="31" height="31" />
+		<texture id = "ui_mcm_dmarks_argb_g" x="576" y="990" width="31" height="31" />
+		<texture id = "ui_mcm_dmarks_argb_b" x="608" y="990" width="31" height="31" />
+
+
+		<texture id = "ui_mcm_dmarks_preview_frame" x="512" y="800" width="300" height="190" />		
+		<texture id = "ui_mcm_dmarks_preview_bg" x="0" y="1060" width="600" height="380" />		
+		<texture id = "ui_mcm_dmarks_preview_gun" x="1448" y="0" width="600" height="380" />		
+		<texture id = "ui_mcm_dmarks_preview_det" x="1448" y="380" width="600" height="380" />		
+		<texture id = "ui_mcm_dmarks_preview_med" x="1448" y="760" width="600" height="380" />		
+		<texture id = "ui_mcm_dmarks_preview_fav" x="1448" y="1140" width="600" height="380" />		
+
+	</file>
+</w>
+

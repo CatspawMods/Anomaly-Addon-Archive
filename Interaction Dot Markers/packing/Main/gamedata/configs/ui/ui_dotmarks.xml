@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<w>
+	<box width="0" height="0" stretch="1"/>
+
+	<alt_interact width="400" height="100" stretch="1" alignment="l">
+
+		<bindframe x="0" y="0" width="15" height="20" stretch="1" vert_align="c">
+			<texture>ui_catsy_keybind_frame_v3</texture>
+		</bindframe>
+
+		<prompt x="0" y="0" width="15" height="20" stretch="1" vert_align="c">
+			<texture>ui_catsy_keybind_bg_single_v0</texture>
+		</prompt>
+
+		<prompt_l x="0" y="0" width="5.3125" height="20" stretch="1" alignment="l">
+			<texture>ui_catsy_keybind_bg_left_v0</texture>
+		</prompt_l>
+		<prompt_c x="5.3125" y="0" width="9.375" height="20" stretch="1" alignment="l">
+			<texture>ui_catsy_keybind_bg_center_v0</texture>
+		</prompt_c>
+		<prompt_r x="14.6875" y="0" width="5.3125" height="20" stretch="1" alignment="l">
+			<texture>ui_catsy_keybind_bg_right_v0</texture>
+		</prompt_r>
+
+		<label width="400" height="20" complex_mode="1" align="l" vert_align="c"/>
+	</alt_interact>
+
+	<messagebox_transbg width="512" height="90">
+		<texture>ui_catsy_messagebox_trans_frame</texture>
+	</messagebox_transbg>
+
+
+	<prog_longpress width="15" height="20" align="l" min="0" max="1" pos="0">
+		<progress stretch="1">
+			<texture>ui_catsy_longpress_bigyellow</texture>
+		</progress>
+	</prog_longpress>
+
+	<prog_dotpointer width="5" height="26" stretch="1" min="0" max="1" pos="0" mode="down">
+		<progress stretch="1">
+			<texture>ui_catsy_line_white_45deg</texture>
+		</progress>
+	</prog_dotpointer>
+
+	<btn_open_argb width="18" height="24" />
+
+	<argb_chrome x="0" y="0" width="250" height="50" stretch="1">
+		<texture>ui_inGame2_hint_wnd_main_window_back</texture>
+
+		<clr_icon_a vert_align="c" stretch="1" >
+			<texture>ui_mcm_dmarks_argb_a</texture>
+		</clr_icon_a>
+
+		<clr_icon_r vert_align="c" stretch="1" >
+			<texture>ui_mcm_dmarks_argb_r</texture>
+		</clr_icon_r>
+
+		<clr_icon_g vert_align="c" stretch="1" >
+			<texture>ui_mcm_dmarks_argb_g</texture>
+		</clr_icon_g>
+
+		<clr_icon_b vert_align="c" stretch="1" >
+			<texture>ui_mcm_dmarks_argb_b</texture>
+		</clr_icon_b>
+
+
+		<input width="30" height="20">
+			<text x="5" font="letterica16" vert_align="c" align="l"/>
+			<texture>ui_inGame2_edit_box_2</texture>
+		</input>
+
+		<input_a x="0" y="0" width="30" height="18" vert_align="c" stretch="1" >
+			<text x="5" y="3.5" font="letterica16" align="l"/>
+			<texture>ui_inGame2_edit_box_2</texture>		
+		</input_a>
+
+		<input_r x="0" y="0" width="30" height="18" vert_align="c" stretch="1">
+			<text x="5" y="3.5" font="letterica16" align="l"/>
+			<texture>ui_inGame2_edit_box_2</texture>		
+		</input_r>
+
+		<input_g x="0" y="0" width="30" height="18" stretch="1">
+			<text x="5" y="3.5" font="letterica16" align="l"/>
+			<texture>ui_inGame2_edit_box_2</texture>		
+		</input_g>
+
+		<input_b x="0" y="0" width="30" height="18" stretch="1">
+			<text x="5" y="0.5" font="letterica16" align="l"/>
+			<texture>ui_inGame2_edit_box_2</texture>		
+		</input_b>
+	</argb_chrome>
+</w>

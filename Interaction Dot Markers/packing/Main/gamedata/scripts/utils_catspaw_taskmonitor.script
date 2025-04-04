@@ -1,0 +1,132 @@
+-- ======================================================================
+--[[    Task State Monitor
+-- ===================================================================--]]
+script_name     = "utils_catspaw_taskmonitor"
+script_version  = "1.0"
+release_date    = 20250324
+--[[======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- =======================================================================  
+    PURPOSE:
+
+    The only way to check whether a task is the actor's current active 
+    task is to manually iterate through the task table on each update, and
+    check each and every one against db.actor:is_active_task(task_id).
+
+    Doing this across multiple addons gets clunky and duplicates the same
+    scan multiple times, which may or may not add up to a significant cost
+    in performance. But it's redundant, inefficient, and could be avoided.
+
+    This monitor performs that scan, and records it in a way that can be
+    publicly accessed by any addon--meaning only one script has to be
+    doing that scan.
+
+-- =======================================================================  
+    USAGE: 
+    By default the monitor starts in a disabled state and has zero effect 
+    on anyone's game. It will only begin scanning if another script calls
+    this function:
+
+    utils_catspaw_taskmonitor.set_monitor_active()
+
+    You can also call set_monitor_active(bool) to set it directly to one 
+    state or the other.
+
+    Then use the following, all of which do exactly what they sound like:
+
+    utils_catspaw_taskmonitor.is_task_storyline()    | returns bool
+    utils_catspaw_taskmonitor.get_active_task_id()   | returns string
+    utils_catspaw_taskmonitor.get_active_target_id() | returns number
+    utils_catspaw_taskmonitor.get_active_task()      | returns task record
+
+    Like all external functions, I recommend setting a local alias in your
+    own script that is easier to type, e.g.:
+
+    local task_target = utils_catspaw_taskmonitor.get_active_target_id
+
+-- =======================================================================  
+    Feel free to crib code from this or include a copy of it in your own 
+    addon, but in the interest of avoiding any possibility of conflicts:
+
+            PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+    Seriously. Just copy the code into yours if you want to mess with it.
+    But the idea is to NOT have multiple different scripts doing this.
+-- ===================================================================--]]
+
+local get_next_tg_interval = utils_catspaw_common and utils_catspaw_common.get_next_tg_interval or (function (x) return x end)
+local monitor_active, active_target_id, active_task_id, storyline_task, next_monitor
+local monitor_interval = 1037
+-- Unusual number chosen to avoid stacking updates
+
+function update_current_task_target()
+    local task_info = task_manager.get_task_manager().task_info
+
+    if task_info and db.actor then
+        if (active_task_id) then
+            local task = task_info[active_task_id]
+            if (task and db.actor:is_active_task(task.t)) then
+                if (active_target_id ~= tonumber(task.current_target)) then
+                    active_target_id = tonumber(task.current_target)
+                end
+                return
+            else
+                active_task_id = nil
+                active_target_id = nil
+            end
+        end
+        
+        if not active_task_id then
+            for task_id, task in pairs(task_info) do
+                if (task and task.t and db.actor:is_active_task(task.t)) then
+                    if (active_task_id ~= task_id) then
+                        active_task_id = task_id
+
+                        storyline_task = task_manager.task_ini:r_string_ex(active_task_id, "storyline")
+                    end
+                    
+                    if (active_target_id ~= tonumber(task.current_target)) then
+                        active_target_id = tonumber(task.current_target)
+                    end
+                end
+            end
+        end
+    end
+end
+
+function get_task(task_id)
+    local task_info = task_manager.get_task_manager().task_info
+    return task_id and task_info and task_info[task_id]
+end
+
+function is_task_storyline() return storyline_task end
+function get_active_task_id() return active_task_id end
+function get_active_target_id() return active_target_id end
+function get_active_task() return get_task(active_task_id) end
+
+function set_monitor_interval(new)
+    monitor_interval = tonumber(new) or monitor_interval or 0
+end
+
+function set_monitor_active(onoff)
+    if (onoff or (onoff == nil)) and not monitor_active then
+        RegisterScriptCallback("actor_on_update", actor_on_update)
+        monitor_active = true
+    elseif monitor_active then
+        UnregisterScriptCallback("actor_on_update", actor_on_update)
+        monitor_active = false
+    end
+end
+
+function actor_on_update()
+    if monitor_interval and next_monitor then
+        if (next_monitor > time_global()) then return end
+        next_monitor   = get_next_tg_interval(monitor_interval)
+    end
+    update_current_task_target()
+end
+
+function on_game_start()
+    next_monitor = 0
+end
