@@ -1,0 +1,387 @@
+-- ======================================================================
+--[[	MCM ARGB Input Widget
+-- ======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- ====================================================================]]
+script_name     = "ui_mcm_argb_input"
+script_version  = "1.0"
+release_date    = 20250405
+
+-- ======================================================================
+--	MCM CacheValue monkeypatch
+-- 	Required in order to allow external scripts to cache MCM values
+-- ======================================================================
+local original_mcm_init = ui_mcm and ui_mcm.UI_MCM and ui_mcm.UI_MCM.InitControls
+local UIMCM
+
+function mcm_invalid()
+	return (not UIMCM) or (ui_mcm.is_gathering())
+end
+
+function ui_mcm.UI_MCM:InitControls()
+	original_mcm_init(self)
+	UIMCM = self
+end
+
+function mcm_cache_value(path, opt, value, v)
+	if mcm_invalid() then return end
+	UIMCM:CacheValue(path, opt, value, v)
+end
+
+-- ======================================================================
+-- 	Utilities
+-- ======================================================================
+
+local xml = CScriptXmlInit()
+
+local unsquish_ratio = 1
+local wnds = {}
+
+function unsquish(width)
+    return (width or 0) * (unsquish_ratio or 1)
+end
+
+function update_unsquish_ratio()
+    unsquish_ratio  = (device().height / device().width) / (768 / 1024)
+    return unsquish_ratio
+end
+
+function play_sfx(snd)
+    snd:play(db.actor, 0, sound_object.s2d)
+end
+
+function play_snd_path(snd_path)
+    play_sfx(snd_path and xr_sound.get_safe_sound_object(snd_path))
+end
+
+-- ======================================================================
+-- 	Simple parameterized button
+-- ======================================================================
+
+class "SimpleButton" (CUIScriptWnd)
+
+function SimpleButton:__init(anchor, button, flags) super()
+	self:SetAutoDelete(true)
+	if not (button and flags and flags.xmlnode and (flags.xml or flags.xmlfile)) then return end
+	self.button 	= button
+	self.anchor 	= anchor
+   	self.flags 		= flags or {}
+	self.xml 		= flags.xml or CScriptXmlInit()
+	if flags.xmlfile and not flags.xml then
+		self.xml:ParseFile(self.flags.xmlfile)
+	end
+    local buttonx 	= "btn_" .. self.button
+    self.btn 		= self.xml:Init3tButton(flags.xmlnode, self.anchor or self)
+    self:Register(self.btn, buttonx)
+    if flags.texture then
+    	self.btn:InitTexture(self.flags.texture)
+    end
+
+    if self.flags.pos_x or self.flags.pos_y then
+		self.btn:SetWndPos(vector2():set(self.flags.pos_x or 0, self.flags.pos_y or 0))
+    end
+
+   	self:AddCallback(buttonx, ui_events.BUTTON_CLICKED, self.OnClick, self)
+end
+
+function SimpleButton:OnClick()
+	if self.flags.func_onclick then
+		self.flags.func_onclick(self)
+	end
+	if self.flags.snd_onclick then
+		play_snd_path(self.flags.snd_onclick)
+	end
+end
+
+function SimpleButton:ShowControl(onoff)
+	self.btn:Show(onoff)
+end
+
+-- ======================================================================
+-- 	ARGB Control UI class
+-- ======================================================================
+
+class "UIARGBControl" (CUIScriptWnd)
+
+function UIARGBControl:Update()
+    CUIScriptWnd.Update(self)
+end
+
+function UIARGBControl:__init(anchor, handlers, opts, flags) super()
+	self:SetAutoDelete(true)
+	local input 	= "input_"
+	local opt 		= opts and opts.id or ""
+	self.base_id 	= input .. opt .. "_"
+	self.anchor 	= anchor or self
+	self.opts 		= opts or {}
+	self.flags 		= flags or {}
+	self.path 		= flags.path or ""
+	self.opt 		= flags.opt or opts.id or ""
+	self.opt_id 	= ui_mcm.cc(self.path, self.opt)
+  	self.argb 		= { a = 255, r = 255, g = 255, b = 255 }
+	self.ctrl 		= {}
+	self.icon 		= {}
+	self.text 		= {}
+	self.icon_w 	= unsquish(16)
+	self.icon_h 	= 16
+	self.elem_w 	= 0
+
+	self:InitControls()
+	self:ShowControls(false)
+    local _ = DEV_DEBUG and printf("[UIARGBControl:_init] Completed for %s", self.opt_id)
+end
+
+function UIARGBControl:SetupControl(color, x, y)
+	if not self.dialog then return end
+	if self.ctrl[color] then return end
+	local ctrl_id 		= self.base_id .. color
+	self.icon[color] 	= xml:InitStatic("argb_chrome:clr_icon_" .. color, self.dialog)
+	self.icon[color]:SetWndSize(vector2():set(self.icon_w, 16))
+	self.icon[color]:SetWndPos(vector2():set(x or 0, (y or 0) + 2))
+	self.icon_size 		= self.icon[color]:GetWidth()
+	self.ctrl[color] 	= xml:InitEditBox("argb_chrome:input", self.dialog)
+	self.ctrl[color]:SetWndSize(vector2():set(unsquish(30), 20))
+	self.ctrl[color]:SetWndPos(vector2():set((x or 0) + unsquish(18), y or 0))
+	self.text[color] 	= xml:InitTextWnd("textbox", self.dialog)
+	self.text[color]:SetWndSize(vector2():set(unsquish(30), 20))
+	self.text[color]:SetWndPos(vector2():set(2 + (x or 0) + unsquish(18), 2 + (y or 0)))
+	self:SetColorText(color, self.argb[color])
+
+	self:Register(self.ctrl[color], ctrl_id)
+	self:AddCallback(ctrl_id, ui_events.EDIT_TEXT_COMMIT, (
+		function()
+			local ctrl 	= self.ctrl[color]
+			local text 	= ctrl:GetText()
+			local value	= text and tonumber(text)
+			if (not value) then
+				self:SetColor(color, self.argb[color])
+				return
+			end			
+			self:SetColor(color, value)
+		end
+	))
+	self.elem_w = unsquish(5) + self.icon_size + self.ctrl[color]:GetWidth()
+end
+
+function UIARGBControl:InitControls()
+	self.init_value = ui_mcm.UI_MCM:GetValue(self.path, self.opt, self.opts, self.flags)
+	self.init_argb 	= self:GetColorsFromString(self.init_value)
+	self.argb 		= self.init_argb and dup_table(self.init_argb) or self.argb
+
+	self.dialog = xml:InitStatic("box", self.anchor)
+	self.dialog:SetWndPos(vector2():set(self.opts.dialog_x or 320, self.opts.dialog_y or 0))
+	self.dialog:SetWndSize(vector2():set(unsquish(self.opts.dialog_w or 220), self.opts.dialog_h or 30))
+	
+	self.chrome = xml:InitStatic("argb_chrome", self.dialog)
+	self.chrome:SetWndPos(vector2():set(0, 0))
+	self.chrome:SetWndSize(vector2():set(unsquish(self.opts.dialog_w or 220), self.opts.dialog_h or 30))
+	self.chrome:InitTexture(self.opts.chrome_tex or "ui_mcm_catsy_argb_chrome60")
+
+	self:SetupControl("a", unsquish(5), 5)
+	self:SetupControl("r", unsquish(5) + self.elem_w, 5)
+	self:SetupControl("g", unsquish(5) + (self.elem_w * 2), 5)
+	self:SetupControl("b", unsquish(5) + (self.elem_w * 3), 5)
+
+	if self.opts.preview_tex then
+		local w = self.opts.preview_w or 24
+		local h = self.opts.preview_h or w
+		local x = self.opts.preview_x or 0
+		local y = self.opts.preview_y or 0
+		self.preview = xml:InitStatic("box", self.opts.anchor_on_dialog and self.dialog or self.anchor)
+		self.preview:InitTexture(self.opts.preview_tex)
+		self.preview:SetWndSize(vector2():set(unsquish(w), h))
+		self.preview:SetWndPos(vector2():set(x, y))
+		self:UpdatePreviewStatic()
+	end
+end
+
+function UIARGBControl:GetColorsFromString(csv)
+    local c = csv and str_explode(csv, ",")
+    return c and {
+        a = c[1] or 255,
+        r = c[2] or 255,
+        g = c[3] or 255,
+        b = c[4] or 255,
+    } or {}
+end
+
+function UIARGBControl:GetStringFromColors(c)
+	c = c or {}
+	local str = string.format("%s,%s,%s,%s", c.a or 0, c.r or 0, c.g or 0, c.b or 0)
+	return str
+end
+
+function UIARGBControl:SetColorText(color, text)
+	if not (self.ctrl[color] and self.text[color]) then return end
+	self.ctrl[color]:SetText(text or "")
+	self.text[color]:SetText(text or "")
+end
+
+function UIARGBControl:UpdateColorText(color)
+	self:SetColorText(color, tostring(self.argb[color]) or "")
+end
+
+function UIARGBControl:UpdateColors()
+	for color,_ in pairs(self.argb) do
+		self:UpdateColorText(color)
+	end
+end
+
+function UIARGBControl:UpdatePreviewStatic()
+	if not self.preview then return end
+	local c 	= self.argb
+	local argb 	= GetARGB(c.a, c.r, c.g, c.b)
+	self.preview:SetTextureColor(argb)
+end
+
+function UIARGBControl:SetColor(color, value)
+	value = value and clamp(value, 0, 255) or 0
+	self.argb[color] = value
+	self:SetColorText(color, tostring(value))
+	self:UpdatePreviewStatic()
+end
+
+function UIARGBControl:ShowControls(onoff)
+	if onoff then
+		if not self.dialog then
+			self:InitControls()
+		end
+		if self.dialog then
+			self.chrome:Show(true)
+			for color,_ in pairs(self.argb) do
+				self.chrome:Show(true)
+				self.ctrl[color]:Show(true)
+				self.text[color]:Show(false)
+			end
+		end
+	else
+		self.chrome:Show(false)
+		for color,_ in pairs(self.argb) do
+			self.chrome:Show(false)
+			self.ctrl[color]:Show(false)
+			self.text[color]:Show(true)
+		end
+	end
+	self:UpdateColors()
+end
+
+function UIARGBControl:MCMSetCachedValue()
+	--local _ = DEV_DEBUG and printf("[UIARGBControl:MCMSetCachedValue] Setting new cached ARGB value in MCM")
+	local c = self.argb or {}
+	local str = self:GetStringFromColors(c)
+	mcm_cache_value(self.path, self.opt, str, self.opts)
+end
+
+function UIARGBControl:MCMRevertCachedValue()
+	--local _ = DEV_DEBUG and printf("[UIARGBControl:MCMRevertCachedValue] Discarding changes and reverting to original ARGB values")
+	self.argb = dup_table(self.init_argb) or self.argb
+	self:UpdateColors()
+end
+
+-- ======================================================================
+--[[ 	Launcher function for ui_hook_functor
+-- ======================================================================
+	USAGE:
+		Invoke by adding the following ui_hook_functor to any MCM string
+		input element:
+
+	ui_hook_functor = {ui_mcm_argb_input.init_mcm_argb_control}
+
+	All of the following arguments are optional:
+		xml 				Pass your own XML object with pre-parsed file
+		xmlfile 			Pass your own XML file to be parsed
+		chrome_tex 			Texture to use for the dialog frame
+		dialog_w 			Width of the ARGB control dialog and frame
+		dialog_h  			Height of the ARGB control dialog and frame
+		dialog_x 			Position of the dialog, relative to its
+		dialog_y  			parent element
+		btn_cancel_tex 		Texture to use for the cancel button
+		btn_accept_tex 		Texture to use for the accept button
+		btn_edit_tex 		Texture to use for the open/edit button
+		preview_tex 		Texture to initialize as a preview for the
+					 		user's current color choices
+		preview_w 			Size of the preview texture
+		preview_h
+		preview_x 			Position of the preview texture
+		preview_y
+		anchor_on_dialog 	If true, preview will be anchored on the
+							ARGB dialog, and will be hidden when it is
+							Otherwise preview will always be displayed
+		ui_snd_path 		Path to sound effect that will play when
+							a button is clicked
+
+	If you pass your xml or xmlfile arguments, the XML content you pass
+	must have the same node structure as in ui_argb_control.xml.
+-- ====================================================================]]
+
+function init_mcm_argb_control(anchor, handlers, opts, flags)
+	xml = CScriptXmlInit()
+	xml:ParseFile("ui_argb_control.xml")
+	if not (anchor and opts and flags) then return end
+	update_unsquish_ratio()
+	local opt_tbl 		= opts
+	flags.ctrl_id 		= ui_mcm.cc(flags.path, flags.opt)
+	local linked 		= tostring(flags.ctrl_id)
+	if handlers and handlers.ctrl then
+		handlers.ctrl:Show(false)
+	end
+	
+	local id_close	= flags.ctrl_id .. "_close"
+	local id_open 	= flags.ctrl_id .. "_open"
+
+	wnds[id_close] 	= SimpleButton(anchor, flags.ctrl_id, { 
+		ctrl_id 	= linked,
+		xml  		= xml,
+		opts 		= opts,
+		--xmlfile 	= "ui_argb_control.xml",
+		xmlnode 	= "btn",
+		texture 	= opts.btn_cancel_tex or "ui_catsy_button_redx80",
+		pos_x 		= 282,
+		pos_y 		= 3,
+		snd_onclick = opts.ui_snd_path or nil,
+		func_onclick= (
+			function(self)
+				wnds[self.button]:ShowControls(false)
+				self:ShowControl(false)
+				wnds[id_open].btn:InitTexture(self.flags.opts.btn_edit_tex or "ui_catsy_button_worn80")
+				wnds[self.button]:MCMRevertCachedValue()
+			end
+		)
+	})
+	wnds[id_close]:ShowControl(false)
+
+	
+	wnds[id_open] 	= SimpleButton(anchor, flags.ctrl_id, { 
+		ctrl_id 	= linked,
+		close_id 	= id_close,
+		xml 		= xml,
+		opts 		= opts,
+		--xmlfile 	= "ui_argb_control.xml",
+		xmlnode 	= "btn",
+		texture 	= opts.btn_edit_tex or "ui_catsy_button_worn80",
+		pos_x 		= 300,
+		pos_y 		= 3,
+		snd_onclick = opts.ui_snd_path or nil,
+		func_onclick= (
+			function(self)
+				self.open = not self.open
+				if self.open then
+					wnds[self.button]:ShowControls(true)
+					wnds[self.flags.close_id]:ShowControl(true)
+					self.btn:InitTexture(self.flags.opts.btn_accept_tex or "ui_catsy_button_check80")
+				else
+					wnds[self.button]:ShowControls(false)
+					wnds[self.flags.close_id]:ShowControl(false)
+					self.btn:InitTexture(self.flags.opts.btn_edit_tex or "ui_catsy_button_worn80")
+					wnds[self.button]:MCMSetCachedValue()
+				end
+			end
+		)
+	})
+
+	wnds[flags.ctrl_id] 			= UIARGBControl(anchor, handlers, opts, flags)
+end
+
+-- ======================================================================
+

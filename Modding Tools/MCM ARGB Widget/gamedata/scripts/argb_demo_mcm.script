@@ -1,0 +1,14 @@
+function on_mcm_load()
+	op = { id = "mcm_argb_demo", sh = true, gr = {
+			{ id = "test_argb_ctrl", type = "input", val = 0, def = "200,210,220,230",
+				hint = "MCM ARGB input test",
+				ui_hook_functor = {ui_mcm_argb_input.init_mcm_argb_control},
+				ui_snd_path = "catspaw\\paw_blip",
+				preview_tex = "ui_inGame2_PDA_icon_Secondary_mission",
+				preview_x 	= 256,
+				preview_y 	= 3
+			}
+		}
+	}
+	return op
+end
