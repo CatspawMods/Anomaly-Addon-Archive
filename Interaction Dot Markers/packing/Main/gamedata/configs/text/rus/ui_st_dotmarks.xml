@@ -199,6 +199,10 @@
 		<text>Настройки объекта</text>
 	</string>
 
+	<string id="ui_mcm_menu_dmarkicons">
+		<text>Настройки иконок</text>
+	</string>
+	
 	<string id="ui_mcm_menu_dmarkmods">
 		<text>Другие аддоны</text>
 	</string>
@@ -417,10 +421,10 @@
 		<text>Нет фона</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size">
+	<string id="ui_mcm_dotmarks_dmarkicons_dot_marker_size">
 		<text>Размер маркера взаимодействия</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size_desc">
+	<string id="ui_mcm_dotmarks_dmarkicons_dot_marker_size_desc">
 		<text>Этот ползунок регулирует размер точечных маркеров, добавляемых к объектам в мире. При значении 1 они будут иметь размер по умолчанию, а при нулевом значении эти значки будут полностью скрыты. Другие особенности аддона, такие как текстовые метки или вторичное взаимодействие, не будут затронуты.
 		</text>
 	</string>
@@ -467,59 +471,59 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom">
-		<text>Отключите специальный иконку для взрывоопасных предметов</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_boom">
+		<text>Включите специальную иконку для взрывоопасных предметов</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom_desc">
-		<text>Если эта опция включена, взрывоопасные объекты будут использовать стандартный точечный маркер вместо специального значка «Я могу взорваться».
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_boom_desc">
+		<text>Если эта опция включена, взрывоопасные объекты будут использовать специальный значок «Я взорвусь» вместо стандартного точечного маркера.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash">
-		<text>Отключить специальный значок для тайников</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_stash">
+		<text>Включить специальный значок для тайников</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash_desc">
-		<text>Если эта опция включена, тайники будут использовать стандартный точечный маркер, когда их основная подсказка активна, вместо классического значка тайника.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_stash_desc">
+		<text>Если эта опция включена, тайники будут использовать классический значок тайника вместо стандартного точечного маркера, когда будет показана их основная подсказка взаимодействия.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box">
-		<text>Отключение специальной иконки для разбиваемых ящиков</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_box">
+		<text>Включите специальный значок для разбиваемых ящиков</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box_desc">
-		<text>Если эта опция включена, разбиваемые ящики будут использовать стандартный точечный маркер вместо специального значка «разбиваемый объект».
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_box_desc">
+		<text>Если эта опция включена, то вместо стандартного точечного маркера в разбиваемых ящиках будет использоваться специальный значок «разбиваемый объект».
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk">
-		<text>Отключите специальную иконку для разговора с NPC</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_talk">
+		<text>Включите специальную иконку для разговора с NPC</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk_desc">
-		<text>Если эта опция включена, сталкеры будут использовать стандартный точечный маркер, а не переключаться на специальный значок «речевой пузырь», когда будет показан их основной запрос на взаимодействие.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_talk_desc">
+		<text>Если эта опция включена, сталкеры будут использовать специальный значок «речевого пузыря» вместо стандартного точечного маркера, когда будет показан запрос на диалог с ними.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services">
-		<text>Отключите специальную иконку для служебных NPC</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_services">
+		<text>Включите специальные иконки для служебных NPC</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services_desc">
-		<text>Если эта опция включена, служебные NPC будут использовать стандартный точечный маркер вместо того, чтобы переключаться на иконку, характерную для службы, когда показывается их основная подсказка взаимодействия.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_services_desc">
+		<text>Если эта опция включена, служебные NPC будут использовать специфическую для сервиса иконку вместо стандартного точечного маркера, когда будет показана их основная подсказка взаимодействия.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door">
-		<text>Отключите специальный значок для дверей</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_door">
+		<text>Включите специальную иконку для дверей</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door_desc">
-		<text>Если эта опция включена, двери будут использовать стандартный точечный маркер вместо того, чтобы переключаться на специальный значок «дверь», когда отображается их основная подсказка взаимодействия.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_door_desc">
+		<text>Если эта опция включена, двери будут использовать свой собственный специальный значок вместо стандартного точечного маркера, когда будет показана их основная подсказка взаимодействия.
 		</text>
 	</string>
 	
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks">
-		<text>Отключить специальный значок для целей миссии</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_tasks">
+		<text>Включить специальные значки для целей миссии</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks_desc">
-		<text>Если эта опция включена, объекты, являющиеся целью текущей активной задачи, будут использовать стандартный точечный маркер вместо своих специальных значков маркеров задач.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_tasks_desc">
+		<text>Если эта опция включена, объекты, являющиеся целью текущей активной задачи, будут использовать значок маркера задачи в высоком разрешении вместо стандартного точечного маркера.
 		</text>
 	</string>
 	
@@ -733,12 +737,6 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_objmenu">
-		<text>$clr_whtЗдесь вы можете включить или отключить функцию $clr_gldInteraction Dot Marks$clr_wht для различных типов объектов, а также настроить параметры для каждого конкретного объекта.\n
-
-		\n$clr_gldЕсли вы внесете изменения здесь, они могут не вступить в силу для уже отсканированных объектов, пока вы не отойдете от них или не перезагрузите игру.</text>
-	</string>
-
 	<string id="ui_mcm_dotmarks_adv_desc">
 		<text>$clr_gldДополнительные настройки\n
 			$clr_whtСкорее всего, большинство из приведенных ниже настроек вам не понадобятся, но они предназначены для тех, кто хочет настроить пользовательский интерфейс по своему вкусу.\n
@@ -751,7 +749,9 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_scanmenu">
-		<text>$clr_whtСледующие флажки$clr_gld контролируют, добавляются ли видимые точечные маркеры $clr_wht к каждому классу объектов. Если какие-то из них отвлекают или менее полезны для вас, снимите флажок, чтобы скрыть их маркеры. Вы по-прежнему сможете взаимодействовать с объектами обычным образом.</text>
+		<text>$clr_whtСледующие флажки$clr_gld контролируют, добавляются ли видимые точечные маркеры $clr_wht к каждому классу объектов. Если какие-то из них отвлекают или менее полезны для вас, снимите флажок, чтобы скрыть их маркеры. Вы по-прежнему сможете взаимодействовать с объектами обычным образом.\n
+
+		\n$clr_gldЕсли вы внесете изменения здесь, они могут не вступить в силу для уже отсканированных объектов, пока вы не отойдете от них или не перезагрузите игру.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_alti_desc">
@@ -886,4 +886,57 @@
 		<text>Подсчитывает вес всех предметов в отмеченных контейнерах и добавляет эту информацию в подсказку. Эта функция может потребовать значительных затрат производительности, если рядом находится много тайников или других контейнеров.</text>
 	</string>
 	
+
+	<string id="ui_mcm_dotmarks_header_icons">
+		<text>Щелкните на $clr_gldзначке шестеренки$clr_def рядом с любым параметром ниже, чтобы $clr_gldopen его ARGB-контроллер$clr_def. Там вы можете отдельно настроить значения альфа (прозрачность), красного, зеленого и синего цветов. Вы увидите предварительный просмотр изменений на соответствующем значке и сможете в любой момент отменить или принять изменения.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_dot_normal">
+		<text>Настройте цвет для обычного точечного маркера</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_dot_focus">
+		<text>Настройте цвет для активного точечного маркера</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_door">
+		<text>Настройте цвет для значка двери</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_talk">
+		<text>Настройте цвет значка диалога</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_box">
+		<text>Настройте цвет для значка «разрушаемый объект»</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_boom">
+		<text>Настройте цвет для значка «взрывоопасный объект»</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_stash">
+		<text>Настройте цвет для иконки тайника</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_trade">
+		<text>Настройте цвет для значка трейдера</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_mech">
+		<text>Настройте цвет для значка техника</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_medic">
+		<text>Настройте цвет для значка медика</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_guide">
+		<text>Настройка цвета для значка гида</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_leader">
+		<text>Настройте цвет для значка лидера</text>
+	</string>
+
 </string_table>

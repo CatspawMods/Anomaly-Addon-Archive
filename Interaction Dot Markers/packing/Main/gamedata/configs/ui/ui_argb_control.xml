@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<w>
+	<box width="0" height="0" stretch="1"/>
+
+	<textbox width="0" height="0" stretch="1">
+		<text x="0" y="0" font="letterica16" vert_align="c" align="l"/>
+	</textbox>
+
+	<btn width="18" height="24" />
+
+	<mcm_cap x="10" y="5" width="282" height="30" stretch="1">
+        <text r="170" g="170" b="170" font="letterica16" align="l" vert_align="c"></text>
+    </mcm_cap>
+
+	<argb_chrome x="0" y="0" width="250" height="50" stretch="1">
+		
+		<clr_icon_a vert_align="c" stretch="1" >
+			<texture>ui_mcm_catsy_argb_a</texture>
+		</clr_icon_a>
+
+		<clr_icon_r vert_align="c" stretch="1" >
+			<texture>ui_mcm_catsy_argb_r</texture>
+		</clr_icon_r>
+
+		<clr_icon_g vert_align="c" stretch="1" >
+			<texture>ui_mcm_catsy_argb_g</texture>
+		</clr_icon_g>
+
+		<clr_icon_b vert_align="c" stretch="1" >
+			<texture>ui_mcm_catsy_argb_b</texture>
+		</clr_icon_b>
+
+		<input width="25" height="20">
+			<text x="2" y="2" font="letterica16" vert_align="c" align="l"/>
+			<texture>ui_mcm_catsy_argb_inputbox</texture>
+		</input>
+
+	</argb_chrome>
+</w>

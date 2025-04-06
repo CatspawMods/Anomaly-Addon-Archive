@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.9-b10"
-release_date    = 20250403
+script_version  = "0.10-b1"
+release_date    = 20250405
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -232,14 +232,13 @@ local base_config = {
                     -- should watch for and erase from the QuickHelp static, and optionally 
                     -- specify a replacement localization string to use.
                 }
-                if (not cfg.disable_icon_services) then
+                if cfg.enable_icon_services then
                     if cfg.vendors[sec] then
                         vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
                         args.service_type   = cfg.vendors[sec]
                         -- Service NPCs (e.g. traders, mechanics) use an active_swap to show
                         -- a special icon instead of the dot marker when they are targeted
                         -- for interaction.
-                        -- killswitched by cfg.disable_icon_services
                     end
                     if not args.service_type then
                         if sec:find("mechanic") or sec:find("tech") then
@@ -271,15 +270,18 @@ local base_config = {
                     end
                 end
                 if args.service_type then
-                    local service_icon = args.service_type and cfg.service_icons[args.service_type] or nil
+                    local service_icon  = args.service_type and cfg.service_icons[args.service_type] or nil
                     vl("Found NPC service icon %s, enabling active swap", service_icon)
                     -- The active_swap specifies a list of args that are swapped in
                     -- whenever the marker becomes the current active target.
                     -- The original values are restored when it is no longer targeted.
                     -- All of these are loaded from tables in dotmarks_defaults.
                     args.active_swap = dup_table(cfg.swap_service)
+                    local icon_class = service_icon:sub(service_icon:find("^ui_catsy_marker_") + 16)
+                    local argb_key   = icon_class and ("argb_service_" .. icon_class)
+                    args.active_swap.custom_argb = argb_key and csv_argb_to_tbl(cfg[argb_key])
                     args.active_swap.texture = service_icon
-                elseif not cfg.disable_icon_talk then
+                elseif cfg.enable_icon_talk then
                     local texture = get_cfg_for_type("tex", "Stalkers")
                     vl("Stalker talk icon %s enabled for active swap", texture)
                     args.active_swap = cfg.swap_talk
@@ -368,7 +370,7 @@ local base_config = {
                         ["st_search_treasure"]      = "st_search_treasure",
                     },
                 }
-                if not cfg.disable_icon_stash then
+                if cfg.enable_icon_stash then
                     args.active_swap = cfg.swap_stash
                 end
                 return args
@@ -458,13 +460,17 @@ local base_config = {
                 local visual        = obj and obj:get_visual_name()
                 return obj and {
                     logged_type     = "an explosive object",
-                    texture         = (not cfg.disable_icon_boom) and get_cfg_for_type("tex", "Explosive") or cfg.marker_dotmark,
+                    texture         = cfg.enable_icon_boom and get_cfg_for_type("tex", "Explosive") or cfg.marker_dotmark,
+                    custom_argb     = cfg.enable_icon_boom and csv_argb_to_tbl(cfg.argb_icon_boom),
                     visual          = visual,
                     physics_obj     = true,
                     no_pri          = true,
                     line_adj_x      = 2,
                     line_adj_h      = -8,
                     line_adj_y      = 8,
+                    far_fade_dist   = early_scan_radius() - 1.5,
+                    far_hide_dist   = early_scan_radius() - 0.5,
+                    far_end_dist    = early_scan_radius() + 5,
                     width           = 16,
                     height          = 16,
                 }
@@ -623,7 +629,7 @@ local base_config = {
                 local visual    = obj:get_visual_name()
                 local id        = obj:id()
                 local ph_door   = id and db.storage[id]["ph_door"]
-                local use_icon  = (not cfg.disable_icon_door)
+                local use_icon  = not not cfg.enable_icon_door
                 local vadjust   = visual and cfg.door_visuals and cfg.door_visuals[visual] or 0.25
                 if (level.name() == "pripyat") and visual:find("door_metal_220x260_01") then
                     -- Catches this weird bullshit with the Laundromat doors being flipped vertically, so
@@ -658,7 +664,7 @@ local base_config = {
                 local visual = obj:get_visual_name()
                 return {
                     logged_type     = "a breakable box",
-                    texture         = (not cfg.disable_icon_box) and get_cfg_for_type("tex", "Boxes") or cfg.marker_dotmark,
+                    texture         = cfg.enable_icon_box and get_cfg_for_type("tex", "Boxes") or cfg.marker_dotmark,
                     physics_obj     = true,
                     visual          = visual,
                     no_pri          = true,
@@ -694,7 +700,7 @@ local base_config = {
         ),
     -- =======================================================================    
         Tutorials = (
-            -- Tutorials are a class of on-screen prompt that is displayed by the game engine
+            -- Tutorials are a class of on-screen prompt that are displayed by the game engine
             -- according to some fairly arcane functionality in the game_tutorials.xml file.
             -- Most are not actually "tutorials" as such, but instead use the engine's tutorial
             -- system as a way of displaying custom interaction prompts to the player.

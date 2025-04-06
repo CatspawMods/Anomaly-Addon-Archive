@@ -184,20 +184,22 @@ prompt_fade_out_time 		= 150
 tutorial_prompt_x 			= 512
 tutorial_prompt_y 			= 600
 ; Screen pos for the "tutorial" prompts at the bottom of the screen
-disable_icon_services 		= false
-; Disables the special icon used when interacting with a service NPC
-disable_icon_tasks 			= false
-; Disables the special task marker icon
-disable_icon_targetdot 		= false
-; Disable the ringed dot that a dotmark changes to when active
-disable_icon_talk 			= false
-; Disables the special icon used for talking to other stalkers
-disable_icon_box 			= false
-; Disables the special "breakable item" icon used for physics boxes
-disable_icon_boom 			= false
-; Disables the special icon used for some explosive objects
-disable_icon_door 			= false
-; Disables the special icon used for doors
+enable_icon_services 		= true
+; Enables the special icon used when interacting with a service NPC
+enable_icon_tasks 			= true
+; Enables the special task marker icon
+enable_icon_targetdot 		= true
+; Enable the ringed dot that a dotmark changes to when active
+enable_icon_talk 			= true
+; Enables the special icon used for talking to other stalkers
+enable_icon_box 			= true
+; Enables the special "breakable item" icon used for physics boxes
+enable_icon_boom 			= true
+; Enables the special icon used for some explosive objects
+enable_icon_door 			= true
+; Enables the special icon used for doors
+enable_icon_stash 			= true
+; Enables the special icon used for stashes
 sp_hide_junk_items 			= true
 ; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
 sp_flag_favejunk 			= true
@@ -268,6 +270,20 @@ bind_char_scale 			= 5.825
 action_text_pos_x 			= 24
 action_text_pos_y 			= 3.5
 ; Adjust position of the action text (e.g. "Pick up/use the thing")
+argb_dot_normal
+argb_dot_focus
+argb_icon_door
+argb_icon_talk
+argb_icon_box
+argb_icon_boom
+argb_icon_stash
+argb_service_trade
+argb_service_mech
+argb_service_medic
+argb_service_guide
+argb_service_leader
+; Placeholders that get set at runtime
+; A config key needs to be in this list in order to be loaded by MCM
 
 ; =================================================================================
 ; 	KILLSWITCHES
@@ -385,7 +401,8 @@ bridge_up_red_forest 			= bridge_up_red_forest_tips
 ; It's probably best not to mess with these unless you know what you're doing with ARGB values.
 
 clr_dmark_norm 	= 255,255,255,255
-; Base color of the marker itself - not yet used
+clr_dmark_focus	= 255,255,255,255
+; Base colors for the marker itself - not yet used
 clr_wpo_red		= 255,196,18,18
 clr_wpo_orn 	= 255,238,153,26
 clr_wpo_yel 	= 255,255,255,118
@@ -423,11 +440,12 @@ guide 		= ui_catsy_marker_guide
 leader 		= ui_catsy_marker_leader
 
 [setting_icons]
-;disable_icon_targetdot 		= 
-disable_icon_box 			= Boxes
-disable_icon_door 			= Doors
-disable_icon_talk 			= Stalkers
-disable_icon_boom 			= Explosive
+;enable_icon_targetdot 		= 
+enable_icon_box 			= Boxes
+enable_icon_door 			= Doors
+enable_icon_talk 			= Stalkers
+enable_icon_boom 			= Explosive
+enable_icon_stash 			= Stashes
 
 [display_cases]
 ; Containers with a section listed here will be treated as Hideout Furniture display cases
@@ -454,6 +472,7 @@ sec 		= ui_catsy_marker_task_sec
 
 [swap_dotactive]
 texture 	= ui_catsy_marker_dotactive
+load_argb 	= argb_dot_focus
 width       = 12
 height      = 12
 line_adj_h  = -11
@@ -462,6 +481,7 @@ line_adj_y  = 10
 
 [swap_door]
 texture     = ui_catsy_marker_door
+load_argb 	= argb_icon_door
 width       = 20
 height      = 20
 line_adj_x  = 4
@@ -470,6 +490,7 @@ line_adj_y  = 12
 
 [swap_stash]
 texture     = ui_catsy_marker_stash
+load_argb 	= argb_icon_stash
 width       = 14
 height      = 14
 line_adj_h  = -13
@@ -478,6 +499,7 @@ line_adj_y  = 12
 
 [swap_talk]
 texture     = ui_catsy_marker_talk
+load_argb 	= argb_icon_talk
 width       = 16
 height      = 16
 line_adj_x  = 4
@@ -727,7 +749,6 @@ show_item_condition 	= dotmarks/dmarkmain/
 show_condition_color 	= dotmarks/dmarkmain/
 show_stash_weight 		= dotmarks/dmarkmain/
 wheel_cycles_pickups 	= dotmarks/dmarkmain/
-dot_marker_size 		= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
 ; =================================================================================
 ; Secondary menu
@@ -752,17 +773,32 @@ haru_skill_coef 		= dotmarks/dmarkmods/
 skill_upd_interval 		= dotmarks/dmarkmods/
 haru_skill_name 		= dotmarks/dmarkmods/
 ; =================================================================================
-; Objects menu
-disable_icon_tasks 		= dotmarks/dmarkobjs/
-disable_icon_boom		= dotmarks/dmarkobjs/
-disable_icon_box		= dotmarks/dmarkobjs/
-disable_icon_door		= dotmarks/dmarkobjs/
-disable_icon_talk		= dotmarks/dmarkobjs/
-disable_icon_services	= dotmarks/dmarkobjs/
-disable_icon_stash		= dotmarks/dmarkobjs/
+; Icons menu
+dot_marker_size 		= dotmarks/dmarkicons/
+argb_dot_normal 		= dotmarks/dmarkicons/
+argb_dot_focus 			= dotmarks/dmarkicons/
+enable_icon_tasks 		= dotmarks/dmarkicons/
+enable_icon_boom		= dotmarks/dmarkicons/
+enable_icon_box			= dotmarks/dmarkicons/
+enable_icon_door		= dotmarks/dmarkicons/
+enable_icon_talk		= dotmarks/dmarkicons/
+enable_icon_services	= dotmarks/dmarkicons/
+enable_icon_stash		= dotmarks/dmarkicons/
+argb_icon_door			= dotmarks/dmarkicons/
+argb_icon_talk			= dotmarks/dmarkicons/
+argb_icon_box			= dotmarks/dmarkicons/
+argb_icon_boom			= dotmarks/dmarkicons/
+argb_icon_stash			= dotmarks/dmarkicons/
+argb_service_trade		= dotmarks/dmarkicons/
+argb_service_mech		= dotmarks/dmarkicons/
+argb_service_medic		= dotmarks/dmarkicons/
+argb_service_guide		= dotmarks/dmarkicons/
+argb_service_leader		= dotmarks/dmarkicons/
+; =================================================================================
+; Objects menu is populated procedurally
+
 ; =================================================================================
 ; Advanced menu
-; Bloated, a bunch of these probably need their own menu
 hide_interaction_dots 	= dotmarks/dmarkadv/
 hide_connecting_line 	= dotmarks/dmarkadv/
 hide_pri_interact_ui 	= dotmarks/dmarkadv/

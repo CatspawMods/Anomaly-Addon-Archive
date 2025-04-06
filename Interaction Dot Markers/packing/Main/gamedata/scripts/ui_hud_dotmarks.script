@@ -41,8 +41,6 @@ script_name     = "ui_hud_dotmarks"
     TODO:
     -   Need to optimize and clean up a whole lot of WIP code
     -   Test with EVERY distinct type of item
-    -   Keep an eye out for explodey things that aren't IsExplosive
-            Need to make sure IEDs etc are included
     -   Various doors need checking for per-visual offsets
     -   Some cabinet doors marked at the hinge instead of the lock
     -   Take all from stash opens the stash anyway (need to trap)
@@ -196,6 +194,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             scale_dist_max      = (near_scan_radius() or 4),
             los_check_int       = (not cfg.ignore_los) and 250 or nil, -- interval in ms to check LOS to marker object
             los_check_range     = (near_scan_radius() or 4) + 1,
+            custom_argb         = dup_table(cfg.colors.clr_dmark_norm),
             func_anim_take_curve= utils_catspaw_common.easing.InSine, -- easing function used for item take animation
 
             coord_args = { -- zero out all default screen coordinate adjustments
@@ -458,7 +457,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
     --printf("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
     if self.destroyed or not (self.active_swap or self.task_swap) then return end
-    local is_task_target= (self.args.id == cfg.active_task_target_id) and not cfg.disable_icon_tasks
+    local is_task_target= (self.args.id == cfg.active_task_target_id) and cfg.enable_icon_tasks
     local is_storyline  = utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.is_task_storyline()
     local last_swap     = self.task_swap or self.active_swap
     self.task_swap      = is_task_target and (is_storyline and cfg.swap_task_pri or cfg.swap_task_sec) or nil
@@ -811,42 +810,6 @@ function get_condition_color(condition, section)
     else
         condition   = clamp(condition / 99, 0, 1)
     end
-
-    --[[
-    if critical then
-        if (condition * 0.01) < critical then
-            return c.clr_wpo_red
-        else
-            return c.clr_battery
-        end
-    end
-    local cc = {
-        min = c.clr_cnd_min,
-        mid = c.clr_cnd_mid,
-        max = c.clr_cnd_max,
-        grn = c.clr_wpo_grn,
-        yel = c.clr_wpo_yel,
-        orn = c.clr_wpo_orn,
-        red = c.clr_wpo_red
-    }
-    local color
-    if cfg.parts_wpo_colors then
-        -- Weapon Parts Overhaul color thresholds
-        color = cfg.colors.clr_missing
-        if condition >= (cfg.parts_wpo_grn or 85) then color = cc.grn
-        elseif condition >= (cfg.parts_wpo_yel or 60) then color = cc.yel
-        elseif condition >= (cfg.parts_wpo_orn or 20) then color = cc.orn
-        elseif condition > -1 then color = cc.red end
-    else
-        -- Vanilla gradient lerp
-        if condition >= 0 then
-            local cond = clamp(condition / 99, 0, 1)
-            color = lerp_color(cond, cc.min , cc.mid , cc.max)
-        else
-            color = c.clr_missing
-        end
-    end
-    --]]
     return get_state_color(condition, mode, args)
 end
 
@@ -2572,7 +2535,7 @@ function scan_nearby_object(obj)
         if obj_has_available_sec_interact(obj, id, mark) and not (args.no_sec) then
             setup_sec_interact_prompt(mark)
         end
-        if (not mark.active_swap) and (not disable_icon_targetdot) then
+        if (not mark.active_swap) and cfg.enable_icon_targetdot then
             mark.active_swap = cfg.swap_dotactive
         end
         
@@ -3043,6 +3006,8 @@ end
 --      MAIN SCAN LOOP
 -- =======================================================================
 function actor_on_update()
+    --printf("cfg.block_loot_window is: %s", cfg.block_loot_window)
+
     if not scanning then return end
     -- ===================================================================
     --  Tutorial monitors
@@ -3222,6 +3187,16 @@ function on_mouse_wheel(scroll_dir, flags)
     flags.ret_value         = false
 end
 
+function parse_color_data(color_key, csv_string)
+    if not (color_key and csv_string) then return end
+    local c         = csv_argb_to_tbl(csv_string)
+    --printf("parsing color %s: %s | %s,%s,%s,%s", k,v, c.a, c.r, c.g, c.b)
+    cfg.colors[color_key]   = c
+    local str       = string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
+    set_color_token(color_key, str)
+    return c
+end
+
 function parse_file_data()
     if cfg.prompts then
         for k,v in pairs(cfg.prompts) do
@@ -3231,11 +3206,7 @@ function parse_file_data()
     if cfg.colors then
         for k,v in pairs(cfg.colors) do
             if k:find("clr_") then
-                local c         = csv_argb_to_tbl(v)
-                --printf("parsing color %s: %s | %s,%s,%s,%s", k,v, c.a, c.r, c.g, c.b)
-                cfg.colors[k]   = c
-                local str       = string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
-                set_color_token(k, str)
+                parse_color_data(k, v)
             else
                 cfg.colors[k]   = nil
             end
@@ -3339,6 +3310,26 @@ function on_option_change()
             end
         end
     end
+    if cfg.argb_dot_normal then
+        parse_color_data("clr_dmark_norm", cfg.argb_dot_normal)
+    end
+    for k,v in pairs(cfg) do
+        printf("Parsing config value %s | %s | load_argb: %s", k, v, (type(v) == "table") and v.load_argb)
+        if k:find("^swap_") and v.load_argb then
+            printf("Loading custom_argb for active_swap %s | %s", k, cfg[v.load_argb])
+            v.custom_argb = csv_argb_to_tbl(cfg[v.load_argb])
+
+            if v.custom_argb then
+                for i,j in pairs(v.custom_argb) do
+                    printf("color %s = %s", i, j)
+                end
+            else
+                printf("No custom_argb found!")
+            end
+            v.load_argb = nil
+        end
+    end
+
     for k,v in pairs(cfg.scan) do
         cfg.scan[k] = get_mcm("dotmarks/dmarkobjs/scan_" .. string.lower(k), cfg.scan[k])
         _ = debug_dump and vl("Scanning %s = %s", k, v)
@@ -3366,13 +3357,13 @@ end
 
 function on_game_start()
     local _ = (DEV_DEBUG or debuglogs or debug_dump) and printf("[%s] Interaction Dot Marks %s (rel %s) began initialization at %s", script_name, script_version, release_date, time_global())
-
-    cfg = dotmarks_main.get_base_config_table()
-    mags_installed = (magazines and magazine_binder)
-    if utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
+    RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+    -- This callback is always registered so that we can notify the player of init failure
+    cfg = dotmarks_main and dotmarks_main.get_base_config_table()
+    if cfg and utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
+        mags_installed = (magazines and magazine_binder)
         parse_file_data()
         dotmarks_main.refresh_main_config()
-        RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
         RegisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
         RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
         RegisterScriptCallback("ActorMenu_on_item_after_move", ActorMenu_on_item_after_move)
@@ -3402,8 +3393,8 @@ function on_game_start()
                 ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_anim_stop", ea_on_item_anim_stop)
             end
         end
-    else
-        printf("%s could not find config file %s\n" ..
-                "! ERROR: %sstartup aborted, no callbacks will be registered", script_name, logprefix, config_file)
+        return
     end
+    printf("! ERROR: Initialization failed, %s could not load base config from %s!\n" ..
+        "! DotMarks startup aborted, skipping callback registration", script_name, config_file)
 end

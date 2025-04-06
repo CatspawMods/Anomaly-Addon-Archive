@@ -199,6 +199,10 @@
 		<text>Object Settings</text>
 	</string>
 
+	<string id="ui_mcm_menu_dmarkicons">
+		<text>Icon Settings</text>
+	</string>
+
 	<string id="ui_mcm_menu_dmarkmods">
 		<text>Other Addons</text>
 	</string>
@@ -418,10 +422,10 @@
 		<text>No background</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size">
+	<string id="ui_mcm_dotmarks_dmarkicons_dot_marker_size">
 		<text>Interaction Dot Marker size</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmain_dot_marker_size_desc">
+	<string id="ui_mcm_dotmarks_dmarkicons_dot_marker_size_desc">
 		<text>This slider adjusts the size of the dot markers added to objects in the world. A value of 1 is their default intended size, while zero will hide these icons entirely. Other features of this addon, such as the text labels or secondary interaction, will not be affected.
 		</text>
 	</string>
@@ -468,59 +472,59 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom">
-		<text>Disable special icon for explosive objects</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_boom">
+		<text>Enable special icon for explosive objects</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_boom_desc">
-		<text>If this option is enabled, explosive objects will use the standard dot marker instead of their special "I explode" icon.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_boom_desc">
+		<text>If this option is enabled, explosive objects will use a special "I explode" icon instead of the standard dot marker.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash">
-		<text>Disable special icon for stashes</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_stash">
+		<text>Enable special icon for stashes</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_stash_desc">
-		<text>If this option is enabled, stashes will use the standard dot marker when their primary prompt is active, instead of the classic stash icon.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_stash_desc">
+		<text>If this option is enabled, stashes will use a classic stash icon instead of the standard dot marker when their primary interaction prompt is shown.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box">
-		<text>Disable special icon for breakable boxes</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_box">
+		<text>Enable special icon for breakable boxes</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_box_desc">
-		<text>If this option is enabled, breakable boxes will use the standard dot marker instead of their special "breakable object" icon.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_box_desc">
+		<text>If this option is enabled, breakable boxes will use a special "breakable object" icon instead of the standard dot marker.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk">
-		<text>Disable special icon for talking to NPCs</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_talk">
+		<text>Enable special icon for talking to NPCs</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_talk_desc">
-		<text>If this option is enabled, stalkers will use the standard dot marker instead of swapping to their special "speech bubble" icon when their primary interaction prompt is shown.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_talk_desc">
+		<text>If this option is enabled, stalkers will use a special "speech bubble" icon  instead the standard dot marker when the prompt to engage them in dialogue is shown.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services">
-		<text>Disable special icons for service NPCs</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_services">
+		<text>Enable special icons for service NPCs</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_services_desc">
-		<text>If this option is enabled, service NPCs will use the standard dot marker instead of swapping to their service-specific icon when their primary interaction prompt is shown.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_services_desc">
+		<text>If this option is enabled, service NPCs will use a service-specific icon instead of the standard dot marker when their primary interaction prompt is shown.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door">
-		<text>Disable special icon for doors</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_door">
+		<text>Enable special icon for doors</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_door_desc">
-		<text>If this option is enabled, doors will use the standard dot marker instead of swapping to their special "door" icon when their primary interaction prompt is shown.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_door_desc">
+		<text>If this option is enabled, doors will use their own special icon instead of the standard dot marker when their primary interaction prompt is shown.
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks">
-		<text>Disable special icon for task objectives</text>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_tasks">
+		<text>Enable special icon for task objectives</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkobjs_disable_icon_tasks_desc">
-		<text>If this option is enabled, objects that are the target of the current active task will use the standard dot marker instead of their special task marker icons.
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_tasks_desc">
+		<text>If this option is enabled, objects that are the target of the current active task will use a hi-res task marker icon instead of the standard dot marker.
 		</text>
 	</string>
 
@@ -733,12 +737,6 @@
 		</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_objmenu">
-		<text>$clr_whtHere you can enable or disable $clr_gldInteraction Dot Marks$clr_wht for different types of objects, as well as object-specific settings.\n
-
-		\n$clr_gldIf you make changes here, they may not take effect for already-scanned objects until you move away from them or saveload.</text>
-	</string>
-
 	<string id="ui_mcm_dotmarks_adv_desc">
 		<text>$clr_gldAdvanced Settings\n
 			$clr_whtYou probably won't need most of the following settings, but they're here for those who want to customize the UI exactly to their liking.\n
@@ -751,7 +749,9 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_scanmenu">
-		<text>$clr_whtThe following checkboxes $clr_gldcontrol whether visible dot markers are added$clr_wht to each different class of object. If any are distracting or less useful for you, unchecking them here will hide their markers. You can still interact with the objects normally.</text>
+		<text>$clr_whtThe following checkboxes $clr_gldcontrol whether visible dot markers are added$clr_wht to each different class of object. If any are distracting or less useful for you, unchecking them here will hide their markers. You can still interact with the objects normally.\n
+
+		\n$clr_gldIf you make changes here, they may not take effect for already-scanned objects until you move away from them or saveload.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_alti_desc">
@@ -883,6 +883,58 @@
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmain_show_stash_weight_desc">
 		<text>Totals up the weight of all items within marked containers, appending this information to the prompt. This feature may have a performance cost when there are many stashes or other containers nearby.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_header_icons">
+		<text>Click the $clr_gldgear icon$clr_def beside any setting below to $clr_gldopen its ARGB control$clr_def. There you can separately adjust the values for Alpha (transparency), Red, Green, and Blue. You will see a preview of your changes on the associated icon, and can $clr_redcancel$clr_def or $clr_grnaccept$clr_def your changes at any time.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_dot_normal">
+		<text>Customize color for the normal dot marker</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_dot_focus">
+		<text>Customize color for the focus dot marker</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_door">
+		<text>Customize color for the door icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_talk">
+		<text>Customize color for the dialogue icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_box">
+		<text>Customize color for the "breakable" icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_boom">
+		<text>Customize color for the "explosive" icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_stash">
+		<text>Customize color for the stash icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_trade">
+		<text>Customize color for the Trader icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_mech">
+		<text>Customize color for the Technician icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_medic">
+		<text>Customize color for the Medic icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_guide">
+		<text>Customize color for the Guide icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_leader">
+		<text>Customize color for the Leader icon</text>
 	</string>
 
 </string_table>
