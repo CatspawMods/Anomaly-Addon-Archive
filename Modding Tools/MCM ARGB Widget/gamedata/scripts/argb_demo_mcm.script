@@ -1,12 +1,37 @@
+-- ======================================================================
+--[[	MCM ARGB Input Widget - demo script
+-- ======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+	Requires MCM 1.7.0+ and ui_mcm_argb_input.script
+-- ====================================================================]]
 function on_mcm_load()
 	op = { id = "mcm_argb_demo", sh = true, gr = {
 			{ id = "test_argb_ctrl", type = "input", val = 0, def = "200,210,220,230",
-				hint = "MCM ARGB input test",
-				ui_hook_functor = {ui_mcm_argb_input.init_mcm_argb_control},
+				-- The default above shows the format the input will be saved in, and the values are
+				-- chosen solely for demonstrative purposes. The ID is whatever you want, just like
+				-- any other MCM setting element.
+
+				ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
+				-- The above line is the ONLY required attribute - everything else that follows
+				-- is COMPLETELY optional. See "FUNCTOR USAGE" in ui_mcm_argb_input.script for
+				-- nore details.
+
 				ui_snd_path = "catspaw\\paw_blip",
+				-- Path to the sound effect to play when any ARGB control button is clicked
+				-- Optional - if omitted, no sound will play
 				preview_tex = "ui_inGame2_PDA_icon_Secondary_mission",
+				-- Texture to use for an icon that previews the current color settings
+				-- Optional - if omitted, no preview will be shown
 				preview_x 	= 256,
 				preview_y 	= 3
+				-- Not needed if you aren't setting up a preview, otherwise put it where you want it.
+				-- The above values will place the icon (default size 24x24) just to the left of the
+				-- button that opens the ARGB control.
+
+				hint = "MCM ARGB input test",
+				-- Obviously just a placeholder for this demo, use your own localization string
 			}
 		}
 	}

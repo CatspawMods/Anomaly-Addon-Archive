@@ -23,7 +23,7 @@
 	See "FUNCTOR USAGE" below for more details.
 -- ====================================================================]]
 script_name     = "ui_mcm_argb_input"
-script_version  = "1.2"
+script_version  = "1.3"
 release_date    = 20250406
 -- ======================================================================
 local UIMCM, UIMM
@@ -182,14 +182,14 @@ function UIARGBControl:SetupControl(color, x, y)
 	if not self.dialog then return end
 	if self.ctrl[color] then return end
 	local ctrl_id 		= self.base_id .. color
-	self.icon[color] 	= xml:InitStatic("argb_chrome:clr_icon_" .. color, self.dialog)
+	self.icon[color] 	= xml:InitStatic(self.opts.xmlnode_clricon or "argb_chrome:clr_icon_" .. color, self.dialog)
 	self.icon[color]:SetWndSize(vector2():set(self.icon_w, 16))
 	self.icon[color]:SetWndPos(vector2():set(x or 0, (y or 0) + 1.5))
 	self.icon_size 		= self.icon[color]:GetWidth()
-	self.ctrl[color] 	= xml:InitEditBox("argb_chrome:input", self.dialog)
+	self.ctrl[color] 	= xml:InitEditBox(self.opts.xmlnode_inputbox or "argb_chrome:input", self.dialog)
 	self.ctrl[color]:SetWndSize(vector2():set(unsquish(30), 20))
 	self.ctrl[color]:SetWndPos(vector2():set((x or 0) + unsquish(18), y or 0))
-	self.text[color] 	= xml:InitTextWnd("textbox", self.dialog)
+	self.text[color] 	= xml:InitTextWnd(self.opts.xmlnode_textbox or "textbox", self.dialog)
 	self.text[color]:SetWndSize(vector2():set(unsquish(30), 20))
 	self.text[color]:SetWndPos(vector2():set(2 + (x or 0) + unsquish(18), 2 + (y or 0)))
 	self:SetColorText(color, self.argb[color])
@@ -220,11 +220,11 @@ function UIARGBControl:InitControls()
 	self.init_argb 	= self:GetColorsFromString(self.init_value)
 	self.argb 		= self.init_argb and dup_table(self.init_argb) or self.argb
 
-	self.dialog = xml:InitStatic("box", self.anchor)
+	self.dialog = xml:InitStatic(self.opts.xmlnode_dialog or "box", self.anchor)
 	self.dialog:SetWndPos(vector2():set(self.opts.dialog_x or 320, self.opts.dialog_y or 0))
 	self.dialog:SetWndSize(vector2():set(unsquish(self.opts.dialog_w or 220), self.opts.dialog_h or 30))
 	
-	self.chrome = xml:InitStatic("argb_chrome", self.dialog)
+	self.chrome = xml:InitStatic(self.opts.xmlnode_chrome or "argb_chrome", self.dialog)
 	self.chrome:SetWndPos(vector2():set(0, 0))
 	self.chrome:SetWndSize(vector2():set(unsquish(self.opts.dialog_w or 220), self.opts.dialog_h or 30))
 	self.chrome:InitTexture(self.opts.chrome_tex or "ui_mcm_catsy_argb_chrome60")
@@ -239,7 +239,7 @@ function UIARGBControl:InitControls()
 		local h = self.opts.preview_h or w
 		local x = self.opts.preview_x or 0
 		local y = self.opts.preview_y or 0
-		self.preview = xml:InitStatic("box", self.opts.anchor_on_dialog and self.dialog or self.anchor)
+		self.preview = xml:InitStatic(self.opts.xmlnode_preview or "box", self.opts.anchor_on_dialog and self.dialog or self.anchor)
 		self.preview:InitTexture(self.opts.preview_tex)
 		self.preview:SetWndSize(vector2():set(unsquish(w), h))
 		self.preview:SetWndPos(vector2():set(x, y))
@@ -337,41 +337,86 @@ end
 -- ======================================================================
 --[[ 	Launcher function for ui_hook_functor
 -- ======================================================================
+	REQUIRES:
+		* MCM 1.7.0 or higher
+		* configs\ui\ui_argb_control.xml (or your own UI file)
+		* configs\ui\textures_descr\ui_argb_control_texd.xml (or yours)
+		* textures\catsy\ui_argb_control.dds (or yours)
+
 	FUNCTOR USAGE:
 		Invoke by adding the following ui_hook_functor to any MCM Input
 		element that has a string value:
 
 	ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control }
 
-	All of the following arguments are optional:
+	All of the following arguments are optional, and are added to the
+	same Input element as attributes:
 		xml 				Pass your own XML object with pre-parsed file
+
 		xmlfile 			Pass your own XML file to be parsed
+
+		xmlnode_dialog 		Use this instead of "box" for the base dialog
+							container (no visible texture), must be large
+							enough to be underneath all input elements.
+
+		xmlnode_chrome 		Use this instead of "argb_chrome" for
+							the UI frame texture container
+
+		xmlnode_inputbox 	Use this instead of "argb_chrome:input" for
+							the InputBox element
+
+		xmlnode_textbox		Use this instead of "textbox" for the text
+							container that shows the channel value when
+							the control is inactive
+
+		xmlnode_clricon 	Use this instead of "argb_chrome:clr_icon_"
+							for the color icons, each of which gets the
+							string "a", "r", "g", or "b" suffixed to it
+
+		xmlnode_preview 	Use this instead of "box" for the image
+							container used when setting up icon previews
+
 		chrome_tex 			Texture to use for the dialog frame
+
 		dialog_w 			Width of the ARGB control dialog and frame
 		dialog_h  			Height of the ARGB control dialog and frame
+
 		dialog_x 			Position of the dialog, relative to its
 		dialog_y  			parent element
+
 		btn_cancel_tex 		Texture to use for the cancel button
+
 		btn_accept_tex 		Texture to use for the accept button
+
 		btn_edit_tex 		Texture to use for the open/edit button
+
 		preview_func 		Pointer to a function that should return the
-							UI static that the control should use as a
-							preview, changing the color of its texture.
+							UI static with a texture, which the script
+							should treat as the preview static--changing
+							the color of its texture in response to user
+							input.
+
 		preview_tex 		Texture to initialize as a preview for the
 					 		user's current color choices, if you want
 					 		this script to handle setting it up instead.
-		preview_w 			Size of the preview texture
+
+		preview_w 			Size of the preview texture (default 24x24)
 		preview_h
+
 		preview_x 			Position of the preview texture
 		preview_y
+
 		anchor_on_dialog 	If true, preview will be anchored on the
-							ARGB dialog, and will be hidden when it is
-							Otherwise preview will always be displayed
+							ARGB dialog, and will be hidden when the
+							control dialog is inactive - otherwise
+							the preview will always be displayed
+
 		ui_snd_path 		Path to sound effect that will play when
-							a button is clicked
+							a button is clicked, otherwise it's silent
 
 	If you pass your xml or xmlfile arguments, the XML content you pass
-	must have the same node structure as in ui_argb_control.xml.
+	must have the same node structure as in ui_argb_control.xml unless
+	you override the defaults using the "xmlnode" attributes above.
 -- ====================================================================]]
 
 function init_mcm_argb_control(anchor, handlers, opts, flags)
