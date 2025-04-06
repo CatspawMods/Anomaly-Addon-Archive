@@ -23,8 +23,8 @@
 	See "FUNCTOR USAGE" below for more details.
 -- ====================================================================]]
 script_name     = "ui_mcm_argb_input"
-script_version  = "1.1"
-release_date    = 20250405
+script_version  = "1.2"
+release_date    = 20250406
 -- ======================================================================
 local UIMCM, UIMM
 RegisterScriptCallback("main_menu_on_init", ( function(m)  UIMM = m end ))
@@ -354,13 +354,12 @@ end
 		btn_cancel_tex 		Texture to use for the cancel button
 		btn_accept_tex 		Texture to use for the accept button
 		btn_edit_tex 		Texture to use for the open/edit button
+		preview_func 		Pointer to a function that should return the
+							UI static that the control should use as a
+							preview, changing the color of its texture.
 		preview_tex 		Texture to initialize as a preview for the
-					 		user's current color choices
-		preview_tbl 		Instead of a texture, a table from which
-							the preview will be pulled each time
-		preview_key 		Key name in the table that will be pulled
-							The purpose is to be able to point at a 
-							static that hasn't yet been initialized
+					 		user's current color choices, if you want
+					 		this script to handle setting it up instead.
 		preview_w 			Size of the preview texture
 		preview_h
 		preview_x 			Position of the preview texture
