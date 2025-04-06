@@ -3,38 +3,48 @@
 -- ======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+    Turns any MCM "Input" element with a string value into an ARGB widget
+    that takes the resulting user-selected ARGB values and composes them 
+    as a comma-separated string like "255,255,255,255", which is then 
+    cached to the string value of the Input element.
+
+	Uses the ui_hook_functor feature added in MCM 1.7.
+    
+    The basic form is:
+
+    { id = "my_argb_ctrl", type = "input", val = 0, 
+    	def = "255,255,255,255",
+		ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control }
+	}
+
+	Other options are available, passed via attributes in the element.
+
+	See "FUNCTOR USAGE" below for more details.
 -- ====================================================================]]
 script_name     = "ui_mcm_argb_input"
-script_version  = "1.0"
+script_version  = "1.1"
 release_date    = 20250405
-
 -- ======================================================================
---	MCM CacheValue monkeypatch
--- 	Required in order to allow external scripts to cache MCM values
--- ======================================================================
-local original_mcm_init = ui_mcm and ui_mcm.UI_MCM and ui_mcm.UI_MCM.InitControls
-local UIMCM
-
-function mcm_invalid()
-	return (not UIMCM) or (ui_mcm.is_gathering())
-end
-
-function ui_mcm.UI_MCM:InitControls()
-	original_mcm_init(self)
-	UIMCM = self
-end
+local UIMCM, UIMM
+RegisterScriptCallback("main_menu_on_init", ( function(m)  UIMM = m end ))
 
 function mcm_cache_value(path, opt, value, v)
-	if mcm_invalid() then return end
+	-- 	Basically just a wrapper function for UI_MCM:CacheValue()
+	--	CacheValue can't be called directly without getting the object of
+	-- 	the active MCM instance. If you try to do this with any generic 
+	-- 	instance of ui_mcm.UI_MCM(), it'll crash.
+
+	UIMCM = UIMM.mcm_dlg
+	if (not UIMCM) or ui_mcm.is_gathering() then return end
 	UIMCM:CacheValue(path, opt, value, v)
 end
 
 -- ======================================================================
--- 	Utilities
+-- 		Utilities
 -- ======================================================================
 
 local xml = CScriptXmlInit()
-
 local unsquish_ratio = 1
 local wnds = {}
 
@@ -56,14 +66,50 @@ function play_snd_path(snd_path)
 end
 
 -- ======================================================================
--- 	Simple parameterized button
+--[[ 		Simple parameterized button
 -- ======================================================================
+	USAGE: SimpleButton(anchor, button, flags)
 
+	[anchor] is the static or other UI container to use as a parent. Can be
+	omitted, in which case the button will be parented to itself and
+	coordinates are relative to the upper left of the screen.
+
+	[button] is required, and can be any unique string that is a valid Lua
+	identifier.
+
+	[flags] is a table of arguments, which must contain one of the 
+	following:
+		1. flags.xml, an XML object with a file already parsed
+		2. flags.xmlfile, a string filename which will be parsed
+
+	It has no default position or behavior. You need to customize it with
+	one or more of the following flags for it to be useful:
+
+		func_onclick: a direct pointer to a function that does anything
+			This is not strictly required, but without a functor to 
+			execute, the button does nothing other than highlight when 
+			you hover it.
+
+		snd_onclick: an optional string path to a sound effect
+
+		pos_x, pos_y: moves it to where you want it, defaults to 0,0
+			Not really needed if your button XML has baked-in xy coords,
+			or if you're otherwise handling its position.
+
+		texture: replace the button texture used
+			Texture should have enable, highlight, and touch variants
+
+		xmlnode: name of the XML node for the button
+			Optional, defaults to "btn"
+
+	See the init_mcm_argb_control() function below for usage examples.
+
+-- ====================================================================]]
 class "SimpleButton" (CUIScriptWnd)
 
 function SimpleButton:__init(anchor, button, flags) super()
 	self:SetAutoDelete(true)
-	if not (button and flags and flags.xmlnode and (flags.xml or flags.xmlfile)) then return end
+	if not (button and flags and (flags.xml or flags.xmlfile)) then return end
 	self.button 	= button
 	self.anchor 	= anchor
    	self.flags 		= flags or {}
@@ -72,7 +118,7 @@ function SimpleButton:__init(anchor, button, flags) super()
 		self.xml:ParseFile(self.flags.xmlfile)
 	end
     local buttonx 	= "btn_" .. self.button
-    self.btn 		= self.xml:Init3tButton(flags.xmlnode, self.anchor or self)
+    self.btn 		= self.xml:Init3tButton(flags.xmlnode or "btn", self.anchor or self)
     self:Register(self.btn, buttonx)
     if flags.texture then
     	self.btn:InitTexture(self.flags.texture)
@@ -99,9 +145,9 @@ function SimpleButton:ShowControl(onoff)
 end
 
 -- ======================================================================
--- 	ARGB Control UI class
+-- 		ARGB Control UI class
+--	See FUNCTOR USAGE below for details
 -- ======================================================================
-
 class "UIARGBControl" (CUIScriptWnd)
 
 function UIARGBControl:Update()
@@ -129,7 +175,7 @@ function UIARGBControl:__init(anchor, handlers, opts, flags) super()
 
 	self:InitControls()
 	self:ShowControls(false)
-    local _ = DEV_DEBUG and printf("[UIARGBControl:_init] Completed for %s", self.opt_id)
+    --local _ = DEV_DEBUG and printf("[UIARGBControl:_init] Completed for %s", self.opt_id)
 end
 
 function UIARGBControl:SetupControl(color, x, y)
@@ -138,7 +184,7 @@ function UIARGBControl:SetupControl(color, x, y)
 	local ctrl_id 		= self.base_id .. color
 	self.icon[color] 	= xml:InitStatic("argb_chrome:clr_icon_" .. color, self.dialog)
 	self.icon[color]:SetWndSize(vector2():set(self.icon_w, 16))
-	self.icon[color]:SetWndPos(vector2():set(x or 0, (y or 0) + 2))
+	self.icon[color]:SetWndPos(vector2():set(x or 0, (y or 0) + 1.5))
 	self.icon_size 		= self.icon[color]:GetWidth()
 	self.ctrl[color] 	= xml:InitEditBox("argb_chrome:input", self.dialog)
 	self.ctrl[color]:SetWndSize(vector2():set(unsquish(30), 20))
@@ -165,6 +211,11 @@ function UIARGBControl:SetupControl(color, x, y)
 end
 
 function UIARGBControl:InitControls()
+	if self.opts.preset_args then
+		for k,v in pairs(self.opts.preset_args) do
+			self.opts[k] = v
+		end
+	end
 	self.init_value = ui_mcm.UI_MCM:GetValue(self.path, self.opt, self.opts, self.flags)
 	self.init_argb 	= self:GetColorsFromString(self.init_value)
 	self.argb 		= self.init_argb and dup_table(self.init_argb) or self.argb
@@ -192,8 +243,8 @@ function UIARGBControl:InitControls()
 		self.preview:InitTexture(self.opts.preview_tex)
 		self.preview:SetWndSize(vector2():set(unsquish(w), h))
 		self.preview:SetWndPos(vector2():set(x, y))
-		self:UpdatePreviewStatic()
 	end
+	self:UpdatePreviewStatic()
 end
 
 function UIARGBControl:GetColorsFromString(csv)
@@ -229,6 +280,9 @@ function UIARGBControl:UpdateColors()
 end
 
 function UIARGBControl:UpdatePreviewStatic()
+	if self.opts.preview_func then
+		self.preview = self.opts.preview_func(self.path, self.opt, self.opts, self.flags)
+	end
 	if not self.preview then return end
 	local c 	= self.argb
 	local argb 	= GetARGB(c.a, c.r, c.g, c.b)
@@ -277,16 +331,17 @@ function UIARGBControl:MCMRevertCachedValue()
 	--local _ = DEV_DEBUG and printf("[UIARGBControl:MCMRevertCachedValue] Discarding changes and reverting to original ARGB values")
 	self.argb = dup_table(self.init_argb) or self.argb
 	self:UpdateColors()
+	self:UpdatePreviewStatic()
 end
 
 -- ======================================================================
 --[[ 	Launcher function for ui_hook_functor
 -- ======================================================================
-	USAGE:
-		Invoke by adding the following ui_hook_functor to any MCM string
-		input element:
+	FUNCTOR USAGE:
+		Invoke by adding the following ui_hook_functor to any MCM Input
+		element that has a string value:
 
-	ui_hook_functor = {ui_mcm_argb_input.init_mcm_argb_control}
+	ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control }
 
 	All of the following arguments are optional:
 		xml 				Pass your own XML object with pre-parsed file
@@ -301,6 +356,11 @@ end
 		btn_edit_tex 		Texture to use for the open/edit button
 		preview_tex 		Texture to initialize as a preview for the
 					 		user's current color choices
+		preview_tbl 		Instead of a texture, a table from which
+							the preview will be pulled each time
+		preview_key 		Key name in the table that will be pulled
+							The purpose is to be able to point at a 
+							static that hasn't yet been initialized
 		preview_w 			Size of the preview texture
 		preview_h
 		preview_x 			Position of the preview texture
@@ -320,30 +380,31 @@ function init_mcm_argb_control(anchor, handlers, opts, flags)
 	xml:ParseFile("ui_argb_control.xml")
 	if not (anchor and opts and flags) then return end
 	update_unsquish_ratio()
-	local opt_tbl 		= opts
-	flags.ctrl_id 		= ui_mcm.cc(flags.path, flags.opt)
-	local linked 		= tostring(flags.ctrl_id)
+	local opt_tbl 		= dup_table(opts)
+	local flag_tbl 		= dup_table(flags)
+	flag_tbl.ctrl_id 	= ui_mcm.cc(flag_tbl.path, flag_tbl.opt)
+	local linked 		= tostring(flag_tbl.ctrl_id)
 	if handlers and handlers.ctrl then
 		handlers.ctrl:Show(false)
 	end
 	
-	local id_close	= flags.ctrl_id .. "_close"
-	local id_open 	= flags.ctrl_id .. "_open"
+	local id_close	= flag_tbl.ctrl_id .. "_close"
+	local id_open 	= flag_tbl.ctrl_id .. "_open"
 
-	wnds[id_close] 	= SimpleButton(anchor, flags.ctrl_id, { 
+	wnds[id_close] 	= SimpleButton(anchor, flag_tbl.ctrl_id, { 
 		ctrl_id 	= linked,
 		xml  		= xml,
-		opts 		= opts,
-		--xmlfile 	= "ui_argb_control.xml",
+		opts 		= opt_tbl,
 		xmlnode 	= "btn",
-		texture 	= opts.btn_cancel_tex or "ui_catsy_button_redx80",
-		pos_x 		= 282,
+		texture 	= opt_tbl.btn_cancel_tex or "ui_catsy_button_redx80",
+		pos_x 		= 284,
 		pos_y 		= 3,
-		snd_onclick = opts.ui_snd_path or nil,
+		snd_onclick = opt_tbl.ui_snd_path or nil,
 		func_onclick= (
 			function(self)
 				wnds[self.button]:ShowControls(false)
 				self:ShowControl(false)
+				wnds[id_open].open = false
 				wnds[id_open].btn:InitTexture(self.flags.opts.btn_edit_tex or "ui_catsy_button_worn80")
 				wnds[self.button]:MCMRevertCachedValue()
 			end
@@ -352,17 +413,16 @@ function init_mcm_argb_control(anchor, handlers, opts, flags)
 	wnds[id_close]:ShowControl(false)
 
 	
-	wnds[id_open] 	= SimpleButton(anchor, flags.ctrl_id, { 
+	wnds[id_open] 	= SimpleButton(anchor, flag_tbl.ctrl_id, { 
 		ctrl_id 	= linked,
 		close_id 	= id_close,
 		xml 		= xml,
-		opts 		= opts,
-		--xmlfile 	= "ui_argb_control.xml",
+		opts 		= opt_tbl,
 		xmlnode 	= "btn",
-		texture 	= opts.btn_edit_tex or "ui_catsy_button_worn80",
-		pos_x 		= 300,
+		texture 	= opt_tbl.btn_edit_tex or "ui_catsy_button_worn80",
+		pos_x 		= 300.5,
 		pos_y 		= 3,
-		snd_onclick = opts.ui_snd_path or nil,
+		snd_onclick = opt_tbl.ui_snd_path or nil,
 		func_onclick= (
 			function(self)
 				self.open = not self.open
@@ -380,7 +440,7 @@ function init_mcm_argb_control(anchor, handlers, opts, flags)
 		)
 	})
 
-	wnds[flags.ctrl_id] 			= UIARGBControl(anchor, handlers, opts, flags)
+	wnds[flag_tbl.ctrl_id] 			= UIARGBControl(anchor, handlers, opt_tbl, flag_tbl)
 end
 
 -- ======================================================================
