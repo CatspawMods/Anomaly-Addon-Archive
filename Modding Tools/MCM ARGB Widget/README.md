@@ -98,7 +98,9 @@ To set up a control that uses colorblind-friendly buttons and text labels, the d
     text_labels = true
 }
 ```
-**Tip:** If you're setting up multiple options with more than one attribute, consider using the `preset_args` attribute, which takes a table of attributes like so:
+
+## Presets for multiple elements
+If you're setting up multiple options with more than one attribute, consider using the `preset_args` attribute, which takes a table of attributes like so:
 ```lua
 local my_preset = {
 				ui_snd_path = "ui_menu_click",
