@@ -31,45 +31,44 @@ All of the following arguments are optional, and should be added to the same `In
     Pass your own XML file to be parsed.
 
   `xmlnode_dialog`
-    Use this instead of `box` for the base dialog container (no visible texture), must be large enough to be underneath all input elements.
+    Use this string instead of `box` for the XML node of the base dialog container (no visible texture). Must be large enough to be underneath all input elements so that their callbacks function.
 
   `xmlnode_chrome`
-  Use this instead of `argb_chrome` for the UI frame texture container.
+   Use this string instead of `argb_chrome` for the XML node of the UI frame texture container.
 
   `xmlnode_inputbox`
-    Use this instead of `argb_chrome:input` for the `InputBox` UI container.
+    Use this string instead of `argb_chrome:input` for XML node of the `InputBox` UI containers.
 
   `xmlnode_textbox`
-    Use this instead of `textbox` for the text container that shows the channel value when the control is inactive.
+    Use this string instead of `textbox` for XML node of the text containers that show the channel value while the control is inactive.
 
   `xmlnode_clricon`
-    Use this instead of `argb_chrome:clr_icon_` for the color icons, each of which gets the string "a", "r", "g", or "b" suffixed to it as appropriate.
+    Use this string instead of `argb_chrome:clr_icon_` for the XML node of the color icons, each of which gets the string "a", "r", "g", or "b" suffixed to it as appropriate.
 
   `xmlnode_preview`
-  Use this instead of `box` for the image container used when setting up icon previews.
+    Use this string instead of `box` for XML node of the image container used when setting up icon previews.
 
   `chrome_tex`
-  Texture to use for the dialog frame.
+   Texture to use for the dialog frame.
 
   `dialog_w` 			
-    Width of the ARGB control dialog and frame.
+    Width of the ARGB control dialog and UI frame.
   `dialog_h`
-    Height of the ARGB control dialog and frame.
+    Height of the ARGB control dialog and UI frame.
 
   `dialog_x`
     Horizontal screen coordinate of the dialog, relative to its parent element.
-  
   `dialog_y`
     Vertical screen coordinate of the dialog, relative to its parent element.
 
   `colorblind`
-    Use an alternative blue color scheme for the default "accept" button instead of green.
+    Use an alternative color scheme for the default "accept" and "cancel" buttons, where the green check will instead be blue, and the red "X" will instead be orange.
 
   `no_color_icons`
-    Disables the icons representing each color channel
+    Disable the icons representing each color channel.
 
   `text_labels`
-    Adds "A/R/G/B" text to label each of the color channels. Can be used as an overlay on top of the default color icons. Recommended for use with colorblind mode.
+    Add "A/R/G/B" text to label each of the color channels. Can be used as an overlay on top of the default color icons. Recommended for use with colorblind mode.
     
   `btn_cancel_tex`
     Texture to use for the "cancel" button.
@@ -87,10 +86,10 @@ All of the following arguments are optional, and should be added to the same `In
     Texture to initialize as a preview for the user's current color choices, if you want this script to handle setting it up.
 
   `preview_w`
-    Width of the preview texture (default 24)
+    Width of the preview texture (default 24).
   
   `preview_h`
-    Height of the preview texture (default 24)
+    Height of the preview texture (default 24).
 
   `preview_x`
     Horizontal position of the preview image.
@@ -99,9 +98,10 @@ All of the following arguments are optional, and should be added to the same `In
     Vertical position of the preview image.
 
   `anchor_on_dialog`
-    If true, preview will be anchored on the ARGB dialog, and will be hidden when the control dialog is inactive - otherwise the preview will always be displayed.
+    If true, preview will be anchored on the ARGB dialog, and will be hidden when the control dialog is inactive - otherwise the preview will always be displayed and its coordinates are relative to the upper-left of the text caption for the MCM setting.
 
   `ui_snd_path`
-    Path to sound effect that will play when a button is clicked, otherwise it's silent.
+    String path to a sound effect that will play when a button is clicked. If omitted, clicks are silent.
 
 If you pass your xml or xmlfile arguments, the XML content you pass must have the same node structure as in `ui_argb_control.xml` unless you override the defaults using the `xmlnode_` attributes above.
+
