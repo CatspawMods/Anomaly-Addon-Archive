@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.6"
-release_date    = 20250403
+script_version  = "0.7.7"
+release_date    = 20250406
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -1699,3 +1699,5 @@ function on_game_start()
     RegisterScriptCallback("on_option_change", on_option_change)
     RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
 end
+
+printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)
