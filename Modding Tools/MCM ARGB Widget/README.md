@@ -8,10 +8,10 @@ Turns any MCM `Input` element with a string value into an ARGB widget that takes
   * `configs\ui\textures_descr\ui_argb_control_texd.xml` (or your own texture definitions)
   * `textures\catsy\ui_argb_control.dds` (or your own texture file)
 
-The basic implementation is an MCM element taking the following form:
-```
+The basic implementation is an MCM element taking the following form, used within an MCM menu like you would any other `Input` element:
+```lua
 { id = "my_argb_ctrl", type = "input", val = 0, def = "255,255,255,255",
-  ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control }
+	ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control }
 }
 ```
 Where `id` is a valid MCM option name of your choice.
@@ -20,7 +20,7 @@ An MCM menu can have any number of these widgets--they work just like any other 
 
 ## FUNCTOR USAGE
 Invoke by adding the following ui_hook_functor to any MCM `Input` element that has a string value (`val = 0`):
-```
+```lua
 ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control }
 ```
 # Optional Arguments
@@ -89,13 +89,13 @@ To set up a control that uses colorblind-friendly buttons and text labels, the d
 
 ```lua
 { id = "example_argb_ctrl", type = "input", val = 0, def = "255,255,255,255",
-				ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
-				ui_snd_path = "ui_menu_click",
-				preview_tex = "ui_inGame2_PDA_icon_Secondary_mission",
-				preview_x 	= 256,
-				preview_y 	= 3,
-    colorblind = true,
-    text_labels = true
+	ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
+	ui_snd_path	= "ui_menu_click",
+	preview_tex	= "ui_inGame2_PDA_icon_Secondary_mission",
+	preview_x 	= 256,
+	preview_y 	= 3,
+	colorblind	= true,
+	text_labels	= true
 }
 ```
 
@@ -103,27 +103,28 @@ To set up a control that uses colorblind-friendly buttons and text labels, the d
 If you're setting up multiple options with more than one attribute, consider using the `preset_args` attribute, which takes a table of attributes like so:
 ```lua
 local my_preset = {
-				ui_snd_path = "ui_menu_click",
-				preview_tex = "ui_inGame2_PDA_icon_Secondary_mission",
-				preview_x 	= 256,
-				preview_y 	= 3,
-    colorblind = true,
-    text_labels = true
+	ui_snd_path	= "ui_menu_click",
+	preview_tex	= "ui_inGame2_PDA_icon_Secondary_mission",
+	preview_x 	= 256,
+	preview_y 	= 3,
+	colorblind 	= true,
+	text_labels	= true
 }
 
 function on_mcm_load()
-    	op = { id = "example_menu", sh = true, gr = {
-            { id = "example_control_1", type = "input", val = 0, def = "255,255,255,255",
-            				ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
-                preset_args = my_preset
-            },
-            { id = "example_control_2", type = "input", val = 0, def = "255,255,255,255",
-            				ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
-                preset_args = my_preset
-            }
-        }
-    }
-    return op
+	op = {
+		id = "example_menu", sh = true, gr = {
+			{ id = "example_control_1", type = "input", val = 0, def = "255,255,255,255",
+				ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
+				preset_args = my_preset
+			},
+			{ id = "example_control_2", type = "input", val = 0, def = "255,255,255,255",
+				ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
+				preset_args = my_preset
+			}
+		}
+	}
+	return op
 end
 ```
 ...and so forth.
