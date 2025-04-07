@@ -25,7 +25,7 @@ function on_mcm_load()
 				-- Texture to use for an icon that previews the current color settings
 				-- Optional - if omitted, no preview will be shown
 				preview_x 	= 256,
-				preview_y 	= 3
+				preview_y 	= 3,
 				-- Not needed if you aren't setting up a preview, otherwise put it where you want it.
 				-- The above values will place the icon (default size 24x24) just to the left of the
 				-- button that opens the ARGB control.
