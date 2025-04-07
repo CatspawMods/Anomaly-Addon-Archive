@@ -39,32 +39,34 @@ script_name     = "ui_hud_dotmarks"
     should update your modded exes ASAP.
 -- =======================================================================
     TODO:
-    -   Need to optimize and clean up a whole lot of WIP code
+    -   See what's going on with knife-in-inventory skinning prompt
+    -   Complete vanilla Loner playthrough and validate all quest prompts
     -   Test with EVERY distinct type of item
-    -   Various doors need checking for per-visual offsets
+    -   Otimize and clean up a whole lot of WIP code
+    -   Check various doors for per-visual offsets
     -   Some cabinet doors marked at the hinge instead of the lock
     -   Take all from stash opens the stash anyway (need to trap)
+    -   Install old modded exes version and test dependency traps
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
 assert(dotmarks_main, "\n\n"..
-    "! ui_hud_dotmarks requires script dotmarks_main, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script dotmarks_main, which does not exist or failed to load!\n\n"
 )
 assert(utils_catspaw_common, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist or failed to load!\n\n"
 )
 assert(utils_catspaw_hudmarks, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_hudmarks, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_hudmarks, which does not exist or failed to load!\n\n"
 )
 assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_text, which does not exist or is an older version!\n" ..
+    "! ui_hud_dotmarks requires script utils_catspaw_text, which is missing or outdated!\n" ..
     "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
     "If the version is outdated, try moving this addon to the bottom of your load order."
 )
 assert(utils_catspaw_mapspots, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist or failed to load!\n\n"
 )
---assert(false,"debug killswitch")
 -- =======================================================================
 local dl, vl, xml
 logprefix   = "[DotMarks] "
@@ -92,6 +94,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
 end
 --set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 -- First two values will be overridden by MCM once the game loads
+
 -- ======================================================================
 --      SHORTCUTS
 -- ======================================================================
@@ -149,18 +152,18 @@ play_snd_path           = dotmarks_main.play_snd_path
 getargb                 = dotmarks_main.getargb
 fonts                   = dotmarks_main.fonts
 targeted_id, locked_id  = nil
+scanning                = false
 cfg                     = {}
 pickup_index            = {}
 nearby_pickups          = {}
 active_anims            = {}
-scanning                = false
 -- ======================================================================
 local st_kg             = gts("st_kg")
-local maingameui        = nil
-local hmm               = nil
 local ea_enabled        = false
 local anim_playing      = false
 local actor_moved       = false
+local maingameui        = nil
+local hmm               = nil
 local popin_active      = nil
 local extra_carry       = nil
 local use_dik           = nil
@@ -542,7 +545,7 @@ function item_pickup_intercept(obj, flags)
     -- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
     -- Called by my monkeypatch of FDDA/FDDAR's pickup if they are
     local now = time_global()
-    vl("[%s][item_pickup_intercept] %s - ret %s | force %s", now, nameid(obj), flags.ret_value, flags.force)
+    --vl("[%s][item_pickup_intercept] %s - ret %s | force %s", now, nameid(obj), flags.ret_value, flags.force)
     if flags.force then
         --printf("Skipping all long-press checks")
     else
@@ -563,7 +566,6 @@ function item_pickup_intercept(obj, flags)
 
     local curr_target, taken_obj
     curr_target = get_current_target()
-    --vl("Current target: %s", curr_target)
     taken_obj = curr_target and get_object_by_id(curr_target)
     
     if taken_obj then
@@ -572,7 +574,6 @@ function item_pickup_intercept(obj, flags)
             cfg.markers[curr_target]:HideAll("dotmarks taking item")
         end
         if flags.ret_value then
-            --vl("Manually taking %s", taken_obj:name())
         -- The monkeypatch in z_fdda_pickup_intercept_dotmarks sets flags.ret_value to false
         -- if flags.ret_value is already false when it gets to DotMarks, DotMarks will assume
         -- that FDDA is handling the pickup part
@@ -595,7 +596,6 @@ function set_adjusted_marker_size(mark_id)
     if not mark then return end
     mark.width = mark.base_w * (cfg.dot_marker_size or 1)
     mark.height = mark.base_h * (cfg.dot_marker_size or 1)
-    --printf("Final mark size: %sx%s", mark.width, mark.height)
 end
 
 function do_marker_popin(
@@ -604,14 +604,12 @@ function do_marker_popin(
         easing_func, on_finish_func, abort_func
     )
     if not mark_id then return end
-    --printf("Initializing popin for %s at %s", mark_id, time_global())
 
     local anim_state = 0
 
     local anim_id = mark_id .. "_popin"
 
     if active_anims[mark_id] then
-        --printf("Repeat invocation of popin event, restarting")
         popin_active = nil
     end
     popin_active = mark_id
@@ -656,16 +654,13 @@ function do_marker_popin(
                         local x = easing_func(anim_state)
                         anim.w = lerp(anim.w_start(mark), anim.w_end(mark), x)
                         anim.h = lerp(anim.h_start(mark), anim.h_end(mark), x)
-                        --printf("[%s] Popin time event: setting base width for %s to %s", time_global(), anim_id, mark.base_w)
                     else
-                        --printf("[%s] Mark %s is no longer active, canceling animation and reverting to base", time_global(), mark_id)
                         anim_state = 1
                     end
                     mark.base_w = anim.w or anim.w_end(mark)
                     mark.base_h = anim.h or anim.h_end(mark)
                     set_adjusted_marker_size(mark_id)
                 else
-                    --printf("Event conditions for %s cleared, aborting", mark_id)
                     anim_state = 1
                 end
             end
@@ -721,10 +716,6 @@ end
 
 function get_bones_for_obj(obj)
     local bones = obj and obj.list_bones and obj:list_bones()
-    --printf("bones for %s", obj:name())
-    --for k,v in pairs(bones) do
-        --printf("[%s] = %s", k, v)
-    --end
     return bones
 end
 
@@ -742,7 +733,7 @@ function is_door_open(obj, id)
     if not id then return end
     local door = id and db.storage[id]["ph_door"] and db.storage[id]["ph_door"].door_action
     local is_open = door:is_open()
-    vl("Door %s is open: %s", obj and obj:name(), is_open)
+    --vl("Door %s is open: %s", obj and obj:name(), is_open)
 end
 
 function is_vanilla_ui_hidden()
@@ -1017,7 +1008,7 @@ function InteractPrompt:BuildUI()
     local boxlen        = fontscale(#args.bind * cfg.bind_char_scale)
     local boxpos        = -(boxlen - 4)
     self.args.style     = cfg.keybind_bg_style or 0
-    vl("Keybind icon style is %s", self.args.style)
+    --vl("Keybind icon style is %s", self.args.style)
     self.black_text     = (self.args.style == 2) or (self.args.style == 3)
     local stretch_adj   = 0
     self.wnd            = xml:InitStatic("alt_interact", self.anchor)
@@ -1076,14 +1067,6 @@ function InteractPrompt:BuildUI()
         self.longpress  = xml:InitProgressBar("prog_longpress", self.prompt)
         self.longpress:SetColor(getargb(self.progress_color))
         self.longpress:SetProgressPos(0)
-        --[[
-        cfg.input_filters[self.args.id] = {
-            key     = self.args.key,
-            mod     = self.args.mod,
-            mode    = self.args.mode,
-            ctrl    = self
-        }
-        --]]
     end
 
     -- Set up text drop shadows
@@ -1141,12 +1124,6 @@ end
 function InteractPrompt:SetupSuffix(obj)
     obj             = obj or (self.args.id and get_object_by_id(self.args.id))
     if (not obj) then return end
-    --if self.args.money then
-        --self.active_suffix = string.format(" ($clr_gld%s$clr_def)", self.args.money)
-        --self.parse_text_colors = true
-        --return
-    --end
-
     if not (cfg.show_item_condition or cfg.show_item_charge) then return end
 
     local sec       = self.args.section or obj:section()
@@ -1156,7 +1133,7 @@ function InteractPrompt:SetupSuffix(obj)
     local gear_cnd  = (self.args.has_parts and cfg.show_item_condition)
     local batt_cnd  = ((self.args.has_power or self.args.has_battery) and cfg.show_item_charge)
 
-    vl("[InteractPrompt:SetupSuffix][%s][has_cond %s][multi %s]", sec, has_cond, self.args.multi_uses)
+    --vl("[InteractPrompt:SetupSuffix][%s][has_cond %s][multi %s]", sec, has_cond, self.args.multi_uses)
 
     if self.args.multi_uses then
         -- Setup suffix text for multiuse items
@@ -1167,7 +1144,6 @@ function InteractPrompt:SetupSuffix(obj)
         end
     elseif has_cond and (gear_cnd or batt_cnd) and (not is_mag) then
         -- Setup suffix text for degradable items
-        vl("setting up condition label")
         local cond = obj and obj:condition()
         self:SetConditionText(sec, cond)
     else
@@ -1198,7 +1174,6 @@ end
 function InteractPrompt:UpdatePromptLength()
     local len           = self.prompt_length
     self.prompt_length  = self.lref:GetWidth() + 25
-    --printf("prompt length was %s, is now %s", len, self.prompt_length)
     if len == self.prompt_length then return self.prompt_length end
     if self.itemcard then
         self.itemcard:SetWndPos(vector2():set(cfg.item_card_pos_x + self.prompt_length, cfg.item_card_pos_y or 0))
@@ -1208,7 +1183,6 @@ end
 
 function InteractPrompt:UpdateWeightColor()
     if not (self.card_wgt_icon and self.card_wgt_text) then return end
-    --local c = get_color_for_weight(self.weight or 0)
     local c = get_state_color(self.weight, 3)
     --printf("Weight of %s is %s | color %s,%s,%s,%s ", self.args.name, self.weight, c.a, c.r, c.b, c.g)
     local color = c and getargb(c)
@@ -1318,6 +1292,7 @@ end
 
 function InteractPrompt:SetupUtjanPartDots(anchor, obj)
     -- Adapted from z_item_icon_info in Utjan's Item UI
+    -- TODO: try again to add drop shadows/background to the dots
     if not cfg.show_part_condition then return end
     if not item_icon_info_mcm then return end
     if self.parts_indicators then
@@ -1384,7 +1359,6 @@ end
 
 
 function InteractPrompt:eleSetCurrentColor(element, a, r, g, b)
-    --printf("[InteractPrompt:eleSetCurrentColor] %s | %s | %s | %s", a, r, g, b)
     if not element then return end
     local argb = get_argb(a, r, g, b)
     if element.SetTextureColor  then element:SetTextureColor(argb) end
@@ -1395,7 +1369,6 @@ function InteractPrompt:eleSetCurrentColor(element, a, r, g, b)
         g = tonumber(g) or 255,
         b = tonumber(b) or 255
     }
-    --printf("Current colors set to %s,%s,%s,%s", element.currcolor.a, element.currcolor.r, element.currcolor.g, element.currcolor.b)
 end
 
 function InteractPrompt:eleSetCurrentColorScheme(element, c)
@@ -1515,9 +1488,8 @@ function InteractPrompt:on_option_change()
         self.args.key   = self.args.key or bind_to_dik(key_bindings.kUSE)
     else
         local sec       = cfg.bind_sec_interact
-        local tap_time  = self.args.tap_time or ui_mcm.get("mcm/mcm_kb/mcm_kb_main/dtaptime2")
-        self.hold_time  = (self.args.hold_time or ui_mcm.get("mcm/mcm_kb/mcm_kb_main/presstime")) * tap_time
-        --self.unbound    = (not sec) or (sec == -1)
+        local tap_time  = self.args.tap_time or (ui_mcm and ui_mcm.get("mcm/mcm_kb/mcm_kb_main/dtaptime2")) or 200
+        self.hold_time  = (self.args.hold_time or (ui_mcm and ui_mcm.get("mcm/mcm_kb/mcm_kb_main/presstime")) or 2) * tap_time
         self.args.key   = cfg["bind_" .. (self.args.event or "")] or sec or 0
         self.args.mod   = cfg["modk_" .. (self.args.event or "")] or sec or 0 
         self.args.mode  = cfg["imod_" .. (self.args.event or "")] or sec or 0
@@ -1533,7 +1505,7 @@ function InteractPrompt:BusyState(tf, prefix, force_update)
     local last_state = self.busystate
     self.busystate = not not tf
     if force_update or ((tf ~= nil) and (self.busystate ~= last_state)) then
-        vl("InteractPrompt:BusyState has changed to %s, updating prompt visuals", self.busystate)
+        --vl("InteractPrompt:BusyState has changed to %s, updating prompt visuals", self.busystate)
         if self.busystate then
             self.active_prefix  = (prefix or gts("st_alti_busy")) .. " "
             self.active_prompt  = first_lower(self.active_prompt)
@@ -1677,7 +1649,7 @@ function InteractPrompt:AnimateFade(inout)
             self.fading_out = false
         end
         if (self.curr_alpha ~= 255) and (cfg.prompt_fade_in_time and (cfg.prompt_fade_in_time > 0)) then
-            vl("Beginning new fade-in effect over %sms from alpha %s to 255 at %s", cfg.prompt_fade_in_time, self.curr_alpha, time_global())
+            --vl("Beginning new fade-in effect over %sms from alpha %s to 255 at %s", cfg.prompt_fade_in_time, self.curr_alpha, time_global())
             self.fading_in = true
             self:ManageFadeAnim(
                 self.curr_alpha, 255, cfg.prompt_fade_in_time, uid .. "in", false, nil, nil, nil, 
@@ -1691,7 +1663,7 @@ function InteractPrompt:AnimateFade(inout)
             self.fading_in = false
         end
         if (self.curr_alpha ~= 0) and (cfg.prompt_fade_out_time and (cfg.prompt_fade_out_time > 0)) then
-            vl("Beginning new fade-out effect over %sms from alpha %s to 0 at %s", cfg.prompt_fade_out_time, self.curr_alpha, time_global())
+            --vl("Beginning new fade-out effect over %sms from alpha %s to 0 at %s", cfg.prompt_fade_out_time, self.curr_alpha, time_global())
             self.fading_out = true
             self:ManageFadeAnim(
                 self.curr_alpha, 0, cfg.prompt_fade_out_time, uid .. "out", false, nil, nil, nil, 
@@ -1803,7 +1775,6 @@ end
 function InteractPrompt:GetQuickHelp()
     local hint = maingameui.UIStaticQuickHelp:GetText()
     if (hint == "") or (hint == " ") then hint = nil end
-    --printf("Contents of QuickHelp static: \"%s\"", hint)
     return hint or nil
 end
 
@@ -1931,7 +1902,6 @@ function InteractPrompt:Destroy(reason)
     self:ShowPrompt(false)
     self:HideDialog()
     self.hint_filters   = nil
-    --self.tutorial       = nil
     self.destroyed      = true
     get_hud():RemoveDialogToRender(self)
     
@@ -2058,7 +2028,6 @@ function state_monitor(tid)
     if state and (conds ~= nil) then
         cond = cfg.state_conds[tid](tid)
     end
-    --printf("state_monitor check for %s: state %s | conditions %s", tid, state, cond)
     cfg.monitors[tid] = state and cond or false
     return cfg.monitors[tid]
 end
@@ -2067,31 +2036,66 @@ function show_interaction_dots(tf)
     cfg.hide_interaction_dots = not tf
 end
 
+function valid_mcm_version(silent)
+    if not (ui_mcm and ui_mcm.VERSION) then return end
+    local log = (DEV_DEBUG or debuglogs or debug_dump) and not silent
+    local VERSION = ui_mcm and ui_mcm.VERSION
+    local ver = VERSION and str_explode(VERSION, "%.")
+    local maj = tonumber(ver and ver[1]) or 0
+    local min = tonumber(ver and ver[2]) or 0
+    local pat = tonumber(ver and ver[3]) or 0
+    local uif = not not (ui_mcm and ui_mcm.UI_MCM and ui_mcm.UI_MCM.Init_Wrapper_Box)
+    local _ = log and printf("[DotMarks] MCM version string: %s | major %s | minor %s | patch %s | functors exist: %s", VERSION, maj, min, pat, uif)
+    local invalid = (maj < 1) or (min < 7) or not uif
+    local pre = invalid and "!" or "+"
+    _ = log and printf(pre.." MCM version check: %s", invalid and "FAILED" or "Passed")
+    if invalid then return false end
+    return true
+end
+
 function check_for_dependencies(silent, debug_test)
     vl("[%s] Checking for dependencies", time_global())
     local failmessage
+    local no_config             = not cfg
+    vl("config loaded: %s", not no_config)
+    -- Trap load failure
+
     local using_modded_exes     = utils_catspaw_common.using_modded_exes
     vl("using_modded_exes: %s", using_modded_exes)
     -- Modded exes are a hard requirement, nothing will function without them
+
     local exes_version          = MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version()) or 0
     local old_exes_nocallback   = (exes_version < 20250306)
     vl("old_exes_nocallback: %s", old_exes_nocallback)
     -- Modded exes found, but too old to support actor_on_update_pickup callback
+
     local no_callback_old_dbs   = (_G.CPickupModeUpdate_COD == nil)
     vl("no_callback_old_dbs: %s", no_callback_old_dbs)
     -- Modded exes up to date, but stale DB files causing missing callback
+
     local no_lookat_method      = (exes_version < 20250225) or (not db.actor.get_actor_object_looking_at)
     vl("no_lookat_method: %s", no_lookat_method)
     -- Modded exes found, but too old even to support get_actor_object_looking_at
+
+    local bad_mcm_version       = not valid_mcm_version(true)
+    local ui_functors           = not not (ui_mcm and ui_mcm.UI_MCM and ui_mcm.UI_MCM.Init_Wrapper_Box)
+    local mcm_version           = ui_mcm and ui_mcm.VERSION or "NOT FOUND"
+    vl("bad_mcm_version: %s", bad_mcm_version)
+    -- Version of MCM older than 1.7.0
+
     local no_hud_mark_manager   = (not hmm)
     vl("no_hud_mark_manager: %s", no_hud_mark_manager)
     -- HUD Mark Manager not found, which is really bad because we should've asserted by now
+
     local epic_fail             = (not using_modded_exes) or
+                                    no_hud_mark_manager or
                                     no_pickup_callback or
                                     no_lookat_method or
-                                    no_hud_mark_manager
+                                    bad_mcm_version or
+                                    no_config
     if not (epic_fail or debug_test) then return end
 
+    cfg = cfg or {}
     cfg.killswitch_all = true
     set_handler_callbacks(true)
 
@@ -2099,38 +2103,52 @@ function check_for_dependencies(silent, debug_test)
         failmessage         = gts("st_dotmarks_epicfail_error") ..
                             gts("st_dotmarks_fail_reason_noexes") ..
                             gts("st_get_modded_exes")
+
     elseif old_exes_nocallback or (debug_test and debug_test == 2) then
         failmessage         = gts("st_dotmarks_epicfail_error") ..
                             string.format(gts("st_dotmarks_fail_reason_oldexes"), 20250306, exes_version) ..
                             gts("st_get_modded_exes")
+
     elseif no_lookat_method or (debug_test and debug_test == 3) then
         failmessage         = gts("st_dotmarks_epicfail_error") ..
                             string.format(gts("st_dotmarks_fail_reason_oldexes"), 20250225, exes_version) ..
                             gts("st_get_modded_exes")
+
     elseif no_callback_old_dbs or (debug_test and debug_test == 4) then
         failmessage         = gts("st_dotmarks_epicfail_error") ..
                             string.format(gts("st_dotmarks_fail_reason_staledbs"), exes_version) ..
                             gts("st_get_modded_exes")
-    elseif no_hud_mark_manager or (debug_test and debug_test == 5) then
+
+    elseif bad_mcm_version or (debug_test and debug_test == 5) then
+        failmessage         = gts("st_dotmarks_epicfail_error") ..
+                            string.format(gts("st_dotmarks_fail_reason_oldmcm"), mcm_version, ui_functors) ..
+                            gts("st_catsy_get_mcm")
+
+    elseif no_hud_mark_manager or (debug_test and debug_test == 6) then
         failmessage         = gts("st_dotmarks_epicfail_error") ..
                             gts("st_dotmarks_fail_reason_nohmm")
+
+    elseif no_config or (debug_test and debug_test == 7) then
+        failmessage         = gts("st_dotmarks_epicfail_error") ..
+                            gts("st_dotmarks_fail_reason_nocfg")
     end
 
     if failmessage then
         local log_msg = parse_colors(failmessage, nil, false)
         printf(log_msg)
-        if (silent or (not cfg.warn_modded_exes)) and (not debug_test) then
+        if silent and not debug_test then
             return epic_fail
         end
 
         failmessage = parse_colors(failmessage)
-        CreateTimeEvent("failed_dependency_warning", 0, 4, (
+        CreateTimeEvent("dotmarks_dependency_warning", 0, 4, (
             function()
                 dotip(failmessage, 10000, "Interaction Dot Marks", true, "ui_inGame2_V_zone_nedavno_proshel_vibros")
                 return true
             end
         ))
     end
+    return true
 end
 
 function actor_on_first_update()
@@ -2188,18 +2206,18 @@ function get_args_for_valid_objects(obj)
     local stype = get_type_for_section(sec)
     if stype then
         -- Switched these around in 0.9-b10, section is more specific than kind
-        vl("Section %s found in lookup: %s", sec, stype)
+        --vl("Section %s found in lookup: %s", sec, stype)
         setup_item_args(stype)
     else
         local ktype = get_type_for_kind(kind)
         if ktype then
-            vl("Kind %s found in lookup: %s", kind, ktype)
+            --vl("Kind %s found in lookup: %s", kind, ktype)
             setup_item_args(ktype)
         else
             for item_class, enabled in pairs(cfg.scan) do
                 --printf("Checking %s against category %s", obj:name(), item_class)
                 if cfg.is_item[item_class](obj) then
-                    vl("Type found via iteration: %s", item_class)
+                    --vl("Type found via iteration: %s", item_class)
                     setup_item_args(item_class)
                     break
                 end
@@ -2221,7 +2239,7 @@ function get_args_for_valid_objects(obj)
     end
     if not args.texture then return end
 
-    dl("get_args_for_valid_objects: %s is %s", nameid(obj), args.logged_type)
+    dl("get_args_for_valid_objects: %s classification is %s", nameid(obj), args.logged_type)
     return args
 end
 
@@ -2465,7 +2483,7 @@ function obj_has_available_sec_interact(obj, id, mark)
 
     local has_interact = required and not banned
 
-    vl("[obj_has_available_sec_interact] %s: %s\n" ..
+    local _ = debug_dump and vl("[obj_has_available_sec_interact] %s: %s\n" ..
         "^ Required: box %s | batt %s | ammo %s | eatable %s | readable %s\n" ..
         "~ Banned: money %s",
         nameid(obj, id),
@@ -2510,7 +2528,7 @@ function scan_nearby_object(obj)
         local args  = get_args_for_valid_objects(obj)
         if not args then return end
 
-        vl("Trying to add dotmark marker for %s", nameid(obj, id))
+        --vl("Trying to add dotmark marker for %s", nameid(obj, id))
         args            = args or {}
         args.id         = id
         args.mark_id    = m_id
@@ -2599,7 +2617,7 @@ function update_targeted_object()
 
     cfg.active_task_target_id = get_task_target()
     if targeted_id and debug_dump then
-        target = get_object_by_id(targeted_id)
+        target = get_game_object(targeted_id)
         vl("update_targeted_object: targeted_id is now %s (%s) | method %s", targeted_id, target and target:name(), method)
     end
 end
@@ -2611,7 +2629,7 @@ end
 
 function get_inventory_table(box, id)
     -- Streamlined version of the one in axr_companions
-    box = box or (id and get_object_by_id(id))
+    box = box or (id and get_game_object(id))
     local t = {}
     if box then
         --printf("Trying to iterate inventory for %s", box:name())
@@ -2812,17 +2830,17 @@ function delay_consume_action(id, manual_use)
     local obj = id and get_object_by_id(id)
     if not obj then return true end
     if (enhanced_animations and ea_enabled and not manual_use) then
-        vl("[%s][delay_consume_action] passing %s to FDDA", time_global(), nameid(obj, id))
+        local _ = debug_dump and vl("[%s][delay_consume_action] passing %s to FDDA", time_global(), nameid(obj, id))
         SendScriptCallback("actor_on_item_before_use", obj, {ret_value = true})
     else
-        vl("[%s][delay_consume_action] causing actor to consume/use %s", time_global(), nameid(obj, id))
+        local _ = debug_dump and vl("[%s][delay_consume_action] causing actor to consume/use %s", time_global(), nameid(obj, id))
         db.actor:eat(obj)
     end
     return true
 end
 
 function force_actor_to_take(obj)
-    vl("Forcing actor to take %s via active pickup callback", obj and obj:name())
+    --vl("Forcing actor to take %s via active pickup callback", obj and obj:name())
     local send_pickup_callback = fdda_callback or item_pickup_intercept
     send_pickup_callback(obj, {force = true, ret_value = true})
 end
@@ -2841,14 +2859,14 @@ function is_item_manual_use(obj, mark)
     local id    = obj and obj:id()
     local mark  = mark or (id and cfg.markers[id]) or {}
     local sec   = mark.section or (obj and obj:section())
-    vl("[%s][is_item_manual_use] %s: manual_use from mark %s | from cfg %s", time_global(), mark.name or (obj and obj:name()), mark.manual_use, cfg.manual_use[sec])
+    --vl("[%s][is_item_manual_use] %s: manual_use from mark %s | from cfg %s", time_global(), mark.name or (obj and obj:name()), mark.manual_use, cfg.manual_use[sec])
     return mark.manual_use or cfg.manual_use[sec]
 end
 
 function delay_read_action(id)
     if fdda_callback and anim_playing then return end
     local obj = id and get_object_by_id(id)
-    vl("delay_read_action: %s", nameid(obj, id))
+--    vl("delay_read_action: %s", nameid(obj, id))
     item_recipe.func_recipe(obj)
     return true
 end
@@ -2864,14 +2882,15 @@ end
 
 function handle_secondary_interact(obj)
     if is_busy_with_anim() then
-        vl("Actor tried to interact but is busy with another item animation")
+        local _ = debug_dump and vl("Actor tried to interact but is busy with another item animation")
     return end
 
     -- Get target object and do validation checks
     local tid = get_current_target()
     local obj = obj or (tid and get_object_by_id(tid))
     if not is_obj_interact_dist(obj) then return end
-    vl("handle_secondary_interact: %s is within alti distance", obj and obj:name())
+    --vl("handle_secondary_interact: %s is within alti distance", obj and obj:name())
+
     -- Passed validation - identify handler, if any
     if IsWeapon(obj) then
         unload_and_take_ammo(obj)
@@ -2896,7 +2915,7 @@ function cycle_targeted_pickup(dir)
     vl("cycle_targeted_pickup: %s | locked %s | target %s", dir and (dir > 0) and "next" or "previous", locked_id, targeted_id)
     if not (dir and get_current_target()) then return end
     local max       = size_table(nearby_pickups)
-    vl("max %s | in_pickup_range %s", max, size_table(cfg.in_pickup_range))
+    local _ = debug_dump and vl("max %s | in_pickup_range %s", max, size_table(cfg.in_pickup_range))
     if (max < 2) or is_empty(cfg.in_pickup_range) then return end
     local id_curr   = get_current_target()
     local ind_curr  = pickup_index[id_curr] or 1
@@ -3095,7 +3114,7 @@ function on_key_release(key)
             if not (dur and time and (dur >= time)) then
                 if pickup then
                     cfg.use_released = nil
-                    vl("No completed hold action, item pickup should occur", time)
+                    --vl("No completed hold action, item pickup should occur", time)
                     force_actor_to_take(pickup)
                 elseif container then
                     vl("No completed hold action, allow inventory interaction", time)
@@ -3113,7 +3132,7 @@ function actor_on_update_pickup(obj)
     cfg.available_pickup = obj and obj:id() or nil
 
     if cfg.last_pickup and cfg.available_pickup and (cfg.last_pickup ~= cfg.available_pickup) then
-        local _ = debug_dump and printf("[DotMarks] actor_on_update_pickup detected new pickup: %s", nameid(obj))
+        --local _ = debug_dump and printf("[DotMarks] actor_on_update_pickup detected new pickup: %s", nameid(obj))
         reset_nearby_item_tables()
     end
 end
@@ -3182,7 +3201,7 @@ function on_mouse_wheel(scroll_dir, flags)
     return end
 
     local direction         = (scroll_dir > 0) and 1 or -1
-    vl("on_mouse_wheel: %s | direction: %s", scroll_dir, direction)
+    local _ = debug_dump and vl("on_mouse_wheel: %s | direction: %s", scroll_dir, direction)
     cycle_targeted_pickup(direction)
     flags.ret_value         = false
 end
@@ -3190,7 +3209,6 @@ end
 function parse_color_data(color_key, csv_string)
     if not (color_key and csv_string) then return end
     local c         = csv_argb_to_tbl(csv_string)
-    --printf("parsing color %s: %s | %s,%s,%s,%s", k,v, c.a, c.r, c.g, c.b)
     cfg.colors[color_key]   = c
     local str       = string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
     set_color_token(color_key, str)
@@ -3299,11 +3317,11 @@ function on_option_change()
             end
             if mcm_path then
                 if reset then
-                    _ = debug_dump and vl("Defaulting %s = %s (was %s)", k, v, get_mcm(mcm_path, cfg[k]))
+                    vl("Defaulting MCM value %s = %s (was %s)", k, v, get_mcm(mcm_path, cfg[k]))
                     ui_mcm.set(mcm_path, v)
                 else
                     cfg[k] = get_mcm(mcm_path, cfg[k])
-                    _ = debug_dump and vl("Loading %s = %s", k, v)
+                    vl("Loading MCM value %s = %s", k, v)
                 end
             else
                 _ = debug_dump and vl("No MCM path found for %s, skipping", k)
@@ -3314,17 +3332,13 @@ function on_option_change()
         parse_color_data("clr_dmark_norm", cfg.argb_dot_normal)
     end
     for k,v in pairs(cfg) do
-        printf("Parsing config value %s | %s | load_argb: %s", k, v, (type(v) == "table") and v.load_argb)
         if k:find("^swap_") and v.load_argb then
-            printf("Loading custom_argb for active_swap %s | %s", k, cfg[v.load_argb])
+            --printf("Loading custom_argb for active_swap %s | %s", k, cfg[v.load_argb])
             v.custom_argb = csv_argb_to_tbl(cfg[v.load_argb])
 
             if v.custom_argb then
                 for i,j in pairs(v.custom_argb) do
-                    printf("color %s = %s", i, j)
                 end
-            else
-                printf("No custom_argb found!")
             end
             v.load_argb = nil
         end
@@ -3356,11 +3370,19 @@ function on_option_change()
 end
 
 function on_game_start()
-    local _ = (DEV_DEBUG or debuglogs or debug_dump) and printf("[%s] Interaction Dot Marks %s (rel %s) began initialization at %s", script_name, script_version, release_date, time_global())
+    local script_version = dotmarks_main and dotmarks_main.script_version
+    local release_date = dotmarks_main and dotmarks_main.release_date
+    local _ = (DEV_DEBUG or debuglogs or debug_dump) and (
+        printf("[%s] Interaction Dot Marks %s (rel %s) began initialization at %s\n",
+            script_name, script_version or "(version not found)", release_date or "missing", time_global()
+        )
+    )
+    local bad_mcm_version = not valid_mcm_version()
     RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
     -- This callback is always registered so that we can notify the player of init failure
     cfg = dotmarks_main and dotmarks_main.get_base_config_table()
-    if cfg and utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
+    local base_failed = not cfg
+    if cfg and (not (base_failed or bad_mcm_version)) and utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
         mags_installed = (magazines and magazine_binder)
         parse_file_data()
         dotmarks_main.refresh_main_config()
@@ -3395,6 +3417,19 @@ function on_game_start()
         end
         return
     end
-    printf("! ERROR: Initialization failed, %s could not load base config from %s!\n" ..
-        "! DotMarks startup aborted, skipping callback registration", script_name, config_file)
+
+    local failmsg
+    if base_failed then
+        cfg = nil
+        failmsg = "could not load base config from dotmarks_main"
+    elseif bad_mcm_version then
+        failmsg = string.format(" to detect MCM 1.7.0 or higher")
+    elseif not cfg then
+        cfg = nil
+        failmsg = string.format(", could not load config file %s", config_file)
+    else
+        failmsg = string.format(" for an unknown reason")
+    end
+    printf("! [%s] ERROR: Initialization failed%s!\n" ..
+        "! DotMarks startup aborted, skipping callback registration", script_name, failmsg)
 end

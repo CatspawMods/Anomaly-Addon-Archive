@@ -2,18 +2,16 @@
 	<file name ="catsy\ui_argb_control">
 		<texture id = "ui_mcm_catsy_argb_chrome100" x="0" y="0" width="440" height="100" />
 		<texture id = "ui_mcm_catsy_argb_chrome60" x="0" y="100" width="440" height="60" />
-	
-		<texture id = "ui_catsy_colorbar_frame" x="674" y="990" width="300" height="63" />
-		<texture id = "ui_catsy_colorbar_inset" x="674" y="1053" width="300" height="63" />
 
 		<texture id = "ui_mcm_catsy_argb_a" x="0" y="160" width="64" height="64" />
 		<texture id = "ui_mcm_catsy_argb_r" x="64" y="160" width="64" height="64" />
 		<texture id = "ui_mcm_catsy_argb_g" x="128" y="160" width="64" height="64" />
 		<texture id = "ui_mcm_catsy_argb_b" x="192" y="160" width="64" height="64" />
 
-		<texture id = "ui_mcm_catsy_argb_inputbox_b" x="440" y="0" width="8" height="40" />
-		<texture id = "ui_mcm_catsy_argb_inputbox_back" x="448" y="0" width="44" height="40" />
-		<texture id = "ui_mcm_catsy_argb_inputbox_e" x="492" y="0" width="8" height="40" />
+		<texture id = "ui_mcm_catsy_argb_text_a" x="256" y="160" width="64" height="64" />
+		<texture id = "ui_mcm_catsy_argb_text_r" x="320" y="160" width="64" height="64" />
+		<texture id = "ui_mcm_catsy_argb_text_g" x="384" y="160" width="64" height="64" />
+		<texture id = "ui_mcm_catsy_argb_text_b" x="448" y="160" width="64" height="64" />
 
 		<texture id = "ui_catsy_button_worn80_e" x="0" y="352" width="80" height="80" />
 		<texture id = "ui_catsy_button_worn80_t" x="0" y="432" width="80" height="80" />
@@ -29,6 +27,18 @@
 		<texture id = "ui_catsy_button_redx80_t" x="160" y="432" width="80" height="80" />
 		<texture id = "ui_catsy_button_redx80_d" x="400" y="352" width="80" height="80" />
 		<texture id = "ui_catsy_button_redx80_h" x="400" y="432" width="80" height="80" />
+
+		<texture id = "ui_catsy_button_check80cb_e" x="0" y="272" width="80" height="80" />
+		<texture id = "ui_catsy_button_check80cb_t" x="80" y="272" width="80" height="80" />
+		<texture id = "ui_catsy_button_check80cb_h" x="160" y="272" width="80" height="80" />
+
+		<texture id = "ui_catsy_button_redx80cb_e" x="240" y="272" width="80" height="80" />
+		<texture id = "ui_catsy_button_redx80cb_t" x="320" y="272" width="80" height="80" />
+		<texture id = "ui_catsy_button_redx80cb_h" x="400" y="272" width="80" height="80" />
+
+		<texture id = "ui_mcm_catsy_argb_inputbox_b" x="440" y="0" width="8" height="40" />
+		<texture id = "ui_mcm_catsy_argb_inputbox_back" x="448" y="0" width="44" height="40" />
+		<texture id = "ui_mcm_catsy_argb_inputbox_e" x="492" y="0" width="8" height="40" />
 	</file>
 </w>
 

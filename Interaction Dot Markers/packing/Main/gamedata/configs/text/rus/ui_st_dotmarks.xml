@@ -730,6 +730,16 @@
 		</text>
 	</string>
 
+	<string id="st_dotmarks_fail_reason_oldmcm">
+		<text>\n$clr_gldInteraction Dot Marks$clr_def не удалось инициализировать, так как для этого требуется MCM версии $clr_grn1.7.0$clr_def или выше, а ваша - $clr_red%s$clr_def. Также проверяется наличие поддержки UI-функтора (найдено: %s).\n
+		\n$clr_def</text>
+	</string>
+
+	<string id="st_catsy_get_mcm">
+		<text>\nВы можете скачать последнюю версию MCM здесь:\n 
+ 		\nhttps://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_header_notmodded">
 		<text>$clr_redВНИМАНИЕ: Вы не используете модифицированные исполняемые файлы!\n
 		\n$clr_whtInteraction Dot Marks$clr_gld для корректной работы требует модифицированных бинарных файлов 20250306 или новее$clr_wht. Прежде чем использовать этот аддон, выполните чистую установку последних модифицированных бинарных файлов с сайта demonized:\n
@@ -804,6 +814,10 @@
 
 	<string id="st_dotmarks_epicfail_error">
 		<text>$clr_redОШИБКА!$clr_wht Сбой аддона!\n</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_nocfg">
+		<text>\n$clr_lblInteraction Dot Marks$clr_def вообще не смогла инициализировать свой файл конфигурации! Это очень плохо, и, вероятно, означает, что в вашей установке что-то серьезно нарушено. Попробуйте переустановить DotMarks со свежей загрузки последней версии и убедитесь, что он загружается после всех других моих аддонов.\n</text>
 	</string>
 
 	<string id="st_dotmarks_fail_reason_noexes">

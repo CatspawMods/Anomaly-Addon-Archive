@@ -805,6 +805,10 @@
 		<text>$clr_redERROR!$clr_wht DotMarks depdendency failure!\n</text>
 	</string>
 
+	<string id="st_dotmarks_fail_reason_nocfg">
+		<text>\n$clr_lblInteraction Dot Marks$clr_def could not initialize its config file at all! This is really bad, and probably means something is seriously broken in your installation. You should try reinstalling DotMarks from a fresh download of the latest version, and ensure that it is loaded after any of my other addons.\n</text>
+	</string>
+
 	<string id="st_dotmarks_fail_reason_noexes">
 		<text>\n$clr_lblInteraction Dot Marks$clr_def could not initialize because it $clr_gldrequires the most recent modded exes$clr_def based on the Anomaly 1.5.3 binaries by TheMrDemonized. These binaries fix vanilla bugs, add many engine features and graphical improvements, and are a superior experience over vanilla in every way.</text>
 	</string>
@@ -812,6 +816,16 @@
 	<string id="st_dotmarks_fail_reason_oldexes">
 		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires a modded exes version of $clr_grn%s$clr_def or newer, and yours is $clr_red%s$clr_def.\n
 		\n$clr_def</text>
+	</string>
+
+	<string id="st_dotmarks_fail_reason_oldmcm">
+		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires MCM version $clr_grn1.7.0$clr_def or higher, and yours was $clr_red%s$clr_def. It also checks for the existence of UI functor support (found: %s).\n
+		\n$clr_def</text>
+	</string>
+
+	<string id="st_catsy_get_mcm">
+		<text>\nYou can download the latest MCM here:\n 
+        \nhttps://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu</text>
 	</string>
 
 	<string id="st_dotmarks_fail_reason_staledbs">

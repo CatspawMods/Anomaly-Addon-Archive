@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: mapspot handling
 -- ===================================================================--]]
 script_name     = "utils_catspaw_mapspots"
-script_version  = "1.0"
-release_date    = 20250311
+script_version  = "1.1"
+release_date    = 20250406
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -276,3 +276,4 @@ function get_mapspot_texture_data(spot)
     return mapspot_data_cache[spot]
 end
 
+printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)

@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.10-b1"
-release_date    = 20250405
+script_version  = "0.10-b2"
+release_date    = 20250406
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -41,13 +41,13 @@ release_date    = 20250405
     should update your modded exes ASAP.
 -- =====================================================================]]
 assert(utils_catspaw_common and utils_catspaw_common.load_file_data, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist or is outdated!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_common, which is outdated or missing!\n\n"
 )
 assert(utils_catspaw_mapspots, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist!\n\n"
+    "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist or failed to load!\n\n"
 )
 assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_text, which does not exist or is an older version!\n" ..
+    "! ui_hud_dotmarks requires script utils_catspaw_text, which is outdated or missing!\n" ..
     "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
     "If the version is outdated, try moving this addon to the bottom of your load order."
 )
@@ -234,7 +234,7 @@ local base_config = {
                 }
                 if cfg.enable_icon_services then
                     if cfg.vendors[sec] then
-                        vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
+                        local _ = debug_dump and vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
                         args.service_type   = cfg.vendors[sec]
                         -- Service NPCs (e.g. traders, mechanics) use an active_swap to show
                         -- a special icon instead of the dot marker when they are targeted
@@ -256,13 +256,6 @@ local base_config = {
                             local str       = tconfig and tconfig:r_string_ex("trader", "buy_supplies")
                             local condlist  = str and xr_logic.parse_condlist(obj, "trader", "buy_supplies", str)
                             local supply    = condlist and xr_logic.pick_section_from_condlist(db.actor, npc, condlist)
-                            printf("Supply level for %s: %s", nameid(obj), supply)
-                            --if supply or (
-                                --(cls == clsid.script_trader) or
-                                --(cls == clsid.trader) or
-                                --(obj:character_community() == "trader") --or
-                                --sec:find("trader")
-                            --) then
                             if supply then
                                 args.service_type = "trader"
                             end
@@ -349,11 +342,9 @@ local base_config = {
                 if not obj then return end
                 local sec           = obj:section()
                 local name          = obj:name()
-                --local unknown       = (gts("st_paw_unknown").." "..gts("st_paw_stash"))
                 local args = {
                     logged_type     = "a stash",
                     is_stash        = true,
-                    --bone            = get_best_pos_bone(obj) or nil,
                     -- By default, marker position is by obj:center(), which is the center of
                     -- the physics shell.
                     -- However, obj:center() doesn't update Lua often in the engine, while
@@ -683,7 +674,6 @@ local base_config = {
                 local name = obj:name()
                 local section = obj:section()
                 local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
-                --printf("Misc loot %s has condition: %s", obj:name(), utils_item.is_degradable(nil, section))
                 return {
                     pickup          = true,
                     bone            = get_best_pos_bone(obj) or nil,
@@ -734,7 +724,6 @@ local base_config = {
                     texture             = get_cfg_for_type("tex", "Workshops") or cfg.marker_dotmark,
                     visual              = visual,
                     no_sec              = true,
-                    --section             = obj:section(),
                     interact_dist       = 1.5,
                     refresh_text        = true,
                     -- Forces the prompt text to check for changes on every update
@@ -785,7 +774,6 @@ function get_cash_quantity_string(section)
     local money
     if section and section:find("^money_") then
         money           = ini_sys:r_string_ex(section, "money_amount") or nil
-        --printf("money amount: %s", money)
         local pre       = ""
         if money and money:find(",") then
             money       = str_explode(money, ",")
@@ -793,11 +781,9 @@ function get_cash_quantity_string(section)
             pre         = "~"
         elseif not money then
             money       = ini_sys:r_float_ex(section, "cost") or nil
-            --printf("no money_amount found, cost is %s", money)
         end
         money           = money and (pre .. tostring(money) .. " " .. gts("st_roubles"))
     end
-    --printf("get_cash_quantity_string for section %s: %s", section, money)
     return money
 end
 
@@ -824,11 +810,8 @@ end
 function get_best_pos_bone(obj)
     local bones = get_bone_list(obj)
     if not bones then return end
-    --printf("get_best_pos_bone found %s bones on %s", size_table(bones), nameid(obj))
     for k,v in pairs(bones) do
-        --printf("Parsing bone %s: %s", k, v)
         if cfg.bones[v] then
-            --printf("Found match for %s in cfg.bones", v)
             return v, k
         end
     end

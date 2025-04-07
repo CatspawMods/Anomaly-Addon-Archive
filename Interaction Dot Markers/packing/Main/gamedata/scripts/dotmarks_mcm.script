@@ -5,13 +5,16 @@
  	Author: Catspaw (CatspawMods @ ModDB)
 -- ====================================================================]]
 assert(utils_catspaw_common, "\n\n"..
-    "! dotmarks_mcm requires utils_catspaw_common, which does not exist!\n\n"
+    "! dotmarks_mcm requires utils_catspaw_common, which does not exist or failed to load!\n\n"
 )
 assert(utils_catspaw_text, "\n\n"..
-    "! dotmarks_mcm requires utils_catspaw_text, which does not exist!\n\n"
+    "! dotmarks_mcm requires utils_catspaw_text, which does not exist or failed to load!\n\n"
 )
 assert(dotmarks_main, "\n\n"..
-    "! dotmarks_mcm requires dotmarks_main, which does not exist!\n\n"
+    "! dotmarks_mcm requires dotmarks_main, which does not exist or failed to load!\n\n"
+)
+assert(ui_hud_dotmarks, "\n\n"..
+    "! dotmarks_mcm requires ui_hud_dotmarks, which does not exist or failed to load!\n\n"
 )
 script_name 		= "dotmarks_mcm"
 debuglogs 			= false
@@ -90,7 +93,6 @@ function init_simple_icon(anchor, handlers, opts, flags)
 	icons[opt_id]:SetWndPos(vector2():set((flags.icon_x or 0) * cfg.unsquish_ratio, flags.icon_y or 0))
 	return icons[opt_id]
 end
-
 
 function init_icon_list(anchor, handlers, opts, flags)
 	local icos = opts and opts.icon_list or cfg.service_icons
@@ -181,7 +183,6 @@ function init_dotmark_preview(anchor, handlers, opts, flags)
 end
 
 function on_dotmark_size_select(path, opt, value, attrs)
-	--printf("on_dotmark_size_select | path %s | opt %s | val %s", path, opt, value)
 	local ctrl 	= wnds[opt]
 	if not ctrl then return end
 	cache[opt] 	= value
@@ -195,7 +196,6 @@ function on_dotmark_size_select(path, opt, value, attrs)
 	local x 	= (opts.icon_x + diff ) * cfg.unsquish_ratio
 	local x2 	= (opts.icon_x + diff2 - 35 ) * cfg.unsquish_ratio
 	local y 	= opts.icon_y
-	--printf("[%s][%s] val %s | sz %s,%s | new %s,%s | diff %s | x,y %s,%s", path,opt,value,szw,szh,w,h,diff,x,y)
 	sync_widget_size(ctrl.reg, w, h)
 	sync_widget_size(ctrl.act, w * 2, h * 2)
 	ctrl.reg:SetWndPos(vector2():set(x, y + diff))
@@ -266,21 +266,6 @@ function get_main_menu()
 		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color},
 		{ id = "show_stash_weight", 	type = "check", 	val = 1, def = cfg.show_stash_weight},
 		{ id = "wheel_cycles_pickups", 	type = "check", 	val = 1, def = cfg.wheel_cycles_pickups },
-		--[[
-		{ id = "dot_marker_size", 		type = "track",		val = 2, min = 0, step = 0.1, max = 2, def = cfg.dot_marker_size,
-			on_selection_functor= {dotmarks_mcm.on_dotmark_size_select},
-			ui_hook_functor 	= {dotmarks_mcm.init_dotmark_preview},
-			icon 	= cfg.marker_dotmark or "",
-			icon_w 	= (cfg.dotmark_preset.width or 5),-- * 1.5,
-			icon_h 	= (cfg.dotmark_preset.height or 5),-- * 1.5,
-			icon_x 	= 370,
-			icon_y 	= 12,
-		},
-
-		get_argb_input_element("argb_dot_normal", cfg.colors.clr_dmark_norm),
-
-		get_argb_input_element("argb_dot_focus", cfg.colors.clr_dmark_focus),
---]]
 
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha },
 
@@ -489,7 +474,7 @@ end
 function generate_icons_menu()
 	local gr = {
 	-- ======================================================================
-	-- 	Main header
+	-- 	Main header and marker settings
 		{ id = "menuslide_icons", 		type = "slide", link = "ui_mcm_dotmarks_banner_icons", size = {512,50}, spacing = 0 },
 
 		{ id = "iconheader", type = "desc", text = "ui_mcm_dotmarks_header_icons",
@@ -517,7 +502,7 @@ function generate_icons_menu()
 		get_argb_input_element("argb_dot_focus", cfg.colors.clr_dmark_focus),
 
 	-- ======================================================================
-	-- 	Focus icons that aren't singletons and need to be at the top
+	-- 	Iterate focus icons for service NPCs
 		{ id = "enable_icon_tasks", type = "check", val = 1, def = cfg.enable_icon_tasks,
 			ui_hook_functor = {dotmarks_mcm.init_icon_list},
 			icon_list 	= cfg.task_icons,
@@ -567,15 +552,7 @@ function generate_icons_menu()
 				icon_x = 450, 	icon_y = 11
 			}
 		)
-		table.insert(gr, get_argb_input_element(argb_id)
-			--[[
-			{ id = argb_id, type = "input", val = 0, def = "255,255,255,255",
-				ui_hook_functor = {ui_mcm_argb_input.init_mcm_argb_control},
-				ui_snd_path 	= "catspaw\\paw_blip",
-				preset_args 	= argb_control_preset,
-			}
-			--]]
-		)
+		table.insert(gr, get_argb_input_element(argb_id))
 	end
 
 	table.insert(gr, { id = "divider", type= "line" })
