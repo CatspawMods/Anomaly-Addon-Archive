@@ -1,6 +1,9 @@
 -- =======================================================================
 --[[      ITEM PICKUP CONTROL - APM MONKEYPATCH
+-- =======================================================================
     Author: Catspaw
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
     Do whatever you like with this patch.
 
     The Anomaly Popup Messages addon does not check whether it has already
@@ -8,7 +11,11 @@
     This causes duplicate messages to appear.
 
     This script does nothing whatsoever when APM is not installed.
+
+    If the author of APM fixes this behavior in some future release of 
+    theirs, this file can be safely hidden or deleted.
 -- =====================================================================]]
+
 local apm_actor_on_item_take = popup_pickup and popup_pickup.actor_on_item_take
 timeout = 2000
 pickups = {}

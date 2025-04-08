@@ -476,7 +476,15 @@
 		<text>Enable special icon for explosive objects</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_boom_desc">
-		<text>If this option is enabled, explosive objects will use a special "I explode" icon instead of the standard dot marker.
+		<text>If this option is enabled, explosive objects will use a special "I explode" icon instead of the standard dot markers.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_butcher">
+		<text>Enable special icon for mutant-skinning prompt</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_butcher_desc">
+		<text>If this option is enabled, the prompt to skin a mutant will use its own special icon instead of the standard dot markers.
 		</text>
 	</string>
 
@@ -484,7 +492,7 @@
 		<text>Enable special icon for stashes</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_stash_desc">
-		<text>If this option is enabled, stashes will use a classic stash icon instead of the standard dot marker when their primary interaction prompt is shown.
+		<text>If this option is enabled, stashes will use a classic stash icon instead of the standard dot markers when their primary interaction prompt is shown.
 		</text>
 	</string>
 
@@ -492,7 +500,7 @@
 		<text>Enable special icon for breakable boxes</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_box_desc">
-		<text>If this option is enabled, breakable boxes will use a special "breakable object" icon instead of the standard dot marker.
+		<text>If this option is enabled, breakable boxes will use a special "breakable object" icon instead of the standard dot markers.
 		</text>
 	</string>
 
@@ -508,7 +516,7 @@
 		<text>Enable special icons for service NPCs</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_services_desc">
-		<text>If this option is enabled, service NPCs will use a service-specific icon instead of the standard dot marker when their primary interaction prompt is shown.
+		<text>If this option is enabled, service NPCs will use a service-specific icon instead of the standard dot markers when their primary interaction prompt is shown.
 		</text>
 	</string>
 
@@ -516,7 +524,7 @@
 		<text>Enable special icon for doors</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_door_desc">
-		<text>If this option is enabled, doors will use their own special icon instead of the standard dot marker when their primary interaction prompt is shown.
+		<text>If this option is enabled, doors will use their own special icon instead of the standard dot markers when their primary interaction prompt is shown.
 		</text>
 	</string>
 
@@ -524,7 +532,7 @@
 		<text>Enable special icon for task objectives</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_tasks_desc">
-		<text>If this option is enabled, objects that are the target of the current active task will use a hi-res task marker icon instead of the standard dot marker.
+		<text>If this option is enabled, objects that are the target of the current active task will use a hi-res task marker icon instead of the standard dot markers.
 		</text>
 	</string>
 
@@ -829,7 +837,7 @@
 	</string>
 
 	<string id="st_dotmarks_fail_reason_staledbs">
-		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires the $clr_gldactor_on_update_pickup$clr_def callback, added in exes version $clr_grn20250306$clr_def. Your modded exes are release clr_gld%sclr_def, but the callback is missing!\n
+		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires the $clr_gldactor_on_update_pickup$clr_def callback, added in exes version $clr_grn20250306$clr_def. Your modded exes are release $clr_gld%s$clr_def, but the callback is missing!\n
 			$clr_def
 			\nIf you're seeing this message, it means that you've updated the exe files but are still using old DB files. You must perform a clean reinstall of the modded exes, from scratch.</text>
 	</string>
@@ -847,6 +855,11 @@
         \nhttps://github.com/themrdemonized/xray-monolith</text>
     </string>
 
+	<string id="st_catsy_failmessage_in_log_or_pda">
+		<text>\n
+		\nYou can see this message again $clr_gldin your PDA under the Messages tab$clr_def, or a plaintext version $clr_gldin the game log found under Anomaly\appdata\logs$clr_def.</text>
+    </string>
+
 	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_x">
 		<text>Action text X offset</text>
 	</string>
@@ -854,7 +867,7 @@
 		<text>Adjusts the horizontal offset of the action text. This is the text that says what the interaction does, e.g. "pick up the thing".
 		 \n
 		\nDefault: 24</text>
-	</string>	
+	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y">
 		<text>Action text Y offset</text>
@@ -925,6 +938,10 @@
 
 	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_boom">
 		<text>Customize color for the "explosive" icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_butcher">
+		<text>Customize color for the mutant-skinning icon</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkicons_argb_icon_stash">

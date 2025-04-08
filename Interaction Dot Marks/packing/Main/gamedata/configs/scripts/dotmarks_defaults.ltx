@@ -37,11 +37,11 @@ prompts
 racked_items
 scan
 section_lookup
+section_swaps
 service_icons
 setting_icons
 smokables
 state_conds
-task_icons
 tex
 useless_shit
 vendors
@@ -54,6 +54,7 @@ weight_colors
 
 ; At the moment in DotMarks it's mostly used to set apart the active swap property 
 ; lists.
+swap_butcher
 swap_door
 swap_dotactive
 swap_service
@@ -196,6 +197,8 @@ enable_icon_box 			= true
 ; Enables the special "breakable item" icon used for physics boxes
 enable_icon_boom 			= true
 ; Enables the special icon used for some explosive objects
+enable_icon_butcher			= true
+; Enables the special icon used for the prompt to skin a mutant
 enable_icon_door 			= true
 ; Enables the special icon used for doors
 enable_icon_stash 			= true
@@ -276,6 +279,7 @@ argb_icon_door
 argb_icon_talk
 argb_icon_box
 argb_icon_boom
+argb_icon_butcher
 argb_icon_stash
 argb_service_trade
 argb_service_mech
@@ -456,10 +460,6 @@ explo_jerrycan_fuel
 explosive_mobiltank
 explosive_tank
 
-[task_icons]
-pri 		= ui_catsy_marker_task_pri
-sec 		= ui_catsy_marker_task_sec
-
 [swap_dotactive]
 texture 	= ui_catsy_marker_dotactive
 load_argb 	= argb_dot_focus
@@ -468,6 +468,15 @@ height      = 12
 line_adj_h  = -11
 line_adj_x  = 3.25
 line_adj_y  = 10
+
+[swap_butcher]
+texture     = ui_catsy_marker_butcher
+load_argb 	= argb_icon_butcher
+width       = 16
+height      = 16
+line_adj_x  = 4
+line_adj_h  = -11
+line_adj_y  = 11
 
 [swap_door]
 texture     = ui_catsy_marker_door
@@ -567,6 +576,7 @@ dynamics\box\box_wood_01 	= true
 dynamics\box\box_metall_01	= true
 
 [smokables]
+; Section names of objects that will receive a "smoke" action verb in their prompt
 cigar
 cigar1
 cigar2
@@ -580,6 +590,7 @@ tobacco
 hand_rolling_tobacco
 
 [manual_use]
+; FDDA won't properly handle usage, have to do so manually
 joint
 
 [door_visuals]
@@ -602,9 +613,33 @@ ws_noaccess = st_tiski_no_info
 ws_use 		= st_tiski
 ws_repair 	= st_awr_tiski
 
+[section_lookup]
+; First step in object detection and classification
+; Section names are the most-specific criteria, so they're checked first
+; Any section name here will override any other classification
+hand_watch      	= Devices
+wpn_binoc_inv   	= Devices
+lead_box        	= Tools
+csky_patch      	= Misc
+dolg_patch      	= Misc
+ecolog_patch    	= Misc
+freedom_patch   	= Misc
+stalker_patch   	= Misc
+bandit_patch    	= Misc
+monolith_patch  	= Misc
+army_patch      	= Misc
+killer_patch    	= Misc
+renegade_patch  	= Misc
+isg_patch       	= Misc
+greh_patch      	= Misc
+af_misery_bread 	= Artefacts
+explosive_mobiltank	= Tools
+explosive_tank 		= Tools
+
 [kind_lookup]
 ; More or less lifted entirely from the debug menu
 ; For quicker lookup than iterating through the entire category-checking loop
+; Mostly accurate but misses some things
 i_arty_junk   	= Artefacts
 i_arty     		= Artefacts
 ARTEFACT    	= Artefacts
@@ -694,26 +729,6 @@ G_RGD5_S    	= Weapons
 G_F1 	    	= Weapons
 G_RGD5 	    	= Weapons
 
-[section_lookup]
-hand_watch      	= Devices
-wpn_binoc_inv   	= Devices
-lead_box        	= Tools
-csky_patch      	= Misc
-dolg_patch      	= Misc
-ecolog_patch    	= Misc
-freedom_patch   	= Misc
-stalker_patch   	= Misc
-bandit_patch    	= Misc
-monolith_patch  	= Misc
-army_patch      	= Misc
-killer_patch    	= Misc
-renegade_patch  	= Misc
-isg_patch       	= Misc
-greh_patch      	= Misc
-af_misery_bread 	= Artefacts
-explosive_mobiltank	= Tools
-explosive_tank 		= Tools
-
 [bones]
 ; List of valid bones to use for positioning
 bone01
@@ -726,9 +741,13 @@ wpn_body
 
 ; =================================================================================
 [mcm_paths]
-; The paths below allow better iteration through the config table to get MCM settings.
-; Paths with "/" at the end will have the key name appended to get the final path
-; Otherwise the path will be used as-is, which allows support for other addon settings
+; The paths below allow better iteration through the config table to update MCM
+; settings, and helps me keep track of what settings are in which menu.
+
+; Paths with "/" at the end will have the key name appended to get the final path.
+
+; Otherwise the path will be used as-is, which allows support for loading settings
+; from other addons directly into the config table.
 ; =================================================================================
 ; Main menu
 show_item_card  		= dotmarks/dmarkmain/
@@ -770,6 +789,7 @@ argb_dot_focus 			= dotmarks/dmarkicons/
 enable_icon_tasks 		= dotmarks/dmarkicons/
 enable_icon_boom		= dotmarks/dmarkicons/
 enable_icon_box			= dotmarks/dmarkicons/
+enable_icon_butcher		= dotmarks/dmarkicons/
 enable_icon_door		= dotmarks/dmarkicons/
 enable_icon_talk		= dotmarks/dmarkicons/
 enable_icon_services	= dotmarks/dmarkicons/
@@ -778,6 +798,7 @@ argb_icon_door			= dotmarks/dmarkicons/
 argb_icon_talk			= dotmarks/dmarkicons/
 argb_icon_box			= dotmarks/dmarkicons/
 argb_icon_boom			= dotmarks/dmarkicons/
+argb_icon_butcher		= dotmarks/dmarkicons/
 argb_icon_stash			= dotmarks/dmarkicons/
 argb_service_trade		= dotmarks/dmarkicons/
 argb_service_mech		= dotmarks/dmarkicons/

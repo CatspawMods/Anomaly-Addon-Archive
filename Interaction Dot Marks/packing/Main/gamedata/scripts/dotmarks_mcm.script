@@ -472,6 +472,10 @@ end
 
 
 function generate_icons_menu()
+	local task_icons =  {
+		pri = cfg.swap_task_pri and cfg.swap_task_pri.texture,
+		sec = cfg.swap_task_sec and cfg.swap_task_sec.texture
+	}
 	local gr = {
 	-- ======================================================================
 	-- 	Main header and marker settings
@@ -505,7 +509,7 @@ function generate_icons_menu()
 	-- 	Iterate focus icons for service NPCs
 		{ id = "enable_icon_tasks", type = "check", val = 1, def = cfg.enable_icon_tasks,
 			ui_hook_functor = {dotmarks_mcm.init_icon_list},
-			icon_list 	= cfg.task_icons,
+			icon_list 	= task_icons,
 			icon_w 		= 32, 	icon_h 		= 32,
 			icon_x 		= 450, 	icon_y 		= 8,
 		},
@@ -534,7 +538,16 @@ function generate_icons_menu()
 	-- ======================================================================
 	-- 	Iterate the rest of the focus icons
 	local tbl = {}
+	local icons = {}
+
 	for k,v in pairs(cfg.setting_icons) do
+		local iclass = cfg.setting_icons[k]
+		local icon 	= iclass and cfg.tex[iclass]
+		icons[k] = icon
+	end
+	icons["enable_icon_butcher"] = cfg.swap_butcher and cfg.swap_butcher.texture
+
+	for k,v in pairs(icons) do
 		tbl[#tbl + 1] = k
 	end
 
@@ -542,8 +555,8 @@ function generate_icons_menu()
 	for _, opt_id in spairs(tbl) do
 		local argb_id = opt_id:gsub("enable", "argb")
 		local enabled = cfg[opt_id]
-		local iclass = cfg.setting_icons[opt_id]
-		local icon 	= iclass and cfg.tex[iclass]
+		local icon 	= icons[opt_id]
+		
 		table.insert(gr, 
 			{ id = opt_id, type = "check", val = 1, def = cfg[opt_id],
 				ui_hook_functor = {dotmarks_mcm.init_simple_icon},
@@ -623,3 +636,4 @@ function on_mcm_load()
 	return op
 end
 
+ 

@@ -39,10 +39,9 @@ script_name     = "ui_hud_dotmarks"
     should update your modded exes ASAP.
 -- =======================================================================
     TODO:
-    -   See what's going on with knife-in-inventory skinning prompt
-    -   Complete vanilla Loner playthrough and validate all quest prompts
-    -   Test with EVERY distinct type of item
-    -   Otimize and clean up a whole lot of WIP code
+    -   Validate that all quest prompts in vanilla Loner playthrough work
+    -   Test with EVERY distinct type of item in the debug menu
+    -   Optimize and clean up a whole lot of WIP code
     -   Check various doors for per-visual offsets
     -   Some cabinet doors marked at the hinge instead of the lock
     -   Take all from stash opens the stash anyway (need to trap)
@@ -2065,12 +2064,12 @@ function check_for_dependencies(silent, debug_test)
     -- Modded exes are a hard requirement, nothing will function without them
 
     local exes_version          = MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version()) or 0
-    local old_exes_nocallback   = (exes_version < 20250306)
-    vl("old_exes_nocallback: %s", old_exes_nocallback)
+    local no_callback_old_exes   = (exes_version < 20250306)
+    vl("no_callback_old_exes: %s", no_callback_old_exes)
     -- Modded exes found, but too old to support actor_on_update_pickup callback
 
-    local no_callback_old_dbs   = (_G.CPickupModeUpdate_COD == nil)
-    vl("no_callback_old_dbs: %s", no_callback_old_dbs)
+    local no_callback_old_dbs   = (_G.CPickupModeUpdate_COD == nil) or not cfg.update_pickup_firing
+    vl("no_callback_old_dbs: %s | found in _G %s | callback firing %s", no_callback_old_dbs, not (_G.CPickupModeUpdate_COD == nil), cfg.update_pickup_firing)
     -- Modded exes up to date, but stale DB files causing missing callback
 
     local no_lookat_method      = (exes_version < 20250225) or (not db.actor.get_actor_object_looking_at)
@@ -2088,54 +2087,49 @@ function check_for_dependencies(silent, debug_test)
     -- HUD Mark Manager not found, which is really bad because we should've asserted by now
 
     local epic_fail             = (not using_modded_exes) or
+                                    no_callback_old_exes or
+                                    no_callback_old_dbs or
                                     no_hud_mark_manager or
                                     no_pickup_callback or
                                     no_lookat_method or
                                     bad_mcm_version or
                                     no_config
     if not (epic_fail or debug_test) then return end
-
     cfg = cfg or {}
     cfg.killswitch_all = true
     set_handler_callbacks(true)
 
     if (not using_modded_exes) or (debug_test and debug_test == 1) then
-        failmessage         = gts("st_dotmarks_epicfail_error") ..
-                            gts("st_dotmarks_fail_reason_noexes") ..
+        failmessage         = gts("st_dotmarks_fail_reason_noexes") ..
                             gts("st_get_modded_exes")
 
-    elseif old_exes_nocallback or (debug_test and debug_test == 2) then
-        failmessage         = gts("st_dotmarks_epicfail_error") ..
-                            string.format(gts("st_dotmarks_fail_reason_oldexes"), 20250306, exes_version) ..
+    elseif no_callback_old_exes or (debug_test and debug_test == 2) then
+        failmessage         = string.format(gts("st_dotmarks_fail_reason_oldexes"), 20250306, exes_version) ..
                             gts("st_get_modded_exes")
 
     elseif no_lookat_method or (debug_test and debug_test == 3) then
-        failmessage         = gts("st_dotmarks_epicfail_error") ..
-                            string.format(gts("st_dotmarks_fail_reason_oldexes"), 20250225, exes_version) ..
+        failmessage         = string.format(gts("st_dotmarks_fail_reason_oldexes"), 20250225, exes_version) ..
                             gts("st_get_modded_exes")
 
     elseif no_callback_old_dbs or (debug_test and debug_test == 4) then
-        failmessage         = gts("st_dotmarks_epicfail_error") ..
-                            string.format(gts("st_dotmarks_fail_reason_staledbs"), exes_version) ..
+        failmessage         = string.format(gts("st_dotmarks_fail_reason_staledbs"), exes_version) ..
                             gts("st_get_modded_exes")
 
     elseif bad_mcm_version or (debug_test and debug_test == 5) then
-        failmessage         = gts("st_dotmarks_epicfail_error") ..
-                            string.format(gts("st_dotmarks_fail_reason_oldmcm"), mcm_version, ui_functors) ..
+        failmessage         = string.format(gts("st_dotmarks_fail_reason_oldmcm"), mcm_version, ui_functors) ..
                             gts("st_catsy_get_mcm")
 
     elseif no_hud_mark_manager or (debug_test and debug_test == 6) then
-        failmessage         = gts("st_dotmarks_epicfail_error") ..
-                            gts("st_dotmarks_fail_reason_nohmm")
+        failmessage         = gts("st_dotmarks_fail_reason_nohmm")
 
     elseif no_config or (debug_test and debug_test == 7) then
-        failmessage         = gts("st_dotmarks_epicfail_error") ..
-                            gts("st_dotmarks_fail_reason_nocfg")
+        failmessage         = gts("st_dotmarks_fail_reason_nocfg")
     end
 
     if failmessage then
+        failmessage = gts("st_dotmarks_epicfail_error") .. failmessage .. gts("st_catsy_failmessage_in_log_or_pda")
         local log_msg = parse_colors(failmessage, nil, false)
-        printf(log_msg)
+        printf(logprefix .. log_msg)
         if silent and not debug_test then
             return epic_fail
         end
@@ -2153,13 +2147,13 @@ end
 
 function actor_on_first_update()
     hmm = utils_catspaw_hudmarks and utils_catspaw_hudmarks.get_hud_mark_manager()
-    if check_for_dependencies(false) then return end
     CreateTimeEvent("dotmark_scan_delay", 0, cfg.scan_start_delay, start_scanning)
     maingameui = ActorMenu.get_maingame()
     xml = CScriptXmlInit()
 end
 
 function start_scanning()
+    if check_for_dependencies(false) then return true end
     scanning = true
     if utils_catspaw_taskmonitor then
         utils_catspaw_taskmonitor.set_monitor_active(true)
@@ -2590,11 +2584,13 @@ function update_targeted_object()
         target = get_object_by_id(cfg.available_pickup)
         method = 2
         -- 20250306 modded exes required for pickup callback
-    elseif db.actor.get_actor_object_looking_at then
+    end
+    if (not target) and db.actor.get_actor_object_looking_at then
         -- 20250225 modded exes required for this method
         target = db.actor:get_actor_object_looking_at()
         method = 1
-    else
+    end
+    if not target then
         -- Vanilla but very finicky, requires the object to be precisely under the crosshair
         target = level.get_target_obj()
         method = 0
@@ -3418,17 +3414,15 @@ function on_game_start()
         return
     end
 
-    local failmsg
+    local failmsg = ""
     if base_failed then
         cfg = nil
-        failmsg = "could not load base config from dotmarks_main"
+        failmsg = " to load base config from dotmarks_main"
     elseif bad_mcm_version then
         failmsg = string.format(" to detect MCM 1.7.0 or higher")
     elseif not cfg then
         cfg = nil
-        failmsg = string.format(", could not load config file %s", config_file)
-    else
-        failmsg = string.format(" for an unknown reason")
+        failmsg = string.format(" to load config file %s", config_file)
     end
     printf("! [%s] ERROR: Initialization failed%s!\n" ..
         "! DotMarks startup aborted, skipping callback registration", script_name, failmsg)

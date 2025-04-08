@@ -18,6 +18,7 @@
  			return
  		end
  	end
+    --printf("Allowing loot window to open")
  	base_ui_inventory_start(mode, obj)
  end
  
