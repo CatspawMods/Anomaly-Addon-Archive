@@ -625,7 +625,7 @@
 		<text>Средний шрифт</text>
 	</string>
 	<string id="ui_mcm_lst_dmarks_font_small">
-		<text>Мелкий шрифт (без кириллицы)</text>
+		<text>Мелкий шрифт</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_itemcard_desc">
@@ -731,13 +731,22 @@
 
 	<string id="ui_mcm_dotmarks_header_oldexes">
 		<text>$clr_redВНИМАНИЕ: Ваши модифицированные двоичные файлы устарели!\n
-		\n$clr_whtInteraction Dot Marks$clr_gld для корректной работы требует моддинга 20250306 или новее$clr_wht. Прежде чем использовать этот аддон, выполните чистую установку последних модифицированных бинарников от demonized:\n
+		\n$clr_whtInteraction Dot Marks$clr_gld для корректной работы требует моддинга $clr_grn20250306$clr_wht или новее$clr_wht. Ваша версия - %s.\n
+
+		\nПрежде чем использовать этот аддон, выполните чистую установку последних модифицированных бинарников от demonized:\n
+
 		\nhttps://github.com/themrdemonized/xray-monolith
 		</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_header_fail_nocolor">
+		<text>\nInteraction Dot Marks не удалось инициализировать, поскольку для этого требуется MCM версии 1.7.0 или выше. Вы видите это сообщение, потому что ваша версия MCM настолько стара, что в ней нет поддержки UI-функторов. Пожалуйста, немедленно обновите вашу версию MCM до последней из Moddb:\n
+
+		\nhttps://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu</text>
+	</string>
+
 	<string id="st_dotmarks_fail_reason_oldmcm">
-		<text>\n$clr_gldInteraction Dot Marks$clr_def не удалось инициализировать, так как для этого требуется MCM версии $clr_grn1.7.0$clr_def или выше, а ваша - $clr_red%s$clr_def. Также проверяется наличие поддержки UI-функтора (найдено: %s).\n
+		<text>\n$clr_gldInteraction Dot Marks$clr_def не удалось инициализировать, так как для этого требуется MCM версии $clr_grn1.7.0$clr_def или выше, а ваша - $clr_red%s$clr_def. Также проверяется наличие поддержки UI-функтора (найдено: %s). Оба требования являются обязательными.\n
 		\n$clr_def</text>
 	</string>
 
@@ -767,7 +776,7 @@
 	<string id="ui_mcm_dotmarks_scanmenu">
 		<text>$clr_whtСледующие флажки$clr_gld контролируют, добавляются ли видимые точечные маркеры $clr_wht к каждому классу объектов. Если какие-то из них отвлекают или менее полезны для вас, снимите флажок, чтобы скрыть их маркеры. Вы по-прежнему сможете взаимодействовать с объектами обычным образом.\n
 
-		\n$clr_gldЕсли вы внесете изменения здесь, они могут не вступить в силу для уже отсканированных объектов, пока вы не отойдете от них или не перезагрузите игру.</text>
+		\n$clr_redЕсли вы внесете изменения здесь, они могут не вступить в силу для уже отсканированных объектов, пока вы не отойдете от них или не перезагрузите игру.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_alti_desc">

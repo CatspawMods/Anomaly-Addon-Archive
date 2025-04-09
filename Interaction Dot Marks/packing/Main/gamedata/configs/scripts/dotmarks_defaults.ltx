@@ -23,6 +23,7 @@ colors
 display_cases
 door_visuals
 dotmark_preset
+explosive_tools
 grenade_ammo_clsids
 in_pickup_range
 invboxes
@@ -37,7 +38,6 @@ prompts
 racked_items
 scan
 section_lookup
-section_swaps
 service_icons
 setting_icons
 smokables
@@ -86,6 +86,10 @@ early_scan_radius           = 2
 ; Radius in meters beyond the near scan for the early scan
 use_skill_system            = true
 ; Enable Skill System integration
+use_fallback_targeting 		= true
+; If no valid target is found using the actor_on_update_pickup function, tries to use older methods
+fallback_distance_check 	= true
+; If fallback targeting is enabled, checks distance of object against sec_interact_dist
 haru_skill_name             = scavenging
 ; Name of related skill
 haru_skill_coef             = 0.2
@@ -168,7 +172,7 @@ font_main_prompt 			= 2
 ; The UI tries to adapt, but some fonts work better than others
 font_item_card				= 0
 ; Font to use for the item card text
-; The default small font has no Cyrillic support, but it's the only one of its size
+; The default small font has no Cyrillic support, but only needs to display numbers
 ui_scale 					= 1
 ; Multiplier for UI element size and position calculations
 ; WIP, not enabled yet
@@ -613,6 +617,10 @@ ws_noaccess = st_tiski_no_info
 ws_use 		= st_tiski
 ws_repair 	= st_awr_tiski
 
+[explosive_tools]
+explo_metalcan_powder
+explosive_tank
+
 [section_lookup]
 ; First step in object detection and classification
 ; Section names are the most-specific criteria, so they're checked first
@@ -844,6 +852,7 @@ popin_anim_dur 			= dotmarks/dmarkadv/
 ; From other addons
 fddar_multipickup 		= fddar/pickup/multipickup
 fddar_pickup_anim 		= fddar/pickup/enable
+fdda_anims_enabled 		= EA_settings/enable_animations
 fdda_pickup_anim 		= EA_settings/take_item_anim
 show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
 show_parts_armor		= item_icon_info/part_dots/show_on_armor

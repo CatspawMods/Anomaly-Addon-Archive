@@ -22,20 +22,23 @@ local exes_version 	= MODDED_EXES_VERSION or (get_modded_exes_version and get_mo
 local header_desc 	= "ui_mcm_dotmarks_header_main"
 local xml 			= CScriptXmlInit()
 local headers 		= {}
-
+local valid_mcm 	= false
+local load_failed 	= false
 local get_main_config 	= utils_catspaw_common.get_main_config
 local gts 				= game.translate_string
 local psk 				= utils_data.parse_string_keys
 local sfind 			= string.find
 local ssub 				= string.sub
 local lang 				= "eng"
+local nocolor_desc 		= "ui_mcm_dotmarks_header_main_nocolor"
 local play_snd_path 	= dotmarks_main.play_snd_path
 script_version 			= dotmarks_main.script_version or "ersion not found!"
 local csv_argb_to_tbl 	= utils_catspaw_text.csv_argb_to_tbl
 release_date			= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
 local rel_version 		= string.format("$clr_tgrv%s (rel %s)", script_version, release_date)
 local cfg 				= utils_catspaw_common.load_file_data("scripts\\dotmarks_defaults.ltx", cfg, {logging = debuglogs, called_by = script_name})
-
+local MCM_VERSION
+local UI_FUNCTORS
 color_tokens = {
     ["clr_lbl"] = "%" .. "%c[255,0,200,220]",
     ["clr_gld"] = "%" .. "%c[255,255,215,0]",
@@ -52,6 +55,24 @@ local pre 	= {}
 local wnds 	= {}
 local cache = {}
 local icons = {}
+
+function valid_mcm_version(silent)
+    if not (ui_mcm and ui_mcm.VERSION) then return end
+    local log 	= DEV_DEBUG and not silent
+    MCM_VERSION = ui_mcm and ui_mcm.VERSION
+    local ver 	= MCM_VERSION and str_explode(MCM_VERSION, "%.")
+    local maj 	= tonumber(ver and ver[1]) or 0
+    local min 	= tonumber(ver and ver[2]) or 0
+    local pat 	= tonumber(ver and ver[3]) or 0
+    UI_FUNCTORS	= not not (ui_mcm and ui_mcm.UI_MCM and ui_mcm.UI_MCM.Init_Wrapper_Box)
+    local _ 	= log and printf("[DotMarks] MCM version string: %s | major %s | minor %s | patch %s | functors exist: %s", MCM_VERSION, maj, min, pat, UI_FUNCTORS)
+    local inv 	= (not UI_FUNCTORS) or (maj < 1) or ((maj == 1) and (min < 7))
+    local pre 	= inv and "!" or "+"
+    _ = log and printf(pre.." MCM version check: %s", inv and "FAILED" or "Passed")
+    if inv then return false, ver, UI_FUNCTORS end
+    return true, ver, UI_FUNCTORS
+end
+
 function unsquish(width)
     return (width or 0) * (cfg.unsquish_ratio or 1)
 end
@@ -66,7 +87,12 @@ function under_to_slash(st)
 	return st and st:gsub("_",  _opt_)
 end
 
+function load_success()
+	return not load_failed
+end
+
 function init_preview(anchor, handlers, opts, flags)
+	if not load_success() then return end
 	pre.main = xml:InitStatic("box", anchor)
 	pre.main:SetWndSize(vector2():set(unsquish(300), 190))
 	pre.main:SetWndPos(vector2():set(unsquish(430), (lang == "rus") and 210 or 180))
@@ -121,7 +147,7 @@ local argb_ctrl
 
 function init_header_element(anchor, handlers, opts, flags)
 	handlers.desc:SetText("")
-	if opts.id == ("blank_space") then return end
+	local localized_text
 
 	local bg	= xml:InitStatic("box", anchor)
 	local text	= xml:InitTextWnd("box", bg)
@@ -130,25 +156,38 @@ function init_header_element(anchor, handlers, opts, flags)
 		anchor:SetWndPos(vector2():set(0, opts.dmark_apos))
 	end
 
-	if opts.id == "header_main" then
+	if (opts.id == "header_main") then
+		if load_failed then
+			if (not valid_mcm) then
+				localized_text = string.format(gts("st_dotmarks_fail_reason_oldmcm"), MCM_VERSION, UI_FUNCTORS) .. gts("st_catsy_get_mcm")
+			elseif exes_version then
+				local text = gts("ui_mcm_dotmarks_header_oldexes")
+				localized_text = string.format(text, exes_version)
+			else
+				localized_text = gts("ui_mcm_dotmarks_header_notmodded")
+			end
+		end
+
 		local rvbox	= xml:InitTextWnd("box", anchor)
 		rvbox:SetWndSize(vector2():set(480 * cfg.unsquish_ratio, 20))
 		rvbox:SetText(psk(rel_version, color_tokens))
 		rvbox:SetWndPos(vector2():set(10 * cfg.unsquish_ratio, -8))
-		--rvbox:SetFont(GetFontSmall())
 		rvbox:SetTextComplexMode(true)
 	end
 
 	if opts.dmark_tex then
-		bg:SetWndSize(vector2():set(650 * cfg.unsquish_ratio, opts.dmark_box_h or 0))
+		bg:SetWndSize(vector2():set(650 * cfg.unsquish_ratio, 0))
 		bg:SetWndPos(vector2():set(10, opts.dmark_bpos or 0))
 		bg:InitTexture(opts.dmark_tex)
 	end		
 
-	text:SetWndSize(vector2():set(620 * cfg.unsquish_ratio, opts.dmark_text_h or 0))
-	text:SetText(psk(gts(opts.dmark_text or opts.text), color_tokens))
-	text:SetWndPos(vector2():set(10, opts.dmark_text_v or 0))
+	text:SetWndSize(vector2():set(620 * cfg.unsquish_ratio, 0))
+	text:SetText(psk(localized_text or gts(opts.dmark_text or opts.text), color_tokens))
+	text:SetWndPos(vector2():set(10, opts.dmark_text_v or 12))
 	text:SetTextComplexMode(true)
+	text:AdjustHeightToText()
+
+	bg:SetWndSize(vector2():set(bg:GetWidth(), text:GetHeight() + 25))
 end
 
 
@@ -246,30 +285,27 @@ function get_main_menu()
 		{ id = "menuslide_main", type = "slide", link = "ui_mcm_dotmarks_banner_main", size = {512,50}, spacing = 0,
 			ui_hook_functor = {dotmarks_mcm.init_preview},
 			-- a proper PAW-style live preview is going to take a lot more work
-		},		
-		{ id = "header_main", 		type = "desc", text = "ui_mcm_dotmarks_header_main_nocolor",
+		},
+		{ id = "header_main", 		type = "desc", text = "ui_mcm_dotmarks_header_fail_nocolor",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_text 		= header_desc,
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head" .. ((lang == "rus") and "140" or "90"),
 			dmark_apos 		= -20,
 			dmark_bpos 		= 10,
-			dmark_box_h 	= (lang == "rus") and 130 or 100,
-			dmark_text_h 	= (lang == "rus") and 120 or 90,
-			dmark_text_v 	= 12
 		},
 
-		{ id = "show_item_card", 		type = "check", 	val = 1, def = cfg.show_item_card},
-		{ id = "show_item_charge", 		type = "check", 	val = 1, def = cfg.show_item_charge},
-		{ id = "show_multi_uses", 		type = "check", 	val = 1, def = cfg.show_multi_uses},
-		{ id = "sp_flag_favejunk", 		type = "check", 	val = 1, def = cfg.sp_flag_favejunk},
-		{ id = "show_item_condition", 	type = "check", 	val = 1, def = cfg.show_item_condition and not utils_catspaw_common.using_gamma_modpack},
-		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color},
-		{ id = "show_stash_weight", 	type = "check", 	val = 1, def = cfg.show_stash_weight},
-		{ id = "wheel_cycles_pickups", 	type = "check", 	val = 1, def = cfg.wheel_cycles_pickups },
+		{ id = "show_item_card", 		type = "check", 	val = 1, def = cfg.show_item_card, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_item_charge", 		type = "check", 	val = 1, def = cfg.show_item_charge, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_multi_uses", 		type = "check", 	val = 1, def = cfg.show_multi_uses, precondition = { dotmarks_mcm.load_success } },
+		{ id = "sp_flag_favejunk", 		type = "check", 	val = 1, def = cfg.sp_flag_favejunk, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_item_condition", 	type = "check", 	val = 1, def = cfg.show_item_condition and not utils_catspaw_common.using_gamma_modpack, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_stash_weight", 	type = "check", 	val = 1, def = cfg.show_stash_weight, precondition = { dotmarks_mcm.load_success } },
+		{ id = "wheel_cycles_pickups", 	type = "check", 	val = 1, def = cfg.wheel_cycles_pickups, precondition = { dotmarks_mcm.load_success } },
 
-		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha },
+		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha, precondition = { dotmarks_mcm.load_success } },
 
-		{ id = "divider", type= "line" },
+		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
 	}
 end
 
@@ -283,9 +319,6 @@ function get_sec_menu()
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_apos 		= -5,
-			dmark_box_h 	= 115,
-			dmark_text_h 	= 105,
-			dmark_text_v 	= 10
 		},
 		{ id = "bind_sec_interact", 	type = "key_bind", 			val = 2, def = cfg.bind_sec_interact or bind_to_dik(key_bindings.kUSE)},
 		{ id = "modk_sec_interact", 	type = ui_mcm.kb_mod_radio, val = 2, def = cfg.modk_sec_interact, hint = "mcm_kb_modifier", 
@@ -323,9 +356,6 @@ function get_mods_menu()
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 			dmark_apos 		= -10,
-			dmark_box_h 	= 75,
-			dmark_text_h 	= 70,
-			dmark_text_v 	= 11
 		},
 		{ id = "bodies_use_paw_patches",type = "check", 	val = 1, def = cfg.bodies_use_paw_patches },
 		{ id = "bodies_use_mpda_rules",	type = "check", 	val = 1, def = cfg.bodies_use_mpda_rules },
@@ -357,9 +387,6 @@ function get_adv_menu()
 			dmark_text 		= "ui_mcm_dotmarks_header_debug",
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head140",
 			dmark_apos 		= -20,
-			dmark_box_h 	= 145,
-			dmark_text_h 	= 130,
-			dmark_text_v 	= 10
 		},
 		{ id = "debuglogs", 			type = "check", 	val = 1, def = ui_hud_dotmarks.debuglogs },
 		{ id = "verbose", 				type = "check", 	val = 1, def = ui_hud_dotmarks.verbose },
@@ -369,9 +396,6 @@ function get_adv_menu()
 		{ id = "header_adv", 		type = "desc", text = "ui_mcm_dotmarks_adv_desc",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
-			dmark_box_h 	= 95,
-			dmark_text_h 	= 90,
-			dmark_text_v 	= 9
 		},
 
 		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
@@ -434,9 +458,6 @@ function get_adv_menu()
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 			dmark_apos 		= -10,
-			dmark_box_h 	= 70,
-			dmark_text_h 	= 60,
-			dmark_text_v 	= 10
 		},
 		{ id = "item_card_pos_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.item_card_pos_x },
 		{ id = "item_card_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.item_card_pos_y },
@@ -448,9 +469,6 @@ function get_adv_menu()
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 			dmark_apos 		= -10,
-			dmark_box_h 	= 60,
-			dmark_text_h 	= 50,
-			dmark_text_v 	= 12
 		},
 		{ id = "pri_use_x_offset", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.pri_use_x_offset },
 		{ id = "pri_use_y_offset", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.pri_use_y_offset },
@@ -484,9 +502,6 @@ function generate_icons_menu()
 		{ id = "iconheader", type = "desc", text = "ui_mcm_dotmarks_header_icons",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
-			dmark_box_h 	= 70,
-			dmark_text_h 	= 65,
-			dmark_text_v 	= 10,
 			dmark_bpos 		= -10
 		},
 
@@ -582,9 +597,6 @@ function generate_objs_menu()
 		{ id = "scanheader", type = "desc", text = "ui_mcm_dotmarks_scanmenu",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head140",
-			dmark_box_h 	= 120,
-			dmark_text_h 	= 110,
-			dmark_text_v 	= 10,
 			dmark_bpos 		= -10
 		},
 	}
@@ -616,21 +628,19 @@ function on_mcm_load()
 	color_tokens = utils_catspaw_text.get_color_tokens() or color_tokens
 	lang = ui_options.curr_localization()
 	xml:ParseFile("ui_dotmarks.xml")
-	if exes_version then
-		if exes_version < 20250306 then
-			header_desc = "ui_mcm_dotmarks_header_oldexes"
-		end
-	else
-		header_desc = "ui_mcm_dotmarks_header_notmodded"
+	valid_mcm = valid_mcm_version()
+	if (not valid_mcm) or (not exes_version) or (exes_version < 20250306) then
+		--nocolor_desc = "ui_mcm_dotmarks_header_fail_nocolor"
+		load_failed = true
 	end
 
 	op = { id = "dotmarks", gr = {
 			{ id = "dmarkmain", sh = true, gr = get_main_menu() },
-			{ id = "dmarksec", 	sh = true, gr = get_sec_menu() },
-			{ id = "dmarkicons", sh = true, gr = generate_icons_menu() },
-			{ id = "dmarkobjs", sh = true, gr = generate_objs_menu() },
-			{ id = "dmarkmods", sh = true, gr = get_mods_menu() },
-			{ id = "dmarkadv", 	sh = true, gr = get_adv_menu() },
+			{ id = "dmarksec", 	sh = true, precondition = { dotmarks_mcm.load_success }, gr = get_sec_menu() },
+			{ id = "dmarkicons", sh = true, precondition = { dotmarks_mcm.load_success }, gr = generate_icons_menu() },
+			{ id = "dmarkobjs", sh = true, precondition = { dotmarks_mcm.load_success }, gr = generate_objs_menu() },
+			{ id = "dmarkmods", sh = true, precondition = { dotmarks_mcm.load_success }, gr = get_mods_menu() },
+			{ id = "dmarkadv", 	sh = true, precondition = { dotmarks_mcm.load_success }, gr = get_adv_menu() },
 		}
 	}
 	return op

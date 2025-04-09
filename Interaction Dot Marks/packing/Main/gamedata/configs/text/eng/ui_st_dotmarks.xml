@@ -627,7 +627,7 @@
 		<text>Medium Print</text>
 	</string>
 	<string id="ui_mcm_lst_dmarks_font_small">
-		<text>Small Print (no Cyrillic)</text>
+		<text>Small Print</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_itemcard_desc">
@@ -733,7 +733,10 @@
 
 	<string id="ui_mcm_dotmarks_header_oldexes">
 		<text>$clr_redWARNING: Your modded binaries are out of date!\n
-		\n$clr_whtInteraction Dot Marks $clr_gldrequires modded binaries 20250306 or newer$clr_wht in order to function properly. Before attempting to use this addon, perform a clean installation of the latest demonized modded binaries:\n
+		\n$clr_whtInteraction Dot Marks $clr_gldrequires modded binaries $clr_grn20250306$clr_gld or newer$clr_wht in order to function properly, and yours is $clr_red%s$clr_wht.\n
+
+		\nBefore attempting to use this addon, perform a CLEAN installation of the latest demonized modded binaries:\n
+
 		\nhttps://github.com/themrdemonized/xray-monolith
 		</text>
 	</string>
@@ -753,13 +756,13 @@
 
 	<string id="ui_mcm_dotmarks_addons_desc">
 		<text>$clr_gldOther Addon Support\n
-			$clr_whtDotMarks supports multiple other addons, such as Sorting Plus, Utjan's Item UI, Milspec PDA, PAW, and more. Some of these integrations have options which you can adjust here.</text>
+			$clr_whtDotMarks supports multiple other addons such as Sorting Plus, Utjan's Item UI, Milspec PDA, PAW, and more. Some of these integrations have options which you can adjust here.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_scanmenu">
 		<text>$clr_whtThe following checkboxes $clr_gldcontrol whether visible dot markers are added$clr_wht to each different class of object. If any are distracting or less useful for you, unchecking them here will hide their markers. You can still interact with the objects normally.\n
 
-		\n$clr_gldIf you make changes here, they may not take effect for already-scanned objects until you move away from them or saveload.</text>
+		\n$clr_redIf you make changes here, they may not take effect for already-scanned objects until you move away from them or saveload.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_alti_desc">
@@ -826,8 +829,14 @@
 		\n$clr_def</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_header_fail_nocolor">
+		<text>\nInteraction Dot Marks could not initialize because it requires MCM version 1.7.0 or higher. You are seeing this message because your version of MCM is so old that it doesn't have UI functor support. Please upgrade your version of MCM immediately to the latest from Moddb:\n
+
+		\nhttps://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu</text>
+	</string>
+
 	<string id="st_dotmarks_fail_reason_oldmcm">
-		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires MCM version $clr_grn1.7.0$clr_def or higher, and yours was $clr_red%s$clr_def. It also checks for the existence of UI functor support (found: %s).\n
+		<text>\n$clr_gldInteraction Dot Marks$clr_def could not initialize because it requires MCM version $clr_grn1.7.0$clr_def or higher, and yours was $clr_red%s$clr_def. It also checks for the existence of UI functor support (found: %s). Both are required.\n
 		\n$clr_def</text>
 	</string>
 

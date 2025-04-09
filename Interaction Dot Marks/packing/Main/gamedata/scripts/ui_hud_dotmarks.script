@@ -52,6 +52,9 @@ script_name     = "ui_hud_dotmarks"
 assert(dotmarks_main, "\n\n"..
     "! ui_hud_dotmarks requires script dotmarks_main, which does not exist or failed to load!\n\n"
 )
+assert(dotmarks_mcm, "\n\n"..
+    "! ui_hud_dotmarks requires script dotmarks_mcm, which does not exist or failed to load!\n\n"
+)
 assert(utils_catspaw_common, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist or failed to load!\n\n"
 )
@@ -143,13 +146,13 @@ get_nearby_campfire     = dotmarks_main.get_nearby_campfire
 get_nearest_firebinder  = dotmarks_main.get_nearest_campfire_binder
 get_val_or_funcval      = dotmarks_main.get_val_or_funcval
 get_cfg_for_type        = dotmarks_main.get_cfg_for_type
-is_fdda_installed       = dotmarks_main.is_fdda_installed
 is_blacklisted          = dotmarks_main.is_blacklisted
 is_empty_mutant_corpse  = dotmarks_main.is_empty_mutant_corpse
 get_fixed_screen_pos    = dotmarks_main.get_fixed_screen_pos
 play_snd_path           = dotmarks_main.play_snd_path
 getargb                 = dotmarks_main.getargb
 fonts                   = dotmarks_main.fonts
+valid_mcm_version       = dotmarks_mcm.valid_mcm_version
 targeted_id, locked_id  = nil
 scanning                = false
 cfg                     = {}
@@ -158,7 +161,9 @@ nearby_pickups          = {}
 active_anims            = {}
 -- ======================================================================
 local st_kg             = gts("st_kg")
-local ea_enabled        = false
+local fdda_installed    = false
+local fddar_installed   = false
+local anims_enabled     = false
 local anim_playing      = false
 local actor_moved       = false
 local maingameui        = nil
@@ -264,7 +269,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     --printf("obj is dead body | mpda rules: %s | empty %s", cfg.bodies_use_mpda_rules, is_empty_mutant_corpse(obj))
                                     local tracked = true
                                     if is_empty_mutant_corpse(obj) then
-                                        printf("mutant corpse is empty, destroying")
+                                        vl("Mutant corpse is empty, destroying marker")
                                         destroy_marker(mark.mark_id, "empty mutant corpse")
                                         return
                                     elseif cfg.bodies_use_mpda_rules and item_milpda then
@@ -526,6 +531,14 @@ function killswitch(feature)
     return ks
 end
 
+function get_fddar_current_action()
+    return lam2 and lam2.get_current_action()
+end
+
+function fddar_update_current_anim_state()
+    anim_playing = lam2 and lam2.is_running()
+end
+
 function get_fdda_callback()
     --local anim_en = (cfg.fdda_pickup_anim or cfg.fddar_pickup_anim) or nil
     --printf("Animations enabled: %s | FDDA %s | FDDAR %s", anim_en, cfg.fdda_pickup_anim, cfg.fddar_pickup_anim)
@@ -540,7 +553,7 @@ end
 
 function item_pickup_intercept(obj, flags)
     if killswitch("pickup") then return end
-
+    --printf("[%s][item_pickup_intercept] %s | ret_value: %s", time_global(), nameid(obj), flags and flags.ret_value)
     -- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
     -- Called by my monkeypatch of FDDA/FDDAR's pickup if they are
     local now = time_global()
@@ -577,7 +590,7 @@ function item_pickup_intercept(obj, flags)
         -- if flags.ret_value is already false when it gets to DotMarks, DotMarks will assume
         -- that FDDA is handling the pickup part
         -- However, some items don't appear to respond to this handling, so we use them manually
-            --flags.ret_value = false
+            vl("flags.ret_value is %s, manually taking %s", flags.ret_value, nameid(taken_obj))
             db.actor:take_item(taken_obj)
         end
     end
@@ -786,7 +799,7 @@ function is_already_target(id)
 end
 
 function get_condition_color(condition, section)
-    printf("get_condition_color | cond %s | sec %s", condition, section)
+    --printf("get_condition_color | cond %s | sec %s", condition, section)
     if not condition then return end
     local args      = {}
     local c         = cfg.colors
@@ -972,7 +985,6 @@ function InteractPrompt:SetupDoorHandlers(args)
             local locked = self.door.data and self.door.data.locked
             local tips = self.door.tips
             local msg = locked and tips.unlock or self.door.is_open() and tips.close or tips.open
-            --printf("door %s is open: %s | locked %s | returning msg %s", args.name, self.door.ctrl:is_open(), locked, msg)
             return msg
         end
     )
@@ -1892,7 +1904,7 @@ function InteractPrompt:actor_on_update()
         self:BusyState(not can_loot, prefix, changed)
     end
 
-    if ea_enabled and cfg.alti_busy_during_anim and not self.busy_locked then
+    if anims_enabled and cfg.alti_busy_during_anim and not self.busy_locked then
         self:BusyState(anim_playing)
     end
 end
@@ -2035,6 +2047,7 @@ function show_interaction_dots(tf)
     cfg.hide_interaction_dots = not tf
 end
 
+--[[
 function valid_mcm_version(silent)
     if not (ui_mcm and ui_mcm.VERSION) then return end
     local log = (DEV_DEBUG or debuglogs or debug_dump) and not silent
@@ -2051,6 +2064,7 @@ function valid_mcm_version(silent)
     if invalid then return false end
     return true
 end
+--]]
 
 function check_for_dependencies(silent, debug_test)
     vl("[%s] Checking for dependencies", time_global())
@@ -2129,7 +2143,7 @@ function check_for_dependencies(silent, debug_test)
     if failmessage then
         failmessage = gts("st_dotmarks_epicfail_error") .. failmessage .. gts("st_catsy_failmessage_in_log_or_pda")
         local log_msg = parse_colors(failmessage, nil, false)
-        printf(logprefix .. log_msg)
+        printf("! " .. logprefix .. log_msg)
         if silent and not debug_test then
             return epic_fail
         end
@@ -2197,22 +2211,25 @@ function get_args_for_valid_objects(obj)
         args.has_power  = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
     end
 
+    local method
     local stype = get_type_for_section(sec)
     if stype then
-        -- Switched these around in 0.9-b10, section is more specific than kind
-        --vl("Section %s found in lookup: %s", sec, stype)
+        vl("Section %s found in lookup: %s", sec, stype)
+        method = 0
         setup_item_args(stype)
     else
         local ktype = get_type_for_kind(kind)
         if ktype then
-            --vl("Kind %s found in lookup: %s", kind, ktype)
+            vl("Kind %s found in lookup: %s", kind, ktype)
+            method = 1
             setup_item_args(ktype)
         else
             for item_class, enabled in pairs(cfg.scan) do
                 --printf("Checking %s against category %s", obj:name(), item_class)
                 if cfg.is_item[item_class](obj) then
-                    --vl("Type found via iteration: %s", item_class)
+                    vl("Type found via iteration: %s", item_class)
                     setup_item_args(item_class)
+                    method = 2
                     break
                 end
             end
@@ -2222,9 +2239,9 @@ function get_args_for_valid_objects(obj)
     if not args.texture then
         local pid = cfg.available_pickup
         if (id == pid) then
-            printf("! Obj %s failed classification, but is detected by engine as a pickup!\n"..
+            printf("! %s Obj %s failed classification, but is detected by engine as a pickup!\n"..
                 "$ Classifying \"Misc\" as a fallback, investigate: section %s | clsid %s | kind %s",
-                nameid(nil, id), sec, cls, kind
+                logprefix, nameid(nil, id), sec, cls, kind
             )
             setup_item_args("Misc")
         else
@@ -2233,7 +2250,8 @@ function get_args_for_valid_objects(obj)
     end
     if not args.texture then return end
 
-    dl("get_args_for_valid_objects: %s classification is %s", nameid(obj), args.logged_type)
+    local method_txt = (method > 1) and "iteration" or (method > 0) and "kind" or "section"
+    dl("get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
     return args
 end
 
@@ -2579,42 +2597,55 @@ end
 
 function update_targeted_object()
     --vl("update_targeted_object: %s", time_global())
+    local last_id = targeted_id
     local target, method
     if cfg.available_pickup then
         target = get_object_by_id(cfg.available_pickup)
         method = 2
         -- 20250306 modded exes required for pickup callback
     end
-    if (not target) and db.actor.get_actor_object_looking_at then
-        -- 20250225 modded exes required for this method
-        target = db.actor:get_actor_object_looking_at()
-        method = 1
-    end
-    if not target then
-        -- Vanilla but very finicky, requires the object to be precisely under the crosshair
-        target = level.get_target_obj()
-        method = 0
+    if (not target) and cfg.use_fallback_targeting then
+        if db.actor.get_actor_object_looking_at then
+            -- 20250225 modded exes required for this method
+            target = db.actor:get_actor_object_looking_at()
+            method = 1
+        else
+            -- Vanilla but very finicky, requires the object to be precisely under the crosshair
+            target = level.get_target_obj()
+            method = 0
+        end
     end
     local id = target and target:id()
     if cfg.racked_items[id] then
         targeted_id = cfg.racked_items[id]
+        target = get_game_object(targeted_id)
     else
         targeted_id = id
     end
+    local method_txt = ""
     if method then
         if method > 1 then
-            method = "avail_pickup"
+            method_txt = "avail_pickup"
         elseif method > 0 then
-            method = "looking_at"
+            method_txt = "looking_at"
         else
-            method = "target_obj"
+            method_txt = "target_obj"
         end
     end
 
     cfg.active_task_target_id = get_task_target()
-    if targeted_id and debug_dump then
-        target = get_game_object(targeted_id)
-        vl("update_targeted_object: targeted_id is now %s (%s) | method %s", targeted_id, target and target:name(), method)
+    if targeted_id then
+        if target and cfg.fallback_distance_check and (targeted_id ~= last_id) and (method < 2) then
+            local apos = db.actor:position()
+            local dist = apos:distance_to(target:position())
+            if dist > (cfg.sec_interact_dist or 2.5) then
+                targeted_id = nil
+            end
+        end
+        if debug_dump and targeted_id then
+            target = target or get_game_object(targeted_id)
+            local _ = target and vl("update_targeted_object: targeted_id is now %s (%s) | method %s", targeted_id, target and target:name(), method_txt)
+        end
     end
 end
 
@@ -2815,7 +2846,7 @@ end
 
 
 function is_busy_with_anim()
-    if (not anim_playing) or (not ea_enabled) then
+    if (not anim_playing) or (not anims_enabled) then
         return false
     end
     return not cfg.alti_busy_during_anim
@@ -2825,7 +2856,7 @@ function delay_consume_action(id, manual_use)
     if fdda_callback and anim_playing then return true end
     local obj = id and get_object_by_id(id)
     if not obj then return true end
-    if (enhanced_animations and ea_enabled and not manual_use) then
+    if (anims_enabled and not manual_use) then
         local _ = debug_dump and vl("[%s][delay_consume_action] passing %s to FDDA", time_global(), nameid(obj, id))
         SendScriptCallback("actor_on_item_before_use", obj, {ret_value = true})
     else
@@ -2899,11 +2930,11 @@ function handle_secondary_interact(obj)
     end
 end
 
-function ea_on_item_use()
+function on_item_use_anim_start()
     anim_playing = true
 end
 
-function ea_on_item_anim_stop()
+function on_item_use_anim_stop()
     anim_playing = false
 end
 
@@ -3277,6 +3308,37 @@ function set_item_pickup_callbacks(kill)
     end
 end
 
+function set_item_anim_callbacks(kill)
+    if lam2 and fddar_installed then
+        if anims_enabled and not (kill or killswitch()) then
+            if lam2.Subscribe then
+                lam2.Subscribe("on_anim_queue_start", on_item_use_anim_start)
+                lam2.Subscribe("on_anim_queue_stop", on_item_use_anim_stop)
+                
+            else
+                RegisterScriptCallback("actor_on_update", fddar_update_current_anim_state)
+            end
+        else
+            if lam2.Unsubscribe then
+                lam2.Unsubscribe("on_anim_queue_start", on_item_use_anim_start)
+                lam2.Unsubscribe("on_anim_queue_stop", on_item_use_anim_stop)
+            else
+                UnregisterScriptCallback("actor_on_update", fddar_update_current_anim_state)
+            end
+        end
+    elseif ea_callbacks and fdda_installed then
+        if anims_enabled and not (kill or killswitch()) then
+            vl("Registering FDDA item animation callbacks")
+            ea_callbacks.EA_RegisterScriptCallback("ea_on_item_use", on_item_use_anim_start)
+            ea_callbacks.EA_RegisterScriptCallback("ea_on_item_anim_stop", on_item_use_anim_stop)
+        else
+            vl("Unregistering FDDA item animation callbacks")
+            ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_use", on_item_use_anim_start)
+            ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_anim_stop", on_item_use_anim_stop)
+        end
+    end
+end
+
 function set_handler_callbacks(kill)
     if kill or killswitch() then
         UnregisterScriptCallback("actor_on_update", actor_on_update)
@@ -3296,6 +3358,7 @@ function set_handler_callbacks(kill)
         RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
     end
     set_item_pickup_callbacks(kill)
+    set_item_anim_callbacks(kill)
 end
 
 function on_option_change()
@@ -3329,7 +3392,6 @@ function on_option_change()
     end
     for k,v in pairs(cfg) do
         if k:find("^swap_") and v.load_argb then
-            --printf("Loading custom_argb for active_swap %s | %s", k, cfg[v.load_argb])
             v.custom_argb = csv_argb_to_tbl(cfg[v.load_argb])
 
             if v.custom_argb then
@@ -3349,7 +3411,12 @@ function on_option_change()
     verbose         = get_mcm("dotmarks/dmarkadv/verbose", verbose)
     _uiscale        = get_mcm("dotmarks/dmarkadv/ui_scale", _uiscale)
     dl("Debug logging enabled | verbose %s | debug_dump %s", debuglogs, verbose, debug_dump)
-    ea_enabled      = ea_callbacks and get_mcm("EA_settings/enable_animations", ea_enabled)
+    if z_fdda_pickup_intercept_dotmarks then
+        fddar_installed = (not not z_fdda_pickup_intercept_dotmarks.fddar_oibp)
+        fdda_installed  = (not not z_fdda_pickup_intercept_dotmarks.fdda_oibp)
+        anims_enabled   = (fddar_installed and cfg.fddar_pickup_anim) or (fdda_installed and cfg.fdda_pickup_anim and cfg.fdda_anims_enabled)
+    end
+
     scanned         = {}
     use_dik         = bind_to_dik(key_bindings.kUSE)
     if cfg.bind_sec_interact == nil then
@@ -3373,12 +3440,13 @@ function on_game_start()
             script_name, script_version or "(version not found)", release_date or "missing", time_global()
         )
     )
-    local bad_mcm_version = not valid_mcm_version()
+    valid_mcm_version = dotmarks_mcm and dotmarks_mcm.valid_mcm_version
+    local bad_mcm_version = (not valid_mcm_version) or not valid_mcm_version()
     RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
     -- This callback is always registered so that we can notify the player of init failure
     cfg = dotmarks_main and dotmarks_main.get_base_config_table()
     local base_failed = not cfg
-    if cfg and (not (base_failed or bad_mcm_version)) and utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
+    if cfg and (not bad_mcm_version) and utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
         mags_installed = (magazines and magazine_binder)
         parse_file_data()
         dotmarks_main.refresh_main_config()
@@ -3397,20 +3465,8 @@ function on_game_start()
         if stealth_kill_detection then
             RegisterScriptCallback("npc_on_silent_kill_callback", handle_npc_death)
         end
-
-        local last_en = ea_enabled
         on_option_change()
-        if ea_callbacks and (ea_enabled ~= last_en) then
-            if ea_enabled and not killswitch() then
-                vl("Registering item animation callbacks")
-                ea_callbacks.EA_RegisterScriptCallback("ea_on_item_use", ea_on_item_use)
-                ea_callbacks.EA_RegisterScriptCallback("ea_on_item_anim_stop", ea_on_item_anim_stop)
-            else
-                vl("Unregistering item animation callbacks")
-                ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_use", ea_on_item_use)
-                ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_anim_stop", ea_on_item_anim_stop)
-            end
-        end
+        _ = (fdda_installed and fddar_installed) and printf("! WARNING: Both FDDA and FDDA Redone scripts were found, but FDDA scripts should be disabled! Leaving them both active can lead to busyhands or other serious issues.")
         return
     end
 

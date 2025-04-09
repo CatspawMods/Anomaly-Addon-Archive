@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.10-b3"
-release_date    = 20250408
+script_version  = "0.10-b4"
+release_date    = 20250409
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -535,7 +535,7 @@ local base_config = {
             function(obj)
                 local section       = obj and obj:section()
                 local blast         = section and ini_sys:r_float_ex(section, "blast")
-                if blast and (blast > 0) and (section ~= "explo_metalcan_powder") then
+                if blast and (blast > 0) and not cfg.explosive_tools[section] then
                     -- More special cases, yay
                     return {iclass_override = "Explosive"}
                 end
@@ -815,11 +815,6 @@ end
 
 function early_scan_radius()
     return near_scan_radius() + (cfg.early_scan_radius or 5)
-end
-
-function is_fdda_installed()
-    local monkey = z_fdda_pickup_intercept_dotmarks
-    return not not (monkey and (monkey.fddar_oibp or monkey.fdda_oibp))
 end
 
 function unsquish(width)
