@@ -23,8 +23,8 @@
 	See "FUNCTOR USAGE" below for more details.
 -- ====================================================================]]
 script_name     = "ui_mcm_argb_input"
-script_version  = "2.0"
-release_date    = 20250406
+script_version  = "2.1"
+release_date    = 20250410
 -- ======================================================================
 local UIMCM, UIMM
 RegisterScriptCallback("main_menu_on_init", ( function(m)  UIMM = m end ))
@@ -38,6 +38,12 @@ function mcm_cache_value(path, opt, value, v)
 	UIMCM = UIMM.mcm_dlg
 	if (not UIMCM) or ui_mcm.is_gathering() then return end
 	UIMCM:CacheValue(path, opt, value, v)
+end
+
+function mcm_get_value(path, opt, v, flags)
+	UIMCM = UIMM.mcm_dlg
+	if (not UIMCM) or ui_mcm.is_gathering() then return end
+	return UIMCM:GetValue(path, opt, v, flags)
 end
 
 -- ======================================================================
@@ -226,7 +232,7 @@ function UIARGBControl:InitControls()
 			self.opts[k] = v
 		end
 	end
-	self.init_value = ui_mcm.UI_MCM:GetValue(self.path, self.opt, self.opts, self.flags)
+	self.init_value = mcm_get_value(self.path, self.opt, self.opts, self.flags)
 	self.init_argb 	= self:GetColorsFromString(self.init_value)
 	self.argb 		= self.init_argb and dup_table(self.init_argb) or self.argb
 
@@ -509,4 +515,3 @@ function init_mcm_argb_control(anchor, handlers, opts, flags)
 end
 
 -- ======================================================================
-
