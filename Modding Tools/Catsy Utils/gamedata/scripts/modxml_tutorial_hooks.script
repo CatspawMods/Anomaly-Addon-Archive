@@ -2,41 +2,77 @@
 --[[	Game Tutorial Hooks and Monitors - DXML Module
 -- ===================================================================--]]
 script_name 	= "modxml_tutorial_hooks"
-script_version 	= "1.2"
-release_date    = 20250307
+script_version 	= "2.0"
+release_date    = 20250410
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
 -- =======================================================================	
 	DEPENDENCIES:
+
 	This script requires the on_xml_read cache feature of the 20250228 
 	modded exes update. Get it here:
 
 	https://github.com/themrdemonized/xray-monolith
 -- =======================================================================	
 	PURPOSE:
+
 	Many game prompts--such as "use" prompts for campfires, sleep zones, 
-	and quest-specific interacts--are displayed using the game's 
+	and some quest-specific interacts--are displayed using the game's 
 	"tutorial" system, which is defined in game_tutorials.xml. The text 
 	container that it writes to is NOT accessible to scripts, and there 
 	is no scripted hook to know which tutorial is active or when they 
 	start/stop.
 
-	The purpose of this script is to implement those hooks. It adds new
-	in/out functors to every node in ui\game_tutorials.xml that watches
-	for the "use" key (the <guard_key> child node). When a tutorial
-	begins or ends, the functors will fire to update the monitors table.
+	The purpose of this script is to implement those hooks, and replace
+	the vanilla interaction text for tutorial prompts with content that
+	is identical, but can be controlled and trapped by other scripts.
 
-	You can get the state of any tutorial like so:
-
-	modxml_tutorial_hooks.monitors[tutorial_name]
-
-	Where tutorial_name is the name of the node in game_tutorials.xml,
-	e.g. "tutorial_campfire_ignite" for the prompt to light a campfire.
+	It adds new	in/out functors to every node in ui\game_tutorials.xml 
+	that tries to trap the "use" key (the <guard_key> child node). When a 
+	tutorial begins or ends, the functors will fire to update the monitors 
+	table, and one of two new callbacks will be sent.
 -- =======================================================================	
-	If another script sets replacements_enabled to false during runtime,
-	it should cause the on_xml_read to abort out, thus disabling the 
-	changes made by this script the next time a tutorial loads.
+	ACTION PROMPT TEXT CONTROL:
+
+	Because the replacements hide the vanilla tutorial text static, this 
+	script also provides a way to control whether they're shown.
+
+	Since the vanilla static isn't accessible, and UIStaticQuickHelp gets 
+	hidden by the engine whenever there isn't an active default action, a
+	new TextWnd named UIStaticTutorials has been created, and is public.
+
+	By default the vanilla text is shown there, but this text can now be 
+	disabled or changed at any time. Since it's a TextWnd, it supports all
+	related methods such as:
+
+	modxml_tutorial_hooks.UIStaticTutorials:GetText()
+
+	And so forth.
+
+	However, the cleanest way to control the text is via the callbacks.
+-- =======================================================================
+	MODPACK AUTHORS:
+
+		If your modpack modifies game_tutorials.xml, and you need to force
+		this script to skip some of your custom tutorial names for any
+		reason, you need to inject your tutorial names into the exceptions
+		table like so:
+
+		1. Create a script named modxml_z_tutorial_hooks_yourmodname.script
+				Where "yourmodname" is obviously replaced with something 
+				identifying your addon.
+				
+				The script name MUST begin with "modxml" in order to load 
+				during DXML processing.
+
+		2. Put something like this in your script:
+				if modxml_tutorial_hooks then
+					modxml_tutorial_hooks.exceptions[my_tutorial_name] = true
+					modxml_tutorial_hooks.exceptions[another_tutorial_name] = true
+				end
+
+		And so on. That should cause this script to skip your tutorials.
 -- =======================================================================
 	Feel free to crib code from this or include a copy of it in your own 
 	addon, but in the interest of avoiding any possibility of conflicts:
@@ -46,24 +82,77 @@ release_date    = 20250307
 	Seriously. Just copy the code into yours if you want to mess with it.
 	Give your script a different name. That's all I ask.
 -- ====================================================================]]
-
 local exes_version 		= MODDED_EXES_VERSION or (get_modded_exes_version and get_modded_exes_version())
-local dxml_cache_enabled= exes_version and (exes_version >= 20250228)
-local do_once 			= false
-local game_tutorials 	= "ui\\game_tutorials.xml"
-local xml_table
-
+local dxml_cache_avail 	= exes_version and (exes_version >= 20250228)
 -- Bomb out if your modded exes version is too old to support DXML cache
-assert(dxml_cache_enabled,
+assert(dxml_cache_avail,
 "! ERROR: Game Tutorial Hooks and Monitors requires the DXML cache feature added by the 20250228 modded exes update. Get it here:\n" ..
 "https://github.com/themrdemonized/xray-monolith\n" ..
 "You really don't want to try using this without it.\n" ..
-"It will cause a severe lag every time you approach a campfire or sleep zone."
-)
+"It will cause a severe lag every time you approach a campfire or sleep zone.")
 
-replacements_enabled 	= true
+-- =======================================================================
+local xml_table, maingameui
+local gts 				= game.translate_string
+local do_once 			= false
+local game_tutorials 	= "ui\\game_tutorials.xml"
+static_xmlfile 			= "maingame.xml"
+static_xmlnode 			= "quick_info"
+replacements_enabled 	= true 	-- killswitch
+callbacks_enabled 		= true 	-- killswitch
+UIStaticTutorials 		= nil
 monitors 				= {}
+exceptions 				= {
+	-- Any tutorial names in this table will be skipped
+	-- These first two are required, otherwise the log will spam errors
+	["totaliz_helper_mlr"]	= true,
+	["credits_seq"]			= true
+}
 
+-- ======================================================================
+--[[	NEW START/STOP CALLBACKS
+-- =======================================================================
+	on_tutorial_prompt_start(tutorial, hint, flags)
+	on_tutorial_prompt_stop(tutorial, hint, flags)
+
+	Where tutorial passes the string name of the tutorial, hint passes
+	the localization string of its hint text, and flags is a table of
+	controls.
+		flags.ret_value	: 	If set false in the start callback, will skip 
+							setting the vanilla tutorial text. In the stop 
+							callback, will abort clearing of the text.
+		flags.hint 		:	Overrides tutorial text with this localization
+							string.
+		flags.text 		: 	If set to anything in either callback, will 
+							override any existing content and set the 
+							tutorial text directly to this. Not localized.
+
+	You can register these callbacks like any other:
+
+	RegisterScriptCallback("on_tutorial_prompt_start", functor)
+	RegisterScriptCallback("on_tutorial_prompt_stop", functor)
+
+	You can also directly get the state of any tutorial like so:
+
+	modxml_tutorial_hooks.monitors[tutorial_name]
+
+	Where tutorial_name is the name of the node in game_tutorials.xml,
+	e.g. "tutorial_campfire_ignite" for the prompt to light a campfire.
+-- ===================================================================--]]
+AddScriptCallback("on_tutorial_prompt_start")
+AddScriptCallback("on_tutorial_prompt_stop")
+
+function SendCallback(tutorial, flags)
+	if not callbacks_enabled then return end
+	if tutorial and monitors[tutorial] then
+		local startstop = monitors[tutorial].state and "start" or "stop"
+		SendScriptCallback("on_tutorial_prompt_"..startstop, tutorial, monitors[tutorial].hint, flags)
+	end
+end
+
+-- =======================================================================
+-- 		DXML REPLACEMENT LOGIC
+-- =======================================================================
 function get_monitoring_functors(tut)
 	if not tut then return end
 	return tut and ([[
@@ -73,14 +162,13 @@ function get_monitoring_functors(tut)
 	]])
 end
 
-
 function query_element(xml_obj, str)
+	if not (xml_obj and str) then return end
 	local res = xml_obj:query(str)
     if res and res[1] then
      	return res[1]
     end
 end
-
 
 function on_xml_read()
     RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj, flags)
@@ -107,16 +195,17 @@ function on_xml_read()
         local root = res and res.kids
 
         if root then
-        	local exceptions = {["totaliz_helper_mlr"]=true, ["credits_seq"]=true}
-        	-- These will cause errors if we try to process them like the others
         	for k,v in pairs(root) do
         		-- Iterate through each tutorial node
         		local tut = str_explode(v.el:sub(2,#v.el), " ")[1]
         		local textnode = (not exceptions[tut]) and query_element(xml_obj, tut .. " item guard_key")
         		local nodetext = textnode and xml_obj:getText(textnode)
         		if nodetext and (nodetext == "use") then
-        			-- the guard_key child node contains the text "use", meaning it traps that bind
+        			-- The guard_key child node contains the text "use", meaning it traps that bind
 	            	monitors[tut] = {}
+	            	textnode = query_element(xml_obj, tut .. " item main_wnd auto_static text")
+	            	monitors[tut].hint = textnode and xml_obj:getText(textnode)
+	            	-- Preserve the vanilla tip text in the monitor
 					local text = get_monitoring_functors(tut)
 	            	local node = tut .. " item"
 					--_ = DEV_DEBUG and printf("game_tutorials_hooks: inserting functor block into node: %s\n* %s", node, text)
@@ -128,14 +217,28 @@ function on_xml_read()
 					-- Procedurally generate in/out handler functions for each tutorial
 					this["monitor_" .. tut .. "_start"] = (
 						function() 
-							--_ = DEV_DEBUG and printf("Began tutorial state %s at %s", tut, time_global())
+							_ = DEV_DEBUG and
+								printf("[TutorialMonitor] Began tutorial state %s at %s", tut, time_global())
 							monitors[tut].state = true
+							local flags = {ret_value = true}
+							SendCallback(tut, flags)
+							if not flags.ret_value then return end
+							local hint = flags.hint or monitors[tut].hint
+							local text = flags.text or (hint and gts(hint)) or ""
+							UIStaticTutorials:SetText(text)
+							UIStaticTutorials:Show(true)
 						end
 					)
 					this["monitor_" .. tut .. "_stop"] = (
 						function() 
-							--_ = DEV_DEBUG and printf("ended tutorial state %s at %s", tut, time_global())
+							_ = DEV_DEBUG and
+								printf("[TutorialMonitor] Ended tutorial state %s at %s", tut, time_global())
 							monitors[tut].state = false
+							local flags = {ret_value = true}
+							SendCallback(tut, flags)
+							local reset_text = flags.ret_value and "" or UIStaticTutorials:GetText()
+							UIStaticTutorials:SetText(flags.text or (flags.hint and gts(flags.hint)) or reset_text)
+							UIStaticTutorials:Show(not flags.ret_value)
 						end
 					)
 		        end
@@ -144,4 +247,16 @@ function on_xml_read()
         -- Cache the results
         xml_table = xml_obj.xml_table
     end)
+end
+
+function actor_on_first_update()
+    maingameui 			= ActorMenu.get_maingame()
+    local xml    		= CScriptXmlInit()
+    xml:ParseFile(static_xmlfile)
+    UIStaticTutorials 	= xml:InitTextWnd(static_xmlnode, maingameui)
+    UIStaticTutorials:SetText("")
+end
+
+function on_game_start()
+	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
 end

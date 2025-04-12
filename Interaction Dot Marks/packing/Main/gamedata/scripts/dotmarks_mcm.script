@@ -411,6 +411,7 @@ function get_adv_menu()
 		
 		{id = "keybind_bg_style", type= "list", val = 2, def = cfg.keybind_bg_style, 
 			content = {
+			   {4,"dmarks_kbstyle_s2"},
 			   {3,"dmarks_kbstyle_worn"},
 			   {2,"dmarks_kbstyle_full"},
 			   {1,"dmarks_kbstyle_wire"},

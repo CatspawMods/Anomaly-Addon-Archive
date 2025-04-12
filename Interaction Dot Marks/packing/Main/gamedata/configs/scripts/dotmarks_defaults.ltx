@@ -19,6 +19,7 @@ blacklisted_kinds
 blacklisted_sections
 bones
 breakable_box_visuals
+button_visuals
 colors
 display_cases
 door_visuals
@@ -78,8 +79,8 @@ early_scan_interval         = 2457
 skill_upd_interval          = 29711
 ; Interval in ms between Skill System updates
 ; These can be very infrequent, since skill level-ups are usually rare
-tut_check_interval 			= 49
-; Interval in ms between tutorial checks, needs to be responsive
+tut_check_interval 			= 1949
+; Interval in ms between tutorial garbage collection checks, cleans up stuck prompts
 near_scan_radius            = 4
 ; Radius in meters of the near scan (affects many other things)
 early_scan_radius           = 2
@@ -87,7 +88,8 @@ early_scan_radius           = 2
 use_skill_system            = true
 ; Enable Skill System integration
 use_fallback_targeting 		= true
-; If no valid target is found using the actor_on_update_pickup function, tries to use older methods
+; If no valid target is found using modded exes features, tries to use vanilla method
+; Has some value catching edge cases, otherwise I'd disable this
 fallback_distance_check 	= true
 ; If fallback targeting is enabled, checks distance of object against sec_interact_dist
 haru_skill_name             = scavenging
@@ -161,7 +163,7 @@ sec_use_y_offset 			= 48
 fixed_screen_pos 			= false
 ; If enabled, screen positions will instead be measured from the upper left of the screen
 ; These are canvas coordinates so 1024x768
-keybind_bg_style 			= 3
+keybind_bg_style 			= 4
 ; Visual style for the "keyboard key" icons used as background for the name of the bound key
 ; 	0 = no icon
 ;	1 =	white outline
@@ -245,12 +247,21 @@ parts_dot_sep_width 		= 1
 parts_dot_pos_x 			= -7
 parts_dot_pos_y				= -4
 ; Position of the part condition indicator, relative to the end of the prompt
+bind_text_pos_x  			= 3
+bind_text_pos_y				= 3
+; Adjust position of the keybind text
+bind_char_scale 			= 5.825
+; Multiplied by the number of characters in the keybind text as part of the width of the icon
+; This value is tuned for the default font, Letterica16
+action_text_pos_x 			= 24
+action_text_pos_y 			= 2.5
+; Adjust position of the action text (e.g. "Pick up/use the thing")
 show_item_card 				= true
 ; Show an item card pop-up when targeting a pickup
 item_card_icon_sz   		= 7.5
 ; Item card info icon size - e.g weight, value
 item_card_pos_x 			= -9.5
-item_card_pos_y 			= 2
+item_card_pos_y 			= 0
 ; Position of the item card, relative to the end of the prompt
 ; The following are a bunch of settings related to fine-tuning the position of the
 ; item card elements within their containers.
@@ -268,15 +279,6 @@ item_card_icon_y    		= 0
 sp_icon_pos_x 				= 10
 sp_icon_pos_y				= 1
 ; Adjust position of the Sorting Plus fave/junk icons
-bind_text_pos_x  			= 3
-bind_text_pos_y				= 2.5
-; Adjust position of the keybind text
-bind_char_scale 			= 5.825
-; Multiplied by the number of characters in the keybind text as part of the width of the icon
-; This value is tuned for the default font, Letterica16
-action_text_pos_x 			= 24
-action_text_pos_y 			= 3.5
-; Adjust position of the action text (e.g. "Pick up/use the thing")
 argb_dot_normal
 argb_dot_focus
 argb_icon_door
@@ -372,9 +374,8 @@ skip_dist 			= true 	; Optimization, skips anything related to updating the dist
 ; Used internally to generate the appropriate text based on the active tutorial state
 ; tutorial_name 				= localization_string_for_tutorial_prompt
 jup_b32_scanner 				= jup_b209_scanner_place_tips
-pri_b306_generator 				= pri_b306_generator_use
+pri_b306_generator 				= pri_b306_generator_use 		; verified
 jup_b206_plant 					= jup_b206_use_plant
-pas_b400_switcher 				= pas_b400_tip_switcher
 pri_a18_use_idol 				= pri_a18_use_idol
 jup_b209_monster_scanner_placed = jup_b209_scanner_place_tips
 jup_b9_heli_1 					= st_search_helicopter
@@ -384,9 +385,9 @@ zat_b101_heli_5 				= st_search_helicopter
 zat_b28_heli_3 					= st_search_helicopter
 zat_b100_heli_2 				= st_search_helicopter
 zat_b33_snag_container 			= zat_b33_car_searching_tip
-tutorial_sleep 					= sleep_zone_tip
-tutorial_campfire_ignite 		= st_ignite_fire
-tutorial_campfire_extinguish 	= st_extinguish_fire
+tutorial_sleep 					= sleep_zone_tip				; verified
+tutorial_campfire_ignite 		= st_ignite_fire				; verified
+tutorial_campfire_extinguish 	= st_extinguish_fire			; verified
 bridge_down_red_forest 			= bridge_down_red_forest_tips
 bridge_stop_red_forest 			= bridge_stop_red_forest_tips
 bridge_up_red_forest 			= bridge_up_red_forest_tips
@@ -427,6 +428,10 @@ clr_weight_ok 	= 255,255,255,255
 clr_weight_over = 255,255,50,0
 clr_weight_high = 255,200,150,0
 ; Colors for inventory carry weight states
+
+[vendors]
+; For vendors who don't match any criteria for correctly detecting their service
+jup_b19_freedom_yar = mechanic
 
 [service_icons]
 ; Active-swap icons used for service NPCs with an active interaction prompt
@@ -606,6 +611,9 @@ dynamics\door\door_wood_130x250_01 		= 0
 dynamics\door\door_metal_220x260_01_l 	= -0.475
 dynamics\door\door_metal_220x260_01_r 	= -0.475
 
+[button_visuals]
+dynamics\door\door_katakomb_big_2_lock 	= 0.25
+
 [prompts]
 ; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
 ; Need to confirm if this is still needed after the hint_filter changes
@@ -739,13 +747,16 @@ G_RGD5 	    	= Weapons
 
 [bones]
 ; List of valid bones to use for positioning
+wpn_body
+door_right
+door_left
+lock
+door
+link
+patch
 bone01
 joint
 joint1
-link
-lock
-patch
-wpn_body
 
 ; =================================================================================
 [mcm_paths]
@@ -848,6 +859,11 @@ item_card_pos_y 		= dotmarks/dmarkadv/
 ;item_card_icon_x 		= dotmarks/dmarkadv/
 ;item_card_icon_y 		= dotmarks/dmarkadv/
 popin_anim_dur 			= dotmarks/dmarkadv/
+bind_text_pos_x 		= dotmarks/dmarkadv/
+bind_text_pos_y			= dotmarks/dmarkadv/
+action_text_pos_x		= dotmarks/dmarkadv/
+action_text_pos_y		= dotmarks/dmarkadv/
+bind_char_scale			= dotmarks/dmarkadv/
 ; =================================================================================
 ; From other addons
 fddar_multipickup 		= fddar/pickup/multipickup

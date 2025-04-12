@@ -64,8 +64,12 @@
 		<texture id = "ui_catsy_keybind_bg_center_v3" x="98" y="256" width="60" height="128" />
 		<texture id = "ui_catsy_keybind_bg_right_v3" x="158" y="256" width="34" height="128" />
 
-<!-- Frame not currently working, InitFrame can't cope with hi-res textures -->
+		<texture id = "ui_catsy_keybind_bg_single_v4" x="1088" y="0" width="128" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v4" x="1088" y="0" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_center_v4" x="1122" y="0" width="60" height="128" />
+		<texture id = "ui_catsy_keybind_bg_right_v4" x="1182" y="0" width="34" height="128" />
 
+<!-- Frame not currently working, InitFrame can't cope with hi-res textures -->
 		<texture id = "ui_catsy_keybind_frame_v3_lt" x="64" y="256" width="34" height="34" />
 		<texture id = "ui_catsy_keybind_frame_v3_t" x="98" y="256" width="60" height="34" />
 		<texture id = "ui_catsy_keybind_frame_v3_rt" x="158" y="256" width="34" height="34" />

@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.10-b4"
-release_date    = 20250409
+script_version  = "0.10-b5"
+release_date    = 20250411
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -151,7 +151,15 @@ local base_config = {
             function(obj) return obj and IsItem("device", obj:section()) end
         ),
         Quest = (
-            function(obj, sec) return obj and IsItem("quest", sec or obj:section()) end
+            function(obj, sec, cls)
+                if not obj then return end
+                if IsItem("quest", sec or obj:section()) then return true end
+                --cls = cls or obj:clsid()
+                --if (cls == clsid.obj_phys_destroyable) then
+                    local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
+                    return scheme == "ph_button"
+                --end
+            end
         ),
         Campfires = (
             function(obj) return obj and (obj:clsid() == clsid.zone_campfire) end
@@ -576,13 +584,36 @@ local base_config = {
     -- =======================================================================    
         Quest = (
             function(obj)
-                return obj and {
-                    logged_type     = "a quest item",
-                    pickup          = true,
+                if not obj then return end
+                local visual    = obj:get_visual_name()
+                local id        = obj:id()
+                local scheme    = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
+                local ph_button = id and scheme and (scheme == "ph_button") and db.storage[id][scheme]
+                local is_pickup = not ph_button
+                local vadjust   = visual and cfg.button_visuals[visual] or 0
+                return {
+                    logged_type     = ph_button and "a quest interaction" or "a quest item",
+                    is_button       = not is_pickup,
+                    visual          = visual,
+                    scheme          = scheme or nil,
+                    pickup          = is_pickup,
+                    refresh_text    = not is_pickup,
                     no_sec          = true,
+                    pos_adjust      = vector():set(0, vadjust, 0),
                     bone            = get_best_pos_bone(obj) or nil,
                     texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                    hint_filters   = is_pickup and {["inventory_item_use"] = "inventory_item_use"} or
+                    {
+                        ["st_make_a_wish"] = "st_make_a_wish",
+                        ["tip_need_access_card"] = "tip_need_access_card",
+                        ["pas_b400_tip_switcher"] = "pas_b400_tip_switcher",
+                        ["tips_rad_switcher_press"] = "tips_rad_switcher_press",
+                        ["tips_labx16switcher_press"] = "tips_labx16switcher_press",
+                        ["bridge_up_red_forest_tips"] = "bridge_up_red_forest_tips",
+                        ["bridge_down_red_forest_tips"] = "bridge_down_red_forest_tips",
+                        ["bridge_stop_red_forest_tips"] = "bridge_stop_red_forest_tips",
+                        ["tips_warlab_switcher_press"] = "tips_warlab_switcher_press",
+                    },
                 }
             end
         ),
@@ -611,13 +642,30 @@ local base_config = {
                 if not obj then return end
                 local visual    = obj:get_visual_name()
                 local id        = obj:id()
-                local ph_door   = id and db.storage[id]["ph_door"]
+                --local ph_door   = id and db.storage[id]["ph_door"]
                 local use_icon  = not not cfg.enable_icon_door
+
+                local ang = obj:angle()
                 local vadjust   = visual and cfg.door_visuals and cfg.door_visuals[visual] or 0.25
-                if (level.name() == "pripyat") and visual:find("door_metal_220x260_01") then
-                    -- Catches this weird bullshit with the Laundromat doors being flipped vertically, so
-                    -- the lock bones are in a different position from anywhere else that visual is used
+                local roll = math.floor(math.abs(math.deg(ang.z)))
+                if (roll > 1) and visual:find("door_metal_220x260_01") then
+                    -- Catches this weird bullshit with SOME of the doors using this 
+                    -- model being rotated 180 degrees vertically, so the lock bones 
+                    -- are in an inverted position from other doors with that visual
                     vadjust = -vadjust
+                end
+                --printf("Door model roll %s | deg.z %s | rad.z %s\nvadjust %s | distance: %s", roll, math.deg(ang.z), ang.z, vadjust, db.actor:position():distance_to(obj:position()))
+                local bone
+                local bones = get_bone_table(obj)
+                
+                if bones["door_right"] then
+                    bone = "door_right"
+                elseif bones["door_left"] then
+                    bone = "door_left"
+                elseif bones["lock"] then
+                    bone = "lock"
+                else
+                    bone = get_best_pos_bone(obj)
                 end
 
                 local args = {
@@ -625,9 +673,10 @@ local base_config = {
                     texture             = cfg.marker_dotmark,
                     is_door             = true,
                     no_sec              = true,
-                    bone                = (not visual:find("cabinet_village_140x210_ph_door")) and "lock" or get_best_pos_bone(obj),
+                    bone                = bone,
                     pos_adjust          = vector():set(0, vadjust, 0),
-                    scheme              = ph_door,
+                    --scheme              = ph_door,
+                    scheme              = "ph_door",
                     -- The scheme is used for getting direct access to the door handlers and data
                     visual              = visual,
                     -- The name of the 3D model visual used for the object
@@ -699,6 +748,7 @@ local base_config = {
                 return {
                     logged_type         = "game_tutorials.xml pop-up",
                     texture             = "",
+                    begin_active        = true,
                     fixed               = true,
                     no_sec              = true,
                     los_check_int       = -1,
@@ -752,7 +802,7 @@ local base_config = {
 -- =======================================================================    
 
 function play_sfx(snd)
-    -- Play sound effect unless disable_all_sounds is true
+    -- Play sound effect unless cfg.disable_all_sounds is true
     if cfg.disable_all_sounds or not snd then return end
     snd:play(db.actor, 0, sound_object.s2d)
 end
@@ -760,7 +810,6 @@ end
 function play_snd_path(snd_path)
     play_sfx(snd_path and xr_sound.get_safe_sound_object(snd_path))
 end
-
 
 function get_cash_quantity_string(section)
     local money
@@ -776,11 +825,13 @@ function get_cash_quantity_string(section)
         end
         money           = money and (pre .. tostring(money) .. " " .. gts("st_roubles"))
     end
+    vl("get_cash_quantity_string(%s): %s", section, money)
     return money
 end
 
-
-function get_base_config_table() return base_config end
+function get_base_config_table()
+    return base_config
+end
 
 function refresh_main_config()
     cfg = ui_hud_dotmarks.cfg
@@ -797,6 +848,16 @@ end
 function get_bone_list(obj, hudmodel)
     if not (obj and obj.list_bones) then return end
     return obj:list_bones(hudmodel)
+end
+
+function get_bone_table(obj, hudmodel)
+    local t = {}
+    local bones = get_bone_list(obj, hudmodel)
+    if not bones then return {} end
+    for k,v in pairs(bones) do
+        t[v] = k
+    end
+    return t
 end
 
 function get_best_pos_bone(obj)
@@ -861,7 +922,7 @@ function is_body_claimed(id)
     if grok_loot_claim then
         local claimed   = grok_loot_claim.claimed
         local k_id      = claimed and id and claimed[id]
-        local k_obj     = k_id and get_object_by_id(k_id)
+        local k_obj     = k_id and get_game_object(k_id)
         local k_alive   = k_obj and is_living_thing(k_obj) and k_obj:alive()
         return not not (k_alive and (k_id ~= AC_ID))
     end

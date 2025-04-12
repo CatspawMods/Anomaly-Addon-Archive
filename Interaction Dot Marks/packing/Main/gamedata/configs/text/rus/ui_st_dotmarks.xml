@@ -408,6 +408,9 @@
 		</text>
 	</string>
 
+	<string id="ui_mcm_lst_dmarks_kbstyle_s2">
+		<text>Плоские и потертые (как в Сталкере 2)</text>
+	</string>
 	<string id="ui_mcm_lst_dmarks_kbstyle_worn">
 		<text>Изношенный внешний вид</text>
 	</string>

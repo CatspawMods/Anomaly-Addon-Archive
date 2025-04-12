@@ -409,6 +409,9 @@
 		</text>
 	</string>
 
+	<string id="ui_mcm_lst_dmarks_kbstyle_s2">
+		<text>Flat worn (like Stalker 2)</text>
+	</string>
 	<string id="ui_mcm_lst_dmarks_kbstyle_worn">
 		<text>3D worn appearance</text>
 	</string>
