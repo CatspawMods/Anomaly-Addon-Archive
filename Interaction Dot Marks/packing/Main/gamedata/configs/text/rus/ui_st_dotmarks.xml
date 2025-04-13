@@ -980,4 +980,66 @@
 		<text>Настройте цвет для значка лидера</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_mute_stalkers">
+		<text>Спрячьте маркер для неразговорчивых сталкеров</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_mute_stalkers_desc">
+		<text>Если эта функция включена, сталкеры, с которыми невозможно вести беседу, вообще не будут отображаться.</text>
+	</string>
+
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_text_y">
+		<text>Y смещение текста карточки предмета</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_text_y_desc">
+		<text>Регулирует вертикальное смещение чисел значения и веса внутри их элементов.
+		 \n
+		\nПо умолчанию: 1.5</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_x">
+		<text>X-смещение для значка карточки предмета</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_x_desc">
+		<text>Настраивает горизонтальное смещение для значков веса и значения внутри их элементов.
+		 \n
+		\nПо умолчанию: 4</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_y">
+		<text>Y-смещение для значка карточки предмета</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_y_desc">
+		<text>Настраивает вертикальное смещение для значков веса и значения внутри их элементов.
+		 \n
+		\nПо умолчанию: 0</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x">
+		<text>Item card element X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x_desc">
+		<text>Adjusts the horizontal offset for the weight and value elements in the item card.
+		 \n
+		\nПо умолчанию: 7.5</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_y">
+		<text>Смещение по оси Y для элементов карточки предмета</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_y_desc">
+		<text>Настраивает вертикальное смещение для элементов веса и стоимости в карточке предмета.
+		 \n
+		\nПо умолчанию: 0</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_h">
+		<text>Смещение по оси X для элементов карточки предмета</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_h_desc">
+		<text>Регулирует высоту элементов веса и значения в карточке предмета. Это значение используется для установки расстояния между строками.
+		 \n
+		\nПо умолчанию: 10</text>
+	</string>
+
 </string_table>

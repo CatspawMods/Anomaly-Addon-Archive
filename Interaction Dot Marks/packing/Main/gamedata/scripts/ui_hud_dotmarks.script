@@ -39,13 +39,10 @@ script_name     = "ui_hud_dotmarks"
     should update your modded exes ASAP.
 -- =======================================================================
     TODO:
-    -   Validate that all quest prompts in vanilla Loner playthrough work
     -   Test with EVERY distinct type of item in the debug menu
     -   Optimize and clean up a whole lot of WIP code
-    -   Check various doors for per-visual offsets
-    -   Some cabinet doors marked at the hinge instead of the lock
     -   Take all from stash opens the stash anyway (need to trap)
-    -   Install old modded exes version and test dependency traps
+    -   Search prompts sometimes don't appear, vanilla text does - LOS?
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -223,26 +220,28 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             --  Updates condition/ammo and other metadata that are visible on prompts
             -- ================================================================================
                 function(mark, args)
+                    if not mark then return end -- literally impossible
                     if cfg.killswitch_markloop then
                         mark:HideAll("killswitch_markloop")
                         return
                     end
                     local now           = time_global()
-                    local id            = mark and mark.id
-                    local hide          = mark and mark.hidden
-                    local _             = debug_dump and printf("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
+                    local id            = mark.id
+                    local dist          = mark.last_dist or 999
+                    local in_range      = dist <= (mark.interact_dist or 2.5)
+                    local hide          = mark.hidden or (not in_range)
+                    local _             = debug_dump and (not hide) and printf("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
                     local obj           = id and get_game_object(id)
                     if not obj then return end
                     
+                    cfg.in_pickup_range[id] = mark.pickup and in_range and dist or nil
+
                     if mark.is_arty and (not can_actor_see_artefact(obj)) then
-                        -- Check whether object is an artefact that is not currently visible
-                        --hide            = true
                         hide_marker_and_prompts(mark.mark_id, "artefact not visible")
                         return
                     end
                     if mark.is_button and mark.use_pri and mark.use_pri.physbtn_active then
                         if not mark.use_pri.physbtn_active() then
-                            --printf("Hiding now-inactive button %s", mark.name)
                             hide_marker_and_prompts(mark.mark_id, "inactive ph_button")
                             return
                         end
@@ -251,15 +250,12 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     -- Check whether this marker is for a junk object
                     local sec           = obj:section()
                     if (not hide) and obj and zzz_rax_sortingplus_mcm and cfg.sp_hide_junk_items then
-                        local sec = obj:section()
-                        if is_junk(sec) then
-                            hide = true
-                        end
+                        hide = is_junk(sec)
                     end
                     -- ================================================================================
                     -- Check whether any logic has shut off interaction prompts entirely
                     local targeted      = is_current_target(id)
-                    local show_pri      = targeted
+                    local show_pri      = targeted and in_range
                     local show_sec      = false
                     if (hide and not cfg.hidden_show_prompts) then
                         --printf("Aborting all prompt display")
@@ -268,15 +264,14 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     else
                         -- ================================================================================
                         -- Check marker display conditions and whether animations are playing
-                        local dist = mark.last_dist or 999
-                        cfg.in_pickup_range[id] = mark.pickup and (dist <= 2.5) and dist or nil
-                        --local in_pickup_range = cfg.in_pickup_range[id]
                         -- ================================================================================
                         -- Check availability of primary interact prompt
-                        if (not hide) and mark.use_pri and mark.use_pri.init_done then
-                            --printf("pri interact check")
-                            local _ = debug_dump and printf("[DotMarks] Checking whether to show pri interact prompt for %s | targeted %s", mark.name, targeted)
-                            if obj and mark.is_npc then
+                        if mark.use_pri and mark.use_pri.init_done then
+                            --printf("pri interact check | hide %s | targeted %s | dist %s", hide, targeted, dist)
+                            _ = debug_dump and printf("[DotMarks] Checking whether to show pri interact prompt for %s | targeted %s | in_range %s", mark.name, targeted, in_range)
+                            if not in_range then
+                                show_pri = false
+                            elseif obj and mark.is_npc then
                                 local last_squad = mark.squad_id
                                 mark.squad_id = obj.group_id
                                 if mark.squad_id ~= last_squad then
@@ -302,17 +297,20 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                         --printf("dead corpse checks out")
                                     end
                                 elseif mark.is_stalker then
+                                    mark.is_mute = not obj:is_talk_enabled()
                                     --printf("%s is stalker", mark.name)
-                                    if (not obj:is_talk_enabled()) then
-                                        --printf("Living NPC %s can't have conversation", mark.name)
+                                    if mark.is_mute then
+                                        --printf("NPC %s can't have conversation | cfg.hide_mute_stalkers: %s", mark.name, cfg.hide_mute_stalkers)
                                         mark.use_pri:ShowPrompt(false)
-                                        return
+                                        show_pri = false
+                                        if cfg.hide_mute_stalkers then
+                                            --printf("hiding mute stalker")
+                                            hide_marker_and_prompts(mark.mark_id, "mute stalker")
+                                            return
+                                        end
                                     end
                                 end
-                            elseif (
-                                (mark.is_stash or (mark.is_stalker and not mark.is_alive)) and
-                                (cfg.show_stash_weight and not mark.is_display)
-                            ) then
+                            elseif mark.is_container and (cfg.show_stash_weight and not mark.is_display) then
                                 local is_managed_stash = not not treasure_manager.caches[mark.id]
                                 -- Update contents of inventory containers
                                 local text = nil
@@ -353,31 +351,33 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                 --printf("Setting stash suffix to: %s", text)
                             end
                             --printf("passed NPC and container checks")
-                            if mark.pickup then
-                                --printf("Mark is an item pickup")
-                                if cfg.show_item_card then
-                                    mark.use_pri:UpdateWeightColor()
+                            if in_range then
+                                if mark.pickup then
+                                    --printf("Mark is an item pickup")
+                                    if cfg.show_item_card then
+                                        mark.use_pri:UpdateWeightColor()
+                                    end
+                                elseif (not show_pri) then
+                                    local available_pickup = mark.pickup and cfg.available_pickup and (mark.id == cfg.available_pickup)
+                                    local not_hidden_by_anim = (cfg.alti_show_during_anim or not anim_playing)
+                                    -- If nothing else has allowed visibility yet, final checks
+                                    show_pri = (
+                                        (locked_id and targeted) or
+                                        (available_pickup and not locked_id) or
+                                        ((not mark.pickup) and (targeted)) and
+                                        (dist < 5) and (not mark.is_mute) and
+                                        not_hidden_by_anim
+                                    )
+                                    --printf("Last chance for show_pri: locked %s | targeted %s | avail_pickup %s | is_pickup %s", locked_id, targeted, available_pickup, mark.pickup)
                                 end
-                            elseif (not show_pri) then
-                                local available_pickup = mark.pickup and cfg.available_pickup and (mark.id == cfg.available_pickup)
-                                local not_hidden_by_anim = (cfg.alti_show_during_anim or not anim_playing)
-                                -- If nothing else has allowed visibility yet, final checks
-                                show_pri = (
-                                    (locked_id and targeted) or
-                                    (available_pickup and not locked_id) or
-                                    ((not mark.pickup) and (targeted)) and
-                                    (dist < 5) and
-                                    not_hidden_by_anim
-                                )
-                                --printf("Last chance for show_pri: locked %s | targeted %s | avail_pickup %s | is_pickup %s", locked_id, targeted, available_pickup, mark.pickup)
-                            end
-                            if mark.condition and cfg.show_item_condition then
-                                -- Update condition for degradable objects
-                                local cond = obj:condition()
-                                if cond ~= mark.condition then
-                                    mark.condition = cond
-                                    mark.use_pri:SetConditionText(sec, cond)
-                                    mark.use_pri:SetPrompt()
+                                if mark.condition and cfg.show_item_condition then
+                                    -- Update condition for degradable objects
+                                    local cond = obj:condition()
+                                    if cond ~= mark.condition then
+                                        mark.condition = cond
+                                        mark.use_pri:SetConditionText(sec, cond)
+                                        mark.use_pri:SetPrompt()
+                                    end
                                 end
                             end
                             --printf("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id), show_pri)
@@ -425,16 +425,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                         -- Clear texture for hidden markers
                         texture = ""
                     else
-                        --mark:ScaleMarkerByDistance(mark.base_w, mark.base_h, nil, cfg.dot_marker_size)
-                        --mark.width = mark.base_w-- * (cfg.dot_marker_size or 1)
-                        --mark.height = mark.base_h-- * (cfg.dot_marker_size or 1)
                         mark.marker_scale = cfg.dot_marker_size
                         mark:ScaleMarkerByDistance()
                         --printf("Base size is %sx%s, setting to %sx%s after UI scaling", mark.base_w, mark.base_h, mark.width, mark.height)
                     end
-                    
-                    --mark.loop_num = mark.loop_num and (mark.loop_num + 1) or 0
-                    --_ = debug_dump and vl("[DotMarks] [%s][%s] End of main update loop %s | Final size: [%s x %s]", time_global(), mark.name, mark.loop_num, dec2(mark.width), dec2(mark.height))
                     mark.marker:InitTexture(texture)
                     log_marker_update_loop(mark)
                 end
@@ -1551,7 +1545,11 @@ function InteractPrompt:on_key_press(key, flags)
     end    
 end
 
-function InteractPrompt:actor_on_net_destroy() self:Destroy("shutdown") end
+function InteractPrompt:actor_on_net_destroy() 
+    self.disabled = true
+    self.destroyed = true
+    get_hud():RemoveDialogToRender(self)
+end
 
 function InteractPrompt:on_option_change()
     if self.args.tutorial and self.init_done then
@@ -2670,26 +2668,30 @@ local function log_target_acquisition(method)
     printf("update_targeted_object: targeted_id is now %s (%s) | method %s", targeted_id, target and target:name(), method_txt)
 end
 
+function is_marker_object_container(obj)
+    return obj and obj:id() and cfg.markers[obj:id()] and cfg.markers[obj:id()].is_container
+end
+
 function update_targeted_object()
     --vl("update_targeted_object: %s", time_global())
     local last_id = targeted_id
     local target, method
-    if cfg.available_pickup then
+
+    if db.actor.get_actor_object_looking_at then
+        -- 20250225 modded exes required for this method
+        target = db.actor:get_actor_object_looking_at()
+        method = 1
+    elseif cfg.use_fallback_targeting then
+        -- Vanilla but very finicky, requires the object to be precisely under the crosshair
+        target = level.get_target_obj()
+        method = 0
+    end
+    if cfg.available_pickup and not is_marker_object_container(target) then
         target = get_game_object(cfg.available_pickup)
         method = 2
         -- 20250306 modded exes required for pickup callback
-    end
-    if (not target) then
-        if db.actor.get_actor_object_looking_at then
-            -- 20250225 modded exes required for this method
-            target = db.actor:get_actor_object_looking_at()
-            method = 1
-        elseif cfg.use_fallback_targeting then
-            -- Vanilla but very finicky, requires the object to be precisely under the crosshair
-            target = level.get_target_obj()
-            method = 0
-        end
-    end
+    end    
+
     local id = target and target:id()
     if cfg.racked_items[id] then
         targeted_id = cfg.racked_items[id]
@@ -3466,8 +3468,9 @@ function on_option_change()
                     vl("Defaulting MCM value %s = %s (was %s)", k, v, get_mcm(mcm_path, cfg[k]))
                     ui_mcm.set(mcm_path, v)
                 else
+                    local foo = ui_mcm.get(mcm_path)
                     cfg[k] = get_mcm(mcm_path, cfg[k])
-                    vl("Loading MCM value %s = %s", k, v)
+                    vl("Loading MCM value %s = %s", k, cfg[k])
                 end
             else
                 _ = debug_dump and vl("No MCM path found for %s, skipping", k)

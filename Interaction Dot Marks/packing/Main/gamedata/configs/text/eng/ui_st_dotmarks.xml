@@ -158,7 +158,7 @@
 		<text>Mark Devices</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_quest">
-		<text>Mark Quest Items</text>
+		<text>Mark Quest Objects</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_campfires">
 		<text>Mark Campfires</text>
@@ -978,6 +978,67 @@
 
 	<string id="ui_mcm_dotmarks_dmarkicons_argb_service_leader">
 		<text>Customize color for the Leader icon</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_mute_stalkers">
+		<text>Hide marker for untalkative stalkers</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_mute_stalkers_desc">
+		<text>If enabled, no marker will be shown at all for stalkers who can't be engaged in conversation.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_text_y">
+		<text>Item Card text Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_text_y_desc">
+		<text>Adjusts the vertical offset of the weight and value text numbers within their elements.
+		 \n
+		\nDefault: 1.5</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_x">
+		<text>Item Card icon X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_x_desc">
+		<text>Adjusts the horizontal offset for the weight and value icons within their elements.
+		 \n
+		\nDefault: 4</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_y">
+		<text>Item Card icon Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_y_desc">
+		<text>Adjusts the vertical offset for the weight and value icons within their elements.
+		 \n
+		\nDefault: 0</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x">
+		<text>Item Card element X offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x_desc">
+		<text>Adjusts the horizontal offset for the weight and value elements in the Item Card.
+		 \n
+		\nDefault: 7.5</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_y">
+		<text>Item Card element Y offset</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_y_desc">
+		<text>Adjusts the vertical offset for the weight and value elements in the Item Card.
+		 \n
+		\nDefault: 0</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_h">
+		<text>Item Card element height</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_h_desc">
+		<text>Adjusts the height of the weight and value elements in the Item Card. This value is used to set the spacing between the rows.
+		 \n
+		\nDefault: 10</text>
 	</string>
 
 </string_table>

@@ -399,6 +399,7 @@ function get_adv_menu()
 		},
 
 		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
+		{ id = "hide_mute_stalkers", 	type = "check",		val = 1, def = cfg.hide_mute_stalkers },
 		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
 		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
 		{ id = "hide_pri_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_pri_interact_ui },
@@ -462,7 +463,14 @@ function get_adv_menu()
 		},
 		{ id = "item_card_pos_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.item_card_pos_x },
 		{ id = "item_card_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.item_card_pos_y },
-		{ id = "item_card_icon_sz", 	type = "input",		val = 2, min = 0, max = 64, def = cfg.item_card_icon_sz },
+		{ id = "item_card_elem_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.item_card_elem_x },
+		{ id = "item_card_elem_y", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.item_card_elem_y },
+
+		{ id = "item_card_elem_h", 		type = "input", 	val = 2, min = 0,    max = 100, def = cfg.item_card_elem_h },
+		{ id = "item_card_icon_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.item_card_icon_x },
+		{ id = "item_card_icon_y", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.item_card_icon_y },
+		{ id = "item_card_icon_sz", 	type = "input",		val = 2, min = 0, 	 max = 64, def = cfg.item_card_icon_sz },
+		{ id = "item_card_text_y", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.item_card_text_y },
 
 		{ id = "divider", type= "line" },
 
@@ -593,7 +601,7 @@ function generate_objs_menu()
 	local gr = {
 	-- ======================================================================
 	-- 	Main header
-		{ id = "menuslide_objs", 		type = "slide", link = "ui_mcm_dotmarks_banner_objs", size = {512,50}, spacing = 0 },
+		{ id = "menuslide_objs", type = "slide", link = "ui_mcm_dotmarks_banner_objs", size = {512,50}, spacing = 0 },
 
 		{ id = "scanheader", type = "desc", text = "ui_mcm_dotmarks_scanmenu",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
@@ -631,7 +639,6 @@ function on_mcm_load()
 	xml:ParseFile("ui_dotmarks.xml")
 	valid_mcm = valid_mcm_version()
 	if (not valid_mcm) or (not exes_version) or (exes_version < 20250306) then
-		--nocolor_desc = "ui_mcm_dotmarks_header_fail_nocolor"
 		load_failed = true
 	end
 

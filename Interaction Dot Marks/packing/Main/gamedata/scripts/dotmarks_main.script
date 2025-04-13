@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.10-b5"
-release_date    = 20250411
+script_version  = "0.10-b6"
+release_date    = 20250412
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -83,7 +83,7 @@ local base_config = {
 -- =======================================================================
     is_item = {
         Stalkers = (
-            function(obj) 
+            function(obj)
                 local comm = obj and get_object_community(obj)
                 local is_enemy = comm and game_relations.is_factions_enemies(get_actor_true_community(), comm)
                 return obj and (
@@ -307,6 +307,7 @@ local base_config = {
                 
                 if IsStalker(nil, cls) then
                     args.is_stalker = true
+                    args.is_container = true
                 elseif IsMonster(nil, cls) then
                     args.active_swap = cfg.swap_butcher
                     args.is_mutant = true
@@ -345,6 +346,7 @@ local base_config = {
                 local args = {
                     logged_type     = "a stash",
                     is_stash        = true,
+                    is_container    = true,
                     -- By default, marker position is by obj:center(), which is the center of
                     -- the physics shell.
                     -- However, obj:center() doesn't update Lua often in the engine, while
@@ -391,7 +393,6 @@ local base_config = {
                         for item_id, world_id in pairs(case_guns) do
                             if (id == item_id) or (id == world_id) then
                                 cfg.racked_items[world_id] = case_id
-                                --printf("%s: case %s | item_id %s | world_id %s", obj:name(), case_id, item_id, world_id)
                                 return nil
                             end
                         end
@@ -730,19 +731,23 @@ local base_config = {
             end
         ),
     -- =======================================================================    
-        Tutorials = (
-            -- Tutorials are a class of on-screen prompt that are displayed by the game engine
-            -- according to some fairly arcane functionality in the game_tutorials.xml file.
-            -- Most are not actually "tutorials" as such, but instead use the engine's tutorial
-            -- system as a way of displaying custom interaction prompts to the player.
+        Tutorials = ( --[[
+            Tutorials are a class of on-screen prompt that is displayed by the game engine
+            according to some fairly arcane functionality in the game_tutorials.xml file.
+            Most are not actually "tutorials" as such, but instead use the engine's tutorial
+            system as a way of displaying custom interaction prompts to the player.
             
-            -- These include campfire interactions, sleep zones, and many quest-specific
-            -- one-off interaction prompts. All are displayed by DotMarks as fixed-position
-            -- screen prompts, as most are not actually attached to any world object.
+            These include campfire interactions, sleep zones, and some quest-specific
+            one-off interaction prompts. All are displayed by DotMarks as fixed-position
+            screen prompts, as they are not actually attached to a specific world object.
 
-            -- There was no existing way to capture these tutorial events, so I created the
-            -- modxml_tutorial_hooks script to set up on/off flags for the states of all such
-            -- tutorial-interactions.
+            There was no existing way to capture these tutorial events, so I created the
+            modxml_tutorial_hooks script to set up on/off flags for the states of all such
+            tutorial-interactions.
+
+            These ended up being used for far fewer things than expected--most of the 
+            entries in game_tutorials.xml seem to be legacy stuff from the OG games and
+            their questlines. --]]
             function()
                 local x,y               = get_fixed_screen_pos()
                 return {

@@ -91,33 +91,28 @@
 		<texture id = "ui_mcm_dotmarks_banner_sec" x="0" y="500" width="1024" height="100" />
 		<texture id = "ui_mcm_dotmarks_banner_objs" x="0" y="600" width="1024" height="100" />
 		<texture id = "ui_mcm_dotmarks_banner_adv" x="0" y="700" width="1024" height="100" />
-		<texture id = "ui_mcm_dotmarks_banner_icons" x="0" y="1848" width="1024" height="100" />
-		<texture id = "ui_mcm_dotmarks_banner_mods" x="0" y="1948" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_icons" x="0" y="800" width="1024" height="100" />
+		<texture id = "ui_mcm_dotmarks_banner_mods" x="0" y="900" width="1024" height="100" />
 
 
-		<texture id = "ui_mcm_dmarks_messagebox_transbg_gen" x="0" y="800" width="512" height="30" />		
-		<texture id = "ui_mcm_dmarks_messagebox_transbg_head90" x="0" y="830" width="512" height="90" />
-		<texture id = "ui_mcm_dmarks_messagebox_transbg_head140" x="0" y="920" width="512" height="140" />		
-		<texture id = "ui_mcm_dmarks_preview_static" x="0" y="1440" width="600" height="380" />
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_gen" x="0" y="1000" width="512" height="30" />		
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_head90" x="0" y="1030" width="512" height="90" />
+		<texture id = "ui_mcm_dmarks_messagebox_transbg_head140" x="0" y="1120" width="512" height="140" />		
+		<texture id = "ui_mcm_dmarks_preview_static" x="0" y="1260" width="600" height="380" />
 
-		<texture id = "ui_catsy_messagebox_trans_frame_lt" x="0" y="830" width="8" height="8" />
-		<texture id = "ui_catsy_messagebox_trans_frame_t" x="8" y="830" width="496" height="8" />
-		<texture id = "ui_catsy_messagebox_trans_frame_rt" x="504" y="830" width="8" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_lt" x="0" y="1030" width="8" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_t" x="8" y="1030" width="496" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_rt" x="504" y="1030" width="8" height="8" />
 
-		<texture id = "ui_catsy_messagebox_trans_frame_l" x="0" y="838" width="8" height="74" />
-		<texture id = "ui_catsy_messagebox_trans_frame_back" x="8" y="838" width="496" height="74" />
-		<texture id = "ui_catsy_messagebox_trans_frame_r" x="504" y="838" width="8" height="74" />
+		<texture id = "ui_catsy_messagebox_trans_frame_l" x="0" y="1038" width="8" height="74" />
+		<texture id = "ui_catsy_messagebox_trans_frame_back" x="8" y="1038" width="496" height="74" />
+		<texture id = "ui_catsy_messagebox_trans_frame_r" x="504" y="1038" width="8" height="74" />
 
-		<texture id = "ui_catsy_messagebox_trans_frame_lb" x="0" y="912" width="8" height="8" />
-		<texture id = "ui_catsy_messagebox_trans_frame_b" x="8" y="912" width="496" height="8" />
-		<texture id = "ui_catsy_messagebox_trans_frame_rb" x="504" y="912" width="8" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_lb" x="0" y="1112" width="8" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_b" x="8" y="1112" width="496" height="8" />
+		<texture id = "ui_catsy_messagebox_trans_frame_rb" x="504" y="1112" width="8" height="8" />
 
-		<texture id = "ui_mcm_dmarks_preview_frame" x="512" y="800" width="300" height="190" />		
-		<texture id = "ui_mcm_dmarks_preview_bg" x="0" y="1060" width="600" height="380" />		
-		<texture id = "ui_mcm_dmarks_preview_gun" x="1448" y="0" width="600" height="380" />		
-		<texture id = "ui_mcm_dmarks_preview_det" x="1448" y="380" width="600" height="380" />		
-		<texture id = "ui_mcm_dmarks_preview_med" x="1448" y="760" width="600" height="380" />		
-		<texture id = "ui_mcm_dmarks_preview_fav" x="1448" y="1140" width="600" height="380" />		
+		<texture id = "ui_mcm_dmarks_preview_frame" x="512" y="1000" width="300" height="190" />		
 	</file>
 </w>
 
