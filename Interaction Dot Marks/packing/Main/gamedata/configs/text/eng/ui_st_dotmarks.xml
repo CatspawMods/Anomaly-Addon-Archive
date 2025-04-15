@@ -319,22 +319,22 @@
 		<text>If enabled, will hide the white line connecting the dot to the interact prompt.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmods_alti_show_during_anim">
-		<text>Show secondary interact UI during FDDA animations</text>
+	<string id="ui_mcm_dotmarks_dmarkmods_show_prompt_during_anim">
+		<text>Show interaction prompt UI during FDDA animations</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmods_alti_busy_during_anim">
-		<text>Secondary interact disabled during FDDA animations</text>
+	<string id="ui_mcm_dotmarks_dmarkmods_prompt_busy_during_anim">
+		<text>Interaction prompts disabled during FDDA animations</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmods_alti_show_during_anim_desc">
-		<text>If enabled, the secondary interact UI will still be shown during FDDA animations, and the next setting below controls whether it can be used. If you want to hide the prompt entirely during animations, disable this option.</text>
+	<string id="ui_mcm_dotmarks_dmarkmods_show_prompt_during_anim_desc">
+		<text>If enabled, the interact UI will still be shown during FDDA animations, and the next setting below controls whether it can be used. If you want to hide the prompt entirely during animations, disable this option.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarkmods_alti_busy_during_anim_desc">
-		<text>If this option is enabled, the secondary interact UI is disabled during FDDA animations, dimming and showing a "Too Busy" message until the current animation completes.\n
+	<string id="ui_mcm_dotmarks_dmarkmods_prompt_busy_during_anim_desc">
+		<text>If this option is enabled, the interact UI is disabled during FDDA animations, dimming and showing a "Too Busy" message until the current animation completes.\n
 		\n 
-		\nDisabling this option will allow "animation canceling", skipping the current animation and immediately beginning the next. The sound effects will still play.</text>
+		\nDisabling this option with the original FDDA will allow "animation canceling", skipping the current animation and immediately beginning the next. The sound effects will still play.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_offsets_desc">

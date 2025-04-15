@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.10-b6"
-release_date    = 20250412
+script_version  = "0.11-b1"
+release_date    = 20250414
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -30,6 +30,11 @@ release_date    = 20250412
 
         * MCM 1.7.0 or newer
         https://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu
+
+        * My utility scripts
+        These are already included with DotMarks--but you can always get
+        the latest version of them from the Source link above, in a
+        folder under Modding Tools.
 -- =====================================================================]]
 assert(utils_catspaw_common and utils_catspaw_common.load_file_data, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_common, which is outdated or missing!\n\n"
@@ -88,7 +93,9 @@ local base_config = {
                 local is_enemy = comm and game_relations.is_factions_enemies(get_actor_true_community(), comm)
                 return obj and (
                     (IsStalker(nil, obj:clsid()) and obj:alive() and not is_enemy) or
-                    (obj:clsid() == clsid.script_trader)
+                    (obj:clsid() == clsid.script_trader) or 
+                    ((obj:name() == "esc_m_trader") or
+                    (obj:section() == "m_lesnik"))
                 )
             end
         ),
@@ -610,10 +617,10 @@ local base_config = {
                         ["pas_b400_tip_switcher"] = "pas_b400_tip_switcher",
                         ["tips_rad_switcher_press"] = "tips_rad_switcher_press",
                         ["tips_labx16switcher_press"] = "tips_labx16switcher_press",
-                        ["bridge_up_red_forest_tips"] = "bridge_up_red_forest_tips",
-                        ["bridge_down_red_forest_tips"] = "bridge_down_red_forest_tips",
-                        ["bridge_stop_red_forest_tips"] = "bridge_stop_red_forest_tips",
-                        ["tips_warlab_switcher_press"] = "tips_warlab_switcher_press",
+                        --["bridge_up_red_forest_tips"] = "bridge_up_red_forest_tips",
+                        --["bridge_down_red_forest_tips"] = "bridge_down_red_forest_tips",
+                        --["bridge_stop_red_forest_tips"] = "bridge_stop_red_forest_tips",
+                        --["tips_warlab_switcher_press"] = "tips_warlab_switcher_press",
                     },
                 }
             end
@@ -655,7 +662,7 @@ local base_config = {
                     -- are in an inverted position from other doors with that visual
                     vadjust = -vadjust
                 end
-                --printf("Door model roll %s | deg.z %s | rad.z %s\nvadjust %s | distance: %s", roll, math.deg(ang.z), ang.z, vadjust, db.actor:position():distance_to(obj:position()))
+                --vl("Door model roll %s | deg.z %s | rad.z %s\nvadjust %s | distance: %s", roll, math.deg(ang.z), ang.z, vadjust, db.actor:position():distance_to(obj:position()))
                 local bone
                 local bones = get_bone_table(obj)
                 

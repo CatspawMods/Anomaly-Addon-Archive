@@ -9,16 +9,16 @@
     Unless that one specific runtime flag is on, all other calls will be
     passed through untouched.
 -- =====================================================================]]
-
- local base_ui_inventory_start = ui_inventory.start
- function ui_inventory.start(mode, obj)
- 	if ui_hud_dotmarks and (mode == 2) then
+local base_ui_inventory_start = ui_inventory.start
+function ui_inventory.start(mode, obj)
+   --local _ = DEV_DEBUG and printf("Trying to start inventory in %s mode for container %s (%s)", mode, obj and obj:name(), obj and obj:id())
+ 	if ui_hud_dotmarks and (mode == "loot") then
  		if ui_hud_dotmarks.cfg.block_loot_window then
- 			local _ = DEV_DEBUG and printf("[z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", obj and obj:name(), obj and obj:id())
+ 			_ = DEV_DEBUG and printf("[z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", obj and obj:name(), obj and obj:id())
  			return
  		end
  	end
-    --printf("Allowing loot window to open")
+   -- Allow loot window to open
  	base_ui_inventory_start(mode, obj)
- end
+end
  
