@@ -211,6 +211,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             -- ================================================================================
                 function(mark, args)
                     if not mark then return end -- literally impossible
+                    if mark.no_update_loop then return end
                     if cfg.killswitch_markloop then
                         mark:HideAll("killswitch_markloop")
                         return
@@ -422,7 +423,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             --  Force LOS check to succeed if the marked object is the current interact target
             -- ================================================================================
                 function(mark, args)
-                    if not (mark.pickup or mark.is_stalker or mark.is_stash) then return end
+                    if not (mark.pickup or mark.is_stalker or mark.container) then return end
                     local pri_shown = (mark and mark.use_pri and mark.use_pri.wnd and mark.use_pri.wnd:IsShown())
                     return pri_shown and true or nil
                 end
@@ -801,12 +802,15 @@ function lerp_color(val, mi, md, mx)
 end
 
 function is_already_target(id)
-    local is_xhair  = hmm and hmm.current_pickup and (id == hmm.current_crosshair)
     local is_pickup = hmm and hmm.current_pickup and (id == hmm.current_pickup)
+    if is_pickup then return true end
     local is_target = hmm and hmm.current_target and (id == hmm.current_target)
-    local result = is_pickup or is_target or is_xhair
+    if is_target then return true end
+    local is_xhair  = hmm and hmm.current_pickup and (id == hmm.current_crosshair)
+    if is_xhair then return true end
+    --local result = is_pickup or is_target or is_xhair
     --vl("is_already_target(%s): %s | pickup: %s | look_target: %s | crosshair: %s", id, result, is_pickup, is_target, is_xhair)
-    return result
+    --return result
 end
 
 function get_condition_color(condition, section)
@@ -1479,10 +1483,12 @@ function InteractPrompt:on_key_hold(key)
             return
         elseif cfg.last_hold and (cfg.last_hold.key == self.args.key) and not timed_out(cfg.last_hold.time, cfg.long_press_delay or 50) then
             --printf("[%s][InteractPrompt:on_key_hold] Tried to start another hold too soon, aborting", now)
+            self.longpress:SetProgressPos(0)
             return
         end
 
         if not cfg.held_key then
+            self.longpress:SetProgressPos(0)
             --printf("[%s][InteractPrompt:on_key_hold] Beginning hold of key %s", now, self.args.key)
         end
         cfg.held_key    = key
@@ -1830,7 +1836,7 @@ end
 function InteractPrompt:UpdateFilteredHints(hint)
     --dump("[InteractPrompt:UpdateFilteredHints][%s][%s][%s]", self.args.id, self.args.event, self.args.name)
     self.last_hint_match = nil
-    if not (self.args.is_door or self.args.is_button or is_already_target(self.args.id)) then return end
+    if not (self.args.is_door or self.args.is_button or self.args.is_workshop or is_already_target(self.args.id)) then return end
     hint = hint or self:GetQuickHelp()
     
     if not hint then return end
@@ -2276,6 +2282,8 @@ function setup_pri_interact_prompt(mark, args)
         int_text = gts("st_alti_search") .. " " .. mark.name
     elseif mark and (mark.is_npc and not mark.is_alive) then
         int_text = gts("st_body_loot")
+    elseif mark and mark.hf_workshop then
+        int_text = nil
     end
 
     local passed_args = {
@@ -2323,6 +2331,8 @@ function setup_sec_interact_prompt(mark)
             mark.name
         )
         func = unload_and_take_ammo
+    elseif mark.hf_workshop then
+        int_text = gts("st_hf_workshop_menu")
     elseif mark.is_container then
         -- Inventory box or stash
         local weight = nil
@@ -2420,8 +2430,9 @@ function unregister_scanned_entity(id)
     if ind then
         nearby_pickups[ind] = nil
     end
-    pickup_index[id] = nil
     cfg.in_pickup_range[id] = nil
+    pickup_index[id] = nil
+    cfg.invboxes[id] = nil
     if cfg.markers[id] then
         local mark = cfg.markers[id]
         if mark.use_pri then
@@ -2463,14 +2474,14 @@ function obj_has_available_sec_interact(obj, id, mark)
     local is_readable   = (mark and mark.is_readable)
     local has_batteries = (mark and mark.has_battery)
     local is_backpack   = (mark and mark.is_backpack)
-    local is_invbox     = mark.is_container --(mark and mark.is_stash) or is_backpack
+    local is_interact   = mark.is_container or mark.hf_workshop
 
     local required      = (
         is_consumable or
         has_batteries or
         is_readable or
         has_ammo or
-        is_invbox
+        is_interact
     )
 
     local banned        = (
@@ -2480,11 +2491,11 @@ function obj_has_available_sec_interact(obj, id, mark)
     local has_interact = required and not banned
 
     local _ = debug_dump and vl("[obj_has_available_sec_interact] %s: %s\n" ..
-        "^ Required: box %s | batt %s | ammo %s | eatable %s | readable %s\n" ..
+        "^ Required: interaction %s | batt %s | ammo %s | eatable %s | readable %s\n" ..
         "~ Banned: money %s",
         nameid(obj, id),
         has_interact,
-        is_invbox,
+        is_interact,
         has_batteries,
         has_ammo,
         is_consumable,
@@ -2916,7 +2927,9 @@ function handle_secondary_interact(obj)
         unload_and_take_ammo(obj)
     elseif (IsItem("eatable", obj:section())) then
         --vl("forcing actor to eat target food")
-        take_and_use(obj)    
+        take_and_use(obj)
+    elseif mark.hf_workshop then
+        -- Do nothing, it opens its own menu
     else
         --vl("forcing actor to use booster item")
         take_and_use(obj)    
@@ -3043,6 +3056,12 @@ end
 
 local function perform_debugging_checks()
     --[[
+    local hint = maingameui.UIStaticQuickHelp:GetText()
+    if hint and (hint ~= "") and (hint ~= " ") then
+        printf("QuickHelp static text: %s", hint)
+    end
+
+    printf("[%s] cfg.block_loot_window: %s", time_global(), cfg.block_loot_window)
     --]]
 end
 
@@ -3116,13 +3135,14 @@ function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
         cfg.use_released = nil
         cfg.block_loot_window = true
-        dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
+        --dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
         cfg.held_key = key
         --flags.ret_value = false
     end
 end
 
 function on_key_release(key)
+    cfg.block_loot_window = false
     if key == cfg.held_mod then cfg.held_mod = nil end
     if (key == cfg.held_key) then
         if (key == use_dik) then
@@ -3130,25 +3150,23 @@ function on_key_release(key)
             cfg.use_released = cfg.use_released or time_global()
             local dur = cfg.holding and cfg.holding.peak_hold
             local time = cfg.holding and cfg.holding.hold_time
-            dump("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
+            --dump("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
             cfg.held_key = nil
 
             if obj and not (dur and time and (dur >= time)) then
                 if is_target_pickup() then
                     cfg.use_released = nil
-                    dump("No completed hold action, item pickup should occur", time)
+                    --dump("No completed hold action, item pickup should occur", time)
                     force_actor_to_take(obj)
                 elseif is_target_container() then
                     if z_ui_inventory_dotmarks then
-                        dump("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
+                        --dump("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
                         cfg.use_released = nil
-                        cfg.block_loot_window = nil
+                        
                         obj:use(db.actor)
                     else
                         printf("! ERROR! z_ui_inventory_dotmarks could not be found, please reinstall DotMarks")
                     end
-                else
-                    
                 end
             end
         end

@@ -70,6 +70,10 @@
 		<text>Возьмите все из</text>
 	</string>
 
+	<string id="st_hf_workshop_menu">
+		<text>Откройте меню верстака</text>
+	</string>
+
 	<string id="st_alti_empty">
 		<text>(пуст)</text>
 	</string>

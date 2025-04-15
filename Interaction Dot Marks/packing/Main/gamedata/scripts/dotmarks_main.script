@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b1"
-release_date    = 20250414
+script_version  = "0.11-b2"
+release_date    = 20250415
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -197,7 +197,11 @@ local base_config = {
         ),
         Workshops = (
             function(obj)
-                return obj and (obj:clsid() == clsid.obj_physic) and string.match(obj:name(), "awr_tiski") end
+                return obj and (obj:clsid() == clsid.obj_physic) and (
+                    string.match(obj:name(), "awr_tiski") or
+                    string.match(obj:name(), "placeable_workshop")
+                )
+            end
         ),
 
 
@@ -350,10 +354,14 @@ local base_config = {
                 if not obj then return end
                 local sec           = obj:section()
                 local name          = obj:name()
+                local hfws_stash    = (sec == "workshop_stash") or nil
                 local args = {
                     logged_type     = "a stash",
-                    is_stash        = true,
-                    is_container    = true,
+                    is_container    = not hfws_stash,
+                    no_update_loop  = hfws_stash,
+                    hidden          = hfws_stash,
+                    no_sec          = hfws_stash,
+                    workshop_stash  = hfws_stash,
                     -- By default, marker position is by obj:center(), which is the center of
                     -- the physics shell.
                     -- However, obj:center() doesn't update Lua often in the engine, while
@@ -363,7 +371,7 @@ local base_config = {
                     is_backpack     = (sec == "inv_backpack"),
                     is_display      = cfg.display_cases[sec] or nil,
                     has_items       = not obj:is_inv_box_empty(),
-                    texture         = cfg.marker_dotmark,
+                    texture         = hfws_stash and "" or cfg.marker_dotmark,
                     hint_filters   = {
                         ["inventory_box_use"]       = "inventory_box_use",
                         ["actor_inventory_box_use"] = "actor_inventory_box_use",
@@ -772,19 +780,26 @@ local base_config = {
             function(obj)
                 if not obj then return end
                 local visual = obj:get_visual_name()
-
+                local sec = obj:section()
+                local hf_workshop       = (sec == "placeable_workshop") or nil
                 return {
                     logged_type         = "a workshop bench",
                     texture             = get_cfg_for_type("tex", "Workshops") or cfg.marker_dotmark,
                     visual              = visual,
-                    no_sec              = true,
-                    interact_dist       = 1.5,
+                    section             = sec,
+                    hf_workshop         = hf_workshop,
+                    is_workshop         = true,
+                    los_dist_min        = hf_workshop and 0.5 or nil,
+                    -- placeable workshop tends to block LOS to itself
+                    no_sec              = not hf_workshop,
                     refresh_text        = true,
+                    interact_dist       = 1.5,
                     -- Forces the prompt text to check for changes on every update
                     hint_filters       = {
-                        ["st_tiski_no_info"]= "st_tiski_no_info",
-                        ["st_tiski"]        = "st_tiski",
-                        ["st_awr_tiski"]    = "st_awr_tiski",
+                        ["st_tiski_no_info"]= (not hf_workshop) and "st_tiski_no_info" or nil,
+                        ["st_tiski"]        = (not hf_workshop) and "st_tiski" or nil,
+                        ["st_awr_tiski"]    = (not hf_workshop) and "st_awr_tiski" or nil,
+                        ["st_interact"]     = hf_workshop and "st_use_workshop" or nil,
                     },
                 }
             end

@@ -70,6 +70,10 @@
 		<text>Take everything from</text>
 	</string>
 
+	<string id="st_hf_workshop_menu">
+		<text>Open Workshop Menu</text>
+	</string>
+
 	<string id="st_alti_empty">
 		<text>(empty)</text>
 	</string>
