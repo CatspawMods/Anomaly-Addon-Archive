@@ -5,7 +5,7 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b3"
+script_version  = "0.11-b4"
 release_date    = 20250415
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -395,7 +395,7 @@ local base_config = {
         Ammo = (
             function(obj)
                 if not obj then return end
-                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                ui_hud_dotmarks.set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
                 return {
                     logged_type     = "ammo",
                     bone            = get_best_pos_bone(obj) or nil,

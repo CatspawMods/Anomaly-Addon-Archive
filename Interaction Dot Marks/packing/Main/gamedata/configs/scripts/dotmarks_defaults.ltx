@@ -36,7 +36,6 @@ metadata_types
 monitors
 notable_npcs
 tutorial_hints
-prompts
 racked_items
 scan
 section_lookup
@@ -72,6 +71,14 @@ swap_task_sec
 ; Any setting here will be loaded as part of the main cfg table
 ; Any non-table key in the cfg table that is defined in the mcm_paths table 
 ; below will query MCM during every on_option_change for an override (if any)
+interact_uifile 			= ui_dotmarks.xml
+; Contains UI element definitions
+marker_dotmark 				= ui_catsy_marker_intdot
+; Texture for the marker dots themselves
+marker_dotactive 			= ui_catsy_marker_dotactive
+; Texture for the "active" object that currently has interact focus
+main_drop_texture 			= ui_dotmarks_main_drop
+; Texture used for the main prompt drop shadow
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 near_scan_interval          = 104
@@ -113,17 +120,6 @@ imod_sec_interact 			= 2
 ; 2 - long press/hold
 sec_interact_dist 			= 2.5
 ; Distance in meters of the alt interact (don't increase, things may break)
-interact_uifile 			= ui_dotmarks.xml
-; Contains UI element definitions
-marker_dotmark 				= ui_catsy_marker_intdot
-; Texture for the marker dots themselves
-marker_dotactive 			= ui_catsy_marker_dotactive
-; Texture for the "active" object that currently has interact focus
-main_drop_texture 			= ui_dotmarks_main_drop
-; Texture used for the main prompt drop shadow
-icon_sp_fave_texture 		= ui_catsy_icon_sortplus_fave
-icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
-; Textures for Sorting Plus integration
 target_lenience 			= 0.95
 ; How far from center the crosshair can be for old targeting method
 ; Need to look into whether and how much this is still needed
@@ -216,13 +212,16 @@ sp_hide_junk_items 			= true
 ; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
 sp_flag_favejunk 			= true
 ; If Sorting Plus is installed, prompts for fave/junk items will be flagged with an appropriate icon
-hide_mute_stalkers 			= true
-; Don't show any marker at all for stalkers who have no dialogue
+icon_sp_fave_texture 		= ui_catsy_icon_sortplus_fave
+icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
+; Textures for Sorting Plus integration
 hidden_show_prompts 		= true
 ; Controls whether prompts still appear if a marker is hidden because of sp_hide_junk_items or hide_interaction_dots
 hidden_marks_on_disabled 	= true
 ; Disabled object classes (from the scan table below) will still have a marker generated, but hidden
 ; If this option is false, no marker will be generated at all, and thus no interaction prompts are possible
+hide_mute_stalkers 			= true
+; Don't show any marker at all for stalkers who have no dialogue
 wheel_cycles_pickups 		= true
 ; Mouse wheel cycles through targeted pickup, if there is more than one in range
 snd_path_blip 				= catspaw\paw_blip
@@ -302,18 +301,10 @@ argb_service_leader
 
 ; =================================================================================
 ; 	KILLSWITCHES
-; To enable any killswitch in-game, you can either set it using the debug menu, 
-; or use something like this in the console:
-
-; run_string ui_hud_dotmarks.cfg.killswitch_pickup = true
-
-; That would completely shut off any pickup handling until you set it to false or
-; reload your game/change maps.
-
+; These are debugging tools to isolate parts of the addon for troubleshooting.
 killswitch_all 				= false
 killswitch_pickup 			= false
 killswitch_markloop 		= false
-;killswitch_markers 			= false ; not implemented yet
 ; =================================================================================
 
 [tex]
@@ -614,18 +605,8 @@ dynamics\door\door_metal_220x260_01_r 	= -0.475
 ; ** Check other labs for interacts that aren't part of Loner story mode
 dynamics\door\door_katakomb_big_2_lock 	= 0.25
 
-[prompts]
-; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
-; ** Need to confirm if this is still needed after the hint_filter changes
-item_take 	= inventory_item_use
-npc_talk 	= character_use
-open_door 	= car_character_use
-close_door 	= tip_door_close
-ws_noaccess = st_tiski_no_info
-ws_use 		= st_tiski
-ws_repair 	= st_awr_tiski
-
 [explosive_tools]
+; Section names that are valid pickups, but aren't detected as tools because they're explosive
 explo_metalcan_powder
 explosive_tank
 explosive_mobiltank

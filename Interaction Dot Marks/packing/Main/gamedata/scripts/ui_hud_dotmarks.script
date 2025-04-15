@@ -25,14 +25,14 @@ script_name     = "ui_hud_dotmarks"
     See dotmarks_main.script for dependencies.
 -- =======================================================================
     TODO:
-    -   Test with EVERY distinct type of item in the debug menu
-    -   Optimize and clean up WIP code that didn't get used
-    -   Clean up any logging or checks that aren't needed for release
-            Especially in main update loop!
+    - Test with EVERY distinct type of item in the debug menu
+    - Optimize/clean up WIP code that didn't get used
+    - Clean up any logging or checks that aren't needed for release
+        Especially in main update loop!
     - Re-validate EVERY FEATURE before public release
     - Verify report of box_wood_02 being unbreakable box in Meadow
     - Check all labs for interacts that aren't part of Loner story mode
-    - Confirm whether cfg.prompts still needed after hint_filter changes
+    - PAW-style live preview for prompt elements - a lot of work
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -2350,7 +2350,7 @@ function setup_pri_interact_prompt(mark, args)
     elseif mark and mark.is_stalker and mark.is_alive then
         int_text = gts("st_alti_speak") .. " " .. mark.name
     elseif mark and mark.is_door then
-        int_text = int_text or trimmed_prompt(cfg.prompts.open_door)
+        int_text = int_text or trimmed_prompt(gts("car_character_use"))
     elseif mark and mark.is_container then
         int_text = gts("st_alti_search") .. " " .. mark.name
     elseif mark and (mark.is_npc and not mark.is_alive) then
@@ -3346,11 +3346,6 @@ function parse_color_data(color_key, csv_string)
 end
 
 function parse_file_data()
-    if cfg.prompts then
-        for k,v in pairs(cfg.prompts) do
-            cfg.prompts[k] = gts(v)
-        end
-    end
     if cfg.colors then
         for k,v in pairs(cfg.colors) do
             if k:find("clr_") then
