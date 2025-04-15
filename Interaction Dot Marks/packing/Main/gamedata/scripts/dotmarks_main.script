@@ -5,7 +5,7 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b2"
+script_version  = "0.11-b3"
 release_date    = 20250415
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -89,10 +89,8 @@ local base_config = {
     is_item = {
         Stalkers = (
             function(obj)
-                local comm = obj and get_object_community(obj)
-                local is_enemy = comm and game_relations.is_factions_enemies(get_actor_true_community(), comm)
                 return obj and (
-                    (IsStalker(nil, obj:clsid()) and obj:alive() and not is_enemy) or
+                    (IsStalker(nil, obj:clsid()) and obj:alive()) or
                     (obj:clsid() == clsid.script_trader) or 
                     ((obj:name() == "esc_m_trader") or
                     (obj:section() == "m_lesnik"))
@@ -221,28 +219,34 @@ local base_config = {
                 if not obj then return end
                 local id            = obj:id()
                 local cls           = obj:clsid()
-                if not cls then return end
                 local sec           = obj:section()
+                local comm          = get_object_community(obj)
+                local acomm         = character_community(db.actor):sub(7)
+                --local acomm      = get_actor_true_community()
+                local is_enemy      = comm and game_relations.is_factions_enemies(acomm, comm)
+
                 local args          = {
-                    logged_type    = "stalker (alive)",
+                    logged_type     = "stalker (alive)",
                     -- logged_type is purely informational for logging
-                    is_npc         = true, -- these three flags should be obvious
-                    is_alive       = true, -- utilized during main loop to speed up checks
-                    is_stalker     = true, -- passed through via args to the interaction prompts
+                    is_enemy        = is_enemy,
+                    hidden          = is_enemy,
+                    is_npc          = true, -- these flags should be obvious
+                    is_alive        = true, -- utilized during main loop to speed up checks
+                    is_stalker      = true, -- passed through via args to the interaction prompts
                     -- Other object classes use similar flags to speed up looping checks.
-                    bone           = "bip01_spine1",
+                    bone            = "bip01_spine1",
                     -- Causes marker position to be based on this bone
-                    pos_adjust     = vector():set(0, 0.1, 0),
+                    pos_adjust      = vector():set(0, 0.1, 0),
                     -- Adjust final marker world pos additively by this value
-                    texture        = cfg.marker_dotmark,
+                    texture         = is_enemy and "" or cfg.marker_dotmark,
                     -- The get_cfg_for_type call for the "tex" type returns the contents of
                     -- the cfg.tex table for the specified object class.
-                    hint_filters = {["character_use"] = "character_use"},
+                    hint_filters    = {["character_use"] = "character_use"},
                     -- Hint filters specify strings that this marker's primary interaction prompt
                     -- should watch for and erase from the QuickHelp static, and optionally 
                     -- specify a replacement localization string to use.
                 }
-                if cfg.enable_icon_services then
+                if cfg.enable_icon_services and not is_enemy then
                     if cfg.vendors[sec] then
                         local _ = debug_dump and vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
                         args.service_type   = cfg.vendors[sec]
@@ -319,6 +323,7 @@ local base_config = {
                 if IsStalker(nil, cls) then
                     args.is_stalker = true
                     args.is_container = true
+                    ui_hud_dotmarks.set_target_data(id, cfg.metadata_types.is_container, true)
                 elseif IsMonster(nil, cls) then
                     args.active_swap = cfg.swap_butcher
                     args.is_mutant = true
@@ -352,9 +357,11 @@ local base_config = {
         Stashes = (
             function(obj)
                 if not obj then return end
+                local id            = obj:id()
                 local sec           = obj:section()
                 local name          = obj:name()
                 local hfws_stash    = (sec == "workshop_stash") or nil
+                ui_hud_dotmarks.set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
                 local args = {
                     logged_type     = "a stash",
                     is_container    = not hfws_stash,
@@ -387,7 +394,9 @@ local base_config = {
     -- =======================================================================    
         Ammo = (
             function(obj)
-                return obj and {
+                if not obj then return end
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
                     logged_type     = "ammo",
                     bone            = get_best_pos_bone(obj) or nil,
                     pickup          = true,     -- object is a gettable inventory item
@@ -606,6 +615,7 @@ local base_config = {
                 local scheme    = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
                 local ph_button = id and scheme and (scheme == "ph_button") and db.storage[id][scheme]
                 local is_pickup = not ph_button
+                ui_hud_dotmarks.set_target_data(id, cfg.metadata_types.is_pickup, not ph_button)
                 local vadjust   = visual and cfg.button_visuals[visual] or 0
                 return {
                     logged_type     = ph_button and "a quest interaction" or "a quest item",
@@ -731,6 +741,7 @@ local base_config = {
                 local name = obj:name()
                 local section = obj:section()
                 local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
+                ui_hud_dotmarks.set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
                 return {
                     pickup          = true,
                     bone            = get_best_pos_bone(obj) or nil,

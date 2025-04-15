@@ -32,6 +32,7 @@ kind_lookup
 manual_use
 markers
 mcm_paths
+metadata_types
 monitors
 notable_npcs
 tutorial_hints
@@ -44,6 +45,7 @@ setting_icons
 smokables
 state_conds
 tex
+target_data
 useless_shit
 vendors
 weight_colors
@@ -373,34 +375,23 @@ skip_online_checks 	= true 	; Optimization, we can assume markers will always be
 skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
 skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
 
+[metadata_types]
+is_pickup 		= 0
+is_container 	= 1
+is_stalker 		= 2
+
 [tutorial_hints]
 ; Used internally to generate the appropriate text based on the active tutorial state
 ; tutorial_name 				= localization_string_for_tutorial_prompt
-; Commented ones may be holdovers from OG games, they aren't used in Loner story
 pri_b306_generator 				= pri_b306_generator_use 		; turn on X8 lift generator
 tutorial_sleep 					= sleep_zone_tip
 tutorial_campfire_ignite 		= st_ignite_fire
 tutorial_campfire_extinguish 	= st_extinguish_fire
-;jup_b32_scanner 				= jup_b209_scanner_place_tips
-;jup_b206_plant 				= jup_b206_use_plant
-;pri_a18_use_idol 				= pri_a18_use_idol
-;jup_b209_monster_scanner_placed = jup_b209_scanner_place_tips
-;jup_b9_heli_1 					= st_search_helicopter
-;jup_b8_heli_4 					= st_search_helicopter
-;jup_b10_ufo_tutor 				= jup_b10_ufo_searching_tips
-;zat_b101_heli_5 				= st_search_helicopter
-;zat_b28_heli_3 				= st_search_helicopter
-;zat_b100_heli_2 				= st_search_helicopter
-;zat_b33_snag_container 		= zat_b33_car_searching_tip
-;bridge_down_red_forest 		= bridge_down_red_forest_tips
-;bridge_stop_red_forest 		= bridge_stop_red_forest_tips
-;bridge_up_red_forest 			= bridge_up_red_forest_tips
+; There were a lot more, but they appear to be unused vestigial elements of the OG games
 
 [colors]
 ; Will be ignored if the key doesn't begin with "clr_", to avoid clobbering non-color tokens
 ; Fifth value in some is a threshold/breakpoint for internal use in condition color lerping
-; TODO: move the one-off colors in the config table here with careful find-replace
-
 ; It's probably best not to mess with these unless you know what you're doing with ARGB values.
 
 clr_dmark_norm 	= 255,255,255,255
@@ -435,6 +426,7 @@ clr_weight_high = 255,200,150,0
 
 [vendors]
 ; For vendors who don't match any criteria for correctly detecting their service
+; Currently just Yar in Laundromat, might be others
 jup_b19_freedom_yar = mechanic
 
 [service_icons]
@@ -547,10 +539,11 @@ line_adj_h  = -13
 ; ================================================================================
 ; These are critical settings that allow the addon to function properly. They are
 ; not intended to be customized, and there is almost no reason to do so except to
-; add support for new items from other addons, which is best done by the addon
+; add support for changes made by other addons, which is best done by the addon
 ; author through DLTX. I can't help with anything that happens if you change them.
 
 [blacklisted_clsids]
+; clsids which should never become markers under any circumstance
 script_actor
 torrid_zone
 zone_ameba_s
@@ -585,7 +578,7 @@ wpn_ammo_vog25 		= true
 ; Defines which object visuals are classified as breakable boxes, no other way to detect
 dynamics\box\box_wood_01 	= true
 ;dynamics\box\box_wood_02 	= true ; this seems to pick up non-breakable boxes in Meadows
-; Need to confirm that
+; ** Need to confirm that
 dynamics\box\box_metall_01	= true
 
 [smokables]
@@ -604,6 +597,7 @@ hand_rolling_tobacco
 
 [manual_use]
 ; FDDA won't properly handle usage, have to do so manually
+; ** Verify whether that's also true of latest FDDAR
 joint
 
 [door_visuals]
@@ -616,11 +610,13 @@ dynamics\door\door_metal_220x260_01_l 	= -0.475
 dynamics\door\door_metal_220x260_01_r 	= -0.475
 
 [button_visuals]
+; The code lock in X8
+; ** Check other labs for interacts that aren't part of Loner story mode
 dynamics\door\door_katakomb_big_2_lock 	= 0.25
 
 [prompts]
 ; Gets populated at runtime with localized and parsed prompts to reduce string operation overhead
-; Need to confirm if this is still needed after the hint_filter changes
+; ** Need to confirm if this is still needed after the hint_filter changes
 item_take 	= inventory_item_use
 npc_talk 	= character_use
 open_door 	= car_character_use
@@ -637,7 +633,7 @@ explosive_mobiltank
 [section_lookup]
 ; First step in object detection and classification
 ; Section names are the most-specific criteria, so they're checked first
-; Any section name here will override any other classification
+; Any section name here will skip checking for any other classification
 hand_watch      	= Devices
 wpn_binoc_inv   	= Devices
 lead_box        	= Tools
@@ -663,6 +659,7 @@ workshop_stash 		= Stashes
 ; More or less lifted entirely from the debug menu
 ; For quicker lookup than iterating through the entire category-checking loop
 ; Mostly accurate but misses some things
+; If a match is found here, it skips the slow process of checking via iteration
 i_arty_junk   	= Artefacts
 i_arty     		= Artefacts
 ARTEFACT    	= Artefacts

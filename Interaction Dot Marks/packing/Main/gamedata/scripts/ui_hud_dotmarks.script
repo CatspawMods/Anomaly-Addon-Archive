@@ -27,8 +27,12 @@ script_name     = "ui_hud_dotmarks"
     TODO:
     -   Test with EVERY distinct type of item in the debug menu
     -   Optimize and clean up WIP code that didn't get used
-    -   Clean up any logging that isn't needed for release
+    -   Clean up any logging or checks that aren't needed for release
             Especially in main update loop!
+    - Re-validate EVERY FEATURE before public release
+    - Verify report of box_wood_02 being unbreakable box in Meadow
+    - Check all labs for interacts that aren't part of Loner story mode
+    - Confirm whether cfg.prompts still needed after hint_filter changes
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -74,6 +78,11 @@ allow_local_logging(true)
 
 local function dump(logtext, ...)
     return debug_dump and logtext and printf(logprefix .. logtext, ...)
+end
+
+local function alert(logtext, ...)
+    if not logtext then return end
+    printf("! " .. logprefix .. logtext, ...)
 end
 
 function set_debug_logging(debug_en, verbose_en, dump_en)
@@ -926,8 +935,8 @@ function InteractPrompt:__init(anchor, args) super()
     end
 
     if debug_dump then
-        printf("[InteractPrompt] Passed args:")
-        for k,v in pairs(args) do printf("|| %s = %s", k, v) end
+        dump("[InteractPrompt] Passed args:")
+        for k,v in pairs(args) do dump("|| %s = %s", k, v) end
     end
     if args.hint_filters then
         local mon = {}
@@ -1972,6 +1981,49 @@ function fontscale(i)
     return i * get_font_scale()
 end
 
+function init_target_metadata(id, meta_dat)
+    if not cfg.target_data[id] then
+        cfg.target_data[id] = {}
+    end
+    if meta_dat ~= nil and not cfg.target_data[id][meta_dat] then
+        cfg.target_data[id][meta_dat] = {}
+    end
+end
+
+function cache(id)
+    return id and cfg.target_data[id]
+end
+
+function set_target_data(id, meta_dat, result)
+    --printf("set_target_data: id %s | meta_dat %s | result %s", id, meta_dat, result)
+    if not (id and meta_dat) then return end
+    init_target_metadata(id, meta_dat)
+    cfg.target_data[id][meta_dat].result = result
+    return result
+end
+
+function get_metadata_record(id, meta_dat)
+    --printf("get_metadata_record(%s, %s): %s", id, meta_dat, id and meta_dat and cfg.target_data[id] and cfg.target_data[id][meta_dat])
+    return id and meta_dat and cfg.target_data[id] and cfg.target_data[id][meta_dat]
+end
+
+function get_target_data(id, meta_dat)
+    --printf("Returning stored metadata %s for ID %s: %s", meta_dat, id, id and meta_dat and cfg.target_data[id] and cfg.target_data[id][meta_dat] and cfg.target_data[id][meta_dat].result)
+    return id and meta_dat and cfg.target_data[id] and cfg.target_data[id][meta_dat] and cfg.target_data[id][meta_dat].result
+end
+
+function ismeta_container(id)
+    return get_target_data(id, cfg.metadata_types.is_container)
+end
+
+function ismeta_pickup(id)
+    return get_target_data(id, cfg.metadata_types.is_pickup)
+end
+
+function is_companion_squad_member(npc)
+    return npc and npc:has_info("npcx_is_companion")
+end
+
 function is_dead_body(args)
     return args.is_npc and not args.is_alive
 end
@@ -2010,6 +2062,7 @@ function is_actor_in_sleep_zone()
     end
 end
 
+
 function get_current_target()
     --dump("current target: %s | L %s | T %s", locked_id or targeted_id, locked_id, targeted_id)
     return locked_id or targeted_id or nil
@@ -2029,16 +2082,37 @@ end
 
 function is_target_pickup(id)
     id = id or get_current_target()
-    return id and cfg.markers[id] and cfg.markers[id].pickup
+    if get_metadata_record(id, cfg.metadata_types.is_pickup) then
+        return get_target_data(id, cfg.metadata_types.is_pickup)
+    end
+    local result = id and (id == cfg.available_pickup) or (cfg.markers[id] and cfg.markers[id].pickup)
+    return set_target_data(id, cfg.metadata_types.is_pickup, result)
 end
 
 function get_target_pickup()
     return is_target_pickup() and get_current_target_obj()
 end
 
-function is_target_container(id)
+function is_target_container(id, cls)
     id = id or get_current_target()
-    return id and cfg.markers[id] and cfg.markers[id].is_container
+    if get_metadata_record(id, cfg.metadata_types.is_container) then
+        --printf("metadata record found for %s, result was %s", id, ismeta_container(id))
+        return ismeta_container(id)
+    end
+    --printf("No cached result for is_target_container, performing check on ID %s", id)
+    local result, obj
+    result = id and cfg.markers[id] and cfg.markers[id].is_container
+    if not result then
+        obj = get_game_object(id)
+        cls = cls or (obj and obj:clsid())
+        if (obj and cls) then
+            --printf("checking clsid: invbox %s | dead stalker %s", IsInvbox(nil, cls), (IsStalker(nil, cls) and not (obj:alive())))
+            result = (IsInvbox(nil, cls) or (IsStalker(nil, cls) and not (obj:alive())))
+        else
+            result = false
+        end
+    end
+    return set_target_data(id, cfg.metadata_types.is_container, result)
 end
 
 function get_target_container()
@@ -2108,7 +2182,7 @@ function check_for_dependencies(silent, debug_test)
     cfg = cfg or {}
     cfg.killswitch_all = true
     set_handler_callbacks(true)
-    printf("! DotMarks dependency check failed")
+    alert("Dependency check failed!")
 
     if (not using_modded_exes) or (debug_test and debug_test == 1) then
         failmessage         = gts("st_dotmarks_fail_reason_noexes") ..
@@ -2140,7 +2214,7 @@ function check_for_dependencies(silent, debug_test)
     if failmessage then
         failmessage = gts("st_dotmarks_epicfail_error") .. failmessage .. gts("st_catsy_failmessage_in_log_or_pda")
         local log_msg = parse_colors(failmessage, nil, false)
-        printf("! " .. logprefix .. log_msg)
+        alert(log_msg)
         if silent and not debug_test then
             return epic_fail
         end
@@ -2187,11 +2261,10 @@ function get_args_for_valid_objects(obj)
     local sec = obj:section()
     local kind = get_obj_kind(obj)
 
-    --vl("get_args_for_valid_objects: %s - clsid %s", nameid(nil, id), cls)
+    vl("get_args_for_valid_objects: %s - clsid %s", nameid(nil, id), cls)
     if is_blacklisted(id, cls, sec, kind) then
         vl("Object matched one or more blacklists: id %s | cls %s | sec %s | kind %s", cfg.blacklisted_ids[id], cfg.blacklisted_clsids[cls], cfg.blacklisted_sections[sec], cfg.blacklisted_kinds[kind])
     return end
-
     local args = { logged_type = "something else", section = sec, clsid = cls }
 
     local function setup_item_args(iclass)
@@ -2235,9 +2308,9 @@ function get_args_for_valid_objects(obj)
     if not args.texture then
         local pid = cfg.available_pickup
         if (id == pid) then
-            printf("! %s Obj %s failed classification, but is detected by engine as a pickup!\n"..
+            alert("Obj %s failed classification, but is detected by engine as a pickup!\n"..
                 "$ Classifying \"Misc\" as a fallback, investigate: section %s | clsid %s | kind %s",
-                logprefix, nameid(nil, id), sec, cls, kind
+                nameid(nil, id), sec, cls, kind
             )
             setup_item_args("Misc")
         else
@@ -2433,6 +2506,7 @@ function unregister_scanned_entity(id)
     cfg.in_pickup_range[id] = nil
     pickup_index[id] = nil
     cfg.invboxes[id] = nil
+    cfg.target_data[id] = nil
     if cfg.markers[id] then
         local mark = cfg.markers[id]
         if mark.use_pri then
@@ -2531,7 +2605,7 @@ function scan_nearby_object(obj)
         --vl("[ID %s] Existing marker found for mark_id %s, skipping", id, m_id)
     else
         scanned[id] = name
-        dl("scanning unmarked object %s | clsid %s | [%s]", nameid(name, id), cls, sec)
+        dl("[DotMarks] scanning unmarked object %s | clsid %s | [%s]", nameid(name, id), cls, sec)
         local args  = get_args_for_valid_objects(obj)
         if not args then return end
 
@@ -3061,8 +3135,8 @@ local function perform_debugging_checks()
         printf("QuickHelp static text: %s", hint)
     end
 
-    printf("[%s] cfg.block_loot_window: %s", time_global(), cfg.block_loot_window)
     --]]
+    dump("[%s] cfg.block_loot_window: %s", time_global(), cfg.block_loot_window)
 end
 
 
@@ -3154,18 +3228,19 @@ function on_key_release(key)
             cfg.held_key = nil
 
             if obj and not (dur and time and (dur >= time)) then
+                --printf("incomplete hold action")
                 if is_target_pickup() then
                     cfg.use_released = nil
                     --dump("No completed hold action, item pickup should occur", time)
                     force_actor_to_take(obj)
-                elseif is_target_container() then
+                elseif is_target_container(obj:id(), obj:clsid()) then
                     if z_ui_inventory_dotmarks then
-                        --dump("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
+                        dump("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
                         cfg.use_released = nil
                         
                         obj:use(db.actor)
                     else
-                        printf("! ERROR! z_ui_inventory_dotmarks could not be found, please reinstall DotMarks")
+                        alert("ERROR! z_ui_inventory_dotmarks could not be found, please reinstall DotMarks")
                     end
                 end
             end
@@ -3496,7 +3571,7 @@ function on_game_start()
         end
         on_option_change()
         if (fdda_installed and fddar_installed) then
-            printf("! WARNING: Both FDDA and FDDA Redone scripts were found, but FDDA scripts should be disabled! Leaving them both active can lead to busyhands or other serious issues.")
+            alert("WARNING: Both FDDA and FDDA Redone scripts were found, but FDDA scripts should be disabled! Leaving them both active can lead to busyhands or other serious issues.")
         end
         return
     end
@@ -3511,6 +3586,6 @@ function on_game_start()
         cfg = nil
         failmsg = string.format(" to load config file %s", config_file)
     end
-    printf("! [%s] ERROR: Initialization failed%s!\n" ..
+    alert("[%s] ERROR: Initialization failed%s!\n" ..
         "! DotMarks startup aborted, skipping callback registration", script_name, failmsg)
 end
