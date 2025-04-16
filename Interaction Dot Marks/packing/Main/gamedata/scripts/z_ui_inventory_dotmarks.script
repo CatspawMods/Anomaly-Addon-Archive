@@ -11,14 +11,13 @@
 -- =====================================================================]]
 local base_ui_inventory_start = ui_inventory.start
 function ui_inventory.start(mode, obj)
-   local _ = DEV_DEBUG and printf("Trying to start inventory in %s mode for container %s (%s)", mode, obj and obj:name(), obj and obj:id())
+   local _ = (DEV_DEBUG or ui_hud_dotmarks.debuglogs) and printf("Trying to start inventory in %s mode for container %s (%s)", mode, obj and obj:name(), obj and obj:id())
  	if ui_hud_dotmarks and (mode == "loot") then
- 		if ui_hud_dotmarks.cfg.block_loot_window then
-         _ = DEV_DEBUG and printf("[z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", obj and obj:name(), obj and obj:id())
+ 		if ui_hud_dotmarks.cfg.block_loot_window and not dotmarks_main.is_companion_squad_member(obj) then
+         _ = (DEV_DEBUG or ui_hud_dotmarks.debuglogs) and printf("[z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", obj and obj:name(), obj and obj:id())
  			return
  		end
  	end
    -- Allow loot window to open
  	base_ui_inventory_start(mode, obj)
 end
- 

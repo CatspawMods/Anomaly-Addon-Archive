@@ -5,7 +5,7 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b4"
+script_version  = "0.11-b5-debug"
 release_date    = 20250415
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -159,10 +159,12 @@ local base_config = {
             function(obj, sec, cls)
                 if not obj then return end
                 if IsItem("quest", sec or obj:section()) then return true end
+                local visual = obj:get_visual_name()
                 --cls = cls or obj:clsid()
                 --if (cls == clsid.obj_phys_destroyable) then
                     local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
-                    return scheme == "ph_button"
+                printf("Checking for quest item: %s | %s | %s\nvisual %s | scheme %s", nameid(obj), sec, cls, visual, scheme)
+                    return (scheme == "ph_button") or (scheme == "ph_code")
                 --end
             end
         ),
@@ -224,7 +226,7 @@ local base_config = {
                 local acomm         = character_community(db.actor):sub(7)
                 --local acomm      = get_actor_true_community()
                 local is_enemy      = comm and game_relations.is_factions_enemies(acomm, comm)
-
+                set_target_data(id, cfg.metadata_types.is_stalker, true)
                 local args          = {
                     logged_type     = "stalker (alive)",
                     -- logged_type is purely informational for logging
@@ -301,8 +303,8 @@ local base_config = {
         Bodies = (
             function(obj)
                 if not obj then return end
-                if is_empty_mutant_corpse(obj) then return end
                 local id            = obj:id()
+                if ui_hud_dotmarks.is_empty_mutant_corpse(id) then return end
                 local cls           = obj:clsid()
                 if not (id and cls) then return end
                 local args = {
@@ -323,10 +325,11 @@ local base_config = {
                 if IsStalker(nil, cls) then
                     args.is_stalker = true
                     args.is_container = true
-                    ui_hud_dotmarks.set_target_data(id, cfg.metadata_types.is_container, true)
+                    set_target_data(id, cfg.metadata_types.is_container, true)
                 elseif IsMonster(nil, cls) then
                     args.active_swap = cfg.swap_butcher
                     args.is_mutant = true
+                    set_target_data(id, cfg.metadata_types.is_mutant, true)
                 end
 
                 args.logged_type    = "dead " .. (args.is_stalker and "stalker" or "mutant")
@@ -361,7 +364,7 @@ local base_config = {
                 local sec           = obj:section()
                 local name          = obj:name()
                 local hfws_stash    = (sec == "workshop_stash") or nil
-                ui_hud_dotmarks.set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
+                set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
                 local args = {
                     logged_type     = "a stash",
                     is_container    = not hfws_stash,
@@ -369,12 +372,6 @@ local base_config = {
                     hidden          = hfws_stash,
                     no_sec          = hfws_stash,
                     workshop_stash  = hfws_stash,
-                    -- By default, marker position is by obj:center(), which is the center of
-                    -- the physics shell.
-                    -- However, obj:center() doesn't update Lua often in the engine, while
-                    -- bone position is updated extremely frequently. So try to get a good
-                    -- bone pos if possible.
-                    -- Uses the obj:list_bones() method added in 20250315 modded exes.
                     is_backpack     = (sec == "inv_backpack"),
                     is_display      = cfg.display_cases[sec] or nil,
                     has_items       = not obj:is_inv_box_empty(),
@@ -395,11 +392,17 @@ local base_config = {
         Ammo = (
             function(obj)
                 if not obj then return end
-                ui_hud_dotmarks.set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
                 return {
                     logged_type     = "ammo",
                     bone            = get_best_pos_bone(obj) or nil,
-                    pickup          = true,     -- object is a gettable inventory item
+                    -- By default, marker position is by obj:center(), which is the center of
+                    -- the physics shell.
+                    -- However, obj:center() doesn't update Lua often in the engine, while
+                    -- bone position is updated extremely frequently. So try to get a good
+                    -- bone pos if possible.
+                    -- Uses the obj:list_bones() method added in 20250315 modded exes.
+                    is_pickup       = true,     -- object is a gettable inventory item
                     no_sec          = true,     -- don't bother checking for secondary action
                     pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
@@ -422,12 +425,12 @@ local base_config = {
                         end
                     end
                 end
-
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
                 local count = obj and obj:get_ammo_in_magazine()
                 return obj and {
                     logged_type     = "a weapon",
                     has_parts       = true,
-                    pickup          = true,
+                    is_pickup       = true,
                     texture         = get_cfg_for_type("tex", "Weapons") or cfg.marker_dotmark,
                     bone            = "wpn_body",
                     pos_adjust      = vector():set(0, 0.05, 0),
@@ -441,9 +444,11 @@ local base_config = {
         Attachments = (
             function(obj)
                 local section = obj and obj:section()
-                return obj and {
+                if not section then return end
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
                     logged_type     = "an attachable item",
-                    pickup          = true,
+                    is_pickup       = true,
                     is_attach       = true,
                     skip_seobj_check= (section == "bolt") or (section == "bolt_bullet") or nil,
                     bone            = get_best_pos_bone(obj) or nil,
@@ -456,9 +461,11 @@ local base_config = {
     -- =======================================================================    
         Grenades = (
             function(obj)
-                return obj and {
+                if not obj then return end
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
                     logged_type     = "a grenade",
-                    pickup          = true,
+                    is_pickup       = true,
                     no_sec          = true,
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = vector():set(0, 0.05, 0),
@@ -495,9 +502,11 @@ local base_config = {
     -- =======================================================================    
         Outfits = (
             function(obj)
-                return obj and {
+                if not obj then return end
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
                     logged_type     = "an outfit",
-                    pickup          = true,
+                    is_pickup       = true,
                     has_parts       = true, -- Item has component parts with condition
                     no_sec          = true,
                     bone            = get_best_pos_bone(obj) or nil,
@@ -510,9 +519,11 @@ local base_config = {
     -- =======================================================================    
         Headgear = (
             function(obj)
-                return obj and {
+                if not obj then return end
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
                     logged_type     = "headgear",
-                    pickup          = true,
+                    is_pickup       = true,
                     has_parts       = true,
                     no_sec          = true,
                     bone            = get_best_pos_bone(obj) or nil,
@@ -526,9 +537,11 @@ local base_config = {
     -- =======================================================================    
         Artefacts = (
             function(obj)
-                return obj and {
+                if not obj then return end
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
                     logged_type     = "an artefact",
-                    pickup          = true,
+                    is_pickup       = true,
                     no_sec          = true,
                     is_arty         = true,
                     bone            = get_best_pos_bone(obj) or nil,
@@ -542,15 +555,18 @@ local base_config = {
         Consumables = (
             function(obj)
                 local section       = obj and obj:section()
+                if not section then return end
                 local name          = nil
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+
                 local multi_uses    = nil
                 if section and IsItem("multiuse", section, obj) then
                     multi_uses = obj:get_remaining_uses()
                 end
-
+                
                 return obj and {
                     logged_type     = money and "money (under consumables)" or "food, drugs, or drink",
-                    pickup          = true,
+                    is_pickup       = true,
                     money           = get_cash_quantity_string(section) or nil,
                     no_sec          = money and true or nil,
                     name            = name or nil,
@@ -567,20 +583,22 @@ local base_config = {
         Tools = (
             function(obj)
                 local section       = obj and obj:section()
-                local blast         = section and ini_sys:r_float_ex(section, "blast")
+                if not section then return end
+                local blast         = ini_sys:r_float_ex(section, "blast")
                 if blast and (blast > 0) and not cfg.explosive_tools[section] then
                     -- More special cases, yay
                     return {iclass_override = "Explosive"}
                 end
-
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                
                 local multi_uses    = nil
-                if section and IsItem("multiuse", section, obj) then
+                if IsItem("multiuse", section, obj) then
                     multi_uses = obj:get_remaining_uses()
                 end
 
                 return obj and {
                     logged_type     = "a tool",
-                    pickup          = true,
+                    is_pickup       = true,
                     multi_uses      = multi_uses,
                     money           = get_cash_quantity_string(section) or nil,
                     manual_use      = true,
@@ -595,9 +613,11 @@ local base_config = {
     -- =======================================================================    
         Devices = (
             function(obj)
-                return obj and {
+                if not obj then return end
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
                     logged_type     = "a device",
-                    pickup          = true,
+                    is_pickup       = true,
                     has_battery     = true,
                     has_power       = true,
                     bone            = "wpn_body",
@@ -614,22 +634,27 @@ local base_config = {
                 local id        = obj:id()
                 local scheme    = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
                 local ph_button = id and scheme and (scheme == "ph_button") and db.storage[id][scheme]
-                local is_pickup = not ph_button
-                ui_hud_dotmarks.set_target_data(id, cfg.metadata_types.is_pickup, not ph_button)
+                local ph_code   = id and scheme and (scheme == "ph_code") and db.storage[id][scheme]
+                local is_button = (ph_button or ph_code)
+                local is_pickup = not is_button
+                if is_pickup then
+                    set_target_data(id, cfg.metadata_types.is_pickup, not is_button)
+                end
                 local vadjust   = visual and cfg.button_visuals[visual] or 0
                 return {
-                    logged_type     = ph_button and "a quest interaction" or "a quest item",
-                    is_button       = not is_pickup,
+                    logged_type     = (ph_button or ph_code) and "a quest interaction" or "a quest item",
+                    is_button       = is_button,
                     visual          = visual,
                     scheme          = scheme or nil,
-                    pickup          = is_pickup,
-                    refresh_text    = not is_pickup,
+                    is_pickup       = is_pickup,
+                    refresh_text    = is_button,
                     no_sec          = true,
                     pos_adjust      = vector():set(0, vadjust, 0),
                     bone            = get_best_pos_bone(obj) or nil,
                     texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
                     hint_filters   = is_pickup and {["inventory_item_use"] = "inventory_item_use"} or
                     {
+                        ["st_codelock"] = "st_codelock",
                         ["st_make_a_wish"] = "st_make_a_wish",
                         ["tip_need_access_card"] = "tip_need_access_card",
                         ["pas_b400_tip_switcher"] = "pas_b400_tip_switcher",
@@ -741,9 +766,9 @@ local base_config = {
                 local name = obj:name()
                 local section = obj:section()
                 local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
-                ui_hud_dotmarks.set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
                 return {
-                    pickup          = true,
+                    is_pickup       = true,
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = vector():set(0, 0.05, 0),
                     no_sec          = cfg.useless_shit[section] and true or nil,
@@ -838,6 +863,14 @@ local base_config = {
     },
 }
 -- =======================================================================    
+
+function set_target_data(...)
+    ui_hud_dotmarks.set_target_data(...)
+end
+
+function get_target_data(...)
+    ui_hud_dotmarks.get_target_data(...)
+end
 
 function play_sfx(snd)
     -- Play sound effect unless cfg.disable_all_sounds is true
@@ -947,15 +980,6 @@ function is_nearest_campfire_lit()
     return fire and fire:is_on()
 end
 
-function is_empty_mutant_corpse(obj)
-    if not (obj and IsMonster(obj)) then return end
-    local id = safeid(obj)
-    local looted = se_load_var(id,obj:name(),"looted")
-    local st = db.storage[id]
-    local decayed = (st and st.death_time and game.get_game_time():diffSec(st.death_time) > cfg.mutant_decay_time)
-    return looted or decayed
-end
-
 function is_body_claimed(id)
     if grok_loot_claim then
         local claimed   = grok_loot_claim.claimed
@@ -965,6 +989,10 @@ function is_body_claimed(id)
         return not not (k_alive and (k_id ~= AC_ID))
     end
     return false
+end
+
+function is_companion_squad_member(npc)
+    return npc and npc.has_info and npc:has_info("npcx_is_companion")
 end
 
 function is_blacklisted(id, cls, sec, kind)

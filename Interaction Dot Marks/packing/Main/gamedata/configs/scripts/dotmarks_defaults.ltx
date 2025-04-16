@@ -35,6 +35,7 @@ mcm_paths
 metadata_types
 monitors
 notable_npcs
+pending_actions
 tutorial_hints
 racked_items
 scan
@@ -126,10 +127,14 @@ target_lenience 			= 0.95
 fddar_multipickup 			= false
 fddar_pickup_anim 			= false
 fdda_pickup_anim 			= false
+fdda_anims_enabled 			= false
 ; These should get populated at runtime with the current values from FDDA's MCM settings
-item_use_delay 				= 0.75
+item_use_delay 				= 0.5
 ; Delay between taking an item and trying to use it 
-; Required to give FDDA pickup animation time to complete
+; Required to give FDDA pickup animation time to begin
+item_use_timeout 			= 1200
+; The maximum amount of time a delayed action will wait for an animation to complete
+; before it times out and executes the action to avoid stuck timeevents
 long_press_delay 			= 1000
 ; Inputs on the primary interact will be ignored for this many ms after a completed long press of the same
 popin_anim_dur 				= 500
@@ -228,7 +233,7 @@ snd_path_blip 				= catspaw\paw_blip
 ; Subtle UI sound effect
 disable_all_sounds 			= false
 ; Disable sound effects
-bodies_use_mpda_rules 		= true
+bodies_use_mpda_rules 		= false
 ; If enabled, body markers will use the same visibility rules as bodies in Milspec PDA
 show_multi_uses 			= true
 ; Append the number of uses to the name of multi-use items with more than one remaining charge
@@ -568,8 +573,6 @@ wpn_ammo_vog25 		= true
 [breakable_box_visuals]
 ; Defines which object visuals are classified as breakable boxes, no other way to detect
 dynamics\box\box_wood_01 	= true
-;dynamics\box\box_wood_02 	= true ; this seems to pick up non-breakable boxes in Meadows
-; ** Need to confirm that
 dynamics\box\box_metall_01	= true
 
 [smokables]
@@ -588,7 +591,6 @@ hand_rolling_tobacco
 
 [manual_use]
 ; FDDA won't properly handle usage, have to do so manually
-; ** Verify whether that's also true of latest FDDAR
 joint
 
 [door_visuals]
@@ -777,6 +779,7 @@ bodies_use_mpda_rules 	= dotmarks/dmarkmods/
 show_prompt_during_anim = dotmarks/dmarkmods/
 prompt_busy_during_anim = dotmarks/dmarkmods/
 item_use_delay	 		= dotmarks/dmarkmods/
+item_use_timeout	 	= dotmarks/dmarkmods/
 sp_hide_junk_items		= dotmarks/dmarkmods/
 sp_icon_pos_x 			= dotmarks/dmarkmods/
 sp_icon_pos_y 			= dotmarks/dmarkmods/

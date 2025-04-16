@@ -536,7 +536,7 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_tasks">
-		<text>Enable special icon for task objectives</text>
+		<text>Enable special icons for task objectives</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_tasks_desc">
 		<text>If this option is enabled, objects that are the target of the current active task will use a hi-res task marker icon instead of the standard dot markers.
