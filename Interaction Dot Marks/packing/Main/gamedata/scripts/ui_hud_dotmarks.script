@@ -25,9 +25,8 @@ script_name     = "ui_hud_dotmarks"
     See dotmarks_main.script for dependencies.
 -- =======================================================================
     TODO:
-    - ! Figure out what's going on with companion inventory for some users
     - Test with EVERY distinct type of item in the debug menu
-    - Investigate adding secondary action to heal wounded stalker
+    - Investigate adding secondary action to heal wounded stalkers
     - MCM live preview for prompt elements - post-release, lots of work
 
     BEFORE PUBLIC RELEASE:
@@ -93,7 +92,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
     if (dump_en ~= nil) then debug_dump = dump_en end
 end
 
-set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 -- First two values will be overridden by MCM once the game loads
 -- debug_dump is EXTREMELY noisy and should only ever be manually enabled for a specific reason
 
@@ -3111,6 +3110,11 @@ function do_garbage_collection()
             end
         end
     end
+    if cfg.block_loot_window then
+        if (now - cfg.block_loot_window) > 3000 then
+            cfg.block_loot_window = nil
+        end
+    end
 end
 
 local function perform_debugging_checks()
@@ -3130,7 +3134,7 @@ end
 --      MAIN SCAN LOOP
 -- =======================================================================
 function actor_on_update()
-    perform_debugging_checks() -- should always be commented for release
+    --perform_debugging_checks() -- should always be commented for release
     if not scanning then return end
     -- ===================================================================
     --  Tutorial monitors
@@ -3195,14 +3199,14 @@ end
 function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
         cfg.use_released = nil
-        cfg.block_loot_window = true
+        cfg.block_loot_window = time_global()
         --dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
         cfg.held_key = key
     end
 end
 
 function on_key_release(key)
-    cfg.block_loot_window = false
+    cfg.block_loot_window = nil
     if key == cfg.held_mod then cfg.held_mod = nil end
     if (key == cfg.held_key) then
         if (key == use_dik) then

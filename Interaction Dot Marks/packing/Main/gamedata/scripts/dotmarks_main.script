@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b5-debug"
-release_date    = 20250415
+script_version  = "0.11-b6"
+release_date    = 20250416
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -160,12 +160,8 @@ local base_config = {
                 if not obj then return end
                 if IsItem("quest", sec or obj:section()) then return true end
                 local visual = obj:get_visual_name()
-                --cls = cls or obj:clsid()
-                --if (cls == clsid.obj_phys_destroyable) then
-                    local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
-                printf("Checking for quest item: %s | %s | %s\nvisual %s | scheme %s", nameid(obj), sec, cls, visual, scheme)
-                    return (scheme == "ph_button") or (scheme == "ph_code")
-                --end
+                local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
+                return (scheme == "ph_button") or (scheme == "ph_code")
             end
         ),
         Campfires = (
