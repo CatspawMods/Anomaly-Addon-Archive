@@ -110,7 +110,7 @@ By default it is set to a long-press equivalent of your Primary Interact--in oth
 > The durations for Long Press and Double Tap actions are set for all addons in `MCM > MCM Keybinds`
 
 > [!WARNING]
-> While having the Secondary Interact as a variant of the same key used for the Primary is convenient, this requires the script to keep close track of--and sometimes block--the pressing of the "use" key. On very rare occasions this can interfere with normal pickup item interactions.
+> While having the Secondary Interact as a variant of the same key used for the Primary is convenient, this requires the script to keep close track of--and sometimes block--the pressing of the "use" key. On very rare occasions this can interfere with normal pickup item interactions. If you have issues like that, try setting the Secondary Interact to a different key.
 ## Long Press Delay
 * Config setting: `long_press_delay`
 * Default: `1000`
@@ -200,7 +200,7 @@ Ammunition of any kind, with the exception of explosives.
 ## Artefacts
 * Config setting: `scan_artefacts`
 
-Any artefact that is not in a container.
+Any artefact, whether or not it in a container.
 ## Attachments
 * Config setting: `scan_attachments`
 
@@ -306,53 +306,81 @@ If my *Milspec PDA* addon is installed, enabling this option will cause bodies t
 ## Show interaction prompt during FDDA animations
 * Config setting: `show_prompt_during_anim`
 * Default: `false`
+
 If enabled, the interaction prompt will be shown during FDDA animations.
 > [!NOTE]
 > If you're using FDDA Redone, there isn't much point to enabling this--see below.
 ## Interaction prompt disabled during FDDA animations
 * Config setting: `prompt_busy_during_anim`
 * Default: `true`
+
 If enabled, the interaction prompt will not accept input during FDDA animations.
 > [!NOTE]
 > This only really affects the original FDDA, since FDDA Redone blocks the use key during animations.
 ## Item secondary usage delay
 * Config setting: `item_use_delay`
 * Default: `0.5`
+
 When using a secondary action on a pickup item, this is the delay in seconds between the pickup event and the queueing of the secondary action. This is necessary in order to allow FDDA's pickup animation time to begin.
 > [!NOTE]
 > This setting has no effect without FDDA or FDDA Redone installed.
+## Take-all secondary action triggers Autoloot
+* Config setting: `takeall_does_autoloot`
+* Default: `true`
+
+If enabled along with iTheon's *Auto Looter*, the secondary action for containers will trigger the Auto Looter function instead of Take all. Once a container has been autolooted, the secondary action for that container will change to "Take all".
+## Override Auto Looter keybind
+* Config setting: `hijack_autoloot_keybind`
+* Default: `true`
+
+If both of these Auto Looter options are enabled, DotMarks will attempt to take control of the Auto Looter key bind, and will disable the usual one. This not only simplifies the integration of the two addons, but allows you to unbind the Auto Looter bind and free up the key for something else.
+> [!NOTE]
+> When this option is enabled, you can't trigger the Auto Looter manually using its keybind--the function is moved to the DotMarks secondary action. However, most players will never need to Autoloot the same container twice.
 ## Hide items marked as junk in Sorting Plus
 * Config setting: `sp_hide_junk_items`
 * Default: `true`
+
 If the *Sorting Plus* addon is installed, and an item has been marked as "junk", then a marker will not be shown for it.
 > [!TIP]
 > Just like any other hidden marker, you can still interact with and pick up the item.
 ## Sorting Plus icon X and Y offsets
 * Config settings: `sp_icon_pos_x`, `sp_icon_pos_y`
 * Default: `10, 1`
+
 Fine-tunes the position of the Sorting Plus icon on the Item Card.
 ## Part condition dots X and Y offsets
 * Config settings: `parts_dot_pos_x`, `parts_dot_pos_y`
 * Default: `-7, -4`
+
 Fine-tunes the position of the part condition dots on the Item Card.
 ## Increase perception radius based on Skill System
 * Config setting: `use_skill_system`
 * Default: `true`
+
 If Haruka's *Skill System* addon (or one of its derivatives) is installed, the `near_scan_radius` will be slightly increased for each level in a specified skill.
 ## Scan radius multiplier per skill level
 * Config setting: `haru_skill_coef`
 * Default: `0.2`
+
+If *Skill System* integration is enabled, this setting controls the multiplier that is applied to the `near_scan_radius` per skill level, and effectively increases the player's "perception" range--the distance at which dot markers begin to appear.
+
+At **Scavenging** level 15 with the default multiplier of 0.2 and radius of 4m, the final near scan radius would be 7 meters.
+> [!WARNING]
+> A very high near scan radius can have a performance impact, especially in dense areas with many objects.
 ## Interval between Skill System updates
 * Config setting: `skill_upd_interval`
 * Default: `29711`
+
 Time in milliseconds between updates. You'll probably never have a need to change this.
 > [!NOTE]
-> Skill level-ups occur very rarely, so the skill system update does not need to happen often.
+> Skill level-ups occur very rarely, so the skill system update does not need to happen often--you may go entire play sessions without a level-up, and even the default value of ~30s is arguably overkill.
 ## Name of the skill used for this check
 * Config setting: `haru_skill_name`
 * Default: `scavenging`
+
+The internal name of the skill from *Skill System* that is used as the basis for the integration.
 > [!WARNING]
-> Bad things may happen if you typo this.
+> Bad things may happen if you typo this, and most of you have no need to tinker with it.
 # MCM Menu: Advanced Settings
 .
 
