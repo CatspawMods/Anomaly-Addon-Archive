@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.7"
-release_date    = 20250406
+script_version  = "0.7.9"
+release_date    = 20250417
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -693,7 +693,7 @@ end
 function is_object_already_targeted(id)
     if not id then return end
     local hmm = get_hud_mark_manager()
-    local is_xhair  = hmm and hmm.current_pickup and (id == hmm.current_crosshair)
+    local is_xhair  = hmm and hmm.current_crosshair and (id == hmm.current_crosshair)
     local is_pickup = hmm and hmm.current_pickup and (id == hmm.current_pickup)
     local is_target = hmm and hmm.current_target and (id == hmm.current_target)
     local result = is_pickup or is_target or is_xhair
@@ -1179,7 +1179,8 @@ end
 
 
 function UIHUDMarker:actor_on_net_destroy()
-    self:Destroy(nil, "actor_on_net_destroy")
+    self.destroying = true
+    get_hud():RemoveDialogToRender(self)
 end
 
 

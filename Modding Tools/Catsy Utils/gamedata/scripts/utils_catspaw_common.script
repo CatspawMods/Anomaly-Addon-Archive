@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.11"
-release_date    = 20250406
+script_version 	= "1.12"
+release_date    = 20250417
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -225,7 +225,7 @@ end
 
 function greater_of(n1, n2)
 	-- Basically a wrapper with failsafes
-	return n1 and n2 and math.max(tonumber(n1) or 0, tonumber(n2) or 0)
+	return n1 and n2 and math.max(tonumber(n1) or 0, tonumber(n2) or 0) or n1 or n2 or 0
 end
 
 function lesser_of(n1, n2)
