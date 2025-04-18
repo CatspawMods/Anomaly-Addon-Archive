@@ -25,12 +25,15 @@ script_name     = "ui_hud_dotmarks"
     See dotmarks_main.script for dependencies.
 -- =======================================================================
     TODO:
-    - Test with EVERY distinct type of item in the debug menu
+    - No localized name for mlr_x8_copybook quest item
+        Probably a safename thing
+        Check all the other quest items too, might've missed some
     - Investigate adding secondary action to heal wounded stalkers
     - MCM live preview for prompt elements - post-release, lots of work
 
     BEFORE PUBLIC RELEASE:
     - Optimize/clean up WIP code that didn't get used
+        Check each function for usage across all scripts
     - Clean up any logging or checks that aren't needed for release
         Especially in main update loop!
     - Re-validate EVERY FEATURE individually - all must pass in same build
@@ -101,15 +104,10 @@ end
 -- ======================================================================
 local get_next_check    = utils_catspaw_common.get_next_tg_interval
 local valid_id          = utils_catspaw_common.valid_id
-local get_obj_section   = utils_catspaw_common.get_obj_section
-local is_living_thing   = utils_catspaw_common.is_living_thing
-local strbool           = utils_catspaw_common.strbool
 local safeid            = utils_catspaw_common.safeid
 local get_mcm           = utils_catspaw_common.get_mcm_or_default_val
-local fade_curve        = utils_catspaw_common.easing.OutQuint
 local lerp              = utils_catspaw_common.lerp
 local dec2              = utils_catspaw_common.dec2
-local get_stash_hint    = utils_catspaw_common.get_stash_hint
 local get_game_object   = utils_catspaw_common.get_game_object
 local easeOutElastic    = utils_catspaw_common.easing.easeOutElastic
 local get_obj_kind      = utils_catspaw_common.get_obj_kind
@@ -126,8 +124,8 @@ local first_upper       = utils_catspaw_text.first_upper
 local nameid            = utils_catspaw_text.obj_name_and_id
 local csv_argb_to_tbl   = utils_catspaw_text.csv_argb_to_tbl
 local clr_tbl           = utils_catspaw_text.clr_tbl
-local clr_tbl_to_index  = utils_catspaw_text.clr_tbl_to_index
 local get_state_color   = utils_catspaw_text.get_state_color
+local inventory_name    = utils_catspaw_text.inventory_name
 local get_argb          = utils_catspaw_mapspots.get_argb
 local is_already_target = utils_catspaw_hudmarks.is_object_already_targeted
 local get_task_target   = utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.get_active_target_id or function() end
@@ -168,11 +166,9 @@ local actor_moved       = false
 local maingameui        = nil
 local hmm               = nil
 local popin_active      = nil
-local extra_carry       = nil
 local use_dik           = nil
 local fdda_callback     = nil
 local fallback_font     = 3
-local _uiscale          = 1
 local next_skill_upd    = 0
 local next_near_scan    = 0
 local next_early_scan   = 0
@@ -236,7 +232,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     
                     cfg.in_pickup_range[id] = mark.is_pickup and in_range and dist or nil
 
-                    if mark.is_arty and (not can_actor_see_artefact(obj)) then
+                    if mark.is_arty and (not mark.in_container) and (not can_actor_see_artefact(obj)) then
                         hide_marker_and_prompts(mark.mark_id, "artefact not visible")
                         return
                     end
@@ -342,6 +338,16 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                             -- Passed NPC and container checks
                             if in_range then
                                 if mark.is_pickup then
+                                    if mark.glowstick_sec and can_pickup_glowstick(obj, id, dist) then
+                                        if (not cfg.available_pickup) then
+                                            cfg.available_pickup = id
+                                        end
+                                        if not pickup_index[id] then
+                                            local i = (#nearby_pickups or 0) + 1
+                                            pickup_index[id] = i
+                                            nearby_pickups[i] = id
+                                        end
+                                    end
                                     -- Mark is an item pickup
                                     if cfg.show_item_card then
                                         mark.use_pri:UpdateWeightColor()
@@ -596,6 +602,7 @@ function item_pickup_intercept(obj, flags)
         -- that FDDA is handling the pickup part
 
         -- However, some items don't appear to respond to this handling, so we use them manually
+        -- based on the cfg.manual_use table
             vl("flags.ret_value is %s, manually taking %s", flags.ret_value, nameid(taken_obj))
             db.actor:take_item(taken_obj)
         end
@@ -738,6 +745,7 @@ end
 function can_actor_see_artefact(obj)
     local arty  = obj and obj:cast_Artefact()
     local vstate= arty and arty.getVisible and arty:getVisible() or 0
+    local _ = debug_dump and vl("can_actor_see_artefact for %s: %s", nameid(obj), (vstate == 1) and true or false)
     return (vstate == 1) and true or false
 end
 
@@ -830,6 +838,18 @@ end
 function timed_out(stamp, interval)
     if not (stamp and interval) then return end
     return (time_global() - stamp) >= interval
+end
+
+function get_quickhelp_text()
+    local quickhelp = maingameui and maingameui.UIStaticQuickHelp
+    local hint = quickhelp and quickhelp:GetText()
+    if (hint == "") or (hint == " ") then hint = nil end
+    return hint or nil
+end
+
+function set_quickhelp_text(text)
+    if not maingameui and maingameui.UIStaticQuickHelp then return end
+    maingameui.UIStaticQuickHelp:SetText(text or "")
 end
 
 --[[======================================================================
@@ -1207,7 +1227,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
     if (not cfg.show_item_card) or (not self.args.is_pickup) then return end
     if self.itemcard then self.itemcard:Show(false) end
     obj = obj or (self.args.id and get_game_object(self.args.id))
-    sec = obj and obj:section()
+    sec = self.args.glowstick_sec or (obj and obj:section())
     if not sec then return end
 
     self.weight     = dec2(ini_sys:r_float_ex(sec,"inv_weight") or 0)
@@ -1776,16 +1796,6 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
     self.drop:SetWndSize(vector2():set(pos + fontscale(55), fontscale(22)))
 end
 
-function InteractPrompt:GetQuickHelp()
-    local hint = maingameui.UIStaticQuickHelp:GetText()
-    if (hint == "") or (hint == " ") then hint = nil end
-    return hint or nil
-end
-
-function InteractPrompt:SetQuickHelp(text)
-    maingameui.UIStaticQuickHelp:SetText(text)
-end
-
 function InteractPrompt:UpdateLongPress()
     if self.longpress then
         if (not self.busystate) and (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
@@ -1802,7 +1812,7 @@ end
 function InteractPrompt:UpdateFilteredHints(hint)
     self.last_hint_match = nil
     if not (self.args.is_door or self.args.is_button or self.args.is_workshop or is_already_target(self.args.id)) then return end
-    hint = hint or self:GetQuickHelp()
+    hint = hint or get_quickhelp_text()
     
     if not hint then return end
     -- QuickHelp static is empty, nothing to filter
@@ -1816,7 +1826,7 @@ function InteractPrompt:UpdateFilteredHints(hint)
         if (hint == k) then
             self.last_hint_match = hint
             if is_vanilla_ui_hidden() then
-                self:SetQuickHelp("")
+                set_quickhelp_text()
             end
             if self.args.refresh_text then
                 self.args.text = v
@@ -1829,18 +1839,18 @@ function InteractPrompt:UpdateFilteredHints(hint)
 end
 
 function InteractPrompt:UpdateDoorState()
-    local hint  = self:GetQuickHelp()
+    local hint  = get_quickhelp_text()
     if self.door and self.door.tip then
         local tip   = self.door.tip()
         local msg   = tip and gts(tip)
         if hint and msg and (hint == msg) then
             if is_vanilla_ui_hidden() then
-                self:SetQuickHelp("")
+                set_quickhelp_text()
             end
             hint = msg
         end
     else
-        hint = self:GetQuickHelp()
+        hint = get_quickhelp_text()
     end
     return hint and trimmed_prompt(hint)
 end
@@ -1912,10 +1922,6 @@ end
 -- =======================================================================
 --      MAIN LOGIC
 -- =======================================================================
-
-function uiscale(i)
-    return i * (_uiscale or 1)
-end
 
 function get_font(num)
     local font = fonts[num or cfg.font_main_prompt or fallback_font]
@@ -2228,7 +2234,7 @@ function get_args_for_valid_objects(obj)
         args.id         = id
         args.clsid      = cls
         args.kind       = kind
-        args.section    = sec
+        args.section    = args.glowstick_sec or sec
         args.hidden     = not cfg.scan[iclass]
         args.has_power  = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
     end
@@ -2296,7 +2302,7 @@ function setup_pri_interact_prompt(mark, args)
     local anchor    = mark.marker or args.anchor
     local key       = bind_to_dik(key_bindings.kUSE)
     local bind_text = bindtext(key, 0)
-    local int_text  = trimmed_prompt(maingameui.UIStaticQuickHelp:GetText())
+    local int_text  = trimmed_prompt(get_quickhelp_text())
 
     if mark.is_pickup then
         int_text = gts("st_alti_take") .. " " .. (mark.money or mark.name)
@@ -2370,6 +2376,13 @@ function setup_sec_interact_prompt(mark)
             -- Pick up backpack and everything in it
             int_text = first_upper(gts("st_alti_pickup_bp"))
             func = pick_up_backpack
+        elseif z_auto_looter and cfg.takeall_does_autoloot and not mark.autolooted then
+            -- Trigger iTheon's autoloot
+            int_text = string.format("%s %s",
+                first_upper(gts("st_alti_autoloot")),
+                mark.name
+            )
+            func = trigger_autoloot
         else
             -- Take everything from box
             int_text = string.format("%s %s",
@@ -2485,6 +2498,15 @@ function marked_obj_has_ammo(id)
     return id and cfg.markers[id] and (cfg.markers[id].ammo_count and cfg.markers[id].ammo_count > 0)
 end
 
+function can_pickup_glowstick(obj, id, dist)
+    if dist > (cfg.obj_interact_dist or 2.5) then return false end
+    obj         = obj or (id and get_game_object(id))
+    id          = id or (obj and obj:id())
+    local pos   = obj and obj:position()
+    local dot   = pos and utils_catspaw_hudmarks and utils_catspaw_hudmarks.dotproduct_for_pos(pos) or 0
+    --dump("can_pickup_glowstick %s: %s | dot %s | lenience %s", id, dot >= (cfg.target_lenience), dot, cfg.target_lenience)
+    return dot >= (cfg.target_lenience)
+end
 
 function obj_has_available_sec_interact(obj, id, mark)
     if not (obj or id) then return end
@@ -2566,7 +2588,7 @@ function scan_nearby_object(obj)
         args            = args or {}
         args.id         = id
         args.mark_id    = m_id
-        args.name       = get_localization(obj, nil, sec) or nil
+        args.name       = args.name or get_localization(obj, nil, sec) or nil
         args.preset     = "dotmark"
 
         if debug_dump then
@@ -2615,19 +2637,25 @@ function dot_eye(position)
     return dot
 end
 
-local function log_target_acquisition(method)
+local function log_target_acquisition(method, last_id)
     if not (debug_dump and method) then return end
     local target = targeted_id and get_game_object(targeted_id)
     if not target then return end
     local method_txt = ""
-    if method > 1 then
+    if method < 0 then
+        target = last_id and get_game_object(last_id)
+        if target then
+            dump("[%s] update_targeted_object: no longer targeting %s", time_global(), nameid(target))
+        end
+        return
+    elseif method > 1 then
         method_txt = "avail_pickup"
     elseif method > 0 then
         method_txt = "looking_at"
     else
         method_txt = "target_obj"
     end
-    dump("update_targeted_object: targeted_id is now %s (%s) | method %s", targeted_id, target and target:name(), method_txt)
+    dump("[%s] update_targeted_object: targeted_id is now %s (%s) | method %s", time_global(), targeted_id, target and target:name(), method_txt)
 end
 
 function is_marker_object_container(obj, id)
@@ -2667,12 +2695,16 @@ function update_targeted_object()
         if target and (method < 1) and cfg.fallback_distance_check and (targeted_id ~= last_id) then
             local apos = db.actor:position()
             local dist = apos:distance_to(target:position())
-            if dist > (cfg.sec_interact_dist or 2.5) then
+            if dist > (cfg.obj_interact_dist or 2.5) then
                 targeted_id = nil
             end
         end
-        log_target_acquisition(method)
+    elseif last_id then
+        method = -1
+    else
+        return
     end
+    log_target_acquisition(method, last_id)
 end
 
 
@@ -2745,6 +2777,29 @@ function iterate_any_inventory(box, func)
     else
         box:iterate_inventory_box(func)
     end
+end
+
+function hijack_autoloot_keybind()
+    if z_auto_looter and cfg.takeall_does_autoloot and cfg.hijack_autoloot_keybind then
+        z_auto_looter.config.looter_key = cfg.autoloot_hijack_value
+    end
+end
+
+function trigger_autoloot(obj, mark)
+    if not (zz_autoloot_dotmarks and z_auto_looter and z_auto_looter.auto_looter) then return end
+    local id = obj and obj:id()
+    zz_autoloot_dotmarks.override_id = id
+    hijack_autoloot_keybind()
+    z_auto_looter.auto_looter(z_auto_looter.config.looter_key)
+    mark = mark or (id and cfg.markers[id])
+    mark.autolooted = true
+    if mark.alt_interact then
+        mark.alt_interact.args.func = take_all_from_box
+        mark.alt_interact.args.name = string.format("%s %s", first_upper( gts("st_alti_takeall") ), mark.name)
+        mark.alt_interact:Prompt(mark.alt_interact.args.name)
+        mark.alt_interact:SetPrompt()
+    end
+    return true
 end
 
 function take_all_from_box(box)
@@ -2865,7 +2920,7 @@ end
 function is_obj_interact_dist(obj)
     if not (obj and db.actor) then return end
     local pos = obj:center()
-    return pos and (pos:distance_to(db.actor:center()) <= (cfg.sec_interact_dist or 2.5))
+    return pos and (pos:distance_to(db.actor:center()) <= (cfg.obj_interact_dist or 2.5))
 end
 
 
@@ -2995,6 +3050,7 @@ function on_item_use_anim_stop()
 end
 
 function cycle_targeted_pickup(dir)
+    vl("cycle_targeted_pickup: %s | locked %s | target %s", dir and (dir > 0) and "next" or "previous", locked_id, targeted_id)
     if not (dir and get_current_target()) then return end
     local max       = size_table(nearby_pickups)
     local _ = debug_dump and vl("max %s | in_pickup_range %s", max, size_table(cfg.in_pickup_range))
@@ -3011,6 +3067,46 @@ function cycle_targeted_pickup(dir)
     local _         = ind_new and (ind_new ~= ind_curr) and play_snd_path(cfg.snd_path_blip)
     vl("Pickup cycled | prev ind %s id %s | new ind %s id %s", ind_curr, nearby_pickups[ind_curr], ind_new, locked_id)
 end
+
+
+--[[
+-- fixes cycling to items behind the player, but broken - investigate why
+function cycle_targeted_pickup(dir)
+    if not (dir and get_current_target()) then return end
+    local max       = size_table(nearby_pickups)
+    local _ = debug_dump and vl("max %s | in_pickup_range %s", max, size_table(cfg.in_pickup_range))
+    if (max < 2) or is_empty(cfg.in_pickup_range) then return end
+    local id_curr   = get_current_target()
+    local ind_curr  = pickup_index[id_curr] or 1
+    local checks    = 0
+    local ind_new
+    local curr = ind_curr
+    local function cycle()
+        checks = checks + 1
+        if (dir > 0) then
+            curr     = (curr < max) and (curr + 1) or 1
+        else
+            curr     = (curr > 1) and (curr - 1) or max
+        end
+        local id = nearby_pickups[curr]
+        local mark = id and cfg.markers[id]
+        if not (mark and mark.is_shown) then
+            if (checks < max) then
+                cycle()
+                return
+            else
+                return
+            end
+        end
+        ind_new = curr
+    end
+    cycle()
+
+    locked_id       = nearby_pickups[ind_new]
+    local _         = ind_new and (ind_new ~= ind_curr) and play_snd_path(cfg.snd_path_blip)
+    vl("Pickup cycled | prev ind %s id %s | new ind %s id %s", ind_curr, nearby_pickups[ind_curr], ind_new, locked_id)
+end
+--]]
 
 function reset_nearby_item_tables()
     locked_id       = nil
@@ -3119,16 +3215,22 @@ end
 
 local function perform_debugging_checks()
     --[[
+    local lookat = db.actor:get_actor_object_looking_at()
+    printf("[%s] targets:\npickup: %s\nlookat: %s\ncrosshair: %s", time_global(),
+        cfg.available_pickup,
+        lookat and lookat:id(),
+        hmm.current_crosshair
+    )
     printf("[%s] anim_playing: %s", time_global(), anim_playing)
-    local hint = maingameui.UIStaticQuickHelp:GetText()
+    --
+    local hint = get_quickhelp_text()
     if hint and (hint ~= "") and (hint ~= " ") then
         dump("QuickHelp static text: %s", hint)
     end
-
-    --]]
+    --
     local _ = debug_dump and dump("[%s] cfg.block_loot_window: %s", time_global(), cfg.block_loot_window)
+    --]]
 end
-
 
 -- =======================================================================
 --      MAIN SCAN LOOP
@@ -3200,7 +3302,7 @@ function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
         cfg.use_released = nil
         cfg.block_loot_window = time_global()
-        --dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
+        dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
         cfg.held_key = key
     end
 end
@@ -3214,17 +3316,17 @@ function on_key_release(key)
             cfg.use_released = cfg.use_released or time_global()
             local dur = cfg.holding and cfg.holding.peak_hold
             local time = cfg.holding and cfg.holding.hold_time
-            --dump("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
+            local _ = debug_dump and vl("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
             cfg.held_key = nil
 
             if obj and not (dur and time and (dur >= time)) then
-                if is_target_pickup() then
+                if is_target_pickup() and ((obj:id() == locked_id) or not locked_id) then
                     cfg.use_released = nil
-                    --dump("No completed hold action, item pickup should occur", time)
+                    vl("No completed hold action, item pickup should occur", time)
                     force_actor_to_take(obj)
                 elseif is_target_container(obj:id(), obj:clsid()) then
                     if z_ui_inventory_dotmarks then
-                        dump("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
+                        vl("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
                         cfg.use_released = nil
                         
                         obj:use(db.actor)
@@ -3263,10 +3365,13 @@ function remove_obj_from_box_table(box, item)
         cfg.invboxes[b_id].items = {}
     end
     local i_id = item:id()
-    table.remove(cfg.invboxes[b_id].items, i_id)
-    if cfg.markers[b_id] then
-        cfg.markers[b_id].has_items = size_table(cfg.invboxes[b_id].items) > 0
-    end    
+    cfg.invboxes[b_id].items[i_id] = nil
+
+    local mark      = cfg.markers[b_id] or {}
+    local was_items = mark.has_items
+    local num_items = size_table(cfg.invboxes[b_id].items)
+    mark.has_items  = num_items > 0
+    vl("remove_obj_from_box_table completed for %s <- %s", item:name(), box:name())
 end
 
 function add_obj_to_box_table(box, item)
@@ -3278,22 +3383,23 @@ function add_obj_to_box_table(box, item)
     if not cfg.invboxes[b_id].items then
         cfg.invboxes[b_id].items = {}
     end
-    local i_id = item:id()
-    local sec = item:section()
+    local i_id      = item:id()
+    local sec       = item:section()
     cfg.invboxes[b_id].items[i_id] = sec
-    if cfg.markers[b_id] then
-        cfg.markers[b_id].has_items = true
-    end
+
+    local mark      = cfg.markers[b_id] or {}
+    mark.has_items  = true
+    vl("add_obj_to_box_table completed for %s -> %s", item:name(), box:name())
 end
 
 function ActorMenu_on_item_after_move(box_id, item, mode, bag_from)
-    if (mode == "loot") then
+    vl("ActorMenu_on_item_after_move: box %s | item %s | bag_from %s", box_id, nameid(item), bag_from)
+    if (mode == 2) or (mode == "loot") then
         local box = box_id and get_game_object(box_id)
-        
-        if (bag_from == "actor_bag") or (bag_from == "actor_equ") then
-            add_obj_to_box_table(box, item)
-        elseif (bag_from == "npc_bag") then
+        if (bag_from == 7) or (bag_from == "npc_bag") then
             remove_obj_from_box_table(box, item)
+        else
+            add_obj_to_box_table(box, item)
         end
     end
 end
@@ -3497,6 +3603,10 @@ function on_option_change()
             end
         end
     end
+    if zz_autoloot_dotmarks then
+        zz_autoloot_dotmarks.hijack_autoloot_keybind = cfg.hijack_autoloot_keybind
+        cfg.keybind_hijack_value = zz_autoloot_dotmarks.keybind_hijack_value
+    end
     log_other_addon_settings()
 
     if cfg.argb_dot_normal then
@@ -3539,6 +3649,7 @@ function on_option_change()
     end
     set_handler_callbacks()
     st_kg           = gts("st_kg")
+    CreateTimeEvent("autoloot_override", 0, 0.25, hijack_autoloot_keybind)
 end
 
 function on_game_start()

@@ -70,6 +70,10 @@
 		<text>Возьмите все из</text>
 	</string>
 
+	<string id="st_alti_autoloot">
+		<text>Автолут из</text>
+	</string>
+
 	<string id="st_hf_workshop_menu">
 		<text>Откройте меню верстака</text>
 	</string>
@@ -1044,6 +1048,22 @@
 		<text>Регулирует высоту элементов веса и значения в карточке предмета. Это значение используется для установки расстояния между строками.
 		 \n
 		\nПо умолчанию: 10</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot">
+		<text>Вторичное действие «Взять все» запускает автолутер</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot_desc">
+		<text>Если установлен аддон iTheon's Auto Looter, включение этой опции приведет к тому, что вторичное действие «Взять все из контейнера» вместо этого вызовет Autoloot. После этого подсказка для этого тела/тайника изменится на обычную подсказку «Взять все».</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_hijack_autoloot_keybind">
+		<text>Переопределение привязки клавиш автолутер</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot_desc">
+		<text>Если установлен аддон автолутера iTheon и в этом меню включены обе опции автолутера, DotMarks попытается отвязать клавишу автолутера со значением, которое не может быть случайно нажато.\n
+
+		\nВключение этой опции позволит вам отвязать клавишу автолутера и освободить ее для чего-то другого. Отключение этой опции позволит вам по-прежнему запускать автолутер независимо от DotMarks.</text>
 	</string>
 
 </string_table>

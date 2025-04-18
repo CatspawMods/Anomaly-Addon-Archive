@@ -1,0 +1,27 @@
+-- =======================================================================
+--[[      AUTO LOOTER MONKEYPATCH
+    Overrides the target-getting function from Auto Looter and allows the
+    looting function to be triggered in a way that bypasses the normal
+    checks for a valid target.
+
+    This is necessary because Auto Looter can only get the target under
+    the crosshair, unless you enable Remote Looting.
+-- =====================================================================]]
+
+perform_monkeypatch     = true
+override_id             = nil
+
+local update_target     = z_auto_looter and z_auto_looter.get_actor
+
+if z_auto_looter and perform_monkeypatch then
+    local _ = DEV_DEBUG and printf("zz_autoloot_dotmarks is monkeypatching z_auto_looter")
+    -- Hook into iTheon's Autoloot
+    function z_auto_looter.get_actor()
+        if override_id then
+            local obj = get_object_by_id(override_id)
+            override_id = nil
+            return obj
+        end
+        return update_target()
+    end
+end

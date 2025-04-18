@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b6"
-release_date    = 20250416
+script_version  = "0.11-b7"
+release_date    = 20250417
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -73,6 +73,7 @@ local nameid            = utils_catspaw_text.obj_name_and_id
 local csv_argb_to_tbl   = utils_catspaw_text.csv_argb_to_tbl
 local clr_tbl           = utils_catspaw_text.clr_tbl
 local clr_tbl_to_index  = utils_catspaw_text.clr_tbl_to_index
+local inventory_name    = utils_catspaw_text.inventory_name
 local get_argb          = utils_catspaw_mapspots.get_argb
 local paw               = tasks_placeable_waypoints
 local gts               = game.translate_string
@@ -149,7 +150,10 @@ local base_config = {
         ),
         Tools = (
             function(obj)
-                return obj and IsItem("tool", obj:section()) and not cfg.is_item.Quest(obj)
+                return obj and (
+                    (obj:name():find("glowstick") or IsItem("tool", obj:section()))
+                    and not cfg.is_item.Quest(obj)
+                )
             end
         ),
         Devices = (
@@ -159,7 +163,6 @@ local base_config = {
             function(obj, sec, cls)
                 if not obj then return end
                 if IsItem("quest", sec or obj:section()) then return true end
-                local visual = obj:get_visual_name()
                 local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
                 return (scheme == "ph_button") or (scheme == "ph_code")
             end
@@ -220,8 +223,12 @@ local base_config = {
                 local sec           = obj:section()
                 local comm          = get_object_community(obj)
                 local acomm         = character_community(db.actor):sub(7)
-                --local acomm      = get_actor_true_community()
                 local is_enemy      = comm and game_relations.is_factions_enemies(acomm, comm)
+                if (comm == "monster") then
+                    -- Sid, but we can assume anyone else who's passed an IsStalker check, but 
+                    -- shows up with a community of "monster", must be the same bullshit
+                    is_enemy = false
+                end
                 set_target_data(id, cfg.metadata_types.is_stalker, true)
                 local args          = {
                     logged_type     = "stalker (alive)",
@@ -253,6 +260,7 @@ local base_config = {
                         -- for interaction.
                     end
                     if not args.service_type then
+                        --vl("No vendor found for %s, searching for service type patterns", sec)
                         if sec:find("mechanic") or sec:find("tech") then
                             args.service_type = "mechanic"
                         elseif sec:find("medic") or sec:find("medik") then
@@ -535,11 +543,13 @@ local base_config = {
             function(obj)
                 if not obj then return end
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                local name = obj:name()
                 return {
                     logged_type     = "an artefact",
                     is_pickup       = true,
                     no_sec          = true,
                     is_arty         = true,
+                    in_container    = not not name:find("_lead_box") or name:find("_aac") or name:find("_aam") or name:find("_iam"),
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
@@ -580,24 +590,32 @@ local base_config = {
             function(obj)
                 local section       = obj and obj:section()
                 if not section then return end
+                local id            = obj:id()
                 local blast         = ini_sys:r_float_ex(section, "blast")
+                local multi_uses    = nil
+                local is_glowstick  = (section == "lights_glowstick")
+                local glowstick_sec = is_glowstick and get_glowstick_section(id)
+                local name          = glowstick_sec and gts(inventory_name(nil, glowstick_sec))
                 if blast and (blast > 0) and not cfg.explosive_tools[section] then
-                    -- More special cases, yay
+                    -- Catch anything with a blast value that isn't actually a Tool
                     return {iclass_override = "Explosive"}
                 end
-                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
-                
-                local multi_uses    = nil
+
                 if IsItem("multiuse", section, obj) then
                     multi_uses = obj:get_remaining_uses()
                 end
+
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
 
                 return obj and {
                     logged_type     = "a tool",
                     is_pickup       = true,
                     multi_uses      = multi_uses,
+                    no_sec          = is_glowstick or nil,
                     money           = get_cash_quantity_string(section) or nil,
                     manual_use      = true,
+                    glowstick_sec   = glowstick_sec or nil,
+                    name            = name or nil,
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = vector():set(0, 0.05, 0),
                     use_verb        = "st_alti_takeuse",
@@ -892,7 +910,9 @@ function get_cash_quantity_string(section)
         end
         money           = money and (pre .. tostring(money) .. " " .. gts("st_roubles"))
     end
-    vl("get_cash_quantity_string(%s): %s", section, money)
+    if money then
+        vl("get_cash_quantity_string(%s): %s", section, money)
+    end
     return money
 end
 
@@ -910,6 +930,12 @@ end
 
 function get_type_for_section(section)
     return section and cfg.section_lookup and cfg.section_lookup[section]
+end
+
+function get_glowstick_section(id)
+    local glowsticks = zz_glowstick_mcm and zz_glowstick_mcm.glowsticks
+    local res = id and glowsticks and glowsticks[id] and glowsticks[id][1] or nil
+    return res
 end
 
 function get_bone_list(obj, hudmodel)

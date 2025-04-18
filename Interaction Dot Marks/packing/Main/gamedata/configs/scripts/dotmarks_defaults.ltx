@@ -102,7 +102,15 @@ use_fallback_targeting 		= true
 ; If no valid target is found using modded exes features, tries to use vanilla method
 ; Has some value catching edge cases, otherwise I'd disable this
 fallback_distance_check 	= true
-; If fallback targeting is enabled, checks distance of object against sec_interact_dist
+; If fallback targeting is enabled, checks distance of object against obj_interact_dist
+takeall_does_autoloot 		= true
+; If enabled, the take-all secondary function will instead trigger iTheon's autoloot
+hijack_autoloot_keybind 	= true
+; If enabled in combination with the above option, DotMarks will try to change the autoloot
+; keybind to something impossible to press, in order to free up the keybind and ensure that
+; it is only triggered by DotMarks.
+autoloot_hijack_value 		= 999999
+; An intentionally invalid key that could never be "pressed" and sent under valid circumstances
 haru_skill_name             = scavenging
 ; Name of related skill
 haru_skill_coef             = 0.2
@@ -119,9 +127,9 @@ imod_sec_interact 			= 2
 ; 0 - simple press
 ; 1 - double-tap
 ; 2 - long press/hold
-sec_interact_dist 			= 2.5
-; Distance in meters of the alt interact (don't increase, things may break)
-target_lenience 			= 0.95
+obj_interact_dist 			= 2.5
+; Object interaction distance in meters (don't increase, things may break)
+target_lenience 			= 0.8
 ; How far from center the crosshair can be for old targeting method
 ; Need to look into whether and how much this is still needed
 fddar_multipickup 			= false
@@ -179,9 +187,6 @@ font_main_prompt 			= 2
 font_item_card				= 0
 ; Font to use for the item card text
 ; The default small font has no Cyrillic support, but only needs to display numbers
-ui_scale 					= 1
-; Multiplier for UI element size and position calculations
-; WIP, not enabled yet
 interact_drop_alpha 		= 0.65
 ; Opacity of the interaction drop shadows
 dot_marker_size 			= 1
@@ -269,7 +274,7 @@ show_item_card 				= true
 ; Show an item card pop-up when targeting a pickup
 item_card_icon_sz   		= 7.5
 ; Item card info icon size - e.g weight, value
-item_card_pos_x 			= -9.5
+item_card_pos_x 			= -9
 item_card_pos_y 			= 0.5
 ; Position of the item card, relative to the end of the prompt
 ; The following are a bunch of settings related to fine-tuning the position of the
@@ -421,8 +426,8 @@ clr_weight_high = 255,200,150,0
 ; Colors for inventory carry weight states
 
 [vendors]
-; For vendors who don't match any criteria for correctly detecting their service
-; Currently just Yar in Laundromat, might be others
+; For catching one-off vendors who aren't detected as the correct service
+m_trader 			= trader
 jup_b19_freedom_yar = mechanic
 
 [service_icons]
@@ -460,6 +465,7 @@ explo_balon_gas
 explo_jerrycan_fuel
 explosive_mobiltank
 explosive_tank
+hand_watch ; can technically be used to check time, but not much point in adding that for the five people who know
 
 [swap_dotactive]
 texture 	= ui_catsy_marker_dotactive
@@ -592,6 +598,8 @@ hand_rolling_tobacco
 [manual_use]
 ; FDDA won't properly handle usage, have to do so manually
 joint
+chocolate
+chocolate_p
 
 [door_visuals]
 ; Defines vertical marker pos offsets based on the door's visual model
@@ -637,6 +645,8 @@ explosive_mobiltank	= Tools
 explosive_tank 		= Tools
 placeable_workshop 	= Workshops
 workshop_stash 		= Stashes
+device_glowstick 	= Tools
+lights_glowstick	= Tools
 
 [kind_lookup]
 ; More or less lifted entirely from the debug menu
@@ -788,6 +798,8 @@ parts_dot_pos_y 		= dotmarks/dmarkmods/
 haru_skill_coef 		= dotmarks/dmarkmods/
 skill_upd_interval 		= dotmarks/dmarkmods/
 haru_skill_name 		= dotmarks/dmarkmods/
+takeall_does_autoloot 	= dotmarks/dmarkmods/
+hijack_autoloot_keybind = dotmarks/dmarkmods/
 ; =================================================================================
 ; Icons menu
 dot_marker_size 		= dotmarks/dmarkicons/

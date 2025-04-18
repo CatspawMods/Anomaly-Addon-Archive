@@ -70,6 +70,10 @@
 		<text>Take everything from</text>
 	</string>
 
+	<string id="st_alti_autoloot">
+		<text>Autoloot from</text>
+	</string>
+
 	<string id="st_hf_workshop_menu">
 		<text>Open Workshop Menu</text>
 	</string>
@@ -1043,6 +1047,22 @@
 		<text>Adjusts the height of the weight and value elements in the Item Card. This value is used to set the spacing between the rows.
 		 \n
 		\nDefault: 10</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot">
+		<text>Take-all secondary action triggers Autoloot</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot_desc">
+		<text>If iTheon's Auto Looter is installed, enabling this option will cause the "Take all from container" secondary action to instead trigger Autoloot. Once this is done, the prompt for that body/stash will change to the normal take-all prompt.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_hijack_autoloot_keybind">
+		<text>Override Auto Looter keybind</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_hijack_autoloot_keybind_desc">
+		<text>If iTheon's Auto Looter is installed, and both Autoloot options are enabled in this menu, DotMarks will attempt to override the Autoloot keybind with a value that can't be pressed accidentally.\n
+
+		\nEnabling this option will allow you to unbind the Looter key and free up the keybind for something else. Disabling it will allow you to still trigger Autoloot independently of DotMarks.</text>
 	</string>
 
 </string_table>
