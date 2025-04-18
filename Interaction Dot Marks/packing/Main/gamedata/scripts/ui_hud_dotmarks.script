@@ -133,6 +133,7 @@ local tuthooks          = modxml_tutorial_hooks
 local is_favorite       = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_favorite
 local is_junk           = zzz_rax_sortingplus_mcm and zzz_rax_sortingplus_mcm.is_junk
 local fdda_pickup       = z_fdda_pickup_intercept_dotmarks
+local fddar_bodysearch  = liz_fdda_redone_body_search
 local gts               = game.translate_string
 -- ======================================================================
 local config_file       = dotmarks_main.dotmarks_config_file
@@ -610,12 +611,13 @@ function item_pickup_intercept(obj, flags)
     return taken_obj
 end
 
-
+--[[
 function easeOutElastic(x)
     -- Easing function for the pop-in animation
     local c4 = 2 * math.pi / 3
     return x == 0 and 0 or (x == 1 and 1 or 2 ^ (-10 * x) * math.sin((x * 10 - 0.75) * c4) + 1)
 end
+--]]
 
 function set_adjusted_marker_size(mark_id)
     local mark = hmm:GetMarker(mark_id)
@@ -2785,9 +2787,66 @@ function hijack_autoloot_keybind()
     end
 end
 
-function trigger_autoloot(obj, mark)
-    if not (zz_autoloot_dotmarks and z_auto_looter and z_auto_looter.auto_looter) then return end
-    local id = obj and obj:id()
+function can_play_search_anim(mark)
+    if not mark then return end
+    vl("can_play_search_anim | %s | stalker %s | container %s", nameid(mark.name, mark.id), mark.is_stalker, mark.is_container)
+    if not (cfg.fddar_body_search and cfg.search_anim_on_takeall) then return end
+    if mark.is_stalker then return true end
+    if cfg.fddar_container_search and mark.is_container then return true end
+end
+
+function try_init_search_anim(box, mark, exec_func)
+    if box and exec_func and can_play_search_anim(mark) then
+        --dl("[%s] trying to trigger search anim", time_global())
+        local action_start = fddar_bodysearch.get_template_action_looting_start(box)
+        action_start.is_show_ui = true
+        lam2.add_action(action_start)
+        local action_idle = fddar_bodysearch.get_template_action_looting_idle(box)
+        cfg.block_loot_window = time_global()
+        action_idle.on_execute = (
+            function (self, time)
+                if npc_loot_claim and npc_loot_claim.actor_looting_claimed then
+                    self.force_close = true
+                end
+                if self.force_close or (time > self.ui_open_delay) or lam2.has_queued_actions() then
+                    if not self.is_input_enabled then
+                        self.is_input_enabled = true
+                        if cfg.fddar_disable_walk then level.enable_input() end
+                    end
+                    if haru_skills then fddar_bodysearch.haruka_scavanger_effect() end
+                    self.force_close = true
+                    local action_stop = fddar_bodysearch.get_template_action_looting_end()
+                    lam2.add_action_first(action_stop)
+                    return lam2.states.success
+                end
+                return lam2.states.running
+            end
+        )
+        lam2.add_action(action_idle)
+        CreateTimeEvent("dotmarks_fddar_takeall", 0, 0.25, (
+            function()
+                if (not anim_playing) then
+                    exec_func(box, mark, true)
+                    cfg.block_loot_window = nil
+                    return true
+                end
+            end
+        ))
+        return true
+    end
+end
+
+function trigger_autoloot(box, mark, skip_anim_check)
+    vl("[%s] trigger_autoloot | %s | skip_anim_check %s", time_global(), nameid(box), not not skip_anim_check)
+    if not (zz_autoloot_dotmarks and z_auto_looter and z_auto_looter.auto_looter) then return true end
+    local id = box and box:id()
+    if not id then return true end
+    if (not skip_anim_check) and try_init_search_anim(box, mark, trigger_autoloot) then
+        vl("[%s] trigger_autoloot: search anim check, not processing inv on this call", time_global())
+        return true
+    end
+
+    dl("[%s] Calling Auto Looter for %s", time_global(), nameid(box))
     zz_autoloot_dotmarks.override_id = id
     hijack_autoloot_keybind()
     z_auto_looter.auto_looter(z_auto_looter.config.looter_key)
@@ -2802,8 +2861,13 @@ function trigger_autoloot(obj, mark)
     return true
 end
 
-function take_all_from_box(box)
+function take_all_from_box(box, mark, skip_anim_check)
+    vl("take_all_from_box | %s | skip_anim_check %s", nameid(box), not not skip_anim_check)
     if not box then return end
+    if (not skip_anim_check) and try_init_search_anim(box, mark, take_all_from_box) then
+        return true
+    end
+
     local function itr_inv(temp, item)
         box:transfer_item(item, db.actor)
         SendScriptCallback("ActorMenu_on_item_after_move", box:id(), item, "loot", "npc_bag")
