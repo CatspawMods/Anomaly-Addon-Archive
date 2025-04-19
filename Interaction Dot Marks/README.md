@@ -437,6 +437,11 @@ Beyond that, while I am continually working to optimize it, understand that this
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
+## Auto Looter keybind doesn't work
+Go to MCM > DotMarks > Other Addons and disable [hijack_autoloot_keybind](#override-auto-looter-keybind).
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 ## Still having problems?
 ### 1. GENERATE A CLEAN DEBUG LOG
 If you need to report a problem, first do this:
