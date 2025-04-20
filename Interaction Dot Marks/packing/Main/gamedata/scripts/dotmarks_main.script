@@ -5,7 +5,7 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b10"
+script_version  = "0.11-b11"
 release_date    = 20250419
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
@@ -50,16 +50,16 @@ assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
 utils_catspaw_common.import_metatable(this, utils_catspaw_common)
 utils_catspaw_common.import_metatable(this, utils_catspaw_text)
 -- =======================================================================
-local dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
-local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+local dl = function(logtext, ...) dlog(nil, logtext, ...) end
+local vl = function(logtext, ...) vlog(nil, logtext, ...) end
 
 function allow_local_logging(onoff)
     if onoff then
-        dl = function(logtext, ...) utils_catspaw_common.dlog(ui_hud_dotmarks, logtext, ...) end
-        vl = function(logtext, ...) utils_catspaw_common.vlog(ui_hud_dotmarks, logtext, ...) end
+        dl = function(logtext, ...) dlog(ui_hud_dotmarks, logtext, ...) end
+        vl = function(logtext, ...) vlog(ui_hud_dotmarks, logtext, ...) end
     else
-        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
-        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+        dl = function(logtext, ...) dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) vlog(nil, logtext, ...) end
     end
 end
 -- =======================================================================
@@ -981,7 +981,7 @@ local base_config = {
                     hf.set_state(match, true)
                     hf.last_active = match
                 end
-                local flags = { text = hf.filters[match].ts_repl or nil }
+                local flags = match and { text = hf.filters[match].ts_repl or nil } or {}
                 SendScriptCallback("on_quickhelp_text_update", hf.last_raw_text, hf.last_active, hf.get_text(hf.last_active), flags)
                 if cfg.hide_van_interact_ui then
                     set_quickhelp_text()
