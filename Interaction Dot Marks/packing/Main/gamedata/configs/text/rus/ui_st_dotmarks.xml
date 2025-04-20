@@ -74,6 +74,10 @@
 		<text>Автолут из</text>
 	</string>
 
+	<string id="st_use_workshop">
+		<text>Используйте верстак</text>
+	</string>
+
 	<string id="st_hf_workshop_menu">
 		<text>Откройте меню верстака</text>
 	</string>

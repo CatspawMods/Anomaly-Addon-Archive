@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.12"
-release_date    = 20250417
+script_version 	= "1.13"
+release_date    = 20250418
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -435,7 +435,7 @@ function get_actor_weight_class(comp_weight)
 end
 
 -- ======================================================================
--- 		SETTINGS MANAGEMENT
+-- 		SETTINGS AND FILE MANAGEMENT
 -- ======================================================================
 
 function get_main_config(path, typ)
@@ -583,6 +583,48 @@ function load_file_data(ini_name, cfg_table, args)
     -- function as a trigger for logic that (correctly) assumes a nil return value means 
     -- the load operation failed. And, for example, disable callbacks and throw an error.
     return cfg_table and (not is_empty(cfg_table)) and cfg_table or nil
+end
+
+function import_metatable(dest, other)
+	-- Adapted from Prof. Lander on Anomaly Discord
+	-- Fetch our existing metatable
+	local mt = getmetatable(dest)
+	-- Fetch our existing index
+	local old = mt.__index
+	-- Prepare our new index
+	local new = nil
+
+	-- In the context of STALKER, a script without an __index is broken and has no access to _G.
+	-- If we were working in regular Lua, we could omit this assert and assign `new = other` to handle the case where `old == nil`.
+	if (old == nil) then
+		-- Script metatable has no __index
+		return
+	end
+
+	if type(old) == "function" then
+		-- If the existing __index is a function...
+		new = (
+			function(self, key)
+				-- Try to fetch our value from `other`
+				local v = other[key]
+				-- Fall back by calling the index
+				return v ~= nil and v or old(dest, key)
+			end
+		)
+	elseif type(old) == "table" then
+		-- If the existing __index is a table...
+		new = (
+			function(self, key)
+				-- Try to fetch our value from `other`
+				local v = other[key]
+				-- Fall back by indexing into the index
+				return v ~= nil and v or old[key]
+			end
+		)      
+	end
+
+	-- Assign the new index function to our metatable
+	mt.__index = new
 end
 
 printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)

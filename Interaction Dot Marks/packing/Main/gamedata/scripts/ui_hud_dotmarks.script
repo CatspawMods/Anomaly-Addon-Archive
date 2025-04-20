@@ -25,11 +25,10 @@ script_name     = "ui_hud_dotmarks"
     See dotmarks_main.script for dependencies.
 -- =======================================================================
     TODO:
-    - No localized name for mlr_x8_copybook quest item
-        Probably a safename thing
-        Check all the other quest items too, might've missed some
+    - Investigate markers and dialogue for wounded enemies
     - Investigate adding secondary action to heal wounded stalkers
     - MCM live preview for prompt elements - post-release, lots of work
+    - Then stop adding features!
 
     BEFORE PUBLIC RELEASE:
     - Optimize/clean up WIP code that didn't get used
@@ -60,6 +59,7 @@ assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
 assert(utils_catspaw_mapspots, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist or failed to load!\n\n"
 )
+utils_catspaw_common.import_metatable(this, dotmarks_main)
 -- =======================================================================
 local dl, vl, xml
 logprefix   = "[DotMarks] "
@@ -71,11 +71,11 @@ function allow_local_logging(onoff)
     -- By default, logging in this script inherits its debuglogs/verbose settings from utils_catspaw_common
     -- This function allows anyone to temporarily switch on debug logging for this script's operations only
     if onoff then
-        dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
-        vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+        dl = function(logtext, ...) dlog(this, logtext, ...) end
+        vl = function(logtext, ...) vlog(this, logtext, ...) end
     else
-        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
-        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+        dl = function(logtext, ...) dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) vlog(nil, logtext, ...) end
     end
 end
 allow_local_logging(true)
@@ -102,30 +102,8 @@ end
 -- ======================================================================
 --      SHORTCUTS
 -- ======================================================================
-local get_next_check    = utils_catspaw_common.get_next_tg_interval
-local valid_id          = utils_catspaw_common.valid_id
-local safeid            = utils_catspaw_common.safeid
-local get_mcm           = utils_catspaw_common.get_mcm_or_default_val
-local lerp              = utils_catspaw_common.lerp
-local dec2              = utils_catspaw_common.dec2
-local get_game_object   = utils_catspaw_common.get_game_object
-local easeOutElastic    = utils_catspaw_common.easing.easeOutElastic
-local get_obj_kind      = utils_catspaw_common.get_obj_kind
-local dotip             = utils_catspaw_common.dotip
-local get_weight_class  = utils_catspaw_common.get_actor_weight_class
-local safename          = utils_catspaw_text.safename
-local bindtext          = utils_catspaw_text.bindtext
-local get_localization  = utils_catspaw_text.find_best_localization
-local parse_colors      = utils_catspaw_text.parse_color_tokens
-local set_color_token   = utils_catspaw_text.set_color_token
-local int_to_rgba       = utils_catspaw_text.int_to_rgba
-local first_lower       = utils_catspaw_text.first_lower
-local first_upper       = utils_catspaw_text.first_upper
-local nameid            = utils_catspaw_text.obj_name_and_id
-local csv_argb_to_tbl   = utils_catspaw_text.csv_argb_to_tbl
-local clr_tbl           = utils_catspaw_text.clr_tbl
-local get_state_color   = utils_catspaw_text.get_state_color
-local inventory_name    = utils_catspaw_text.inventory_name
+local get_mcm           = get_mcm_or_default_val
+local nameid            = obj_name_and_id
 local get_argb          = utils_catspaw_mapspots.get_argb
 local is_already_target = utils_catspaw_hudmarks.is_object_already_targeted
 local get_task_target   = utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.get_active_target_id or function() end
@@ -136,24 +114,10 @@ local fdda_pickup       = z_fdda_pickup_intercept_dotmarks
 local fddar_bodysearch  = liz_fdda_redone_body_search
 local gts               = game.translate_string
 -- ======================================================================
-local config_file       = dotmarks_main.dotmarks_config_file
-get_type_for_kind       = dotmarks_main.get_type_for_kind
-get_type_for_section    = dotmarks_main.get_type_for_section
-near_scan_radius        = dotmarks_main.near_scan_radius
-early_scan_radius       = dotmarks_main.early_scan_radius
-get_nearby_campfire     = dotmarks_main.get_nearby_campfire
-get_nearest_firebinder  = dotmarks_main.get_nearest_campfire_binder
-get_val_or_funcval      = dotmarks_main.get_val_or_funcval
-get_cfg_for_type        = dotmarks_main.get_cfg_for_type
-is_blacklisted          = dotmarks_main.is_blacklisted
-get_fixed_screen_pos    = dotmarks_main.get_fixed_screen_pos
-play_snd_path           = dotmarks_main.play_snd_path
-getargb                 = dotmarks_main.getargb
-fonts                   = dotmarks_main.fonts
 valid_mcm_version       = dotmarks_mcm.valid_mcm_version
 targeted_id, locked_id  = nil
 scanning                = false
-cfg                     = {}
+--cfg                     = {}
 pickup_index            = {}
 nearby_pickups          = {}
 active_anims            = {}
@@ -169,6 +133,7 @@ local hmm               = nil
 local popin_active      = nil
 local use_dik           = nil
 local fdda_callback     = nil
+local hintfilters       = nil
 local fallback_font     = 3
 local next_skill_upd    = 0
 local next_near_scan    = 0
@@ -199,7 +164,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
             los_check_range     = (near_scan_radius() or 4) + 1,
             custom_argb         = dup_table(cfg.colors.clr_dmark_norm),
             marker_scale        = cfg.dot_marker_size,
-            func_anim_take_curve= utils_catspaw_common.easing.InSine, -- easing function used for item take animation
+            func_anim_take_curve= easing.InSine, -- easing function used for item take animation
 
             coord_args = { -- zero out all default screen coordinate adjustments
                 near_adj = 0, 
@@ -224,12 +189,12 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     end
                     local now           = time_global()
                     local id            = mark.id
-                    local dist          = mark.last_dist or 999
-                    local in_range      = dist <= (mark.interact_dist or 2.5)
-                    local hide          = mark.hidden or (not in_range)
-                    local _             = (not hide) and dump("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
                     local obj           = id and get_game_object(id)
                     if not obj then return end
+                    local dist          = mark.last_dist or 999
+                    local in_range      = dist <= (mark.interact_dist or 2.5)
+                    local hide          = (mark.hidden and not (mark.is_stalker and obj:wounded())) or (not in_range)
+                    local _             = (not hide) and dump("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
                     
                     cfg.in_pickup_range[id] = mark.is_pickup and in_range and dist or nil
 
@@ -243,6 +208,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                             return
                         end
                     end
+
                     -- ================================================================================
                     -- Check whether this marker is for a junk object
                     local sec           = obj:section()
@@ -301,35 +267,38 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     end
                                 end
                             elseif mark.is_container and (cfg.show_stash_weight and not mark.is_display) then
-                                local is_managed_stash = not not treasure_manager.caches[mark.id]
                                 -- Update contents of inventory containers
+                                mark.body_claimed = is_body_claimed(id)
+                                local is_managed_stash = not not (mark.body_claimed or treasure_manager.caches[mark.id])
                                 local text = nil
+                                local num_items = 0
                                 if (not cfg.invboxes[id]) then
                                     cfg.invboxes[id] = {}
                                 end
-                                local num_items = 0
-                                if (not cfg.invboxes[id].items) then
-                                    cfg.invboxes[id].items, num_items = get_inventory_table(obj, id)
-                                    _ = debug_dump and vl("[%s] No inventory table for container %s, iterated and found %s items", time_global(), mark.name, num_items)
-                                    if is_managed_stash and (num_items == 0) then
-                                        -- treasure manager stashes return as empty until searched
-                                        cfg.invboxes[id].items = nil
-                                    else
-                                        mark.has_items = num_items > 0
+                                if not mark.body_claimed then
+                                    if (not cfg.invboxes[id].items) then
+                                        cfg.invboxes[id].items, num_items = get_inventory_table(obj, id)
+                                        _ = debug_dump and vl("[%s] No inventory table for container %s, iterated and found %s items", time_global(), mark.name, num_items)
+                                        if is_managed_stash and (num_items == 0) then
+                                            -- treasure manager stashes return as empty until searched
+                                            cfg.invboxes[id].items = nil
+                                        else
+                                            mark.has_items = num_items > 0
+                                        end
                                     end
                                 end
 
                                 if cfg.invboxes[id].items then
                                     if mark.has_items then
                                         mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id].items)
-                                        local wc = mark.weight and get_weight_class(mark.weight)
+                                        local wc = mark.weight and get_actor_weight_class(mark.weight)
                                         local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
                                         mark.use_pri.parse_text_colors = true
                                         text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
                                     else
                                         text = " " .. gts("st_alti_empty")
                                     end
-                                elseif is_managed_stash and not cfg.invboxes[id].items then
+                                elseif mark.body_claimed or (is_managed_stash and not cfg.invboxes[id].items) then
                                     text = " (" .. gts("st_unknown_contents") .. ")"
                                 else
                                     text = " " .. gts("st_alti_empty")
@@ -380,7 +349,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                             -- ================================================================================
                             -- Check availability of secondary interact prompt
                             if mark.alt_interact then
-                                show_sec = show_pri
+                                show_sec = show_pri and not mark.body_claimed
                                 if show_sec then
                                     if cfg.hide_sec_interact_ui then
                                         show_sec        = false
@@ -611,14 +580,6 @@ function item_pickup_intercept(obj, flags)
     return taken_obj
 end
 
---[[
-function easeOutElastic(x)
-    -- Easing function for the pop-in animation
-    local c4 = 2 * math.pi / 3
-    return x == 0 and 0 or (x == 1 and 1 or 2 ^ (-10 * x) * math.sin((x * 10 - 0.75) * c4) + 1)
-end
---]]
-
 function set_adjusted_marker_size(mark_id)
     local mark = hmm:GetMarker(mark_id)
     if not mark then return end
@@ -713,7 +674,7 @@ function init_active_marker_popin(mark)
         mark.args.width * 0.5, mark.args.height * 0.5,
         mark.active_swap.width, mark.active_swap.height,
         cfg.popin_anim_dur,
-        easeOutElastic,
+        easing.easeOutElastic,
         (function()
             mark.next_update = 0
             mark.popin_done = true
@@ -842,11 +803,30 @@ function timed_out(stamp, interval)
     return (time_global() - stamp) >= interval
 end
 
+--[[======================================================================
+    UIStaticQuickHelp management
+    Most of the logic is in dotmarks_main.cfg.hint_filter
+
+    on_quickhelp_text_update(raw_text, loc_string, trimmed_text, flags)
+        Params: (<string>, <string>, <string>, <table>)
+
+        raw_text:
+            the raw text content of the UIStaticQuickHelp textwnd
+        loc_string:
+            the localization string of the text
+        trimmed_text:
+            the text with the "use key" prompt trimmed off
+        
+    flags is an empty table, set flags.text to any string to replace text
+    
+    cfg.hide_van_interact_ui will override showing any such text changes
+-- =====================================================================]]
+
+AddScriptCallback("on_quickhelp_text_update")
+
 function get_quickhelp_text()
-    local quickhelp = maingameui and maingameui.UIStaticQuickHelp
-    local hint = quickhelp and quickhelp:GetText()
-    if (hint == "") or (hint == " ") then hint = nil end
-    return hint or nil
+    local text = maingameui and maingameui.UIStaticQuickHelp and maingameui.UIStaticQuickHelp:GetText()
+    return text and (text ~= "") and (text ~= " ") and text or nil
 end
 
 function set_quickhelp_text(text)
@@ -928,11 +908,15 @@ function InteractPrompt:__init(anchor, args) super()
         for k,v in pairs(args) do dump("|| %s = %s", k, v) end
     end
     if args.hint_filters then
-        local mon = {}
+        vl("Setting up %s hint filters", size_table(args.hint_filters))
+        self.filters = {}
+        self.prompts = {}
         for k,v in pairs(args.hint_filters) do
-            mon[gts(k)]     = trimmed_prompt(gts(v))
+            hintfilters.add(k, v)
+            self.filters[k] = function() return hintfilters.get_state(k) end
+            self.prompts[k] = function() return self.filters[k]() and hintfilters.get_text(k) or nil end
         end
-        args.hint_filters   = args.pri and mon or nil
+        RegisterScriptCallback("on_quickhelp_text_update", self)
     end
 
     local color             = cfg.colors
@@ -968,7 +952,7 @@ function InteractPrompt:__init(anchor, args) super()
 end
 
 function InteractPrompt:GetInvWeightDisplay(weight)
-    local wc = weight and get_weight_class(weight)
+    local wc = weight and get_actor_weight_class(weight)
     local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
     self.parse_text_colors = true
     return string.format(" ($%s%.2f %s$clr_def)", code, self.weight, st_kg)
@@ -1786,8 +1770,8 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
     local color_text, plain_text
 
     if self.parse_text_colors then
-        color_text = parse_colors(new_text, nil, true)
-        plain_text = parse_colors(new_text, nil, false)
+        color_text = parse_color_tokens(new_text, nil, true)
+        plain_text = parse_color_tokens(new_text, nil, false)
     end
     local _ = debug_dump and vl("InteractPrompt:SetPrompt(%s, %s, %s) | %s", new_prefix, new_prompt, new_suffix, new_text)
     self.label:TextControl():SetText(color_text or new_text)
@@ -1811,90 +1795,33 @@ function InteractPrompt:UpdateLongPress()
     end
 end
 
-function InteractPrompt:UpdateFilteredHints(hint)
-    self.last_hint_match = nil
-    if not (self.args.is_door or self.args.is_button or self.args.is_workshop or is_already_target(self.args.id)) then return end
-    hint = hint or get_quickhelp_text()
-    
-    if not hint then return end
-    -- QuickHelp static is empty, nothing to filter
+function InteractPrompt:on_quickhelp_text_update(raw_text, loc_string, trimmed_text)
+    --vl("on_quickhelp_text_update | %s | %s | %s", raw_text, loc_string, trimmed_text)
+    if not (loc_string and self.prompts[loc_string]) then return end
+    if self.args.refresh_text then
+        self.args.text = trimmed_text
+        self:SetPrompt(self.args.text)
+        return
+    end        
+end
 
-    if not self.args.hint_filters then return end
-    -- No filters to process
-    
-    local filters = self.args.hint_filters
-
-    for k,v in pairs(filters) do
-        if (hint == k) then
-            self.last_hint_match = hint
-            if is_vanilla_ui_hidden() then
-                set_quickhelp_text()
-            end
+function InteractPrompt:UpdateFilteredHints()
+    if not (self.prompts and (self.args.is_door or self.args.is_button or self.args.is_workshop or is_already_target(self.args.id))) then return end
+    local hint
+    for k,v in pairs(self.prompts) do
+        hint = v()
+        if hint then
             if self.args.refresh_text then
-                self.args.text = v
+                self.args.text = hint
                 self:SetPrompt(self.args.text)
                 return
-            end
+            end            
         end
     end
     return hint
 end
 
-function InteractPrompt:UpdateDoorState()
-    local hint  = get_quickhelp_text()
-    if self.door and self.door.tip then
-        local tip   = self.door.tip()
-        local msg   = tip and gts(tip)
-        if hint and msg and (hint == msg) then
-            if is_vanilla_ui_hidden() then
-                set_quickhelp_text()
-            end
-            hint = msg
-        end
-    else
-        hint = get_quickhelp_text()
-    end
-    return hint and trimmed_prompt(hint)
-end
-
-function InteractPrompt:actor_on_update()
-    if self.destroyed then return end
-    local _ = debug_dump and vl("[%s][%s]InteractPrompt:actor_on_update | %s%s", self.args.id, self.args.event, self.init_done and "" or "first run at ", time_global())
-    local hint
-
-    if self.args.hint_filters then
-        hint = self:UpdateFilteredHints(hint)
-    end
-
-    if (self.args.tutorial or self.args.is_stalker) then
-        if self.args.tutorial and (time_global() - self.init_done > 1000) then
-            local monitor_active = state_monitor(self.args.tutorial)
-            if ((not monitor_active) or (not game.has_active_tutorial())) then
-                vl("No active tutorial, destroying prompt")
-                self:Destroy("no active tutorial for " .. self.args.tutorial)
-                return
-            end
-        end
-        _ = (not self.init_done) and vl("Updates for this type are handled in main loop")
-        return
-    end
-
-    if self.disabled then return end
-
-    if self.args.pri then
-        if (
-            self.door or
-            (not self.args.text) or
-            (self.args.text == "")
-        ) then
-            hint = self:UpdateDoorState()
-            self:SetPrompt(nil, hint or self.args.text or "")
-        end
-        self:UpdateFaveJunkIcon()
-    else
-        self:UpdateLongPress()
-    end
-    
+function InteractPrompt:UpdateMutantLootPrompt()
     if is_dead_mutant(self.args) and self.args.section then
         local can_loot, loot_msg = can_chop_body(self.args.section)
         local changed = (loot_msg ~= self.last_loot_msg)
@@ -1903,10 +1830,61 @@ function InteractPrompt:actor_on_update()
         self:Suffix(can_loot and "" or (loot_msg and (": " .. gts(loot_msg))) or "")
         self:BusyState(not can_loot, prefix, changed)
     end
+end
 
+function InteractPrompt:UpdateAnimBusyState()
     if anims_enabled and cfg.prompt_busy_during_anim and not self.busy_locked then
         self:BusyState(anim_playing)
     end
+end
+
+function InteractPrompt:UpdatePrimaryInteractText()
+    if self.prompts then return end
+    -- Skip any markers already checked against hint filters
+    if (
+        self.door or
+        (not self.args.text) or
+        (self.args.text == "")
+    ) then
+        local hint = hintfilters.last_raw_text and trimmed_prompt(hintfilters.last_raw_text)
+        self:SetPrompt(nil, hint or self.args.text or "")
+    end
+end
+
+function InteractPrompt:CheckForStuckTutorial()
+    _ = (not self.init_done) and vl("Updates for this type are handled in main loop")
+    if self.args.tutorial and (time_global() - self.init_done > 1000) then
+        local monitor_active = state_monitor(self.args.tutorial)
+        if ((not monitor_active) or (not game.has_active_tutorial())) then
+            vl("No active tutorial, destroying prompt")
+            self:Destroy("no active tutorial for " .. self.args.tutorial)
+            return
+        end
+    end
+end
+
+function InteractPrompt:actor_on_update()
+    if self.destroyed then return end
+    local _ = debug_dump and vl("[%s][%s]InteractPrompt:actor_on_update | %s%s", self.args.id, self.args.event, self.init_done and "" or "first run at ", time_global())
+
+    self:UpdateFilteredHints()
+
+    if (self.args.tutorial or self.args.is_stalker) then
+        self:CheckForStuckTutorial()
+        return
+    end
+
+    if self.disabled then return end
+
+    if self.args.pri then
+        self:UpdatePrimaryInteractText()
+        self:UpdateFaveJunkIcon()
+        self:UpdateMutantLootPrompt()
+    else
+        self:UpdateLongPress()
+    end
+
+    self:UpdateAnimBusyState()
 end
 
 function InteractPrompt:Destroy(reason)
@@ -2102,7 +2080,6 @@ function check_for_dependencies(silent, debug_test)
     dl("config loaded: %s", not no_config)
     -- Trap load failure
 
-    local using_modded_exes     = utils_catspaw_common.using_modded_exes
     dl("using_modded_exes: %s", using_modded_exes)
     -- Modded exes are a hard requirement, nothing will function without them
 
@@ -2172,13 +2149,13 @@ function check_for_dependencies(silent, debug_test)
 
     if failmessage then
         failmessage = gts("st_dotmarks_epicfail_error") .. failmessage .. gts("st_catsy_failmessage_in_log_or_pda")
-        local log_msg = parse_colors(failmessage, nil, false)
+        local log_msg = parse_color_tokens(failmessage, nil, false)
         alert(log_msg)
         if silent and not debug_test then
             return epic_fail
         end
 
-        failmessage = parse_colors(failmessage)
+        failmessage = parse_color_tokens(failmessage)
         CreateTimeEvent("dotmarks_dependency_warning", 0, 4, (
             function()
                 dotip(failmessage, 10000, "Interaction Dot Marks", true, "ui_inGame2_V_zone_nedavno_proshel_vibros")
@@ -2356,7 +2333,7 @@ function setup_sec_interact_prompt(mark)
         local atype     = obj:get_ammo_type() + 1
         local ammos     = parse_list(ini_sys, obj:section(), "ammo_class")
         local sec       = ammos and atype and ammos[atype]
-        local ammo      = get_localization(nil, nil, sec)
+        local ammo      = find_best_localization(nil, nil, sec)
         int_text        = string.format(gts("st_alti_prompt_ammo"),
             mag_installed and gts("st_alti_eject_mag") or gts("st_alti_unload_weapon"),
             ammo,
@@ -2590,7 +2567,7 @@ function scan_nearby_object(obj)
         args            = args or {}
         args.id         = id
         args.mark_id    = m_id
-        args.name       = args.name or get_localization(obj, nil, sec) or nil
+        args.name       = args.name or find_best_localization(obj, nil, sec) or nil
         args.preset     = "dotmark"
 
         if debug_dump then
@@ -2841,6 +2818,7 @@ function trigger_autoloot(box, mark, skip_anim_check)
     if not (zz_autoloot_dotmarks and z_auto_looter and z_auto_looter.auto_looter) then return true end
     local id = box and box:id()
     if not id then return true end
+    if is_body_claimed(id) then return true end
     if (not skip_anim_check) and try_init_search_anim(box, mark, trigger_autoloot) then
         vl("[%s] trigger_autoloot: search anim check, not processing inv on this call", time_global())
         return true
@@ -2867,14 +2845,16 @@ function take_all_from_box(box, mark, skip_anim_check)
     if (not skip_anim_check) and try_init_search_anim(box, mark, take_all_from_box) then
         return true
     end
+    local id = box:id()
+    if is_body_claimed(id) then return true end
 
     local function itr_inv(temp, item)
         box:transfer_item(item, db.actor)
-        SendScriptCallback("ActorMenu_on_item_after_move", box:id(), item, "loot", "npc_bag")
+        SendScriptCallback("ActorMenu_on_item_after_move", id, item, "loot", "npc_bag")
     end
     iterate_any_inventory(box, itr_inv)
-    if cfg.markers[box:id()] then
-        cfg.markers[box:id()].has_items = false
+    if cfg.markers[id] then
+        cfg.markers[id].has_items = false
     end
     utils_obj.play_sound("interface\\items\\inv_items_take_all")
     return true
@@ -3277,6 +3257,13 @@ function do_garbage_collection()
     end
 end
 
+function check_hint_filters()
+    if not (cfg.hint_filter and cfg.hint_filter.enabled) then return end
+    if is_empty(cfg.hint_filter.enabled) then return end
+    local text = cfg.hint_filter.update_text()
+    --dump("[%s] Hint filter update%s", time_global(), text and (" - text is: "..text) or ", no text")
+end
+
 local function perform_debugging_checks()
     --[[
     local lookat = db.actor:get_actor_object_looking_at()
@@ -3286,11 +3273,7 @@ local function perform_debugging_checks()
         hmm.current_crosshair
     )
     printf("[%s] anim_playing: %s", time_global(), anim_playing)
-    --
-    local hint = get_quickhelp_text()
-    if hint and (hint ~= "") and (hint ~= " ") then
-        dump("QuickHelp static text: %s", hint)
-    end
+
     --
     local _ = debug_dump and dump("[%s] cfg.block_loot_window: %s", time_global(), cfg.block_loot_window)
     --]]
@@ -3303,13 +3286,18 @@ function actor_on_update()
     --perform_debugging_checks() -- should always be commented for release
     if not scanning then return end
     -- ===================================================================
+    --  Hint filters
+    --  Watches and manages the UIStaticQuickHelp text prompts
+    -- ===================================================================
+    check_hint_filters()
+    -- ===================================================================
     --  Tutorial monitors
     --  Watches for state flags set by modxml_tutorial_hooks.script
     --  Mostly cleanup now that tutorials are handled via callbacks
     -- ===================================================================
     if cfg.tut_check_interval then
         if (next_tut_check <= time_global()) then
-            next_tut_check = get_next_check(cfg.tut_check_interval)
+            next_tut_check = get_next_tg_interval(cfg.tut_check_interval)
             dotmarks_main.in_sleep_zone = is_actor_in_sleep_zone()
             check_tutorial_states()
         end
@@ -3331,7 +3319,7 @@ function actor_on_update()
     -- ===================================================================
     if cfg.skill_upd_interval then
         if (next_skill_upd <= time_global()) then
-            next_skill_upd  = get_next_check(cfg.skill_upd_interval)
+            next_skill_upd  = get_next_tg_interval(cfg.skill_upd_interval)
             update_skill_bonus_range()
         end
     end
@@ -3342,7 +3330,7 @@ function actor_on_update()
     -- ===================================================================
     if cfg.near_scan_interval then
         if (next_near_scan <= time_global()) then
-            next_near_scan   = get_next_check(cfg.near_scan_interval)
+            next_near_scan   = get_next_tg_interval(cfg.near_scan_interval)
             scan_nearby_entities(near_scan_radius())
         end
     end
@@ -3353,7 +3341,7 @@ function actor_on_update()
     -- ===================================================================
     if cfg.early_scan_interval then
         if (next_early_scan <= time_global()) then
-            next_early_scan   = get_next_check(cfg.early_scan_interval)
+            next_early_scan   = get_next_tg_interval(cfg.early_scan_interval)
             scan_nearby_entities(early_scan_radius())
         end
     end
@@ -3547,7 +3535,8 @@ function parse_file_data()
         for k,v in pairs(cfg.vendors) do
             vl("|| %s = %s", k,v)
         end
-    end 
+    end
+    hintfilters = cfg.hint_filter
 end
 
 function set_item_pickup_callbacks(kill)
@@ -3726,12 +3715,11 @@ function on_game_start()
     local bad_mcm_version = (not valid_mcm_version) or not valid_mcm_version()
     RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
     -- This callback is always registered so that we can notify the player of init failure
-    cfg = dotmarks_main and dotmarks_main.get_base_config_table()
-    local base_failed = not cfg
-    if cfg and (not bad_mcm_version) and utils_catspaw_common.load_file_data(config_file, this.cfg, { logging = debug_dump, called_by = script_name }) then
+    --cfg = dotmarks_main and dotmarks_main.get_base_config_table()
+    local base_failed = not init_base_config(dotmarks_config_file, { logging = debug_dump, called_by = script_name })
+    if cfg and (not bad_mcm_version) then
         mags_installed = (magazines and magazine_binder)
         parse_file_data()
-        dotmarks_main.refresh_main_config()
         RegisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
         RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
         RegisterScriptCallback("ActorMenu_on_item_after_move", ActorMenu_on_item_after_move)
@@ -3762,7 +3750,7 @@ function on_game_start()
         failmsg = string.format(" to detect MCM 1.7.0 or higher")
     elseif not cfg then
         cfg = nil
-        failmsg = string.format(" to load config file %s", config_file)
+        failmsg = string.format(" to load config file %s", dotmarks_config_file)
     end
     alert("[%s] ERROR: Initialization failed%s!\n" ..
         "! DotMarks startup aborted, skipping callback registration", script_name, failmsg)

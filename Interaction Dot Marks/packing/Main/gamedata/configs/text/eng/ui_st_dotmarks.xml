@@ -74,8 +74,12 @@
 		<text>Autoloot from</text>
 	</string>
 
+	<string id="st_use_workshop">
+		<text>Use Workbench</text>
+	</string>
+
 	<string id="st_hf_workshop_menu">
-		<text>Open Workshop Menu</text>
+		<text>Open Workbench Menu</text>
 	</string>
 
 	<string id="st_alti_empty">

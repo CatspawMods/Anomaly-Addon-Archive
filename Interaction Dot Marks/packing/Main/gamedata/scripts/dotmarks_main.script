@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b9"
-release_date    = 20250418
+script_version  = "0.11-b10"
+release_date    = 20250419
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -47,6 +47,8 @@ assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
     "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
     "If the version is outdated, try moving this addon to the bottom of your load order."
 )
+utils_catspaw_common.import_metatable(this, utils_catspaw_common)
+utils_catspaw_common.import_metatable(this, utils_catspaw_text)
 -- =======================================================================
 local dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
 local vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
@@ -62,23 +64,12 @@ function allow_local_logging(onoff)
 end
 -- =======================================================================
 dotmarks_config_file    = "scripts\\dotmarks_defaults.ltx"
-local strbool           = utils_catspaw_common.strbool
-local is_living_thing   = utils_catspaw_common.is_living_thing
-local safeid            = utils_catspaw_common.safeid
-local get_obj_kind      = utils_catspaw_common.get_obj_kind
-local load_file_data    = utils_catspaw_common.load_file_data
-local get_game_object   = utils_catspaw_common.get_game_object
-local safename          = utils_catspaw_text.safename
-local nameid            = utils_catspaw_text.obj_name_and_id
-local csv_argb_to_tbl   = utils_catspaw_text.csv_argb_to_tbl
-local clr_tbl           = utils_catspaw_text.clr_tbl
-local clr_tbl_to_index  = utils_catspaw_text.clr_tbl_to_index
-local inventory_name    = utils_catspaw_text.inventory_name
+local nameid            = obj_name_and_id
 local get_argb          = utils_catspaw_mapspots.get_argb
 local paw               = tasks_placeable_waypoints
 local gts               = game.translate_string
-local cfg               = {}
 local in_sleep_zone     = false
+cfg                     = nil
 -- =======================================================================
 --      MAIN CONFIG TABLE
 --  Most values are loaded from configs\scripts\dotmarks_defaults.ltx
@@ -875,8 +866,154 @@ local base_config = {
             end 
         ),
     },
+-- =======================================================================    
+--  [cfg.hint_filter]: a set of subordinate functions that centralize the
+--  checking and clearing of the UIStaticQuickHelp prompt text
+-- =======================================================================       
+    hint_filter = {
+        add = (
+            function(match_str, replace_str)
+                local hf = cfg.hint_filter
+                if not match_str then return end
+                if not hf.enabled then hf.enabled = {} end
+                vl("Trying to add hint filter %s | %s", match_str, replace_str)
+                hf.init(match_str, replace_str)
+                hf.enabled[match_str] = hf.filters[match_str].hint
+                hf.inc_sub(match_str)
+                return true
+            end
+        ),
+        rem = (
+            function(m)
+                local hf = cfg.hint_filter
+                if not (m and hfil.filters[m]) then return end
+                vl("Trying to remove hint filter %s", match_str)
+                hf.dec_sub(m)
+                if hf.filters[m].subs < 1 then
+                    hf.enabled[m] = nil
+                end
+                return true
+            end
+        ),  
+        inc_sub     = ( 
+            function(m)
+                local hfil = cfg.hint_filter.filters
+                hfil[m].subs = (hfil[m].subs or 0) + 1
+                return hfil[m].subs
+            end
+        ),
+        dec_sub     = (
+            function(m)
+                local hfil = cfg.hint_filter.filters
+                hfil[m].subs = (hfil[m].subs or 0) - 1
+                return hfil[m].subs
+            end
+        ),
+        get_state   = (
+            function(m)
+                return m and cfg.hint_filter.filters and cfg.hint_filter.filters[m] and cfg.hint_filter.filters[m].state
+            end
+        ),
+        set_state = (
+            function(m, state)
+                if not (m and cfg.hint_filter.filters and cfg.hint_filter.filters[m]) then return end
+                cfg.hint_filter.filters[m].state = state
+                if state then
+                    if cfg.hint_filter.last_active and (cfg.hint_filter.last_active ~= m) then
+                        cfg.hint_filter.filters[cfg.hint_filter.last_active].state = false
+                    end
+                    cfg.hint_filter.last_active = m
+                end
+                vl("State for hint filter %s is now %s", m, state)
+                return true
+            end
+        ),
+        init = (
+            function(m, r)
+                vl("Initializing hint filter %s with replacement string %s", m, r)
+                local hf = cfg.hint_filter
+                if not m then return end
+                if r == "" then r = nil end
+                if not hf.filters then
+                    hf.filters = {}
+                end
+                local hfil = hf.filters
+                if not hf.trims then
+                    hf.trims = {}
+                end
+                if hf.filters[m] then return end
+                hfil[m]          = {}
+                hfil[m].hint     = m
+                -- original loc string
+                hfil[m].ts_hint  = game.translate_string(m)
+                -- translated original
+                hfil[m].repl     = r
+                -- replacement loc string
+                hfil[m].ts_repl  = r and game.translate_string(r) or nil
+                -- translated replacement
+                hfil[m].trim_h   = trimmed_prompt(hfil[m].ts_hint)
+                -- trimmed original
+                hfil[m].trim_r   = r and trimmed_prompt(hfil[m].ts_repl) or nil
+                -- trimmed replacement
+                hfil[m].text     = hfil[m].trim_r or hfil[m].trim_h
+                -- final text to use
+                hf.trims[hfil[m].trim_h] = m
+                -- trimmed text to match
+                hf.set_state(m, false)
+                return true
+            end
+        ),
+        update_text = (
+            function()
+                local hf = cfg.hint_filter
+                hf.last_raw_text = get_quickhelp_text()
+                if not hf.last_raw_text then
+                    -- No hint
+                    if hf.last_active then
+                        hf.set_state(hf.last_active, false)
+                    end
+                    return
+                end
+                local text = trimmed_prompt(hf.last_raw_text)
+                local match = text and hf.trims[text]
+                if match then
+                    -- QuickHelp text matches active filter
+                    hf.set_state(match, true)
+                    hf.last_active = match
+                end
+                local flags = { text = hf.filters[match].ts_repl or nil }
+                SendScriptCallback("on_quickhelp_text_update", hf.last_raw_text, hf.last_active, hf.get_text(hf.last_active), flags)
+                if cfg.hide_van_interact_ui then
+                    set_quickhelp_text()
+                elseif flags.text and flags.text ~= text then
+                    set_quickhelp_text(flags.text)
+                    return flags.text
+                else
+                    return text
+                end
+            end
+        ),
+        get_text = (
+            function(m)
+                return cfg.hint_filter.filters[m] and cfg.hint_filter.filters[m].text
+            end
+        )
+    }
 }
 -- =======================================================================    
+
+function get_quickhelp_text()
+    return ui_hud_dotmarks.get_quickhelp_text()
+end
+
+function set_quickhelp_text(text)
+    ui_hud_dotmarks.set_quickhelp_text(text)
+end
+
+function trimmed_prompt(txt)
+    local pos = txt and txt:find("%(")
+    return pos and txt:sub(1, pos - 2) or txt or ""
+end
 
 function set_target_data(...)
     ui_hud_dotmarks.set_target_data(...)
@@ -916,12 +1053,9 @@ function get_cash_quantity_string(section)
     return money
 end
 
-function get_base_config_table()
-    return base_config
-end
-
-function refresh_main_config()
-    cfg = ui_hud_dotmarks.cfg
+function init_base_config(cfg_file, args)
+    cfg = dup_table(base_config)
+    return load_file_data(cfg_file, this.cfg, args)
 end
 
 function get_type_for_kind(kind)
@@ -1003,13 +1137,15 @@ function is_nearest_campfire_lit()
 end
 
 function is_body_claimed(id)
-    if grok_loot_claim then
-        local claimed   = grok_loot_claim.claimed
-        local k_id      = claimed and id and claimed[id]
+    if not id then return end
+    if npc_loot_claim or grok_loot_claim then
+        local claims    = npc_loot_claim and npc_loot_claim.loot_claims or grok_loot_claim and grok_loot_claim.claimed
+        local k_id      = claims and claims[id]
         local k_obj     = k_id and get_game_object(k_id)
         local k_alive   = k_obj and is_living_thing(k_obj) and k_obj:alive()
         return not not (k_alive and (k_id ~= AC_ID))
     end
+
     return false
 end
 
