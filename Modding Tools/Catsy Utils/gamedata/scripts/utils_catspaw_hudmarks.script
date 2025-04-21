@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.7.9"
-release_date    = 20250417
+script_version  = "0.9"
+release_date    = 20250420
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -76,33 +76,6 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
 end
 --set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 
---tracking_metrics        = true
-
-metrics                 = {
-    hmm_init    = 0,
-    hmm_end     = 0,
-    hmm_marks   = 0,
-    init_marks  = 0,
-    dest_marks  = 0,
-    peak_marks  = 0,
-    peak_vis    = 0,
-    timeline    = {},
-}
-
-local function inc_metric(m,i)
-    local now = time_global()
-    if not m then return end
-    metrics[m] = (metrics[m] or 0) + 1
-    metrics.timeline[now] = metrics.timeline[now] or {}
-    if not i then return end
-    metrics.timeline[now][i] = metrics.timeline[now][i] or {}
-    metrics.timeline[now][i][m] = (metrics.timeline[now][i][m] or 0) + 1
-end
-
-local met       = tracking_metrics
-local next_met  = 0
-local met_int   = 5000
-local log_cnt   = 0
 -- ======================================================================
 
 local paw               = tasks_placeable_waypoints
@@ -115,7 +88,7 @@ local round10           = utils_catspaw_common.round10
 local dec2              = utils_catspaw_common.dec2
 local to360             = utils_catspaw_common.to360
 local get_game_object   = utils_catspaw_common.get_game_object
-local safename          = utils_catspaw_text.safename
+local bestname          = utils_catspaw_text.bestname
 local int_to_rgba       = utils_catspaw_text.int_to_rgba
 local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
 local get_argb          = utils_catspaw_mapspots.get_argb
@@ -199,7 +172,7 @@ function add_marker_preset(preset_name, table_or_functor, overwrite)
 end
 -- ======================================================================
 
-function get_object_bearing(pos, obj, id)
+local function get_object_bearing(pos, obj, id)
     -- Thanks to demonized for help with this
     -- For some reason it causes the main loop to shit the bed though
     -- Unused for now
@@ -467,7 +440,6 @@ class "HUDMarkerManager"
 function HUDMarkerManager:__init()
     dl("[HUDMarkMgr] Initializing HUD Marker Manager")
     self.init_time          = time_global()
-    metrics.hmm_init        = self.init_time
     self.update_int         = 15
     self.next_update        = 0
     self.hover_tolerance    = hover_tolerance
@@ -486,7 +458,6 @@ function HUDMarkerManager:RegisterCallbacks()
 end
 
 function HUDMarkerManager:actor_on_update()
-    --local _=met and inc_metric("hmm_updates")
     --vl("[HUDMarkerManager:actor_on_update]")
     local obj = level.get_target_obj()
     self.last_crosshair     = self.current_crosshair
@@ -530,7 +501,6 @@ function HUDMarkerManager:SetCheckOnscreen(onoff)
 end
 
 function HUDMarkerManager:AddMarker(args)
-    --local _=met and inc_metric("hmm_add", args.id)
     --printf("HUDMarkerManager:AddMarker called")
     args = args or {}
     local id = args.id
@@ -586,7 +556,6 @@ function HUDMarkerManager:AddMarker(args)
 end
 
 function HUDMarkerManager:DelMarker(mark_id)
-    --local _=met and inc_metric("hmm_del")
     --vl("[HUDMarkerManager:DelMarker] m_id: %s", mark_id)
     if not (mark_id and markers[mark_id]) then return end
     nearest[markers[mark_id].id or 0] = nil
@@ -915,7 +884,6 @@ function UIHUDMarker:__init(args) super()
     else
         self:RegisterSelfManagementCallbacks()
     end
-    --_=met and inc_metric("mark_created", args.id)
     if not (args and args.skip_first_update) then self:Update() end
 end
 
@@ -975,7 +943,7 @@ function UIHUDMarker:InitSettings(args)
     end
 
     self.start          = get_time_elapsed()
-    self.name           = self.name or (id and safename and safename(id)) or (se_obj and (se_obj.character_name and se_obj:character_name() or se_obj:name())) or ""
+    self.name           = self.name or (id and bestname and bestname(id)) or (se_obj and (se_obj.character_name and se_obj:character_name() or se_obj:name())) or ""
     local pin           = paw and (paw.pins and paw.pins[id])
     self.min_x          = self.min_x or 0
     self.min_y          = self.min_y or 0
@@ -1112,7 +1080,6 @@ function UIHUDMarker:Destroy(managed, reason)
         self.func_on_destroy(self)
     end
     get_hud():RemoveDialogToRender(self)
-    --local _=met and inc_metric("mark_destroyed", self.id)
 end
 
 function UIHUDMarker:UpdateBaseMarkerSize(w, h)
@@ -1225,7 +1192,6 @@ function UIHUDMarker:actor_on_item_take(obj)
 end
 
 function UIHUDMarker:actor_on_update()
-    --local _=met and inc_metric("mark_actor_updates", self.id)
     if (self.next_update or 0) > time_global() then return end
     self.next_update = get_next_check(self.update_int or 50)
     --vl("[UIHUDMarker:actor_on_update][%s] tg %s | next_update %s", self.mark_id, time_global(), self.next_update)
@@ -1424,18 +1390,14 @@ function UIHUDMarker:OnscreenCheck()
 end
 
 function UIHUDMarker:Update()
-    --local _=met and inc_metric("mark_began_update", self.id)
     
     if self.destroying or (not db.actor) then
-        --_=met and inc_metric("mark_skip_update_skip_destroying", self.id)
         return
     end
     if not self.skip_onscreen_precheck then
         self:OnscreenCheck()
     end
-    --_=met and inc_metric("mark_did_onscreen_check", self.id)
     if self.killswitched then
-        --_=met and inc_metric("mark_update_skip_killswitched", self.id)
         return
     end
 
@@ -1444,7 +1406,6 @@ function UIHUDMarker:Update()
     self.current_use_target = false
     vl("[UIHUDMarker:Update][%s]", self.mark_id)
     if self.func_on_update then
-        --_=met and inc_metric("ran_func_on_update", self.id)
         vl("[UIHUDMarker:Update] Executing custom func_on_update %s", self.func_on_update)
         local args = {ret_value = true}
         self.func_on_update(self, args)
@@ -1458,7 +1419,6 @@ function UIHUDMarker:Update()
     local show_dist, show_hint = self:TextCanBeShown(true)
     
     if show_hint and not self.skip_hint then
-        --_=met and inc_metric("mark_did_hint_text", self.id)
         if id and self.is_wp then
             id          = paw and paw.get_current_waypoint()
             self.name   = paw and (
@@ -1503,7 +1463,6 @@ function UIHUDMarker:Update()
     self.last_dist  = dist
 
     if self.los_check_int then
-        --_=met and inc_metric("mark_checked_los", self.id)
 
         -- Check for line-of-sight to marker if an interval is set in los_check_int
         local has_los = self:HasLOS(dist)
@@ -1521,7 +1480,6 @@ function UIHUDMarker:Update()
             self:ShowMarker(los_marker_state, "Failed LOS")
         return end
     end
-    --_=met and inc_metric("mark_passed_los", self.id)
     local level_name, same_map
     if se_obj then
         level_name    = alife():level_name(se_obj and game_graph():vertex(se_obj.m_game_vertex_id):level_id())
@@ -1564,7 +1522,6 @@ function UIHUDMarker:Update()
     --printf("[UIHUDMarker:Update][%s][%s] Checking to see if there are screen coords for %s", self.id, self.mark_id, self.name)
     -- Visual update logic
     if (main_hud_shown() or axr_main.binoc_is_zoomed or axr_main.scoped_weapon_is_zoomed) then
-        --_=met and inc_metric("mark_checked_coords", self.id)
         local args  = self.coord_args or {}
         args.id     = self.id
         --args.bone   = self.bone
@@ -1678,7 +1635,6 @@ function UIHUDMarker:Update()
             end
             self:ShowMarker(true, "completed update")
             CUIScriptWnd.Update(self)
-            --_=met and inc_metric("mark_update_visible", self.id)
             return
         end
         --vl("No screen cooords found for %s", self.id)
