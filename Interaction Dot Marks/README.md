@@ -85,7 +85,7 @@ If enabled, when there is more than one nearby item that can be picked up, scrol
 > If FDDA Redone's multi-pickup option is disabled, DotMarks will try to respect this by only allowing the focused item to be picked up--but on rare occasions that isn't possible.
 ## Main drop shadow transparency
 * Config setting: `interact_drop_alpha`
-* Default: `true`
+* Default: `0.7`
 
 Sets the alpha (transparency) channel for the main drop shadows underneath the interaction prompts or other UI elements.
 > [!TIP]
@@ -118,6 +118,35 @@ By default it is set to a long-press equivalent of your Primary Interact--in oth
 When a long-press action is completed, inputs from that same key will be ignored for this many milliseconds. This is necessary to prevent the same key from incorrectly registering as a simple press just after completing the previous action--a person cannot lift their finger off the key instantaneously.
 > [!TIP]
 > If you find that your primary interact isn't registering when trying to quickly pick up multiple items, you can try lowering this value. It must be between 50 and 2000.
+
+## Enable "use item" action
+* Config setting: `sec_enable_use_act`
+* Default: `true`
+
+Enables the secondary action that allows you to immediately use any consumable pickup item.
+
+## Enable "unload weapon" action
+* Config setting: `sec_enable_unload_act`
+* Default: `true`
+Enables the secondary action that allows you to unload and take the ammunition from a weapon on the ground.
+## Enable "take all" action
+* Config setting: `sec_enable_takeall_act`
+* Default: `true`
+Enables the secondary action that allows you to take everything from a container at once.
+
+If you have iTheon's Auto Looter addon installed, there is also an option in the Addons menu that allows you to autoloot the same way. It is enabled by default.
+## Enable "heal NPC" action
+* Config setting: `sec_enable_heal_act`
+* Default: `true`
+Enables the secondary action that allows you to heal a wounded stalker on the ground.
+
+Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
+## Enable animation for healing action
+* Config setting: `sec_enable_heal_anim`
+* Default: `true`
+Enables an animation when healing wounded stalkers using the secondary action.
+
+The default animation just briefly causes the actor to crouch and look at the stalker while the usage sound plays. If you have the [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10) addon installed, its animation is MUCH better and DotMarks will use that instead.
 # MCM Menu: Icon Settings
 The default "dot marker" is a small white dot with a thin black outline. When a marker has **focus**--that is, its Primary Interaction prompt is shown--the icon changes to an alternate *focus icon*. By default, this is a smaller white dot with a ring around it.
 
