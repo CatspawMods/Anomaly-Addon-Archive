@@ -2,6 +2,10 @@
 Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
 
 ## Change Log
+
+**2.17.2:**
+- Updated utility scripts to the 20250422 versions
+
 **2.17.1:**
 - Updated `utils_catspaw_text` to 1.5.
 - Fix for "no guides" error message incorrectly preventing travel from labs and other dangerous areas.
