@@ -74,6 +74,10 @@
 		<text>Autoloot from</text>
 	</string>
 
+	<string id="st_alti_heal">
+		<text>Use %s to heal %s</text>
+	</string>
+
 	<string id="st_use_workshop">
 		<text>Use Workbench</text>
 	</string>
@@ -96,6 +100,10 @@
 
 	<string id="st_alti_uses">
 		<text>uses</text>
+	</string>
+
+	<string id="st_alti_owned">
+		<text>owned</text>
 	</string>
 
 	<string id="st_alti_nopower">
@@ -1067,6 +1075,47 @@
 		<text>If iTheon's Auto Looter is installed, and both Autoloot options are enabled in this menu, DotMarks will attempt to override the Autoloot keybind with a value that can't be pressed accidentally.\n
 
 		\nEnabling this option will allow you to unbind the Looter key and free up the keybind for something else. Disabling it will allow you to still trigger Autoloot independently of DotMarks.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_use_act">
+		<text>Enable "use item" action</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_use_act_desc">
+		<text>Enables the secondary action that allows you to immediately use any consumable pickup item.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_unload_act">
+		<text>Enable "unload weapon" action</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_unload_act_desc">
+		<text>Enables the secondary action that allows you to unload and take the ammunition from a weapon on the ground.</text>
+	</string>
+	
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_takeall_act">
+		<text>Enable "take all" action</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_takeall_act_desc">
+		<text>Enables the secondary action that allows you to take everything from a container at once.\n
+
+		\nIf you have iTheon's Auto Looter addon installed, there is also an option in the Addons menu that allows you to autoloot the same way. It is enabled by default.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_act">
+		<text>Enable "heal NPC" action</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_act_desc">
+		<text>Enables the secondary action that allows you to heal a wounded stalker on the ground.\n
+
+		\nUnlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and it will show you on the prompt which one it will use, as well as how many uses you have remaining.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim">
+		<text>Enable animation for healing action</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim_desc">
+		<text>Enables an animation when healing wounded stalkers using the secondary action.\n
+
+		\nThe default animation just briefly causes the actor to crouch and look at the stalker while the usage sound plays. If you have the Animated NPC Healing addon installed, its animation is MUCH better and DotMarks will use that instead.</text>
 	</string>
 
 </string_table>

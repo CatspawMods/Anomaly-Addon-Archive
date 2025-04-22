@@ -337,11 +337,13 @@ function get_sec_menu()
 			}
 		},
 
-		{ id = "divider", type= "line" },
-
 		{ id = "long_press_delay", 		type = "input", 	val = 2, min = 50, max = 2000, def = cfg.long_press_delay },
 
-		{ id = "divider", type= "line" },
+		{ id = "sec_enable_use_act", 	type = "check", 		val = 1, def = cfg.sec_enable_use_act },
+		{ id = "sec_enable_unload_act", 	type = "check", 	val = 1, def = cfg.sec_enable_unload_act },
+		{ id = "sec_enable_takeall_act", 	type = "check", 	val = 1, def = cfg.sec_enable_takeall_act },
+		{ id = "sec_enable_heal_act",type = "check", 	val = 1, def = cfg.sec_enable_heal_act },
+		{ id = "sec_enable_heal_anim", 	type = "check", 	val = 1, def = cfg.sec_enable_heal_anim },
 	}
 end
 

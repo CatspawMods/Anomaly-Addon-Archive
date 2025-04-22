@@ -74,6 +74,10 @@
 		<text>Автолут из</text>
 	</string>
 
+	<string id="st_alti_heal">
+		<text>Используйте %s, чтобы вылечить %s</text>
+	</string>
+
 	<string id="st_use_workshop">
 		<text>Используйте верстак</text>
 	</string>
@@ -98,6 +102,10 @@
 		<text>части</text>
 	</string>
 
+	<string id="st_alti_owned">
+		<text>принадлежат</text>
+	</string>
+	
 	<string id="st_alti_nopower">
 		<text>без питания</text>
 	</string>
@@ -1068,6 +1076,47 @@
 		<text>Если установлен аддон автолутера iTheon и в этом меню включены обе опции автолутера, DotMarks попытается отвязать клавишу автолутера со значением, которое не может быть случайно нажато.\n
 
 		\nВключение этой опции позволит вам отвязать клавишу автолутера и освободить ее для чего-то другого. Отключение этой опции позволит вам по-прежнему запускать автолутер независимо от DotMarks.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_use_act">
+		<text>Включите действие «использовать объект».</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_use_act_desc">
+		<text>Включает вторичное действие, позволяющее немедленно использовать любой расходуемый предмет для подбора.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_unload_act">
+		<text>Включить действие «разрядить оружие»</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_unload_act_desc">
+		<text>Включает вторичное действие, позволяющее разрядить и забрать боеприпасы из оружия, лежащего на земле.</text>
+	</string>
+	
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_takeall_act">
+		<text>Включить действие «взять все»</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_takeall_act_desc">
+		<text>Включает вторичное действие, позволяющее взять из контейнера все и сразу.\n
+
+		\nЕсли у вас установлен аддон iTheon's Auto Looter, то в меню аддонов есть опция, которая позволяет вам автолутить таким же образом. Она включена по умолчанию.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_act">
+		<text>Включить действие «исцелить NPC»</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_act_desc">
+		<text>Включает вторичное действие, которое позволяет вам исцелить раненого сталкера на земле.\n
+
+		\nВ отличие от ванильной функции, эта позволит вам использовать любую имеющуюся у вас mедицинский набор или стимпак - но всегда будет стараться использовать самую дешевую, и в подсказке будет показано, какую из них вы будете использовать, а также сколько у вас осталось использований.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim">
+		<text>Включите анимацию для действия исцеления</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim_desc">
+		<text>Включает анимацию при лечении раненых преследователей с помощью вторичного действия.\n
+
+		\nПо умолчанию анимация лишь ненадолго заставляет актера приседать и смотреть на преследователя, пока играет звук использования. Если у вас установлен аддон Animated NPC Healing, его анимация намного лучше, и DotMarks будет использовать ее вместо этого.</text>
 	</string>
 
 </string_table>

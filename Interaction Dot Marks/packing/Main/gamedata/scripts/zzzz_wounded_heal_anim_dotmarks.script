@@ -1,0 +1,64 @@
+-- =======================================================================
+--[[    Interaction Dot Marks ("DotMarks")
+-- =======================================================================
+	ANIM AND TARGET CONTROL - ANIMATED NPC HEALING MONKEYPATCH
+-- =======================================================================    
+    These patches are necessary in order for DotMarks to interact properly
+    with the Animated NPC Healing addon. Their use_injector script doesn't
+    accept an object or ID, it just assumes you're in a dialog and tries
+    to get_talking_npc().
+
+    This patch cause it to accept a passed NPC object or the current
+    target object as well.
+
+    I would have rather done this with a clean monkeypatch instead of
+    overriding its core function, but the way the script is designed did
+    not allow it.
+-- =====================================================================]]
+
+perform_monkeypatch = true
+
+if zzz_wounded_heal_anim and perform_monkeypatch then
+	local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("zzzz_wounded_heal_anim_dotmarks is monkeypatching zzz_wounded_heal_anim to allow integration")
+	function zzz_wounded_heal_anim.use_injector(npc)
+		level.disable_input()
+		
+		-- Patch for Dynamic Dialog UI
+		if dialog_fov then
+			UnregisterScriptCallback("GUI_on_hide", dialog_fov.GUI_on_hide)
+			dialog_fov.stop_move_camera()
+			dialog_fov.reset_fov()
+		end
+		if (not npc) then
+			npc = ui_hud_dotmarks.get_current_target_obj()
+			if not npc then
+				npc = get_talking_npc()
+			end
+		end
+
+		zzz_wounded_heal_anim.look_at_npc(npc)
+		zzz_wounded_heal_anim.active_slot = db.actor:active_slot()
+		zzz_wounded_heal_anim.cur_fov = get_console():get_float("hud_fov")
+		
+		get_hud():HideActorMenu()
+		zzz_wounded_heal_anim.anim_item = "tch_help_wounded_hud_anm"
+		db.actor:activate_slot(0)
+		
+		zzz_wounded_heal_anim.det_active = db.actor:active_detector() or nil
+		if zzz_wounded_heal_anim.det_active then zzz_wounded_heal_anim.det_active:switch_state(2) end
+		
+		level.add_cam_effector("camera_effects\\hand_help.anm", 8800, false, "zzz_wounded_heal_anim.on_hud_animation_end")
+		level.add_call( function () return db.actor:active_slot() == 0 and not db.actor:active_detector() end, function ()
+			get_console():execute("hud_fov 0.6")
+			game.play_hud_motion(2, zzz_wounded_heal_anim.anim_item, "anm_show", false, 1)
+			
+			sound_object("help_wounded_hud\\help_injector"):play_no_feedback(db.actor, sound_object.s2d, 0, vector():set(0,0,0), 1.0, 1.0)	
+		end)
+	end
+
+	local heal_anim_end = zzz_wounded_heal_anim.on_hud_animation_end
+	function zzz_wounded_heal_anim.on_hud_animation_end()
+		heal_anim_end()
+		ui_hud_dotmarks.heal_anim_end()
+	end
+end

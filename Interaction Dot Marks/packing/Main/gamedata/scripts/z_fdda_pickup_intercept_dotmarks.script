@@ -1,5 +1,8 @@
 -- =======================================================================
---[[      ITEM PICKUP CONTROL - FDDA AND FDDA REDONE MONKEYPATCHES
+--[[    Interaction Dot Marks ("DotMarks")
+-- =======================================================================
+    ITEM PICKUP CONTROL - FDDA AND FDDA REDONE MONKEYPATCHES
+-- =======================================================================
     Intercepts primary-use keybind and checks for correct target, altering
     the passed object if necessary.
 
@@ -13,7 +16,7 @@ patched     = false
 
 if fddar_oibp then
     patched = true
-    printf("[DotMarks] FDDA Redone detected, patching liz_fdda_redone_item_pickups.actor_on_item_before_pickup")
+    local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("[DotMarks] FDDA Redone detected, patching liz_fdda_redone_item_pickups.actor_on_item_before_pickup")
     liz_fdda_redone_item_pickup.actor_on_item_before_pickup = (
         function(obj, flags)
             flags.ret_value = not ui_hud_dotmarks.fdda_handles_pickups()
@@ -25,7 +28,7 @@ if fddar_oibp then
     )
 elseif fdda_oibp then
     patched = true
-    printf("[DotMarks] FDDA detected, patching take_item_anim.actor_on_item_before_pickup")
+    local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("[DotMarks] FDDA detected, patching take_item_anim.actor_on_item_before_pickup")
     take_item_anim.actor_on_item_before_pickup = (
         function(obj, flags)
             local taken_obj = ui_hud_dotmarks.item_pickup_intercept(obj, flags)

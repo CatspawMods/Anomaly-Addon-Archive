@@ -103,6 +103,19 @@ use_fallback_targeting 		= true
 ; Has some value catching edge cases, otherwise I'd disable this
 fallback_distance_check 	= true
 ; If fallback targeting is enabled, checks distance of object against obj_interact_dist
+sec_enable_use_act			= true
+; Enables the default "use/consume" secondary action for pickup items
+sec_enable_takeall_act		= true
+; Enables the "take all" secondary action for containers
+sec_enable_unload_act		= true
+; Enables the "unload" secondary action for weapons
+sec_enable_heal_act			= true
+; Enables the "heal wounded" secondary action for downed stalkers
+sec_enable_heal_anim 		= true
+; Enables animation for the "heal wounded" secondary action
+search_anim_on_takeall 		= true
+; Play FDDA Redone's "body search" animation when executing a container secondary action
+; Will only take effect if the animation is enabled in FDDAR
 takeall_does_autoloot 		= true
 ; If enabled, the take-all secondary function will instead trigger iTheon's autoloot
 hijack_autoloot_keybind 	= false
@@ -111,9 +124,6 @@ hijack_autoloot_keybind 	= false
 ; it is only triggered by DotMarks.
 autoloot_hijack_value 		= 999999
 ; An intentionally invalid key that could never be "pressed" and sent under valid circumstances
-search_anim_on_takeall 		= true
-; Play FDDA Redone's "body search" animation when executing a container secondary action
-; Will only take effect if the animation is enabled in FDDAR
 haru_skill_name             = scavenging
 ; Name of related skill
 haru_skill_coef             = 0.2
@@ -193,7 +203,7 @@ font_main_prompt 			= 2
 font_item_card				= 0
 ; Font to use for the item card text
 ; The default small font has no Cyrillic support, but only needs to display numbers
-interact_drop_alpha 		= 0.65
+interact_drop_alpha 		= 0.7
 ; Opacity of the interaction drop shadows
 dot_marker_size 			= 1
 ; Scale multiplier for the size of the dot markers
@@ -796,6 +806,11 @@ bind_sec_interact 		= dotmarks/dmarksec/
 modk_sec_interact 		= dotmarks/dmarksec/
 imod_sec_interact 		= dotmarks/dmarksec/
 long_press_delay 		= dotmarks/dmarksec/
+sec_enable_use_act 		= dotmarks/dmarksec/
+sec_enable_unload_act 	= dotmarks/dmarksec/
+sec_enable_takeall_act 	= dotmarks/dmarksec/
+sec_enable_heal_act 	= dotmarks/dmarksec/
+sec_enable_heal_anim 	= dotmarks/dmarksec/
 ; =================================================================================
 ; Other addons menu
 ; =================================================================================

@@ -25,10 +25,9 @@ script_name     = "ui_hud_dotmarks"
     See dotmarks_main.script for dependencies.
 -- =======================================================================
     TODO:
-    - Investigate markers and dialogue for wounded enemies
-    - Investigate adding secondary action to heal wounded stalkers
+    - Investigate markers and missing dialogue option for wounded enemies
     - MCM live preview for prompt elements - post-release, lots of work
-    - Then stop adding features!
+    - After that, stop adding features!
 
     BEFORE PUBLIC RELEASE:
     - Optimize/clean up WIP code that didn't get used
@@ -45,7 +44,7 @@ assert(dotmarks_main, "\n\n"..
 assert(dotmarks_mcm, "\n\n"..
     "! ui_hud_dotmarks requires script dotmarks_mcm, which does not exist or failed to load!\n\n"
 )
-assert(utils_catspaw_common, "\n\n"..
+assert(utils_catspaw_common and utils_catspaw_common.import_metatable, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_common, which does not exist or failed to load!\n\n"
 )
 assert(utils_catspaw_hudmarks, "\n\n"..
@@ -193,7 +192,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                     if not obj then return end
                     local dist          = mark.last_dist or 999
                     local in_range      = dist <= (mark.interact_dist or 2.5)
-                    local hide          = (mark.hidden and not (mark.is_stalker and obj:wounded())) or (not in_range)
+                    local hide          = mark.hidden or (not in_range)
                     local _             = (not hide) and dump("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
                     
                     cfg.in_pickup_range[id] = mark.is_pickup and in_range and dist or nil
@@ -256,6 +255,12 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                         end
                                     end
                                 elseif mark.is_stalker then
+                                    mark.is_wounded = IsWounded(obj)
+                                    if mark.is_wounded and not mark.was_wounded then
+                                        local _ = debug_dump and vl("%s detected as wounded: %s", mark.name, mark.is_wounded)
+                                        mark.was_wounded = true
+                                        set_secondary_action(mark)
+                                    end
                                     mark.is_mute = not obj:is_talk_enabled()
                                     if mark.is_mute then
                                         --mark.use_pri:ShowPrompt(false) -- maybe not needed any more?
@@ -361,11 +366,22 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                             show_sec    = false
                                         elseif mark.is_container then
                                             show_sec    = show_pri and mark.has_items
+                                        elseif mark.was_wounded then
+                                            if mark.is_wounded and not cfg.healing_stalker then
+                                                if mark.is_wounded then
+                                                    show_sec = not not mark.alt_interact.avail_aid
+                                                else
+                                                    show_sec = false
+                                                    end_mark_wounded_state(mark)
+                                                end
+                                            end
                                         end
                                         dump("[DotMarks] Checking whether to show alt interact prompt for %s | show_pri %s | targeted %s", mark.name, show_pri, targeted)
                                     end
                                 end
-                                mark.alt_interact:ShowPrompt(show_sec)
+                                if mark.alt_interact then
+                                    mark.alt_interact:ShowPrompt(show_sec)
+                                end
                             end
                         end
                     end
@@ -474,6 +490,25 @@ end
 
 -- ======================================================================
 
+function IsWounded(obj)
+    local var = load_var(obj, "wounded_state")
+    return var and (var ~= "") and (var ~= "nil")
+end
+
+function end_mark_wounded_state(mark)
+    --vl("end_mark_wounded_state for %s", mark and mark.name)
+    if not (mark and mark.is_stalker and mark.alt_interact) then return end
+    mark.is_wounded = nil
+    mark.was_wounded = nil
+    cfg.healing_stalker = nil
+    mark.checked_for_sec = nil
+    local obj = mark.id and get_game_object(mark.id)
+    --if obj then
+        --obj:enable_talk()
+    --end
+    mark.alt_interact:Destroy("NPC is no longer wounded")
+end
+
 function log_marker_update_loop(mark)
     mark.loop_num = mark.loop_num and (mark.loop_num + 1) or 0
     local _ = debug_dump and vl("[DotMarks] [%s][%s] End of main update loop %s | Final size: [%s x %s]", time_global(), mark.name, mark.loop_num, dec2(mark.width), dec2(mark.height))
@@ -517,6 +552,19 @@ function killswitch(feature)
         ks = cfg.killswitch_all
     end
     return ks
+end
+
+function shut_down()
+    scanning = false
+    cfg.killswitch_all = true
+    set_handler_callbacks(true)
+    for k,v in pairs(cfg.markers) do
+        if v.mark_id then
+            destroy_marker(v.mark_id)
+        else
+            v:Destroy("shutting down")
+        end
+    end
 end
 
 function get_fddar_current_action()
@@ -886,9 +934,6 @@ function InteractPrompt:__init(anchor, args) super()
         local x,y   = get_fixed_screen_pos()
         args.locked_screen_pos = vector2():set(x, y)
     end
-    if args.mark_id then
-        self.mark   = hmm:GetMarker(args.mark_id)
-    end
     if args.scheme then
         if args.is_button then
             local method = ((args.scheme == "ph_button") and "on_press" or "on_code")
@@ -949,6 +994,14 @@ function InteractPrompt:__init(anchor, args) super()
     RegisterScriptCallback("actor_on_update", self)
     
     vl("[%s][InteractPrompt] Completed setup for prompt: %s", self.init_done, self:GetFullPrompt())
+end
+
+function InteractPrompt:GetMark()
+    if self.args.mark_id then
+        return hmm:GetMarker(self.args.mark_id)
+    elseif self.args.id and cfg.markers[self.args.id] then
+        return cfg.markers[self.args.id]
+    end
 end
 
 function InteractPrompt:GetInvWeightDisplay(weight)
@@ -1710,12 +1763,11 @@ function InteractPrompt:OnVisibilityChange(state, reason)
         _ = debug_dump and vl("Checking campfire state for %s", self.args.tutorial)
         local obj = get_nearby_campfire(5, false)
         if obj then
-            local id = obj:id()
-            self.mark = id and cfg.markers[id]
-            if self.mark then
-                self.mark:ActiveSwap(state)
-                if state and can_start_popin_anim(self.mark) then
-                    init_active_marker_popin(self.mark)
+            local mark = self:GetMark()
+            if mark then
+                mark:ActiveSwap(state)
+                if state and can_start_popin_anim(mark) then
+                    init_active_marker_popin(mark)
                 end
             end
         else
@@ -1768,7 +1820,6 @@ end
 function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
     local new_text  = self:GetFullPrompt(new_prefix, new_prompt, new_suffix)
     local color_text, plain_text
-
     if self.parse_text_colors then
         color_text = parse_color_tokens(new_text, nil, true)
         plain_text = parse_color_tokens(new_text, nil, false)
@@ -1863,14 +1914,47 @@ function InteractPrompt:CheckForStuckTutorial()
     end
 end
 
+function InteractPrompt:GetWoundedSuffix(last_aid, qty)
+    if (last_aid ~= self.avail_aid) then
+        self.aid_multi = nil
+    end
+    self.aid_multi = self.aid_multi or IsItem("multiuse", self.avail_aid)
+    local text = string.format(" (%s %s%s)", qty or 0, self.aid_multi and (gts("st_alti_uses").." ") or "", gts("st_alti_owned"))
+    return text
+end
+
+function InteractPrompt:CheckForWoundedStalkers()
+    self.avail_aid = nil
+    local mark = self.args.id and cfg.markers[self.args.id]
+    if not mark.is_wounded then
+    return end
+    local last_aid = self.avail_aid
+    self.avail_aid = cheapest_medical_help_owned()
+    local qtyowned  = actor_aid_item_count(self.avail_aid) or 0
+    if qtyowned < 1 then
+        dump("InteractPrompt:CheckForWoundedStalkers found no health items")
+        self.avail_aid = nil
+        self:ShowPrompt(false)
+        return
+    end
+    --dump("Generating heal prompt text for aid item %s", self.avail_aid)
+    self.wounded_string = self.wounded_string or gts("st_alti_heal")
+    local use_aid_name = gts(inventory_name(nil, self.avail_aid, true))
+    self.args.text  = string.format(self.wounded_string, use_aid_name, mark.name)
+    local suffix = self:GetWoundedSuffix(last_aid, qtyowned)
+    self:SetPrompt(nil, self.args.text, suffix)
+    self:UpdateLongPress()
+    self:UpdateAnimBusyState()
+end
+
 function InteractPrompt:actor_on_update()
     if self.destroyed then return end
     local _ = debug_dump and vl("[%s][%s]InteractPrompt:actor_on_update | %s%s", self.args.id, self.args.event, self.init_done and "" or "first run at ", time_global())
-
     self:UpdateFilteredHints()
-
-    if (self.args.tutorial or self.args.is_stalker) then
+    local mark = self:GetMark()
+    if (self.args.tutorial or mark.is_stalker) then
         self:CheckForStuckTutorial()
+        _ = (not self.args.pri) and self:CheckForWoundedStalkers()
         return
     end
 
@@ -2318,6 +2402,8 @@ end
 function setup_sec_interact_prompt(mark)
     if not mark then return end
     if mark.alt_interact then return end
+    if mark.checked_for_sec then return end
+    mark.checked_for_sec = true
     local id        = mark.id
     vl("[%s][%s] setup_sec_interact_prompt for %s", id, mark.mark_id, mark.name)
     local anchor    = mark.marker
@@ -2330,6 +2416,7 @@ function setup_sec_interact_prompt(mark)
     local func      = handle_secondary_interact
 
     if obj and IsWeapon(obj) then
+        if not cfg.sec_enable_unload_act then return end
         local atype     = obj:get_ammo_type() + 1
         local ammos     = parse_list(ini_sys, obj:section(), "ammo_class")
         local sec       = ammos and atype and ammos[atype]
@@ -2342,9 +2429,13 @@ function setup_sec_interact_prompt(mark)
             mark.name
         )
         func = unload_and_take_ammo
+    elseif mark.is_wounded then
+        if not cfg.sec_enable_heal_act then return end
+        func = help_wounded_stalker
     elseif mark.hf_workshop then
         int_text = gts("st_hf_workshop_menu")
     elseif mark.is_container then
+        if not cfg.sec_enable_takeall_act then return end
         -- Inventory box or stash
         local weight = nil
         if not obj:is_inv_box_empty() then
@@ -2371,6 +2462,7 @@ function setup_sec_interact_prompt(mark)
             func = take_all_from_box
         end
     elseif cfg.is_item.Tools(obj) then
+        if not cfg.sec_enable_use_act then return end
         -- Usable tool
         local verb      = mark.use_verb or "st_alti_takeuse"
         int_text        = string.format(gts("st_alti_prompt_usable"),
@@ -2380,6 +2472,7 @@ function setup_sec_interact_prompt(mark)
         )
 
     elseif cfg.is_item.Consumables(obj) then
+        if not cfg.sec_enable_use_act then return end
         -- Consumable
         local verb      = mark.use_verb or (
             (mark.kind == "i_medical") and "st_alti_use_booster" or
@@ -2392,6 +2485,7 @@ function setup_sec_interact_prompt(mark)
             gts("st_alti_now")
         )
     elseif (mark.kind == "i_letter") then
+        if not cfg.sec_enable_use_act then return end
         -- Readable
         int_text        = string.format(gts("st_alti_prompt_usable"),
             gts("st_alti_read"),
@@ -2400,6 +2494,7 @@ function setup_sec_interact_prompt(mark)
         )
         func = take_and_read
     elseif section and IsItem("device", section) then
+        if not cfg.sec_enable_unload_act then return end
         -- Device with battery power
         int_text        = string.format(gts("st_alti_prompt_usable"),
             first_upper(gts("st_item_unpack_battery")),
@@ -2415,6 +2510,7 @@ function setup_sec_interact_prompt(mark)
         )
         func = deploy_backpack
     else
+        if not cfg.sec_enable_use_act then return end
         -- Fallback to generic "use" prompt
         int_text        = string.format(gts("st_alti_prompt_booster"),
             gts("st_alti_takeuse"),
@@ -2436,6 +2532,14 @@ function setup_sec_interact_prompt(mark)
     }
 
     mark.alt_interact = InteractPrompt(anchor or maingameui, args)
+end
+
+function set_secondary_action(mark)
+    if not mark then return end
+    if mark.alt_interact then
+        mark.alt_interact:Destroy("reinit as something else")
+    end
+    setup_sec_interact_prompt(mark)
 end
 
 -- =======================================================================
@@ -2758,6 +2862,103 @@ function iterate_any_inventory(box, func)
     end
 end
 
+function cheapest_medical_help_owned(who)
+    who = who or db.actor
+    if not who then return end
+    local medkit
+    local medhelp = {
+        [1] = "medkit",
+        [2] = "medkit_army",
+        [3] = "medkit_scientic",
+        [4] = "stimpack",
+        [5] = "stimpack_army",
+        [6] = "stimpack_scientic"
+    }
+    for i = 1, #medhelp do
+        medkit = medhelp[i]
+        if medkit and who:object(medkit) then
+            return medkit
+        end
+    end
+end
+
+function actor_aid_item_count(section)
+    if not db.actor then return end
+    local num_owned = section and utils_item.get_amount(db.actor, section, 1) or 0
+    return num_owned   
+end
+
+function try_init_heal_anim(npc, mark, exec_func)
+    end_mark_wounded_state(mark)
+    cfg.hidden_before_anim = mark.hidden
+    mark.hidden = true
+    if npc and exec_func and cfg.sec_enable_heal_anim and not cfg.healing_stalker then
+        if zzz_wounded_heal_anim then
+            cfg.healing_stalker = npc:id()
+            zzz_wounded_heal_anim.use_injector(npc)
+        elseif liz_fdda_redone_body_search then
+            -- Largely adapted from FDDAR's body search
+            cfg.healing_stalker = npc:id()
+            local pos = npc and utils_obj.safe_bone_pos(npc, "bip01_spine1") or npc:position()
+            db.actor:actor_look_at_point(liz_fdda_redone_body_search.clamp_target_pos_height(pos, 10))
+            local is_crouching = IsMoveState('mcCrouch')
+            local is_crouch_togglable = get_console_cmd(1, "g_crouch_toggle")
+            if not is_crouch_togglable then exec_console_cmd("g_crouch_toggle 1") end
+            level.press_action(bind_to_dik(key_bindings.kCROUCH))
+            level.release_action(bind_to_dik(key_bindings.kCROUCH))
+            db.actor:hide_weapon()
+            level.disable_input()
+
+            local end_time = time_global() + 500
+
+            CreateTimeEvent("dotmarks_heal_stalker", 0, 0, (
+                function()
+                    if time_global() > end_time then
+                        utils_obj.play_sound("interface\\inv_stim_4p3")
+                        cfg.healing_stalker = nil
+                        exec_func(npc, mark, true)
+                        db.actor:actor_stop_look_at_point()
+                        level.enable_input()
+                        if is_crouching ~= IsMoveState('mcCrouch') then
+                            level.press_action(bind_to_dik(key_bindings.kCROUCH))
+                            level.release_action(bind_to_dik(key_bindings.kCROUCH))
+                            if not is_crouch_togglable then exec_console_cmd("g_crouch_toggle 0") end
+                        end                    
+                        return true
+                    end
+                end
+            ))
+        end
+        return true
+    end
+end
+
+function heal_anim_end()
+    local id = cfg.healing_stalker
+    local npc = id and get_game_object(id)
+    local mark = id and cfg.markers[id]
+    if not (npc and mark) then return end
+    help_wounded_stalker(npc, mark, true)
+end
+
+function help_wounded_stalker(npc, mark, skip_anim_check)
+    if not mark then return end
+    if (not skip_anim_check) and try_init_heal_anim(npc, mark, help_wounded_stalker) then
+        vl("[%s] help_wounded_stalker: search anim check, not processing on this call", time_global())
+        return true
+    end
+    mark.hidden = cfg.hidden_before_anim
+    cfg.hidden_before_anim = nil
+    if not (npc and mark) then return true end
+    local medkit    = cheapest_medical_help_owned()
+    local count     = medkit and actor_aid_item_count(medkit)
+    if (not count) or (count < 1) then return true end
+    alife_create_item("medkit_script", npc)
+    xr_wounded.unlock_medkit(npc)
+    game_statistics.increment_npc_statistic(db.actor, "wounded_helped")
+end
+
+
 function hijack_autoloot_keybind()
     if z_auto_looter and cfg.takeall_does_autoloot and cfg.hijack_autoloot_keybind then
         z_auto_looter.config.looter_key = cfg.autoloot_hijack_value
@@ -2850,7 +3051,7 @@ function take_all_from_box(box, mark, skip_anim_check)
 
     local function itr_inv(temp, item)
         box:transfer_item(item, db.actor)
-        SendScriptCallback("ActorMenu_on_item_after_move", id, item, "loot", "npc_bag")
+        SendScriptCallback("actor_on_item_take_from_box", box, item)
     end
     iterate_any_inventory(box, itr_inv)
     if cfg.markers[id] then
@@ -3350,12 +3551,42 @@ end
 
 -- =======================================================================
 
+
 function on_before_key_press(key, bind, dis, flags)
     if cfg.watch_use and (key == use_dik) then
         cfg.use_released = nil
         cfg.block_loot_window = time_global()
         dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
         cfg.held_key = key
+        local id = get_current_target()
+        if not id then return end
+        local mark = cfg.markers[id]
+        if not (mark and mark.is_stalker and mark.is_wounded) then return end
+        --dump("NPC %s is wounded, supressing key", mark and mark.name)
+        flags.ret_value = false
+    end
+end
+
+function do_use_release_action_manually(id)
+    local obj = get_game_object(id)
+    local mark = id and cfg.markers[id]
+    -- Target exists, no completed hold action
+    if is_target_pickup(id) and ((id == locked_id) or not locked_id) then
+        cfg.use_released = nil
+        vl("No completed hold action, item pickup should occur")
+        force_actor_to_take(obj)
+    elseif is_target_container(id, obj:clsid()) then
+        if z_ui_inventory_dotmarks then
+            vl("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
+            cfg.use_released = nil
+            obj:use(db.actor)
+        else
+            alert("ERROR! z_ui_inventory_dotmarks could not be found, please reinstall DotMarks")
+        end
+    elseif mark and mark.is_stalker and mark.is_wounded then
+        vl("Forcing actor to talk with wounded NPC")
+        cfg.use_released = nil
+        xr_effects.force_talk(db.actor, obj, {true})
     end
 end
 
@@ -3364,28 +3595,15 @@ function on_key_release(key)
     if key == cfg.held_mod then cfg.held_mod = nil end
     if (key == cfg.held_key) then
         if (key == use_dik) then
-            local obj = get_current_target_obj()
+            cfg.held_key = nil
             cfg.use_released = cfg.use_released or time_global()
+            local id = get_current_target()
+            if not id then return end
             local dur = cfg.holding and cfg.holding.peak_hold
             local time = cfg.holding and cfg.holding.hold_time
             local _ = debug_dump and vl("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
-            cfg.held_key = nil
-
-            if obj and not (dur and time and (dur >= time)) then
-                if is_target_pickup() and ((obj:id() == locked_id) or not locked_id) then
-                    cfg.use_released = nil
-                    vl("No completed hold action, item pickup should occur", time)
-                    force_actor_to_take(obj)
-                elseif is_target_container(obj:id(), obj:clsid()) then
-                    if z_ui_inventory_dotmarks then
-                        vl("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
-                        cfg.use_released = nil
-                        
-                        obj:use(db.actor)
-                    else
-                        alert("ERROR! z_ui_inventory_dotmarks could not be found, please reinstall DotMarks")
-                    end
-                end
+            if not (dur and time and (dur >= time)) then
+                do_use_release_action_manually(id)
             end
         end
     end
@@ -3476,6 +3694,11 @@ function on_mouse_wheel(scroll_dir, flags)
     local _ = debug_dump and vl("on_mouse_wheel: %s | direction: %s", scroll_dir, direction)
     cycle_targeted_pickup(direction)
     flags.ret_value         = false
+end
+
+function on_before_level_changing()
+    dl("Shutting down for level change")
+    shut_down()
 end
 
 function parse_color_data(color_key, csv_string)
@@ -3732,6 +3955,7 @@ function on_game_start()
         RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
         RegisterScriptCallback("npc_on_death_callback", handle_npc_death)
         RegisterScriptCallback("monster_on_death_callback", handle_npc_death)
+        RegisterScriptCallback("on_before_level_changing", on_before_level_changing)
         if stealth_kill_detection then
             RegisterScriptCallback("npc_on_silent_kill_callback", handle_npc_death)
         end

@@ -5,8 +5,8 @@
 
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.11-b11"
-release_date    = 20250419
+script_version  = "0.12-b1"
+release_date    = 20250422
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -34,9 +34,11 @@ release_date    = 20250419
         * My utility scripts
         These are already included with DotMarks--but you can always get
         the latest version of them from the Source link above, in a
-        folder under Modding Tools.
+        folder under Modding Tools. Try that if you get the below error
+        message about outdated scripts, or if you get a crash caused by a
+        missing (nil value) function.
 -- =====================================================================]]
-assert(utils_catspaw_common and utils_catspaw_common.load_file_data, "\n\n"..
+assert(utils_catspaw_common and utils_catspaw_common.import_metatable, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_common, which is outdated or missing!\n\n"
 )
 assert(utils_catspaw_mapspots, "\n\n"..
@@ -70,10 +72,20 @@ local paw               = tasks_placeable_waypoints
 local gts               = game.translate_string
 local in_sleep_zone     = false
 cfg                     = nil
--- =======================================================================
---      MAIN CONFIG TABLE
---  Most values are loaded from configs\scripts\dotmarks_defaults.ltx
--- =======================================================================
+--[[======================================================================
+      MAIN CONFIG TABLE
+    For the most part this sets up a number of subordinate functions that
+    are used for item classification, for generating marker attributes 
+    once an object has been classified, and a few other pieces.
+
+    At runtime it is also used to store all configuration values, many 
+    of which are for internal use only and are not exposed in MCM. Finally
+    it is used to briefly store state flags or other values that need to 
+    be made publicly available to all functions.
+
+    Most tables and config values are loaded on startup from:
+        configs\scripts\dotmarks_defaults.ltx
+-- =====================================================================]]
 local base_config = {
 -- =======================================================================
 --  [cfg.is_item]: table of functors to test if an object matches a type
@@ -342,7 +354,7 @@ local base_config = {
                     args.texture    = get_cfg_for_type("tex", "Bodies", obj) or cfg.marker_dotmark
                 end
                 if is_body_claimed(id) then
-                    args.name       = safename(id) .. " (" .. gts("st_body_is_claimed") .. ")"
+                    args.name       = bestname(id) .. " (" .. gts("st_body_is_claimed") .. ")"
                 end
                 if args.is_stalker then
                     args.has_items  = not obj:is_inv_box_empty()

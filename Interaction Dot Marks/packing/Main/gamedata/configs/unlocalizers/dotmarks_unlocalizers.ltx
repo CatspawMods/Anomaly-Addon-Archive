@@ -5,7 +5,9 @@ hold
 ; The table MCM uses to track how long a key is held
 [z_auto_looter]
 load_settings
-; iTheon's Autoloot
+ammo_parts_sections
+valid_modes
+; Hook into iTheon's Auto Looter
 [ui_sleep_dialog]
 sleep_zones
 ; The sleep_zones table
@@ -17,3 +19,6 @@ actor_looting
 check_claim
 loot_claims
 ; Claim table and functions to check them
+[hf_furniture_types]
+TYPE2FUNC
+; So we can properly override HF's init_stash func

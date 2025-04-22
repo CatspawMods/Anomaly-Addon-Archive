@@ -1,27 +1,116 @@
 -- =======================================================================
---[[      AUTO LOOTER MONKEYPATCH
-    Overrides the target-getting function from Auto Looter and allows the
-    looting function to be triggered in a way that bypasses the normal
-    checks for a valid target.
+--[[    AUTO LOOTER OVERRIDE AND CALLBACK FIX MONKEYPATCHES
+-- =======================================================================
+    Author: Catspaw
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- =======================================================================    
+    These patches are necessary in order for DotMarks to interact properly
+    with Auto Looter, but also contain a very important fix for the Auto
+    Looter addon itself.
 
-    This is necessary because Auto Looter can only get the target under
-    the crosshair, unless you enable Remote Looting.
+    I would have rather done this with a clean monkeypatch instead of
+    overriding two core functions, but the way they're designed just did
+    not allow it.
+-- =======================================================================
+    FIRST PURPOSE: 
+    Overrides the target-getting function from Auto Looter to bypass the
+    checks for a valid target. To do so, set override_id to any valid
+    object ID.
+
+    This feature is necessary because Auto Looter, by default, can only
+    recognize targets that are precisely under the crosshair.
+-- =======================================================================
+    SECOND PURPOSE:
+    Fixes a longstanding bug in Auto Looter where it does not send the 
+    actor_on_item_take_from_box callback when remote looting. This causes
+    stash markers to not clear on autoloot, among other various issues 
+    with anything that relies on that callback.
+
+    This feature adds that callback, and in the process adds a public 
+    variable that flags whether or not the last autoloot was a remote
+    looting.
+-- =======================================================================
+    I recommend that anyone who uses Auto Looter also use this fix, 
+    whether or not you use DotMarks. The first feature takes no action 
+    and affects nothing if override_id does not get set to anything, and
+    you still get the callback fix.
 -- =====================================================================]]
 
-perform_monkeypatch     = true
-override_id             = nil
-
-local update_target     = z_auto_looter and z_auto_looter.get_actor
+perform_monkeypatch = true
+override_id         = nil
+last_loot_remote    = false
 
 if z_auto_looter and perform_monkeypatch then
-    local _ = DEV_DEBUG and printf("zz_autoloot_dotmarks is monkeypatching z_auto_looter")
     -- Hook into iTheon's Autoloot
+    local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("zz_autoloot_dotmarks is monkeypatching z_auto_looter")
+    
     function z_auto_looter.get_actor()
+        last_loot_remote = false
         if override_id then
+            last_loot_remote = true
             local obj = get_object_by_id(override_id)
             override_id = nil
             return obj
         end
-        return update_target()
+        -- Standard looting
+        local last_mode = actor_menu.get_last_mode()
+        local object_being_looted = level.object_by_id(ui_inventory.GUI.npc_id)
+        if object_being_looted and (not object_being_looted:alive()) and z_auto_looter.valid_modes[last_mode] then
+            return object_being_looted
+        end
+
+        -- Remote looting
+        local target = level.get_target_obj()
+        if target and (IsStalker(target) and not target:alive() or IsInvbox(target)) then
+            if config.remote_looting_distance == 0 then
+                news_manager.send_tip(db.actor, game.translate_string("st_auto_looter_remote_looting_disabled"))
+            elseif target:position():distance_to(db.actor:position()) > config.remote_looting_distance then
+                news_manager.send_tip(db.actor, game.translate_string("st_auto_looter_remote_looting_too_far"))
+            else
+                last_loot_remote = true
+                return target
+            end
+        end
     end
+
+    function z_auto_looter.handle_loot(actor)
+        local collected_items = z_auto_looter.collect_items(actor)
+        local should_loot = false
+
+        for k, v in pairs(collected_items) do
+            local should_loot = false
+            if IsAmmo(v) then
+                should_loot = z_auto_looter.config.loot_ammo
+            elseif IsGrenade(v) then
+                should_loot = z_auto_looter.config.loot_grenades
+            elseif z_auto_looter.has_value(z_auto_looter.ammo_parts_sections, v:section()) then
+                should_loot = z_auto_looter.config.loot_ammo_parts
+            elseif IsOutfit(v) or IsHeadgear(v) or IsWeapon(v) then
+                -- Not looting these
+                should_loot = false
+            elseif magazine_binder and magazine_binder.is_magazine(v) then
+                should_loot = z_auto_looter.config.loot_magazines
+            else
+                local sec = v:section()
+                if string.find(sec, "prt_o_") then
+                    should_loot = z_auto_looter.cond_loot_armor_part(v)
+                elseif string.find(sec, "prt_w_") then
+                    should_loot = z_auto_looter.cond_loot_weapon_part(v)
+                elseif z_auto_looter.is_misc_item_defined_in_loot_config(v) then
+                    should_loot = z_auto_looter.cond_misc_loot(v)
+                else
+                    should_loot = true
+                end
+            end
+
+            if should_loot then
+                actor:transfer_item(v, db.actor)
+                if last_loot_remote then
+                    SendScriptCallback("actor_on_item_take_from_box", actor, get_object_by_id(v))
+                end
+            end
+        end
+    end
+
 end
+

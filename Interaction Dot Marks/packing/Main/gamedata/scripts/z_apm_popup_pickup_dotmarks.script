@@ -3,9 +3,7 @@
 -- =======================================================================
     Author: Catspaw
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
-
-    Do whatever you like with this patch.
-
+-- =======================================================================
     The Anomaly Popup Messages addon does not check whether it has already
     notified the player about a specific ID--it only tracks section names.
     This causes duplicate messages to appear.
@@ -14,13 +12,20 @@
 
     If the author of APM fixes this behavior in some future release of 
     theirs, this file can be safely hidden or deleted.
--- =====================================================================]]
+-- =======================================================================
+    Feel free to crib code from this or include a copy of it in your own 
+    addon, but in the interest of avoiding any possibility of conflicts:
 
+            PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+    Seriously. Just copy the code into yours if you want to mess with it.
+-- =====================================================================]]
 local apm_actor_on_item_take = popup_pickup and popup_pickup.actor_on_item_take
 timeout = 2000
 pickups = {}
 if popup_pickup then
     function popup_pickup.actor_on_item_take(item)
+        local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("z_apm_popup_pickup_dotmarks is monkeypatching APM to fix duplicate pop-up messages")
         local now = time_global()
         local id = item and item:id()
         if pickups[id] then
