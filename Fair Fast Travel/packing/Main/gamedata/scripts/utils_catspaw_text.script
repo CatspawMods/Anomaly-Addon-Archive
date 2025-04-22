@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.5"
-release_date    = 20250318
+script_version 	= "1.10.1"
+release_date    = 20250420
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -34,11 +34,13 @@ assert(utils_catspaw_common,
 -- 		LOGGING
 -- =======================================================================
 local dl, vl
-debuglogs   = false
-verbose     = false
+debuglogs       = false
+verbose         = false
+logprefix       = "[CatsyText] "
+vprefix         = ""
 
 function allow_local_logging(onoff)
-    -- By default, logging in this script inherits its settings from utils_catspaw_common
+    -- By default, logging in this script inherits its debuglogs/verbose settings from utils_catspaw_common
     -- This function allows anyone to switch on debug logging for this script's operations only
     if onoff then
         dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
@@ -61,8 +63,11 @@ end
 -- =======================================================================
 local safeid 			= utils_catspaw_common.safeid
 local valid_id 			= utils_catspaw_common.valid_id
+local get_game_object	= utils_catspaw_common.get_game_object
 local getstrtbl_support	= utils_catspaw_common.exe_getstrtbl_support
 local get_stash_hint 	= utils_catspaw_common.get_stash_hint
+local to_bool 			= utils_catspaw_common.to_bool
+local get_weight_class  = utils_catspaw_common.get_actor_weight_class
 -- =======================================================================
 local psk       		= utils_data.parse_string_keys
 local gts 				= game.translate_string
@@ -74,6 +79,7 @@ local DIK_name          = ui_mcm and ui_mcm.display_key or (function() return ""
 -- =======================================================================
 -- 		TEXT SUBSTITUTION
 -- =======================================================================
+tokens_generated 		= false
 local female_names		= {}
 local default_tokens 	= {}
 local game_tokens = {
@@ -141,7 +147,8 @@ function refresh_tokens(args)
 	local tokens 		= {}
 
 	if db.actor then
-		local actor_name 	= alife():actor():character_name()
+		vl("Refreshing actor tokens")
+		local actor_name 	= db.actor:character_name()
 		local afirst, alast	= get_firstname_lastname()
 		local actor_comm 	= gameplay_disguise.get_default_comm()
 		local disg_comm 	= db.actor:character_community()
@@ -158,20 +165,15 @@ function refresh_tokens(args)
 		-- a particular location at a point, e.g. "in Cordon, east of the Rookie Village"
 	end
 
-
 	if args then
-		local function add_tokens_from_args()
-			-- Refresh token tables with any existing token names also present in args
-			for k,v in pairs(args) do
-				if type(v) == "string" then
-					if actor_tokens[k] then actor_tokens[k] = v end
-					if game_tokens[k] then game_tokens[k] = v end
-					if obj_tokens[k] then obj_tokens[k] = v end
-				end
+		-- Refresh token tables with any existing token names also present in args
+		for k,v in pairs(args) do
+			if type(v) == "string" then
+				if actor_tokens[k] then actor_tokens[k] = v end
+				if game_tokens[k] then game_tokens[k] = v end
+				if obj_tokens[k] then obj_tokens[k] = v end
 			end
 		end
-
-		add_tokens_from_args()
 
 		if args.first_init or args.force_refresh then
 			dl("Refreshing standard text substitution tokens")
@@ -194,12 +196,67 @@ function refresh_tokens(args)
 				obj_tokens.firstname= first
 				obj_tokens.lastname = last
 				obj_tokens.location = dynamic_news_helper.GetPointDescription(npc_gobj)
+				for k,v in pairs(obj_tokens) do
+					game_tokens[k] 	= v
+				end
 			end
 		end
 	end
 end
 
+function get_default_tokens(actor_t, game_t, skip_refresh)
+	if not skip_refresh then
+		refresh_tokens()
+	end
+	if object_t then return object_tokens end
+	if actor_t then return actor_tokens end
+	if game_t then return game_tokens end
+	if not skip_refresh then
+		for k,v in pairs(actor_tokens) do default_tokens[k] = v end
+		for k,v in pairs(game_tokens) do default_tokens[k] = v end
+	end
+	return default_tokens
+end
+
+function csv_argb_to_tbl(csv)
+    local c
+    if csv and type(csv) == "string" then
+    	c = str_explode(csv, ",")
+    elseif csv and type(csv) == "table" then
+    	c = csv
+    end
+
+    return c and {
+        a = c[1] or 255,
+        r = c[2] or 255,
+        g = c[3] or 255,
+        b = c[4] or 255,
+        v = c[5] or nil -- threshold value for use in state lerping
+    } or nil
+end
+
+function clr_tbl(a, r, g, b, v)
+    return {
+        a = a,
+        r = r,
+        g = g,
+        b = b,
+        v = v
+    }
+end
+
+function clr_tbl_to_index(clr_tbl, tval)
+    return {
+        clr_tbl.a or 255,
+        clr_tbl.r or 255,
+        clr_tbl.g or 255,
+        clr_tbl.b or 255,
+        clr_tbl.v or tval or 0
+    }
+end
+
 local parse_colors 		= true
+local nocolor_tokens 	= {}
 local color_tokens 		= {
 	["clr_def"] = "%" .. "%c[default]",			-- UI element's default color
 	-- NOTE: %c[default] must be lowercase, or Anomaly will shit itself with more than two commas in the string
@@ -217,11 +274,46 @@ local color_tokens 		= {
     ["clr_tgr"] = "%" .. "%c[128,90,90,90]",    -- transparent neutral gray - used by me in menus for version tags
     ["clr_ui2"]	= "%" .. "%c[ui_2]",			-- system color: 255,232,208
     ["clr_ui8"]	= "%" .. "%c[ui_8]",			-- dialogue text: 216,186,140 - you know, that pale khaki
+    ["clr_uab"] = "%" .. "%c[255,0,87,183]",
 }
-local nocolor_tokens 	= {}
 
 function get_color_tokens()			return color_tokens or {} end
 function get_nocolor_tokens()		return nocolor_tokens or {} end
+
+function set_color_token(k, s)
+	-- set or add a color token in the format of the color_tokens table above
+	nocolor_tokens[k] = ""
+	color_tokens[k] = "%" .. s
+	if color_tokens[k]:find("%" .. "%") then return end
+	-- to catch double parsing of %% into %
+	color_tokens[k] = "%" .. color_tokens[k]
+end
+
+function get_color_code_for_argb(a, r, g, b)
+	return "%".."%"..string.format("c[%s,%s,%s,%s]", a or 255, r or 255, g or 255, b or 255)
+end
+
+state_tokens = {}
+state_colors = {
+	["clr_rg_good"] 	= {255,0,255,0},
+	["clr_rg_bad"] 		= {255,255,0,0},
+	-- Boolean states, defaulting to full red/green for good/bad
+	["clr_wpo_red"] 	= {255,196,18,18},
+	["clr_wpo_orn"] 	= {255,238,153,26},
+	["clr_wpo_yel"] 	= {255,255,255,118},
+	["clr_wpo_grn"] 	= {255,107,207,119},
+	["clr_missing"] 	= {255,70,60,60},
+	-- Weapon Parts Overhaul condition threshold colors
+	["clr_cnd_min"] 	= {255,196,18,18,0},
+	["clr_cnd_mid"] 	= {255,255,255,118,0.5},
+	["clr_cnd_max"] 	= {255,107,207,119,1},
+	-- Vanilla condition lerping colors
+	["clr_battery"] 	= {255,86,196,209},
+	-- Color of the battery charge bar
+	["clr_weight_ok"] 	= {255,255,255,255},
+	["clr_weight_over"] = {255,255,50,0},
+	["clr_weight_high"] = {255,200,150,0},
+}
 
 function update_nocolor_tokens()
 	-- manually resync nocolor_tokens table with color_tokens
@@ -230,13 +322,10 @@ function update_nocolor_tokens()
 	end
 end
 
-function set_color_token(k, s)
-	-- set or add a color token in the format of the color_tokens table above
-	color_tokens[k] = "%" .. s
-	nocolor_tokens[k] = ""
-end
-
 update_nocolor_tokens()
+for k,v in pairs(state_colors) do
+	state_tokens[k] = "%" .. get_color_code_for_argb(unpack(v))
+end
 
 function int_to_rgba(i)
 	-- Converts integer to RGB or RGBA values
@@ -300,6 +389,119 @@ function parse_color_tokens(s, t, c)
 	return psk(s, docolor and color_tokens or nocolor_tokens)
 end
 
+
+function lerp_color(val, mi, md, mx, as_index)
+    --printf("lerp_color: %s, %s, %s, %s", val, mi, md, mx)
+    -- like in utils_xml, except returning a table I can do something with instead of ARGB
+    local m1,m2
+    if (val >= mi[5]) and (val < md[5]) then
+        m1 = mi
+        m2 = md
+    elseif (val >= md[5]) and (val <= mx[5]) then
+        m1 = md
+        m2 = mx
+    end
+    if not (m1 and m2) then
+        return clr_tbl(255,255,255,255)
+    end
+    
+    local t = {}
+    for i=1,4 do
+        if m1[i] == m2[i] then
+            t[i] = m1[i]
+        else
+            t[i] = math.floor( m1[i] + ((m2[i] - m1[i]) * normalize(val, m1[5], m2[5])) )
+            --printf(" [%s] %s = %s [ %s , %s ] | diff: %s - normalize: %s", self.section, i, t[i], m1[i], m2[i], (m2[i] - m1[i]), 1 - normalize(val, m1[5], m2[5]))
+        end
+    end
+    return as_index and t or clr_tbl(t[1], t[2], t[3], t[4])
+end
+
+wpo_thresholds = {
+	-- These are public and can be customized if need be
+	grn = 85,
+	yel = 60,
+	orn = 20,
+	red = -1
+}
+
+function get_state_color(state, mode, args)
+	args 		= args or {}
+	--printf("state %s | mode %s | min %s | mid %s | max %s | crit %s", state, mode, args.min, args.mid, args.max, args.crit)
+	--[[ 	Takes a state value in the form of a number or boolean (bool or t/f string)
+			Returns a table with keys a, r, g, b
+
+		Optional parameters
+			mode:
+			-1 		: Boolean value, can be string true/false also, returns full green for true, otherwise full red
+			 0 (def): Item condition as vanilla color gradient lerped from 0 to 100
+			 1 		: Item parts condition from 0 to 100 based on WPO thresholds
+			 2 		: Battery power, returns the usual blue if ok, or red if below critical
+			 3 		: Actor encumbrance, returns grn/orn/yel based on carried weight
+	--]]
+	mode 		= mode or 0
+	local col 	= args.colors or state_colors
+	local wpo 	= wpo_thresholds or {}
+	local color = col.clr_missing or {}
+	local r1, r2
+
+	if (mode < 0) then
+		-- Mode -1: boolean
+		color 		= to_bool(state) and (
+			(args.colors and args.colors.clr_true or state_colors.clr_rg_good) or
+			(args.colors and args.colors.clr_false or state_colors.clr_rg_bad)
+		)
+	else
+		state 		= tonumber(state) or 0
+		if (mode > 2) then
+			-- Mode 3: Actor encumbrance
+			-- For this mode, state optionally passes additional +weight for the comparison
+			-- wc = weight class | 2 = over | 1 = will be over in +10kg | 0 = ok
+			-- r1 = actor carried weight
+			-- r2 = actor max weight
+		    local wc
+		    wc, r1, r2 = get_weight_class(state)
+		    color = wc and (
+		    		(wc > 1) and col.clr_weight_over or
+		    		(wc > 0) and col.clr_weight_high or
+		    		col.clr_weight_ok
+		    )
+		elseif (mode > 1) or args.crit then
+
+			-- Mode 2: Battery power
+			-- Optionally pass the device's critical threshold as args.min
+			local crit 	= ((tonumber(state) or 0) * 0.01) < (args.crit or 0.05)
+	        color 		= crit and col.clr_wpo_red or col.clr_battery
+	        r1			= crit and 1 or 0
+		elseif (mode > 0) then
+			-- WPO parts
+			-- Accepts state values -1 to 100
+        	if (state >= (wpo.grn or args.t_wpo_grn or 85)) then
+        		color 	= col.clr_wpo_grn
+        	elseif (state >= (wpo.yel or args.t_wpo_yel or 60)) then
+        		color 	= col.clr_wpo_yel
+        	elseif (state >= (wpo.orn or args.t_wpo_orn or 20)) then
+        		color 	= col.clr_wpo_orn
+        	elseif (state > (wpo.red or args.t_wpo_red or -1)) then
+        		color 	= col.clr_wpo_red
+        	end
+	    else
+	        -- Vanilla gradient lerp
+	        -- Accepts state values 0 to 100
+	        if state >= 0 then
+	            state 	= clamp(state / 99, 0, 1)
+	            color 	= lerp_color( state,
+	             	args.min or col.clr_cnd_min,
+	             	args.mid or col.clr_cnd_mid,
+	             	args.max or col.clr_cnd_max,
+	             	true
+	            )
+	        end
+		end
+	end
+    return csv_argb_to_tbl(color), r1, r2
+end
+
 -- =======================================================================
 -- 		KEYBIND TEXT
 -- =======================================================================
@@ -348,9 +550,47 @@ end
 -- 		OBJECT NAMES
 -- =======================================================================
 
-function inventory_name(obj, section)
+function obj_name_and_id(obj_or_string, id, use_section)
+	-- I very frequently log objects by noting their name and id like so: esc_trader24869 (24869)
+	-- This requires nil-checking and has let crash errors slip through before just from logging
+	-- So I can alias this function to something short and use it for safe logging
+	local obj, name
+	id 			= tonumber(id)
+	if obj_or_string and (type(obj_or_string) == "string") then
+		name 	= obj_or_string
+	else
+		obj 	= obj_or_string or (id and get_game_object(id))
+		id 		= id or (obj_or_string and obj_or_string:id())
+		name 	= obj and (use_section and obj:section() or obj:name())
+	end
+	if name and id then
+		return string.format("%s (%s)", name, id)
+	end
+	return name or id
+end
+
+function load_female_name_strings()
+	if not getstrtbl_support() then
+		dl("load_female_name_strings: function get_string_table is unsupported by GAMMA or vanilla, aborting")
+	return end
+	-- Compile list of female names starting with "name_woman_"
+	-- Mainly for Dux's character kit
+	dl("load_female_name_strings: parsing any recognized female names in the character list")
+    local t = get_string_table()
+    if not female_names then female_names = {} end
+    for k, v in pairs(t) do
+        if k:find("name_woman_") then
+        	local name = str_explode(v," ")
+            female_names[k] = name[1]
+            --This log line will be very noisy on every load, only enable for targeted troubleshooting
+            --vl("Found female name: %s = %s", k, v)
+        end
+    end
+end
+
+function inventory_name(obj, section, no_nil)
 	section = section or (obj and obj:section())
-	return section and ini_sys:r_string_ex(section, "inv_name") or nil
+	return section and ini_sys:r_string_ex(section, "inv_name") or (no_nil and "" or nil)
 end
 
 function find_best_localization(obj, name, section)
@@ -401,8 +641,9 @@ function find_best_localization(obj, name, section)
     return text
 end
 
-function safename(id)
+function bestname(id)
     if not valid_id(id) then return end
+	local nameid 	= obj_name_and_id
     local text      = "unknown"
     local se_obj    = alife_object(id)
     if not se_obj then return text end
@@ -412,10 +653,10 @@ function safename(id)
     if paw and paw.pins[id] then
         -- If there's a pin for this ID, use its text above all else
         text = paw.pins[id].name
-        vl("%s (%s) is a pin: %s",name,id,text)
+        vl("%s is a pin: %s", nameid(name, id), text)
     elseif paw and (cls == clsid.script_zone) then
         text = gts("st_paw_pin_default_name")
-        vl("%s (%s) is a script zone: %s",name,id,text)
+        vl("%s is a script zone: %s", nameid(name, id), text)
     elseif (cls == clsid.script_restr) then
         local _,_,hint = txr_routes.get_route_info(name)
         if hint then
@@ -423,10 +664,10 @@ function safename(id)
         else
             text = gts(name)
         end
-        vl("%s (%s) is a level transition: %s",name,id,text)
+        vl("%s is a level transition: %s", nameid(name, id), text)
     elseif (cls == clsid.smart_terrain) then
         text = gts("st_"..name.."_name"):gsub("%."," -")
-        vl("%s (%s) is a smart terrain: %s",name,id,text)
+        vl("%s is a smart terrain: %s", nameid(name, id), text)
     elseif (cls == clsid.online_offline_group_s) then
         local comm = se_obj.player_id
         local sq = paw and gts("st_paw_squad") or "squad"
@@ -435,30 +676,51 @@ function safename(id)
         if debuglogs then
             text = text..": "..name
         end
-        vl("%s (%s) is NPC squad with faction %s: %s",name,id,comm,text)
+        vl("%s is NPC squad with faction %s: %s", nameid(name, id), comm, text)
     elseif IsInvbox(nil,cls) then
-        local obj = get_object_by_id(id)
-        local section = obj and obj:section()
-        text = get_stash_hint(id)
-        if name and (not text) or (text == "") then
-        	text = find_best_localization(obj, name, section)
+    	vl("%s is an inventory box, checking for localization", nameid(name, id))
+        text 		= get_stash_hint(id)
+        --printf("stash hint is %s", text)
+        local obj 	= get_game_object(id)
+        local sec 	= obj and obj:section()
+        local st_id = tostring(id)
+    	local bad 	= {"", " ", "none", sec, name}
+        --local pre 	= ""
+        if (not text) or bad[text] then
+        	--printf("no text %s | bad text %s", not text, text and not not bad[text])
+        	text 	= find_best_localization(obj, name, sec)
         end
-        if name and (not text) or (text == name) then
-            if name:find("smart_terrain") and name:find("_box") then
-                local smartname = name:sub(1,-5)
-                text = gts("st_"..smartname.."_name"):gsub("%."," -") .. " " .. (paw and gts("st_paw_stash") or "stash")
-            end
+
+        if (not text) or (text == name) then
+        	text = nil
+        	if name then 
+	            if name:find("smart_terrain") and name:find("_box") then
+	                local smartname = name:sub(1,-5)
+	                local smartloc 	= "st_"..smartname.."_name"
+	                smartname 		= gts(smartloc)
+	                if smartloc ~= smartname then
+	                	local sname = str_explode(smartname, "%. ")
+	                	text 		= (sname[2] or sname[1])
+	                end
+	            end
+	        end
+        	
+	        local unknown 	= gts("st_paw_unknown")
+	        if (unknown == "st_paw_unknown") then unknown = "Unknown" end
+	        local stash 	= gts("st_paw_stash")
+	        if (stash == "st_paw_stash") then stash = "stash" end
+			--text = string.format("%s%s %s", text, unknown, stash)
+			text = string.format("%s%s %s", text and (text..": ") or "", unknown, stash)
+
+            dl("No localization found for stash %s, defaulting to \"%s\"", name, text)
+            --text = paw and (gts("st_paw_unknown").." "..gts("st_paw_stash")) or "Unknown stash"
         end
-        if (not text) or (text == locst) then
-            dl("No localization found for stash %s",locst)
-            text = paw and (gts("st_paw_unknown").." "..gts("st_paw_stash")) or "Unknown stash"
-        end
-        vl("%s (%s) is an inventory_box stash: %s",name,id,text)
+        vl("%s is an inventory_box stash: %s", nameid(name,id),text)
     elseif IsStalker(nil,cls) or (cls == clsid.script_trader) then
         text = se_obj:character_name()
-        vl("%s (%s) is a stalker: %s",name,id,text)
+        vl("%s is a stalker: %s", nameid(name, id), text)
     else
-        local obj = get_object_by_id(id)
+        local obj = get_game_object(id)
         local section = obj and obj:section()
         if not section then
             return text
@@ -490,19 +752,20 @@ function safename(id)
                 text = special_cases[what] or what
             end
             text = text and gts("encyclopedia_mutants_"..text)
-            vl("%s (%s) is a creature: %s",name,id,text)
+            vl("%s is a creature: %s", nameid(name, id), text)
         else
             text = find_best_localization(obj, name, section)
             if not text then
                 text = name
-                dl("No localization or other name found for object %s (%s)", name, id)
+                dl("No localization or other name found for object %s", nameid(name, id))
             end
         end
     end
 
-    dl("safename returns %s for %s",text, name)
+    dl("safename returns %s for %s", text, name)
     return text
 end
+safename = bestname -- alias for backwards compatibility
 
 function load_female_name_strings()
 	if not getstrtbl_support() then
@@ -528,3 +791,4 @@ function on_game_start()
 	-- RegisterScriptCallback("actor_on_first_update", load_female_name_strings)
 end
 
+printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)

@@ -4,8 +4,8 @@
     Author: Catspaw
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
-script_version          = "1.14.2"
-release_date            = 20250311
+script_version          = "1.14.3"
+release_date            = 20250422
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:

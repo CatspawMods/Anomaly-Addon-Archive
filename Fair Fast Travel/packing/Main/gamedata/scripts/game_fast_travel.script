@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.17.1"
-release_date 	= 20250318
+script_version 	= "2.17.2"
+release_date 	= 20250422
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151

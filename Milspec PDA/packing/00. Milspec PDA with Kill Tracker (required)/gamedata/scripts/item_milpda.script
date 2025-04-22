@@ -16,8 +16,8 @@
 		* demonized for help with the NPC PDA weapon hide fix
 -- ==================================================================--]]
 script_name 			= "item_milpda"
-script_version        	= "1.14.2"
-release_date            = 20250311
+script_version        	= "1.14.3"
+release_date            = 20250422
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 		1. Pick up any Milspec PDAs and save your game

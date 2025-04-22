@@ -5,8 +5,8 @@
     https://www.youtube.com/@CatspawAdventures
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/new-extensible-rf-sources/
 -- ===================================================================--]]
-script_version 				= "1.7.2"
-release_date            	= 20250314
+script_version 				= "1.7.3"
+release_date            	= 20250422
 -- =======================================================================
 --[[	Includes optional support for:
 		TB's RF Tasks (integrated)
