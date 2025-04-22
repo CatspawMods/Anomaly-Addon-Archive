@@ -3,6 +3,8 @@
     
     PRE-RELEASE TEST BUILD - THIS IS A WORK IN PROGRESS
 
+    FEATURE COMPLETE
+
 -- ===================================================================--]]
 script_name     = "ui_hud_dotmarks"
 --[[======================================================================
@@ -26,8 +28,8 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
     TODO:
     - Investigate markers and missing dialogue option for wounded enemies
-    - MCM live preview for prompt elements - post-release, lots of work
-    - After that, stop adding features!
+    - Eliminate prompt wobble on focus due to anim changing anchor pos
+    - Smoother fadein/out for the extended visibility range of explosives
 
     BEFORE PUBLIC RELEASE:
     - Optimize/clean up WIP code that didn't get used
@@ -35,6 +37,12 @@ script_name     = "ui_hud_dotmarks"
     - Clean up any logging or checks that aren't needed for release
         Especially in main update loop!
     - Re-validate EVERY FEATURE individually - all must pass in same build
+
+    POST-RELEASE:
+    - Encyclopedia entry/entries
+    - NPE module(s)
+    - MCM live preview for prmopt elements - lots of work
+
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -116,7 +124,6 @@ local gts               = game.translate_string
 valid_mcm_version       = dotmarks_mcm.valid_mcm_version
 targeted_id, locked_id  = nil
 scanning                = false
---cfg                     = {}
 pickup_index            = {}
 nearby_pickups          = {}
 active_anims            = {}
@@ -271,11 +278,11 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                         end
                                     end
                                 end
-                            elseif mark.is_container and (cfg.show_stash_weight and not mark.is_display) then
+                            elseif mark.is_container and not mark.is_display then
                                 -- Update contents of inventory containers
                                 mark.body_claimed = is_body_claimed(id)
                                 local is_managed_stash = not not (mark.body_claimed or treasure_manager.caches[mark.id])
-                                local text = nil
+                                local text = ""
                                 local num_items = 0
                                 if (not cfg.invboxes[id]) then
                                     cfg.invboxes[id] = {}
@@ -293,22 +300,24 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
                                     end
                                 end
 
-                                if cfg.invboxes[id].items then
-                                    if mark.has_items then
-                                        mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id].items)
-                                        local wc = mark.weight and get_actor_weight_class(mark.weight)
-                                        local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
-                                        mark.use_pri.parse_text_colors = true
-                                        text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
+                                if cfg.show_stash_weight then
+                                    if cfg.invboxes[id].items then
+                                        if mark.has_items then
+                                            mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id].items)
+                                            local wc = mark.weight and get_actor_weight_class(mark.weight)
+                                            local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
+                                            mark.use_pri.parse_text_colors = true
+                                            text = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
+                                        else
+                                            text = " " .. gts("st_alti_empty")
+                                        end
+                                    elseif mark.body_claimed or (is_managed_stash and not cfg.invboxes[id].items) then
+                                        text = " (" .. gts("st_unknown_contents") .. ")"
                                     else
                                         text = " " .. gts("st_alti_empty")
                                     end
-                                elseif mark.body_claimed or (is_managed_stash and not cfg.invboxes[id].items) then
-                                    text = " (" .. gts("st_unknown_contents") .. ")"
-                                else
-                                    text = " " .. gts("st_alti_empty")
+                                    mark.use_pri:SetPrompt(nil, nil, text)
                                 end
-                                mark.use_pri:SetPrompt(nil, nil, text)
                             end
                             -- Passed NPC and container checks
                             if in_range then

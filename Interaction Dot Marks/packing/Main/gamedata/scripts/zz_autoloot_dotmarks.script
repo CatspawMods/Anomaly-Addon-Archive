@@ -62,9 +62,9 @@ if z_auto_looter and perform_monkeypatch then
         -- Remote looting
         local target = level.get_target_obj()
         if target and (IsStalker(target) and not target:alive() or IsInvbox(target)) then
-            if config.remote_looting_distance == 0 then
+            if z_auto_looter.config.remote_looting_distance == 0 then
                 news_manager.send_tip(db.actor, game.translate_string("st_auto_looter_remote_looting_disabled"))
-            elseif target:position():distance_to(db.actor:position()) > config.remote_looting_distance then
+            elseif target:position():distance_to(db.actor:position()) > z_auto_looter.config.remote_looting_distance then
                 news_manager.send_tip(db.actor, game.translate_string("st_auto_looter_remote_looting_too_far"))
             else
                 last_loot_remote = true
@@ -106,7 +106,8 @@ if z_auto_looter and perform_monkeypatch then
             if should_loot then
                 actor:transfer_item(v, db.actor)
                 if last_loot_remote then
-                    SendScriptCallback("actor_on_item_take_from_box", actor, get_object_by_id(v))
+                    printf("v is %s", v and v:name())
+                    SendScriptCallback("actor_on_item_take_from_box", actor, v)
                 end
             end
         end
