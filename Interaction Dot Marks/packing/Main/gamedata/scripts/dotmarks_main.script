@@ -32,8 +32,8 @@ release_date    = 20250423.1
         These are already included with DotMarks--but you can always get
         the latest version of them from the Source link above, in a
         folder under Modding Tools. Try that if you get the below error
-        message about outdated scripts, or if you get a crash caused by a
-        missing (nil value) function.
+        message about outdated scripts, or if you get a crash related to
+        any script that begins with "utils_catspaw_" in the name.
 -- =====================================================================]]
 assert(utils_catspaw_common and utils_catspaw_common.import_metatable, "\n\n"..
     "! ui_hud_dotmarks requires script utils_catspaw_common, which is outdated or missing!\n\n"
@@ -48,7 +48,7 @@ assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
 )
 utils_catspaw_common.import_metatable(this, utils_catspaw_common)
 utils_catspaw_common.import_metatable(this, utils_catspaw_text)
--- If a public key does not exist in dotmarks_main, these will be searched
+-- If a public key does not exist in dotmarks_main, search these scripts
 -- =======================================================================
 local dl = function(logtext, ...) dlog(nil, logtext, ...) end
 local vl = function(logtext, ...) vlog(nil, logtext, ...) end

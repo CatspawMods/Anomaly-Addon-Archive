@@ -109,7 +109,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
 	if (dump_en ~= nil) then debug_dump = dump_en end
 end
 
-set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 
 -- First two values will be overridden by MCM once the game loads
 -- debug_dump is EXTREMELY noisy and should only ever be manually enabled for a specific reason
@@ -3756,6 +3756,12 @@ function parse_color_data(color_key, csv_string)
 end
 
 function parse_file_data()
+	local ini_cfg = ini_file_ex(dotmarks_config_file)
+	for k,_ in pairs(cfg.reset_table) do
+		local ver = tonumber(k)
+		local res = "reset_" .. tostring(k)
+		cfg.version_resets[ver] = ini_cfg:collect_section(res)
+	end
 	if cfg.colors then
 		for k,v in pairs(cfg.colors) do
 			if k:find("clr_") then
@@ -3770,7 +3776,6 @@ function parse_file_data()
 		[1] = "clr_weight_high",
 		[2] = "clr_weight_over"
 	}
-
 	cfg.show_part_condition     = (cfg.show_parts_weapons or cfg.show_parts_armor)
 	cfg.color_icon_itemcard     = clr_tbl(cfg.color_icon_itemcard)
 	cfg.unsquish_ratio          = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
@@ -3902,37 +3907,35 @@ function on_option_change()
 	verbose     = get_mcm("dotmarks/dmarkadv/verbose", verbose)
 	local log 	= (debuglogs or debug_dump or verbose or DEV_DEBUG)
 	local _ 	= log and printf("Debug logging enabled: %s | verbose %s | debug_dump %s | DEV_DEBUG %s", debuglogs, verbose, debug_dump, DEV_DEBUG)
-	local last_version = ui_mcm.get("dotmarks/dmarkmain/last_version")
-	local last_release = ui_mcm.get("dotmarks/dmarkmain/last_release")
-	if not last_release then
-		_=log and printf("No previous DotMarks version information found in MCM, setting to current version")
-	else
-		local vtext = "Found MCM config from DotMarks version %s, rel %s"
-		if tonumber(last_release) < release_date then
-			vtext = vtext .. ", updating to "..release_date.." release "..script_version
+	local reset	= {}
+
+	if not cfg.first_update then
+		cfg.first_update = true
+		local last_version = ui_mcm.get("dotmarks/dmarkmain/last_version")
+		local last_release = ui_mcm.get("dotmarks/dmarkmain/last_release")
+		if not last_release then
+			_=log and printf("No previous DotMarks version information found in MCM, setting to current version")
+		else
+			local vtext = "Found MCM config from DotMarks version %s, rel %s"
+			if tonumber(last_release) < release_date then
+				vtext = vtext .. ", updating to v"..script_version.." release "..release_date
+			end
+			_=log and printf(vtext, last_version, last_release)
 		end
-		_=log and printf(vtext, last_version, last_release)
-	end
-	ui_mcm.set("dotmarks/dmarkmain/last_version", script_version)
-	ui_mcm.set("dotmarks/dmarkmain/last_release", release_date)
-	local reset_table = {
-		[20250423]	= {
-			pri_use_x_offset 		= true,
-			pri_use_y_offset 		= true,
-			sec_use_x_offset 		= true,
-			sec_use_y_offset 		= true,
-			b	= true
-		}
-	}
-	local resets = {}
-	for rel, opts in pairs(reset_table) do
-		if (not last_release) or (last_release < rel) then
-			dump("Existing release %s is older than %s, adding opts to reset table", last_release, rel)
-			for k,v in pairs(opts) do
-				dump("Will reset opt %s", k)
-				resets[k] = v
+		
+		if cfg.version_resets then
+			for rel, opts in pairs(cfg.version_resets) do
+				if (not last_release) or (last_release < rel) then
+					dump("Existing release %s is older than %s, adding opts to reset table", last_release, rel)
+					for k,_ in pairs(opts) do
+						dump("Will reset opt %s", k)
+						reset[k] = true
+					end
+				end
 			end
 		end
+		ui_mcm.set("dotmarks/dmarkmain/last_version", script_version)
+		ui_mcm.set("dotmarks/dmarkmain/last_release", release_date)
 	end
 
 	vl("Loading config table")
@@ -3944,7 +3947,7 @@ function on_option_change()
 				mcm_path = mcm_path .. k
 			end
 			if mcm_path then
-				if resets[k] then
+				if reset[k] then
 					dl("Defaulting MCM value %s = %s (was %s)", k, v, get_mcm(mcm_path, cfg[k]))
 					ui_mcm.set(mcm_path, v)
 				else
