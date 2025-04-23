@@ -14,11 +14,15 @@
     I would have rather done this with a clean monkeypatch instead of
     overriding its core function, but the way the script is designed did
     not allow it.
+
+    If at some point that changes so that this patch is no longer needed,
+    the author can disable it by setting the following to true:
+
+    zzz_wounded_heal_anim.ignore_dotmarks_fix
+    
 -- =====================================================================]]
 
-perform_monkeypatch = true
-
-if zzz_wounded_heal_anim and perform_monkeypatch then
+if zzz_wounded_heal_anim and not zzz_wounded_heal_anim.ignore_dotmarks_fix then
 	local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("zzzz_wounded_heal_anim_dotmarks is monkeypatching zzz_wounded_heal_anim to allow integration")
 	function zzz_wounded_heal_anim.use_injector(npc)
 		level.disable_input()

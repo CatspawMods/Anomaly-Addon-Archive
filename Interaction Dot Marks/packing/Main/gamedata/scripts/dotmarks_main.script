@@ -1,12 +1,9 @@
 -- =======================================================================
 --[[    Interaction Dot Marks ("DotMarks")
-
-    PRE-RELEASE TEST BUILD - THIS IS A WORK IN PROGRESS
-
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.12-b2"
-release_date    = 20250422
+script_version  = "0.12-b3" -- Still a pre-release test build!
+release_date    = 20250423
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -51,6 +48,7 @@ assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
 )
 utils_catspaw_common.import_metatable(this, utils_catspaw_common)
 utils_catspaw_common.import_metatable(this, utils_catspaw_text)
+-- If a public key does not exist in dotmarks_main, these will be searched
 -- =======================================================================
 local dl = function(logtext, ...) dlog(nil, logtext, ...) end
 local vl = function(logtext, ...) vlog(nil, logtext, ...) end
@@ -94,60 +92,74 @@ local base_config = {
         Stalkers = (
             function(obj)
                 return obj and (
-                    (IsStalker(nil, obj:clsid()) and obj:alive()) or
-                    (obj:clsid() == clsid.script_trader) or 
-                    ((obj:name() == "esc_m_trader") or
-                    (obj:section() == "m_lesnik"))
+                    (IsStalker(nil, obj:clsid()) and obj:alive())
+                    -- Living stalker
+                    or is_special_case_npc(obj)
+                    -- Certain special-case characters
                 )
             end
         ),
         Bodies = (
             function(obj) return obj and (is_living_thing(obj) and not obj:alive()) end
+            -- Dead NPCs, whether stalker or monster
         ),
         Stashes = (
             function(obj) return obj and IsInvbox(nil, obj:clsid()) end
+            -- Containers that the actor can interact with to stash or remove items
         ),
         Ammo = (
             function(obj) 
                 local cls = obj and obj:clsid()
                 if not cls then return end
                 return IsAmmo(nil, cls) or (cfg.grenade_ammo_clsids and cfg.grenade_ammo_clsids[cls])
+                -- Special test needed to catch grenade launcher ammo types, table in config file
             end
         ),
         Weapons = (
-            function(obj) return obj and (IsWeapon(nil, obj:clsid()) or (obj:clsid() == clsid.wpn_binocular_s)) end -- also catches binocs
+            function(obj) return obj and (IsWeapon(nil, obj:clsid()) or (obj:clsid() == clsid.wpn_binocular_s)) end
+            -- All equippable weapons, also catches binocs
         ),
         Attachments = (
             function(obj) return obj and (get_type_for_kind(get_obj_kind(obj)) == "Attachments") end
+            -- Things that can be attached to a weapon or armor, some odd things get caught by this
         ),
         Grenades = (
             function(obj) return obj and IsGrenade(nil, obj:clsid()) end
+            -- Actual throwables - including the object as it's sailing through the air
         ),
         Explosive = (
             function(obj) return obj and IsExplosive(nil, obj:clsid()) end
+            -- Explosive objects, mostly physics but also some pickups
         ),
         Outfits = (
             function(obj) return obj and IsOutfit(nil, obj:clsid()) end
+            -- Equippable bodywear
         ),
         Headgear = (
             function(obj) return obj and IsHeadgear(nil, obj:clsid()) end
+            -- Equippable headwear
         ),
         Artefacts = (
             function(obj) return obj and IsArtefact(nil, obj:clsid()) end
+            -- All artefacts, whether or not they are in a container
         ),
         Consumables = (
             function(obj) 
                 if obj and cfg.is_item.Attachments(obj) then return end
+                -- Various food items get classed as attachments--this catches them
 
                 local cls = obj and obj:clsid()
                 if (cls and (cls == clsid.obj_food)) then
+                    -- if it's food clsid we're good and can stop there
                     return true
                 end
                 local section = obj and obj:section()
                 return 
                     (section and 
                         (IsItem("eatable", section)) or
+                        -- food and drink not caught by clsid
                         (ini_sys:r_string_ex(section, "kind") == "i_medical")
+                        -- drugs and other boosters
                     )
             end
         ),
@@ -155,36 +167,54 @@ local base_config = {
             function(obj)
                 return obj and (
                     (obj:name():find("glowstick") or IsItem("tool", obj:section()))
+                    -- Glowsticks exist as both inventory and world objects, require special handling
                     and not cfg.is_item.Quest(obj)
                 )
             end
         ),
         Devices = (
             function(obj) return obj and IsItem("device", obj:section()) end
+            -- Anything that would normally go in the device slot, most with batteries
         ),
         Quest = (
             function(obj, sec, cls)
                 if not obj then return end
                 if IsItem("quest", sec or obj:section()) then return true end
+                -- Stop there, that's good enough to match
                 local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
                 return (scheme == "ph_button") or (scheme == "ph_code")
+                -- Catches physics objects meant for interaction, like the Miracle Machine buttons
             end
         ),
         Campfires = (
             function(obj) return obj and (obj:clsid() == clsid.zone_campfire) end
+            -- All campfires, should catch deployable as well
         ),
         Doors = (
             function(obj) 
                 local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
                 return (scheme == "ph_door")
+                -- Only certain way to recognize an interactable door: by its scheme
             end
         ),
         Boxes = (
             function(obj)
                 local cls = obj and obj:clsid()
                 if not (cls and (cls == clsid.obj_phys_destroyable)) then return end
+                -- We're only concerned with breakable objects
                 local visual = obj:get_visual_name()
                 return visual and cfg.breakable_box_visuals[visual]
+                -- Table of matching visuals in config file
+            end
+        ),
+        Workshops = (
+            function(obj)
+                return obj and (obj:clsid() == clsid.obj_physic) and (
+                    string.match(obj:name(), "awr_tiski") or
+                    -- Vanilla static workshop
+                    string.match(obj:name(), "placeable_workshop")
+                    -- HF placeable workshop
+                )
             end
         ),
         Misc = (
@@ -195,17 +225,9 @@ local base_config = {
                     (cls == clsid.equ_backpack) or
                     (cls == clsid.obj_bolt)
                 ) and not (cfg.is_item and cfg.is_item.Quest(obj))
+                -- Should catch anything else that isn't a quest item
             end
-        ),
-        Workshops = (
-            function(obj)
-                return obj and (obj:clsid() == clsid.obj_physic) and (
-                    string.match(obj:name(), "awr_tiski") or
-                    string.match(obj:name(), "placeable_workshop")
-                )
-            end
-        ),
-
+        )
 
     },
 -- =======================================================================
@@ -225,15 +247,15 @@ local base_config = {
                 local cls           = obj:clsid()
                 local sec           = obj:section()
                 local comm          = get_object_community(obj)
-                local acomm         = character_community(db.actor):sub(7)
-                local is_enemy      = comm and game_relations.is_factions_enemies(acomm, comm)
-                if (comm == "monster") then
-                    -- Sid, but we can assume anyone else who's passed an IsStalker check, but 
-                    -- shows up with a community of "monster", must be the same bullshit
-                    is_enemy = false
+                if (sec == "m_trader") or (comm == "monster") then
+                    -- Sid, but we can assume that anyone else who's passed an IsStalker check, 
+                    -- but shows up with a community of "monster", must be the same bullshit
+                    comm = "stalker"
                 end
+                local is_enemy      = comm and game_relations.is_factions_enemies(cfg.actor_comm, comm)
                 set_target_data(id, cfg.metadata_types.is_stalker, true)
                 local args          = {
+                    comm            = comm,
                     logged_type     = "stalker (alive)",
                     -- logged_type is purely informational for logging
                     is_enemy        = is_enemy,
@@ -247,23 +269,21 @@ local base_config = {
                     pos_adjust      = vector():set(0, 0.1, 0),
                     -- Adjust final marker world pos additively by this value
                     texture         = is_enemy and "" or cfg.marker_dotmark,
-                    -- The get_cfg_for_type call for the "tex" type returns the contents of
-                    -- the cfg.tex table for the specified object class.
                     hint_filters    = {["character_use"] = "character_use"},
-                    -- Hint filters specify strings that this marker's primary interaction prompt
-                    -- should watch for and erase from the QuickHelp static, and optionally 
-                    -- specify a replacement localization string to use.
+                    -- Hint filters specify localization strings that this marker's primary 
+                    -- interaction prompt should watch for and erase from the QuickHelp static, 
+                    -- and optionally specify a replacement localization string to use.
                 }
                 if cfg.enable_icon_services and not is_enemy then
                     if cfg.vendors[sec] then
                         local _ = debug_dump and vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
                         args.service_type   = cfg.vendors[sec]
                         -- Service NPCs (e.g. traders, mechanics) use an active_swap to show
-                        -- a special icon instead of the dot marker when they are targeted
+                        -- a special icon instead of the ringed dot when they are targeted
                         -- for interaction.
                     end
                     if not args.service_type then
-                        --vl("No vendor found for %s, searching for service type patterns", sec)
+                        -- A bunch of manual checks to catch all NPCs who provide a service
                         if sec:find("mechanic") or sec:find("tech") then
                             args.service_type = "mechanic"
                         elseif sec:find("medic") or sec:find("medik") then
@@ -273,9 +293,6 @@ local base_config = {
                         else
                             local tprofile  = trade_manager.get_trade_profile(id, "cfg_ltx")
                             local tconfig   = tprofile and trade_manager.get_trade_cfg(tprofile)
-                            --local supply = nil
-
-                            --if tconfig then
                             local str       = tconfig and tconfig:r_string_ex("trader", "buy_supplies")
                             local condlist  = str and xr_logic.parse_condlist(obj, "trader", "buy_supplies", str)
                             local supply    = condlist and xr_logic.pick_section_from_condlist(db.actor, npc, condlist)
@@ -289,7 +306,7 @@ local base_config = {
                     local service_icon  = args.service_type and cfg.service_icons[args.service_type] or nil
                     vl("Found NPC service icon %s, enabling active swap", service_icon)
                     -- The active_swap specifies a list of args that are swapped in
-                    -- whenever the marker becomes the current active target.
+                    -- whenever the marker becomes the current focused target.
                     -- The original values are restored when it is no longer targeted.
                     -- All of these are loaded from tables in dotmarks_defaults.
                     args.active_swap = dup_table(cfg.swap_service)
@@ -299,6 +316,8 @@ local base_config = {
                     args.active_swap.texture = service_icon
                 elseif cfg.enable_icon_talk then
                     local texture = get_cfg_for_type("tex", "Stalkers")
+                    -- The get_cfg_for_type call for the "tex" type returns the contents of
+                    -- the cfg.tex table for the specified object class.
                     vl("Stalker talk icon %s enabled for active swap", texture)
                     args.active_swap = cfg.swap_talk
                 end
@@ -421,7 +440,7 @@ local base_config = {
         Weapons = (
             function(obj)
                 if weapon_showcase and not is_empty(weapon_showcase.weapon_displays) then
-                    -- Ignore weapons in Hideout Furniture display cases
+                    -- Ignore weapons in Hideout Furniture display cases, they're fake
                     local id = obj and obj:id()
                     for case_id, case_guns in pairs(weapon_showcase.weapon_displays) do
                         for item_id, world_id in pairs(case_guns) do
@@ -483,9 +502,6 @@ local base_config = {
         ),
     -- =======================================================================    
         Explosive = (
-            -- This seems to be explosive barrels and the like
-            -- Need to track down others in this class if it's going to stay
-            -- Some explosive pickups get miscategorized as this, and need section lookups
             function(obj)
                 local visual        = obj and obj:get_visual_name()
                 return obj and {
@@ -677,10 +693,6 @@ local base_config = {
                         ["pas_b400_tip_switcher"] = "pas_b400_tip_switcher",
                         ["tips_rad_switcher_press"] = "tips_rad_switcher_press",
                         ["tips_labx16switcher_press"] = "tips_labx16switcher_press",
-                        --["bridge_up_red_forest_tips"] = "bridge_up_red_forest_tips",
-                        --["bridge_down_red_forest_tips"] = "bridge_down_red_forest_tips",
-                        --["bridge_stop_red_forest_tips"] = "bridge_stop_red_forest_tips",
-                        --["tips_warlab_switcher_press"] = "tips_warlab_switcher_press",
                     },
                 }
             end
@@ -710,7 +722,6 @@ local base_config = {
                 if not obj then return end
                 local visual    = obj:get_visual_name()
                 local id        = obj:id()
-                --local ph_door   = id and db.storage[id]["ph_door"]
                 local use_icon  = not not cfg.enable_icon_door
 
                 local ang = obj:angle()
@@ -743,7 +754,6 @@ local base_config = {
                     no_sec              = true,
                     bone                = bone,
                     pos_adjust          = vector():set(0, vadjust, 0),
-                    --scheme              = ph_door,
                     scheme              = "ph_door",
                     -- The scheme is used for getting direct access to the door handlers and data
                     visual              = visual,
@@ -773,28 +783,6 @@ local base_config = {
                     line_adj_y      = 8,
                     width           = 10,
                     height          = 10,
-                }
-            end
-        ),
-    -- =======================================================================    
-        Misc = (
-            function(obj)
-                if not obj then return end
-                local name = obj:name()
-                local section = obj:section()
-                local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
-                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
-                return {
-                    is_pickup       = true,
-                    bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
-                    no_sec          = cfg.useless_shit[section] and true or nil,
-                    is_readable     = kind and (kind == "i_letter") or nil,
-                    -- Book or letter that can be picked up and read as a secondary action
-                    is_backpack     = (obj:clsid() == clsid.equ_backpack),
-                    logged_type     = "miscellaneous loot",
-                    texture         = get_cfg_for_type("tex", "Misc") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
         ),
@@ -857,6 +845,28 @@ local base_config = {
                 }
             end
         ),        
+    -- =======================================================================    
+        Misc = (
+            function(obj)
+                if not obj then return end
+                local name = obj:name()
+                local section = obj:section()
+                local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
+                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                return {
+                    is_pickup       = true,
+                    bone            = get_best_pos_bone(obj) or nil,
+                    pos_adjust      = vector():set(0, 0.05, 0),
+                    no_sec          = cfg.useless_shit[section] and true or nil,
+                    is_readable     = kind and (kind == "i_letter") or nil,
+                    -- Book or letter that can be picked up and read as a secondary action
+                    is_backpack     = (obj:clsid() == clsid.equ_backpack),
+                    logged_type     = "miscellaneous loot",
+                    texture         = get_cfg_for_type("tex", "Misc") or cfg.marker_dotmark,
+                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                }
+            end
+        )
     },
 -- =======================================================================    
 --  [cfg.state_conds]: a set of extra checks for tutorial-based prompts 
@@ -1013,6 +1023,15 @@ local base_config = {
     }
 }
 -- =======================================================================    
+
+function is_special_case_npc(obj)
+    return obj and (
+        (obj:clsid() == clsid.script_trader) or 
+        ((obj:name() == "esc_m_trader") or
+        (obj:section() == "m_lesnik"))
+    )
+end
+
 
 function get_quickhelp_text()
     return ui_hud_dotmarks.get_quickhelp_text()
@@ -1195,6 +1214,7 @@ end
 --      FONT SETUP
 -- =======================================================================
 fonts = {
+    -- May need to at some point separate height and width scales
     [0] = { size = 10, card_x = 0, font = GetFontSmall()}, -- need accurate size
     [1] = { size = 14, card_x = 0, font = GetFontMedium()}, -- need accurate size
     [2] = { size = 16, card_x = 0, font = GetFontLetterica16Russian()},

@@ -38,6 +38,7 @@ notable_npcs
 pending_actions
 tutorial_hints
 racked_items
+reset_table
 scan
 section_lookup
 service_icons
@@ -169,7 +170,7 @@ prompt_busy_during_anim 	= true
 ; Whether visible prompts are disabled during FDDA animations
 hide_interaction_dots 		= false
 ; Disable showing dots (or other marker icons) at all
-hide_connecting_line 		= false 
+hide_connecting_line 		= true
 ; Disable the animated white line that appears
 hide_pri_interact_ui 		= false
 ; Disable the replacement primary interact UI
@@ -182,10 +183,10 @@ hide_van_interact_ui		= true
 ; Disable the vanilla interaction prompts
 hide_drop_shadow 			= false
 ; Disable the drop shadow beneath prompts
-pri_use_x_offset 			= -10
-pri_use_y_offset 			= 28
-sec_use_x_offset 			= -10
-sec_use_y_offset 			= 48
+pri_use_x_offset 			= -15
+pri_use_y_offset 			= 25
+sec_use_x_offset 			= -15
+sec_use_y_offset 			= 45
 ; Screen positions for the primary and secondary interact prompts
 ; By default these are measured from the attached interaction dot
 fixed_screen_pos 			= false
@@ -209,10 +210,11 @@ dot_marker_size 			= 1
 ; Scale multiplier for the size of the dot markers
 bodies_use_paw_patches 		= false
 ; Integrates with my PAW addon to use its hi-res faction patch icons
-prompt_fade_in_time 		= 150
+prompt_fade_in_time 		= 250
 ; Time in ms for the fade-in effect on prompts
 prompt_fade_out_time 		= 150
 ; Time in ms for the fade-out effect
+; Doesn't seem to be working - investigate as low priority
 tutorial_prompt_x 			= 512
 tutorial_prompt_y 			= 600
 ; Screen pos for the "tutorial" prompts at the bottom of the screen
@@ -348,8 +350,8 @@ Stashes 	= ui_catsy_marker_stash
 ; Defines which item categories exist, and which are scanned by default
 Stalkers 	= true
 Bodies      = true
-Ammo        = true
 Stashes     = true
+Ammo        = true
 Weapons     = true
 Attachments = true
 Grenades    = true
@@ -362,10 +364,10 @@ Tools       = true
 Devices     = true
 Quest       = true
 Campfires   = true
-Misc    	= true
 Doors       = true
 Boxes       = false
 Workshops 	= true
+Misc    	= true
 
 [dotmark_preset]
 ; Static presets for the dot markers that get passed to utils_catspaw_hudmarks
@@ -396,6 +398,7 @@ skip_dist 			= true 	; Optimization, skips anything related to updating the dist
 is_pickup 		= 0
 is_container 	= 1
 is_stalker 		= 2
+is_empty_mutant	= 3
 
 [tutorial_hints]
 ; Used internally to generate the appropriate text based on the active tutorial state
@@ -456,7 +459,7 @@ guide 		= ui_catsy_marker_guide
 leader 		= ui_catsy_marker_leader
 
 [setting_icons]
-;enable_icon_targetdot 		= 
+; Used purely for iteration in an MCM menu
 enable_icon_box 			= Boxes
 enable_icon_door 			= Doors
 enable_icon_talk 			= Stalkers
@@ -471,7 +474,7 @@ placeable_pistol_shelf 		= true
 
 [useless_shit]
 ; Section names of things like matches that shouldn't have a secondary interact
-; This probably needs many more entries than it currently has
+; This probably needs more entries than it currently has
 roubles
 box_matches
 compression_bag
@@ -481,7 +484,9 @@ explo_balon_gas
 explo_jerrycan_fuel
 explosive_mobiltank
 explosive_tank
-hand_watch ; can technically be used to check time, but not much point in adding that for the five people who know
+hand_watch
+; The hand watch can technically be used to check time, but not much point in adding that
+; Not for the five people who know and the single person who might ever use one from the ground
 
 [swap_dotactive]
 texture 	= ui_catsy_marker_dotactive
@@ -489,26 +494,27 @@ load_argb 	= argb_dot_focus
 width       = 12
 height      = 12
 line_adj_h  = -11
-line_adj_x  = 3.25
-line_adj_y  = 10
+;line_adj_x  = 3.25
+;line_adj_y  = 10
 
 [swap_butcher]
+; 
 texture     = ui_catsy_marker_butcher
 load_argb 	= argb_icon_butcher
 width       = 16
 height      = 16
-line_adj_x  = 4
 line_adj_h  = -11
-line_adj_y  = 11
+;line_adj_x  = 4
+;line_adj_y  = 11
 
 [swap_door]
 texture     = ui_catsy_marker_door
 load_argb 	= argb_icon_door
 width       = 20
 height      = 20
-line_adj_x  = 4
 line_adj_h  = -12
-line_adj_y  = 12
+;line_adj_x  = 4
+;line_adj_y  = 12
 
 [swap_stash]
 texture     = ui_catsy_marker_stash
@@ -516,41 +522,41 @@ load_argb 	= argb_icon_stash
 width       = 14
 height      = 14
 line_adj_h  = -13
-line_adj_x  = 3
-line_adj_y  = 12
+;line_adj_x  = 3
+;line_adj_y  = 12
 
 [swap_talk]
 texture     = ui_catsy_marker_talk
 load_argb 	= argb_icon_talk
 width       = 16
 height      = 16
-line_adj_x  = 4
 line_adj_h  = -11
-line_adj_y  = 11
+;line_adj_x  = 4
+;line_adj_y  = 11
 
 [swap_service]
 width       = 18
 height      = 18
-line_adj_x  = 4
-line_adj_y  = 11
 line_adj_h  = -11
+;line_adj_x  = 4
+;line_adj_y  = 11
 
 [swap_task_pri]
 texture 	= ui_catsy_marker_task_pri
 width       = 18
 height      = 18
-line_adj_x  = 4
-line_adj_y  = 11
 line_adj_h  = -11
+;line_adj_x  = 4
+;line_adj_y  = 11
 
 
 [swap_task_sec]
 texture 	= ui_catsy_marker_task_sec
 width       = 18
 height      = 18
-line_adj_x  = 4
-line_adj_y  = 13
 line_adj_h  = -13
+;line_adj_x  = 4
+;line_adj_y  = 13
 
 ; ================================================================================
 ; 	DON'T TOUCH BELOW THIS LINE
@@ -585,6 +591,7 @@ zone_rusty_hair
 
 [grenade_ammo_clsids]
 ; Defines which clsids are classified as GL ammo for the purposes of scan detection
+; If an addon really must introduce new grenade clsids, they can DLTX them here
 wpn_ammo_m209_s 	= true
 wpn_ammo_og7b_s 	= true
 wpn_ammo_vog25_s	= true
@@ -599,6 +606,7 @@ dynamics\box\box_metall_01	= true
 
 [smokables]
 ; Section names of objects that will receive a "smoke" action verb in their prompt
+; May require updating for e.g. Western Goods?
 cigar
 cigar1
 cigar2
@@ -612,7 +620,7 @@ tobacco
 hand_rolling_tobacco
 
 [manual_use]
-; FDDA won't properly handle usage, have to do so manually
+; FDDA won't handle usage of these objects at animation end, have to trigger them manually
 joint
 chocolate
 chocolate_p
@@ -628,7 +636,7 @@ dynamics\door\door_metal_220x260_01_r 	= -0.475
 
 [button_visuals]
 ; The code lock in X8
-; ** Check other labs for interacts that aren't part of Loner story mode
+; Need to check the elevator back out
 dynamics\door\door_katakomb_big_2_lock 	= 0.25
 
 [explosive_tools]
@@ -640,10 +648,17 @@ explosive_mobiltank
 [section_lookup]
 ; First step in object detection and classification
 ; Section names are the most-specific criteria, so they're checked first
-; Any section name here will skip checking for any other classification
+; A section name found here will skip checking for any other classification
+workshop_stash 		= Stashes
+af_misery_bread 	= Artefacts
+lead_box        	= Tools
+explosive_mobiltank	= Tools
+explosive_tank 		= Tools
+device_glowstick 	= Tools
+lights_glowstick	= Tools
 hand_watch      	= Devices
 wpn_binoc_inv   	= Devices
-lead_box        	= Tools
+placeable_workshop 	= Workshops
 csky_patch      	= Misc
 dolg_patch      	= Misc
 ecolog_patch    	= Misc
@@ -656,76 +671,12 @@ killer_patch    	= Misc
 renegade_patch  	= Misc
 isg_patch       	= Misc
 greh_patch      	= Misc
-af_misery_bread 	= Artefacts
-explosive_mobiltank	= Tools
-explosive_tank 		= Tools
-placeable_workshop 	= Workshops
-workshop_stash 		= Stashes
-device_glowstick 	= Tools
-lights_glowstick	= Tools
 
 [kind_lookup]
 ; More or less lifted entirely from the debug menu
 ; For quicker lookup than iterating through the entire category-checking loop
-; Mostly accurate but misses some things
+; Mostly accurate but misses some things, and only detects pickup items
 ; If a match is found here, it skips the slow process of checking via iteration
-i_arty_junk   	= Artefacts
-i_arty     		= Artefacts
-ARTEFACT    	= Artefacts
-SCRPTART    	= Artefacts
-i_arty_cont     = Artefacts
-i_mutant_cooked = Consumables
-i_mutant_raw    = Consumables
-i_food    		= Consumables
-II_FOOD     	= Consumables
-S_FOOD      	= Consumables
-i_drink    		= Consumables
-II_BOTTL    	= Consumables
-i_medical    	= Consumables
-II_BANDG    	= Consumables
-II_MEDKI    	= Consumables
-II_ANTIR    	= Consumables
-i_device    	= Devices
-DET_SIMP    	= Devices
-DET_ADVA    	= Devices
-DET_ELIT    	= Devices
-DET_SCIE    	= Devices
-i_kit      		= Tools
-i_tool      	= Tools
-i_repair    	= Tools
-i_upgrade 	    = Tools
-i_part 	    	= Misc
-i_mutant_part   = Misc
-i_misc 	    	= Misc
-II_DOC      	= Misc
-EQ_PATCH    	= Misc
-II_ATTCH    	= Misc
-II_BTTCH    	= Misc
-D_FLALIT    	= Misc
-S_PDA       	= Misc
-D_PDA       	= Misc
-i_letter    	= Misc
-i_quest			= Quest
-o_helmet    	= Headgear
-E_HLMET     	= Headgear
-EQU_HLMET   	= Headgear
-i_mutant_belt   = Attachments
-i_attach     	= Attachments
-i_backpack   	= Attachments
-EQ_BAKPK    	= Attachments
-w_misc   		= Attachments
-WP_SCOPE    	= Attachments
-WP_SILEN    	= Attachments
-WP_GLAUN    	= Attachments
-S_WPN_MISC  	= Attachments
-WP_BINOC    	= Attachments
-II_BOLT     	= Attachments
-o_light 		= Outfits
-E_STLK      	= Outfits
-EQU_STLK    	= Outfits
-o_medium   		= Outfits
-o_sci   		= Outfits
-o_heavy   		= Outfits
 w_ammo        	= Ammo
 AMMO        	= Ammo
 AMMO_S      	= Ammo
@@ -757,6 +708,63 @@ G_F1_S      	= Weapons
 G_RGD5_S    	= Weapons
 G_F1 	    	= Weapons
 G_RGD5 	    	= Weapons
+i_mutant_belt   = Attachments
+i_attach     	= Attachments
+i_backpack   	= Attachments
+EQ_BAKPK    	= Attachments
+w_misc   		= Attachments
+WP_SCOPE    	= Attachments
+WP_SILEN    	= Attachments
+WP_GLAUN    	= Attachments
+S_WPN_MISC  	= Attachments
+WP_BINOC    	= Attachments
+II_BOLT     	= Attachments
+o_light 		= Outfits
+E_STLK      	= Outfits
+EQU_STLK    	= Outfits
+o_medium   		= Outfits
+o_sci   		= Outfits
+o_heavy   		= Outfits
+o_helmet    	= Headgear
+E_HLMET     	= Headgear
+EQU_HLMET   	= Headgear
+i_arty_junk   	= Artefacts
+i_arty     		= Artefacts
+ARTEFACT    	= Artefacts
+SCRPTART    	= Artefacts
+i_arty_cont     = Artefacts
+i_mutant_cooked = Consumables
+i_mutant_raw    = Consumables
+i_food    		= Consumables
+II_FOOD     	= Consumables
+S_FOOD      	= Consumables
+i_drink    		= Consumables
+II_BOTTL    	= Consumables
+i_medical    	= Consumables
+II_BANDG    	= Consumables
+II_MEDKI    	= Consumables
+II_ANTIR    	= Consumables
+i_kit      		= Tools
+i_tool      	= Tools
+i_repair    	= Tools
+i_upgrade 	    = Tools
+i_device    	= Devices
+DET_SIMP    	= Devices
+DET_ADVA    	= Devices
+DET_ELIT    	= Devices
+DET_SCIE    	= Devices
+i_quest			= Quest
+i_part 	    	= Misc
+i_mutant_part   = Misc
+i_misc 	    	= Misc
+II_DOC      	= Misc
+EQ_PATCH    	= Misc
+II_ATTCH    	= Misc
+II_BTTCH    	= Misc
+D_FLALIT    	= Misc
+S_PDA       	= Misc
+D_PDA       	= Misc
+i_letter    	= Misc
 
 [bones]
 ; List of valid bones to use for positioning
@@ -799,6 +807,10 @@ show_condition_color 	= dotmarks/dmarkmain/
 show_stash_weight 		= dotmarks/dmarkmain/
 wheel_cycles_pickups 	= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
+; 	hidden settings, used internally
+welcome_message_shown 	= dotmarks/dmarkmain/
+last_version	 		= dotmarks/dmarkmain/
+last_release 			= dotmarks/dmarkmain/
 ; =================================================================================
 ; Secondary menu
 ; =================================================================================
@@ -820,7 +832,6 @@ bodies_use_mpda_rules 	= dotmarks/dmarkmods/
 show_prompt_during_anim = dotmarks/dmarkmods/
 prompt_busy_during_anim = dotmarks/dmarkmods/
 item_use_delay	 		= dotmarks/dmarkmods/
-item_use_timeout	 	= dotmarks/dmarkmods/
 sp_hide_junk_items		= dotmarks/dmarkmods/
 sp_icon_pos_x 			= dotmarks/dmarkmods/
 sp_icon_pos_y 			= dotmarks/dmarkmods/
@@ -882,7 +893,7 @@ early_scan_radius 		= dotmarks/dmarkadv/
 keybind_bg_style 		= dotmarks/dmarkadv/
 hidden_show_prompts		= dotmarks/dmarkadv/
 prompt_fade_in_time		= dotmarks/dmarkadv/
-prompt_fade_out_time	= dotmarks/dmarkadv/
+;prompt_fade_out_time	= dotmarks/dmarkadv/
 font_main_prompt 		= dotmarks/dmarkadv/
 font_item_card 			= dotmarks/dmarkadv/
 item_card_icon_sz 		= dotmarks/dmarkadv/

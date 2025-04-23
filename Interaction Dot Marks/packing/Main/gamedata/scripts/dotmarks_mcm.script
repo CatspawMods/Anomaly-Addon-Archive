@@ -278,6 +278,8 @@ function get_argb_input_element(opt_id, def, preset)
 	}
 end
 
+function hidden() return false end
+
 -- ======================================================================
 
 function get_main_menu()
@@ -306,6 +308,11 @@ function get_main_menu()
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha, precondition = { dotmarks_mcm.load_success } },
 
 		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+
+		{ id = "welcome_message_shown", type = "check", 	val = 1, def = false, precondition = { dotmarks_mcm.hidden} },
+		{ id = "last_version", 			type = "input", 	val = 0, precondition = { dotmarks_mcm.hidden} },
+		{ id = "last_release", 			type = "input", 	val = 2, precondition = { dotmarks_mcm.hidden} },
+		-- These are necessary because MCM ignores ui_mcm.get requests for values that aren't part of a menu
 	}
 end
 
@@ -340,9 +347,9 @@ function get_sec_menu()
 		{ id = "long_press_delay", 		type = "input", 	val = 2, min = 50, max = 2000, def = cfg.long_press_delay },
 
 		{ id = "sec_enable_use_act", 	type = "check", 		val = 1, def = cfg.sec_enable_use_act },
-		{ id = "sec_enable_unload_act", 	type = "check", 	val = 1, def = cfg.sec_enable_unload_act },
-		{ id = "sec_enable_takeall_act", 	type = "check", 	val = 1, def = cfg.sec_enable_takeall_act },
-		{ id = "sec_enable_heal_act",type = "check", 	val = 1, def = cfg.sec_enable_heal_act },
+		{ id = "sec_enable_unload_act", type = "check", 	val = 1, def = cfg.sec_enable_unload_act },
+		{ id = "sec_enable_takeall_act",type = "check", 	val = 1, def = cfg.sec_enable_takeall_act },
+		{ id = "sec_enable_heal_act",	type = "check", 	val = 1, def = cfg.sec_enable_heal_act },
 		{ id = "sec_enable_heal_anim", 	type = "check", 	val = 1, def = cfg.sec_enable_heal_anim },
 	}
 end
@@ -449,7 +456,7 @@ function get_adv_menu()
 		},
 
 		{ id = "prompt_fade_in_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_in_time },
-		{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
+		--{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
 		{ id = "popin_anim_dur", 		type = "track",		val = 2, min = 0, step = 1, max = 2000, def = cfg.popin_anim_dur },
 
 		{ id = "action_text_pos_x", 	type = "input", 	val = 2, min = -384, max = 768, def = cfg.action_text_pos_x },

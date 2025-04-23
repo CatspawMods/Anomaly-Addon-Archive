@@ -11,7 +11,8 @@
     This script does nothing whatsoever when APM is not installed.
 
     If the author of APM fixes this behavior in some future release of 
-    theirs, this file can be safely hidden or deleted.
+    theirs, this file can be safely hidden or deleted, or the author can
+    set popup_pickup.ignore_dotmarks_fix to true.
 -- =======================================================================
     Feel free to crib code from this or include a copy of it in your own 
     addon, but in the interest of avoiding any possibility of conflicts:
@@ -23,9 +24,11 @@
 local apm_actor_on_item_take = popup_pickup and popup_pickup.actor_on_item_take
 timeout = 2000
 pickups = {}
-if popup_pickup then
+
+if popup_pickup and not popup_pickup.ignore_dotmarks_fix then
+    local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("z_apm_popup_pickup_dotmarks is monkeypatching APM to fix duplicate pop-up messages")
     function popup_pickup.actor_on_item_take(item)
-        local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("z_apm_popup_pickup_dotmarks is monkeypatching APM to fix duplicate pop-up messages")
+        
         local now = time_global()
         local id = item and item:id()
         if pickups[id] then

@@ -36,11 +36,10 @@
     you still get the callback fix.
 -- =====================================================================]]
 
-perform_monkeypatch = true
 override_id         = nil
 last_loot_remote    = false
 
-if z_auto_looter and perform_monkeypatch then
+if z_auto_looter and not z_auto_looter.ignore_dotmarks_fix then
     -- Hook into iTheon's Autoloot
     local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("zz_autoloot_dotmarks is monkeypatching z_auto_looter")
     
@@ -54,7 +53,7 @@ if z_auto_looter and perform_monkeypatch then
         end
         -- Standard looting
         local last_mode = actor_menu.get_last_mode()
-        local object_being_looted = level.object_by_id(ui_inventory.GUI.npc_id)
+        local object_being_looted = ui_inventory.GUI.npc_id and level.object_by_id(ui_inventory.GUI.npc_id)
         if object_being_looted and (not object_being_looted:alive()) and z_auto_looter.valid_modes[last_mode] then
             return object_being_looted
         end
@@ -106,7 +105,6 @@ if z_auto_looter and perform_monkeypatch then
             if should_loot then
                 actor:transfer_item(v, db.actor)
                 if last_loot_remote then
-                    printf("v is %s", v and v:name())
                     SendScriptCallback("actor_on_item_take_from_box", actor, v)
                 end
             end
