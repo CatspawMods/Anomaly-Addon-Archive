@@ -3921,12 +3921,12 @@ function on_option_change()
 			pri_use_y_offset 		= true,
 			sec_use_x_offset 		= true,
 			sec_use_y_offset 		= true,
-			hide_connecting_line	= true
+			b	= true
 		}
 	}
 	local resets = {}
 	for rel, opts in pairs(reset_table) do
-		if last_release < rel then
+		if (not last_release) or (last_release < rel) then
 			dump("Existing release %s is older than %s, adding opts to reset table", last_release, rel)
 			for k,v in pairs(opts) do
 				dump("Will reset opt %s", k)
