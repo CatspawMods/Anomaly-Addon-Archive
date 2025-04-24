@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.12-b4" -- Still a pre-release test build!
-release_date    = 20250423.1
+script_version  = "0.12-b5" -- Still a pre-release test build!
+release_date    = 20250424
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -1170,7 +1170,8 @@ end
 function is_body_claimed(id)
     if not id then return end
     if npc_loot_claim or grok_loot_claim then
-        local claims    = npc_loot_claim and npc_loot_claim.loot_claims or grok_loot_claim and grok_loot_claim.claimed
+        local claims    = cfg.grok_claim and grok_loot_claim and grok_loot_claim.claimed or npc_loot_claim and npc_loot_claim.loot_claims
+        if (not claims) or is_empty(claims) then return end
         local k_id      = claims and claims[id]
         local k_obj     = k_id and get_game_object(k_id)
         local k_alive   = k_obj and is_living_thing(k_obj) and k_obj:alive()

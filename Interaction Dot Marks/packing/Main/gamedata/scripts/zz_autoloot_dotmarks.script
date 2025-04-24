@@ -72,8 +72,9 @@ if z_auto_looter and not z_auto_looter.ignore_dotmarks_fix then
         end
     end
 
-    function z_auto_looter.handle_loot(actor)
-        local collected_items = z_auto_looter.collect_items(actor)
+    function z_auto_looter.handle_loot(box)
+        ui_hud_dotmarks.update_mark_after_autoloot(box)
+        local collected_items = z_auto_looter.collect_items(box)
         local should_loot = false
 
         for k, v in pairs(collected_items) do
@@ -103,9 +104,9 @@ if z_auto_looter and not z_auto_looter.ignore_dotmarks_fix then
             end
 
             if should_loot then
-                actor:transfer_item(v, db.actor)
+                box:transfer_item(v, db.actor)
                 if last_loot_remote then
-                    SendScriptCallback("actor_on_item_take_from_box", actor, v)
+                    SendScriptCallback("actor_on_item_take_from_box", box, v)
                 end
             end
         end

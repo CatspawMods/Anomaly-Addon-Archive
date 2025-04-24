@@ -207,11 +207,17 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					local obj           = id and get_game_object(id)
 					if not obj then return end
 					local show_pri      = true
-					if mark.is_stalker then
+					if mark.is_stalker and mark.is_alive then
+						local alive = obj:alive()
+						if not alive then
+							handle_npc_death(obj)
+							return
+						end
 						mark.is_enemy   = mark.comm and game_relations.is_factions_enemies(cfg.actor_comm, mark.comm)
 						mark.is_wounded = IsWounded(obj) or nil
 						mark.is_mute    = not obj:is_talk_enabled()
 						mark.hidden     = (mark.hidden and mark.is_mute) or (mark.is_enemy and not mark.is_wounded)
+						--dump("%s is %s stalker | enemy %s | wounded %s | mute %s", mark.name, mark.is_enemy, mark.is_wounded, mark.is_mute)
 						if mark.is_wounded and not mark.was_wounded then
 							local _ = debug_dump and vl("%s detected as wounded: %s", mark.name, mark.is_wounded)
 							mark.was_wounded = true
@@ -1026,7 +1032,7 @@ end
 function InteractPrompt:GetMark()
 	if self.args.mark_id then
 		return hmm:GetMarker(self.args.mark_id)
-	elseif self.args.id and cfg.markers[self.args.id] then
+	elseif (self.id or self.args.id) and cfg.markers[(self.id or self.args.id)] then
 		return cfg.markers[self.args.id]
 	end
 end
@@ -1549,6 +1555,7 @@ end
 
 
 function InteractPrompt:on_key_hold(key)
+	--dump("[%s] InteractPrompt:on_key_hold | key %s", key)
 	if (self.disabled or self.destroyed or self.busystate) then return end
 	
 	if (key == self.args.key) and (self.args.mode == 2) and ui_mcm.get_mod_key(self.args.mod) then
@@ -1894,7 +1901,8 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
 end
 
 function InteractPrompt:UpdateLongPress()
-	if self.longpress then
+	if self.longpress and not self.args.pri then
+		--dump("[%s] InteractPrompt:UpdateLongPress", time_global())
 		if (not self.busystate) and (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
 			self.peak_hold = time_continual() - (cfg.held_time or 0)
 			local prog = (self.peak_hold / self.hold_time)
@@ -2001,7 +2009,6 @@ function InteractPrompt:CheckWoundedStalkers()
 	self.args.text  = string.format(self.wounded_string, use_aid_name, mark.name)
 	local suffix = self:GetWoundedSuffix(last_aid, qtyowned)
 	self:SetPrompt(nil, self.args.text, suffix)
-	self:UpdateLongPress()
 	self:UpdateAnimBusyState()
 end
 
@@ -2009,11 +2016,12 @@ function InteractPrompt:actor_on_update()
 	if self.destroyed then return end
 	local _ = debug_dump and vl("[%s][%s]InteractPrompt:actor_on_update | %s%s", self.args.id, self.args.event, self.init_done and "" or "first run at ", time_global())
 	self:UpdateFilteredHints()
-	
+
 	local mark = self:GetMark()
-	if (self.args.tutorial or mark.is_stalker) then
+	if (self.args.tutorial or (mark and mark.is_stalker)) then
 		self:CheckForStuckTutorial()
-		_ = (not self.args.pri) and mark.is_wounded and self:CheckWoundedStalkers()
+		_ = (not self.args.pri) and mark and mark.is_wounded and self:CheckWoundedStalkers()
+		self:UpdateLongPress()
 		return
 	end
 
@@ -3073,6 +3081,19 @@ function try_init_search_anim(box, mark, exec_func)
 	end
 end
 
+function update_mark_after_autoloot(obj)
+	local id = obj and obj:id()
+	mark = id and cfg.markers[id]
+	if not mark then return end
+	mark.autolooted = true
+	if mark.alt_interact then
+		mark.alt_interact.args.func = take_all_from_box
+		mark.alt_interact.args.name = string.format("%s %s", first_upper( gts("st_alti_takeall") ), mark.name)
+		mark.alt_interact:Prompt(mark.alt_interact.args.name)
+		mark.alt_interact:SetPrompt()
+	end
+end
+
 function trigger_autoloot(box, mark, skip_anim_check)
 	vl("[%s] trigger_autoloot | %s | skip_anim_check %s", time_global(), nameid(box), not not skip_anim_check)
 	if not (zz_autoloot_dotmarks and z_auto_looter and z_auto_looter.auto_looter) then return true end
@@ -3088,14 +3109,6 @@ function trigger_autoloot(box, mark, skip_anim_check)
 	zz_autoloot_dotmarks.override_id = id
 	hijack_autoloot_keybind()
 	z_auto_looter.auto_looter(z_auto_looter.config.looter_key)
-	mark = mark or (id and cfg.markers[id])
-	mark.autolooted = true
-	if mark.alt_interact then
-		mark.alt_interact.args.func = take_all_from_box
-		mark.alt_interact.args.name = string.format("%s %s", first_upper( gts("st_alti_takeall") ), mark.name)
-		mark.alt_interact:Prompt(mark.alt_interact.args.name)
-		mark.alt_interact:SetPrompt()
-	end
 	return true
 end
 
@@ -3601,13 +3614,12 @@ function on_before_key_press(key, bind, dis, flags)
 	if cfg.watch_use and (key == use_dik) then
 		cfg.use_released = nil
 		cfg.block_loot_window = time_global()
-		dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
+		--dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
 		cfg.held_key = key
 		local id = get_current_target()
 		if not id then return end
 		local mark = cfg.markers[id]
 		if not (mark and mark.is_stalker and mark.is_wounded) then return end
-		--dump("NPC %s is wounded, supressing key", mark and mark.name)
 		flags.ret_value = false
 	end
 end
@@ -3618,18 +3630,34 @@ function do_use_release_action_manually(id)
 	-- Target exists, no completed hold action
 	if is_target_pickup(id) and ((id == locked_id) or not locked_id) then
 		cfg.use_released = nil
-		vl("No completed hold action, item pickup should occur")
+		dump("[%s] No completed hold action, item pickup should occur", time_global())
 		force_actor_to_take(obj)
 	elseif is_target_container(id, obj:clsid()) then
+		dump("[%s] No completed hold action, target is a container", time_global())
+		if is_body_claimed(id) then
+			if cfg.grok_claim then
+				vl("Calling Grok loot claim")
+				local dik = bind_to_dik(key_bindings.kUSE)
+				local flags = {ret_value = true}
+				grok_loot_claim.on_before_key_press(dik, key_bindings.kUSE, nil, flags)
+				if not flags.ret_value then return end
+			else
+				vl("Calling NPC loot claim")
+				npc_loot_claim.actor_looting(obj)
+				if npc_loot_claim.actor_looting_claimed then return end
+				dump("Loot claim passed, looting")
+			end
+		end
+
 		if z_ui_inventory_dotmarks then
-			vl("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
+			dump("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
 			cfg.use_released = nil
 			obj:use(db.actor)
 		else
 			alert("ERROR! z_ui_inventory_dotmarks could not be found, please reinstall DotMarks")
 		end
 	elseif mark and mark.is_stalker and mark.is_wounded then
-		vl("Forcing actor to talk with wounded NPC")
+		dump("Forcing actor to talk with wounded NPC")
 		cfg.use_released = nil
 		xr_effects.force_talk(db.actor, obj, {true})
 	end
@@ -3646,7 +3674,7 @@ function on_key_release(key)
 			if not id then return end
 			local dur = cfg.holding and cfg.holding.peak_hold
 			local time = cfg.holding and cfg.holding.hold_time
-			local _ = debug_dump and vl("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
+			dump("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
 			if not (dur and time and (dur >= time)) then
 				do_use_release_action_manually(id)
 			end
@@ -3810,6 +3838,7 @@ function parse_file_data()
 		end
 	end
 	hintfilters = cfg.hint_filter
+	cfg.grok_claim = not not grok_loot_claim
 end
 
 function set_item_pickup_callbacks(kill)

@@ -1,0 +1,51 @@
+-- =======================================================================
+--[[ 		LOOT CLAIM SAVEGAME PERSISTENCE MONKEYPATCH
+-- =======================================================================
+    Author: Catspaw
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- =======================================================================
+	PURPOSE:
+	Adds save-state persistence to the original NPC Loot Claim. The GAMMA
+	version already has this, but NPCs in the original "forget" claims 
+	after a saveload.
+
+	REASON:
+	Because there ought to be, and because I got sick of not being able to
+	quickload a save game with a claimed corpse to test while modding.
+
+-- =======================================================================
+    REQUIRES:
+    	* NPC Loot Claim (the original version, not the GAMMA version)
+    	* unlocalization of the npc_loot_claim.loot_claims table
+    	* modded exes in order to be able to unlocalize
+-- =======================================================================
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+-- =====================================================================]]
+
+function on_game_start()
+	if not npc_loot_claim then return end
+	local _ = DEV_DEBUG and printf("npc_loot_claim_persistence enabled, NPC loot claims will persist through saveloads")
+	RegisterScriptCallback("save_state", (
+		function(mdata) 
+			local loot_claims = npc_loot_claim.loot_claims
+			if loot_claims and not is_empty(loot_claims) then
+				_ = DEV_DEBUG and printf("Saving %s NPC loot claims to database", size_table(loot_claims))
+				mdata.loot_claims = npc_loot_claim.loot_claims
+			end
+		end
+	))
+	RegisterScriptCallback("load_state", (
+		function(mdata) 
+			local loot_claims = mdata.loot_claims
+			if loot_claims and not is_empty(loot_claims) then
+				_ = DEV_DEBUG and printf("Loaded %s NPC loot claims to database", size_table(loot_claims))
+				npc_loot_claim.loot_claims = mdata.loot_claims
+			end
+		end
+	))
+end

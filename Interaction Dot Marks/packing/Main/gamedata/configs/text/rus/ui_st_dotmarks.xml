@@ -348,7 +348,7 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_show_prompt_during_anim">
-		<text>Альт использование отключено во время анимации FDDA</text>
+		<text>Показывать пользовательский интерфейс подсказок по взаимодействию во время анимации FDDA.</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_show_prompt_during_anim_desc">
 		<text>Если эта опция включена, пользовательский интерфейс альтернативного использования отключается во время анимации FDDA, затемняясь и показывая сообщение «Слишком занят» до завершения текущей анимации.\n
@@ -362,6 +362,14 @@
 
 	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_x_offset">
 		<text>Горизонтальное положение для основного диалога действий.</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_prompt_busy_during_anim">
+		<text>Подсказки по взаимодействию отключены во время анимации FDDA.</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_prompt_busy_during_anim_desc">
+		<text>Если эта опция включена, интерактивный пользовательский интерфейс отключается во время анимации FDDA, затемняется и показывает сообщение «Слишком занят» до тех пор, пока текущая анимация не завершится.\n
+		\n 
+		\nОтключение этой опции в оригинальном FDDA позволит "отменить анимацию", пропустив текущую анимацию и немедленно начав следующую. Звуковые эффекты будут по-прежнему воспроизводиться.</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_x_offset_desc">
 		<text>Настройка положения подсказки по горизонтали. Допустимые значения от -512 до 1024.
@@ -851,7 +859,7 @@
 	</string>
 
 	<string id="st_dotmarks_epicfail_error">
-		<text>$clr_redОШИБКА!$clr_wht Сбой аддона!\n</text>
+		<text>$clr_redОШИБКА!$clr_wht Сбой зависимости!\n</text>
 	</string>
 
 	<string id="st_dotmarks_fail_reason_nocfg">
@@ -1036,10 +1044,10 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x">
-		<text>Item card element X offset</text>
+		<text>Смещение элемента карточки товара по оси X</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x_desc">
-		<text>Adjusts the horizontal offset for the weight and value elements in the item card.
+		<text>Регулирует горизонтальное смещение элементов веса и стоимости в карточке товара.
 		 \n
 		\nПо умолчанию: 7.5</text>
 	</string>
@@ -1072,7 +1080,7 @@
 	<string id="ui_mcm_dotmarks_dmarkmods_hijack_autoloot_keybind">
 		<text>Переопределение привязки клавиш автолутер</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot_desc">
+	<string id="ui_mcm_dotmarks_dmarkmods_hijack_autoloot_keybind_desc">
 		<text>Если установлен аддон автолутера iTheon и в этом меню включены обе опции автолутера, DotMarks попытается отвязать клавишу автолутера со значением, которое не может быть случайно нажато.\n
 
 		\nВключение этой опции позволит вам отвязать клавишу автолутера и освободить ее для чего-то другого. Отключение этой опции позволит вам по-прежнему запускать автолутер независимо от DotMarks.</text>
