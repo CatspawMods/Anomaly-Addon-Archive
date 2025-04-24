@@ -1,10 +1,13 @@
 # **Interaction Dot Marks**
+![DotMarks Title](packing/fomod/images/dotmarks-fomod.png)
+----
 A blatant imitation of the "interaction dot" HUD markers in Stalker 2, and some of its other UI niceties such as floating prompts and secondary interactions.
 
 Except not quite as cool, because Anomaly is jank. Hopefully this makes it a little less jank.
 
 Also implements a "Secondary Interact" keybind with contextual actions such as unloading a weapon without having to pick it up, or taking everything from a stash without opening the loot window.
 
+# **Requirements**
 Requires **MCM 1.7.0** and the **20250306 modded exes** by demonized, or (better yet) the latest of both:
 * [Demonized modded exes (Github)](https://github.com/themrdemonized/xray-monolith)
 * [Mod Configuration Menu (Moddb)](https://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu)
@@ -13,13 +16,31 @@ Requires **MCM 1.7.0** and the **20250306 modded exes** by demonized, or (better
 >
 > This addon *will not work at all* on vanilla Anomaly, and may crash spectacularly if you try.
 
+# **Strongly Recommended**
+These other fantastic addons are not required, but DotMarks is designed to integrate with them and extend their functionality. Click the title of each to go to their Moddb pages.
+> [!TIP]
+> All of these features either respect the relevant MCM settings of each addon, or have their own settings in the DotMarks MCM menu to configure or disable them.
+## [FDDA or FDDA Redone](https://www.moddb.com/mods/stalker-anomaly/addons/fdda-redone)
+Secondary actions--for example, using consumables--will automatically hand the action and animation off to FDDA or FDDA Redone. The latter is recommended, but either will work.
+> [!NOTE]
+> Even if you don't normally use either version of FDDA, I recommend giving this a try. It's hard to overstate how immersive it is to see your character pick up an item and immediately begin using it, all without entering your inventory or any other menu.
+## [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10)
+If this addon is installed, DotMarks will use its excellent animation for the heal-an-NPC secondary action.
+## [Sorting Plus](https://www.moddb.com/mods/stalker-anomaly/addons/sorting-plus)
+With Sorting Plus, any items on the ground that you've marked as Favorites or Junk will show an appropriate icon on the Item Card.
+## [Utjan's Item UI Improvements](https://www.moddb.com/mods/stalker-anomaly/addons/utjans-item-ui-improvements)
+DotMarks will show Utjan's part condition dots on the Item Card if it detects the addon.
+
+> [!NOTE]
+> FDDA and Utjan's Item UI are already part of GAMMA.
+
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 
 # Personalization
 Everyone likes different things. "Play your own way" is axiomatic to me.
 
-If your issue is that you don't like the way something looks or works, start by checking out the MCM menu under **DotMarks**. It's packed with customization options that will let you selectively disable or tweak just about everything in the addon. And you'll need the **Advanced** menu there if you're going to report an issue.
+If your issue is that you don't like the way something looks or works, the MCM menu under **DotMarks** is packed with options that will let you selectively disable or personalize just about everything in the addon. And you'll need the **Advanced** menu there if you're going to report an issue.
 
 Everything in DotMarks is designed to be customizable. Nearly every individual part of the interaction UI can be enabled, disabled, or moved around. Every animation, every icon, every sound, every feature, every color. It's your UI--make it suit your preferences.
 
