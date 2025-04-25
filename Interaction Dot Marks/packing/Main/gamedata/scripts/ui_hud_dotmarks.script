@@ -23,8 +23,10 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	TODO (all non-critical):
 	- Add "welcome" message similar to PAW, controlled by MCM flag
+	- Update GH documentation with new Utjan settings
 
 	BEFORE PUBLIC RELEASE:
+	- Correct the MCM text and documentation for changed defaults
 	- Re-validate EVERY FEATURE individually - all must pass in same build
 
 	POST-RELEASE:
@@ -152,7 +154,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 			id                  = id,
 			far_fade_dist       = near_scan_radius() - 1,
 			far_hide_dist       = 1,
-			far_end_dist        = early_scan_radius() + 2,
+			far_end_dist        = early_scan_radius() + 5,
 			scale_dist_min      = (near_scan_radius() or 4) - 1.5,
 			scale_dist_mid      = (near_scan_radius() or 4) - 0.5,
 			scale_dist_max      = (near_scan_radius() or 4),
@@ -222,7 +224,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					local dist          = mark.last_dist or 999
 					local in_range      = dist <= (mark.interact_dist or 2.5)
 					local hide          = mark.hidden --(mark.hidden or (not in_range))
-					local _             = (not hide) and dump("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
+					local _             = (not hide) and dump("[DotMarks] [%s][%s] Visibility and UI checks for %s | dist %s", mark.id, now, mark.name or mark.tutorial or mark.text, dist)
 					
 					cfg.in_pickup_range[id] = mark.is_pickup and in_range and dist or nil
 
@@ -243,11 +245,15 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					if (not hide) and obj and zzz_rax_sortingplus_mcm and cfg.sp_hide_junk_items then
 						hide = is_junk(sec)
 					end
+
 					-- ================================================================================
 					-- Check whether any logic has shut off interaction prompts entirely
 					local targeted      = is_current_target(id)
 					local show_sec      = false
 					show_pri            = show_pri and targeted and in_range
+					if not (mark.item_class and is_object_scannable(mark.item_class)) then
+						hide = true
+					end
 					--dump("prompt check: hide %s | hidden_show: %s | anim block: %s", hide, cfg.hidden_show_prompts, prompt_blocked_by_anim())
 					if (hide and not cfg.hidden_show_prompts) or prompt_blocked_by_anim() then
 						--dump("Hiding all prompts")
@@ -1018,14 +1024,14 @@ end
 
 function InteractPrompt:SetupButtonHandlers()
 	local method = "on_use"
-	if (args.scheme == "ph_button") then
+	if (self.args.scheme == "ph_button") then
 		method = "on_press"
-	elseif (args.scheme == "ph_code") then
+	elseif (self.args.scheme == "ph_code") then
 		method = "on_code"
 	end
 	self.physbtn_active = (
 		function()
-			local btn = self.args.id and db.storage[self.args.id][args.scheme]
+			local btn = self.args.id and db.storage[self.args.id][self.args.scheme]
 			return btn and not not btn[method]
 		end
 	)
@@ -2087,6 +2093,7 @@ function InteractPrompt:actor_on_update()
 	self:UpdateFilteredHints()
 
 	local mark = self:GetMark()
+
 	if (self.args.tutorial or (mark and mark.is_stalker)) then
 		self:CheckForStuckTutorial()
 		self:CheckCampfireStates()
@@ -2300,6 +2307,11 @@ function show_interaction_dots(tf)
 	cfg.hide_interaction_dots = not tf
 end
 
+-- =======================================================================
+-- 		DEPENDENCY CHECK
+--	Checks all hard dependencies one by one, logs which ones fail, and 
+--	shows an appropriate message to the user at the end.
+-- =======================================================================
 function check_for_dependencies(silent, debug_test)
 	dl("[%s] Checking for dependencies", time_global())
 	local failmessage
@@ -2417,6 +2429,10 @@ function stop_scanning()
 	return true
 end
 
+function is_object_scannable(item_class)
+	return not not (item_class and cfg.scan[item_class])
+end
+
 function get_args_for_valid_objects(obj)
 	if not obj then return end
 	local id = obj:id()
@@ -2437,11 +2453,12 @@ function get_args_for_valid_objects(obj)
 			iclass      = args.iclass_override
 			args        = get_cfg_for_type("args", iclass, obj) or {}
 		end
+		args.item_class	= iclass
 		args.id         = id
 		args.clsid      = cls
 		args.kind       = kind
 		args.section    = args.glowstick_sec or sec
-		args.hidden     = not cfg.scan[iclass]
+		args.hidden     = not is_object_scannable(iclass)
 		args.has_power  = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
 	end
 
@@ -2793,7 +2810,7 @@ function scan_nearby_object(obj)
 	if scanned[id] then
 		-- Skip previously-scanned IDs if their name matches, otherwise clear the table entry assuming it's a reused ID
 		if scanned[id] == name then
-			--dump("%s has already been scanned, skipping", nameid(name, id))
+			dump("%s has already been scanned, skipping", nameid(name, id))
 		return end
 		dl("%s has a new name, assuming the ID has been reused and clearing entry", id)
 		scanned[id] = nil
@@ -2850,6 +2867,7 @@ end
 
 
 function scan_nearby_entities(scan_radius)
+	--dump("[%s] scan_nearby_entities(%s)", scan_radius)
 	local pos = db.actor and db.actor:center()
 	if not pos then return end
 	level.iterate_nearest(pos, scan_radius, scan_nearby_object)
@@ -3470,12 +3488,13 @@ function reset_nearby_item_tables()
 end
 
 function update_nearby_pickups()
-	if is_empty(cfg.in_pickup_range) then return end
 	local actor_moving = (level.actor_moving_state() > 0)
 	if actor_moving then
 		reset_nearby_item_tables()
 		return true
 	end
+
+	if is_empty(cfg.in_pickup_range) then return end
 	cfg.last_pickup = cfg.available_pickup
 	if not is_empty(nearby_pickups) then return end
 	-- pickup tables haven't been updated since actor stopped moving
@@ -4073,6 +4092,7 @@ function on_option_change()
 			v:Destroy(nil, "reset after on_option_change")
 		end
 	end
+	reset_nearby_item_tables()
 	set_handler_callbacks()
 	st_kg           = gts("st_kg")
 	CreateTimeEvent("autoloot_override", 0, 0.25, hijack_autoloot_keybind)

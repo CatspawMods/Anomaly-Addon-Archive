@@ -138,6 +138,10 @@
 		<text>заявлен</text>
 	</string>
 
+	<string id="ui_mcm_pawsys_pawgen_hide_intro_header">
+		<text>$clr_tgrНе показывать это вступительное сообщение</text>
+	</string>
+	
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_bodies">
 		<text>Отметить трупы</text>
 	</string>
@@ -1128,7 +1132,7 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale">
-		<text>Size of the part condition dots</text>
+		<text>Размер точек состояния деталей</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale_desc">
 		<text>Этот ползунок регулирует размер точек состояния детали.

@@ -104,6 +104,12 @@ function init_preview(anchor, handlers, opts, flags)
 	pre.fr 	= xml:InitStatic("box", pre.bg)
 	pre.fr:InitTexture("ui_mcm_dmarks_preview_frame")
 	pre.fr:SetWndSize(vector2():set(unsquish(300), 190))
+
+	local rvbox	= xml:InitTextWnd("box", anchor)
+	rvbox:SetWndSize(vector2():set(480 * cfg.unsquish_ratio, 20))
+	rvbox:SetText(psk(rel_version, color_tokens))
+	rvbox:SetWndPos(vector2():set(10 * cfg.unsquish_ratio, 52))
+	rvbox:SetTextComplexMode(true)	
 end
 
 function init_simple_icon(anchor, handlers, opts, flags)
@@ -167,12 +173,6 @@ function init_header_element(anchor, handlers, opts, flags)
 				localized_text = gts("ui_mcm_dotmarks_header_notmodded")
 			end
 		end
-
-		local rvbox	= xml:InitTextWnd("box", anchor)
-		rvbox:SetWndSize(vector2():set(480 * cfg.unsquish_ratio, 20))
-		rvbox:SetText(psk(rel_version, color_tokens))
-		rvbox:SetWndPos(vector2():set(10 * cfg.unsquish_ratio, -8))
-		rvbox:SetTextComplexMode(true)
 	end
 
 	if opts.dmark_tex then
@@ -285,15 +285,16 @@ function hidden() return false end
 function get_main_menu()
 	return {
 		{ id = "menuslide_main", type = "slide", link = "ui_mcm_dotmarks_banner_main", size = {512,50}, spacing = 0,
-			ui_hook_functor = {dotmarks_mcm.init_preview},
+			ui_hook_functor = { dotmarks_mcm.init_preview },
 			-- a proper PAW-style live preview is going to take a lot more work
 		},
 		{ id = "header_main", 		type = "desc", text = "ui_mcm_dotmarks_header_fail_nocolor",
-			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			ui_hook_functor = { dotmarks_mcm.init_header_element },
 			dmark_text 		= header_desc,
+			dmark_text_v 	= 12,
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head" .. ((lang == "rus") and "140" or "90"),
 			dmark_apos 		= -20,
-			dmark_bpos 		= 10,
+			dmark_bpos 		= 8,
 		},
 
 		{ id = "show_item_card", 		type = "check", 	val = 1, def = cfg.show_item_card, precondition = { dotmarks_mcm.load_success } },
@@ -307,8 +308,7 @@ function get_main_menu()
 
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha, precondition = { dotmarks_mcm.load_success } },
 
-		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
-
+		-- Hidden options:
 		{ id = "welcome_message_shown", type = "check", 	val = 1, def = false, precondition = { dotmarks_mcm.hidden} },
 		{ id = "last_version", 			type = "input", 	val = 0, precondition = { dotmarks_mcm.hidden} },
 		{ id = "last_release", 			type = "input", 	val = 2, precondition = { dotmarks_mcm.hidden} },

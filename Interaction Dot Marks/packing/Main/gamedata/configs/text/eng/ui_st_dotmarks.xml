@@ -138,6 +138,10 @@
 		<text>Claimed</text>
 	</string>
 
+	<string id="ui_catsy_hide_intro_header">
+		<text>$clr_tgrDon't show this intro message again</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_bodies">
 		<text>Mark Bodies</text>
 	</string>
@@ -744,13 +748,13 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_header_main_nocolor">
-		<text>Welcome to Interaction Dot Marks--a modernized replacement for the object interaction UI that brings some of Stalker 2's QoL features back to Anomaly, while adding powerful new options. Everyone enjoys different things, so DotMarks is designed to be customized to your preferences. If you don't find what you're looking for in the options below, head over to the Advanced tab.
+		<text>Welcome to Interaction Dot Marks--a modernized replacement for the object interaction UI that brings some of Stalker 2's QoL features back to Anomaly, while adding powerful new options. Everyone enjoys different things, so DotMarks is designed to be customized to your preferences. If you don't find what you're looking for in the options below, head over to the other tabs.
 		</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_header_main">
 		<text>$clr_whtWelcome to $clr_gldInteraction Dot Marks$clr_wht--a modernized replacement for the object interaction UI that brings some of Stalker 2's QoL features back to Anomaly, while adding powerful new options.\n
-		\nEveryone enjoys different things, so DotMarks is designed to be $clr_lblcustomized to your preferences$clr_wht. If you don't find what you're looking for in the options below, head over to the $clr_lblAdvanced$clr_wht tab.
+		\nEveryone enjoys different things, so DotMarks is designed to be $clr_lblcustomized to your preferences$clr_wht. If you don't find what you're looking for in the options below, head over to the other tabs.
 		</text>
 	</string>
 

@@ -7,6 +7,12 @@
 		<text x="0" y="0" font="letterica16" vert_align="c" align="l"/>
 	</textbox>
 
+	<check x="0" y="0" width="35" height="30" stretch="1">
+        <texture>ui_inGame2_checkbox</texture>
+    </check>
+
+	<hide_head x="0" y="0" width="300" height="30" vert_align="c" complex_mode="1"/>
+	
 	<alt_interact width="400" height="100" stretch="1" alignment="l">
 
 		<bindframe x="0" y="0" width="15" height="20" stretch="1" vert_align="c">
