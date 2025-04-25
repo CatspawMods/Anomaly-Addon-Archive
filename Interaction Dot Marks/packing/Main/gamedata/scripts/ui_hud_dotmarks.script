@@ -21,28 +21,10 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
-	TODO (all non-critical, prioritize marked *):
-	* Investigate markers and missing dialogue option for wounded enemies
-	* Try again to fix items cycling behind the player
-		See commented-out code for broken version
-	- Investigate why prompt_fade_out_time isn't working, disable for now
-	- Smoother fade in/out for the extended visibility range of explosives
-		Markers in general aren't fading as nicely as they use to do
-		probably related to the changes to near_scan and early_scan radii
-		low priority but not unimportant
-	- Try again to add drop shadows/background to the Utjan dots
-		I think the way to go is to replace the existing dots with the new
-		shadows in the logic, then attach the original dots on top
-	- Investigate how to anchor campfire tutorial prompts to the campfires
-		Need to confirm their true vanilla interact distance
-		Probably hook into existing check for nearest, then add a flag to
-		force a prompt active when its linked tutorial is
+	TODO (all non-critical):
 	- Add "welcome" message similar to PAW, controlled by MCM flag
 
 	BEFORE PUBLIC RELEASE:
-	- I don't think I checked the button for taking the X8 elevator back up
-	- Optimize/clean up WIP code that didn't get used
-		Check each function for usage across all scripts
 	- Re-validate EVERY FEATURE individually - all must pass in same build
 
 	POST-RELEASE:
@@ -168,14 +150,14 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 			--  Presets that need to be generated on-marker-create rather than static LTX defs
 			-- ================================================================================
 			id                  = id,
-			far_fade_dist       = near_scan_radius() - 0.5,
-			far_hide_dist       = near_scan_radius(),
-			far_end_dist        = early_scan_radius() + 3,
-			scale_dist_min      = (near_scan_radius() or 4) - 1,
+			far_fade_dist       = near_scan_radius() - 1,
+			far_hide_dist       = 1,
+			far_end_dist        = early_scan_radius() + 2,
+			scale_dist_min      = (near_scan_radius() or 4) - 1.5,
 			scale_dist_mid      = (near_scan_radius() or 4) - 0.5,
 			scale_dist_max      = (near_scan_radius() or 4),
 			los_check_int       = (not cfg.ignore_los) and 250 or nil, -- interval in ms to check LOS to marker object
-			los_check_range     = (near_scan_radius() or 4) + 1,
+			los_check_range     = early_scan_radius() + 1,
 			custom_argb         = dup_table(cfg.colors.clr_dmark_norm),
 			marker_scale        = cfg.dot_marker_size,
 			func_anim_take_curve= easing.InSine, -- easing function used for item take animation
@@ -218,10 +200,16 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 						mark.is_mute    = not obj:is_talk_enabled()
 						mark.hidden     = (mark.hidden and mark.is_mute) or (mark.is_enemy and not mark.is_wounded)
 						--dump("%s is %s stalker | enemy %s | wounded %s | mute %s", mark.name, mark.is_enemy, mark.is_wounded, mark.is_mute)
-						if mark.is_wounded and not mark.was_wounded then
-							local _ = debug_dump and vl("%s detected as wounded: %s", mark.name, mark.is_wounded)
-							mark.was_wounded = true
-							set_secondary_action(mark)
+						if mark.is_wounded and not (mark.was_wounded) then
+							mark.was_wounded 	= true
+							--local wounded 		= load_var(obj, "wounded_state")
+							--local state 		= state_mgr.get_state(obj)
+							--dump("%s detected as wounded: %s | state: %s", mark.name, wounded, state)
+							if mark.is_enemy then
+								-- do nothing at this time, enemies with surrender dialog can talk
+							else
+								set_secondary_action(mark)
+							end
 						end
 						if mark.is_mute then
 							show_pri = false
@@ -233,7 +221,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					end
 					local dist          = mark.last_dist or 999
 					local in_range      = dist <= (mark.interact_dist or 2.5)
-					local hide          = (mark.hidden or (not in_range))
+					local hide          = mark.hidden --(mark.hidden or (not in_range))
 					local _             = (not hide) and dump("[DotMarks] [%s][%s] Visibility and UI checks for %s", mark.id, now, mark.name or mark.tutorial or mark.text)
 					
 					cfg.in_pickup_range[id] = mark.is_pickup and in_range and dist or nil
@@ -340,7 +328,9 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 							end
 							-- Passed NPC and container checks
 							if in_range then
-								if mark.is_pickup then
+								if mark.is_campfire then
+									show_pri = cfg.active_campfire and (cfg.active_campfire == mark.id)
+								elseif mark.is_pickup then
 									if mark.glowstick_sec and can_pickup_glowstick(obj, id, dist) then
 										if (not cfg.available_pickup) then
 											cfg.available_pickup = id
@@ -378,7 +368,9 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 								end
 							end
 							--dump("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id), show_pri)
-							mark.use_pri:ShowPrompt(show_pri)
+							if mark.use_pri then
+								mark.use_pri:ShowPrompt(show_pri)
+							end
 							-- ================================================================================
 							-- Check availability of secondary interact prompt
 							if mark.alt_interact then
@@ -678,7 +670,10 @@ function do_marker_popin(
 
 	local anim_id = mark_id .. "_popin"
 
-	if active_anims[mark_id] then
+	if not active_anims[mark_id] then
+		active_anims[mark_id] = {}
+	end
+	if active_anims[mark_id].popin then
 		popin_active = nil
 	end
 	popin_active = mark_id
@@ -690,7 +685,7 @@ function do_marker_popin(
 	local end_time  = time_global() + duration
 
 	easing_func = easing_func or function(x) return x end
-	active_anims[mark_id] = {
+	active_anims[mark_id].popin = {
 		mark_id     = mark_id,
 		anim_id     = anim_id,
 		start_time  = start_time,
@@ -712,7 +707,7 @@ function do_marker_popin(
 				-- Timeout to catch orphaned timeevents
 				anim_state = 1
 			else
-				local anim = active_anims[mark_id]
+				local anim = active_anims[mark_id].popin
 				local mark = hmm:GetMarker(mark_id)
 				if not (mark and mark.is_shown) then
 					anim_state = 1
@@ -734,7 +729,7 @@ function do_marker_popin(
 
 			if (anim_state == 1) then
 				if on_finish_func then on_finish_func() end
-				active_anims[mark_id] = nil
+				active_anims[mark_id].popin = nil
 				popin_active = nil
 				return true
 			end
@@ -921,12 +916,13 @@ end
 -- =====================================================================]]
 
 class "InteractPrompt" (CUIScriptWnd)
-
+-- =======================================================================
 function InteractPrompt:__init(anchor, args) super()
 	vl("InteractPrompt:__init | event %s | name %s | tutorial %s", args and args.event, args and args.name, args and args.tutorial)
 	self:SetAutoDelete(true)
 	self.elements = {
 		["wnd"]         = true,
+		["drop"] 		= true,
 		["prompt"]      = false,
 		["prompt_l"]    = false,
 		["prompt_c"]    = false,
@@ -940,6 +936,61 @@ function InteractPrompt:__init(anchor, args) super()
 	}   -- bool is whether to scale alpha
 	self.xml    = CScriptXmlInit()
 	self.uid    = "dotmarks_" .. args.event
+	self:ParseArgs(args)
+	-- ===================================================================
+	--	Setup special handlers and hint filters
+	-- ===================================================================
+	self.anchor = self.args.fixed and maingameui or anchor or maingameui
+	if self.args.fixed then
+		local x,y   = get_fixed_screen_pos()
+		self.args.locked_screen_pos = vector2():set(x, y)
+	end
+	if self.args.scheme then
+		if self.args.is_button then
+			self:SetupButtonHandlers()
+		elseif self.args.scheme == "ph_door" then
+			self:SetupDoorHandlers()
+		end
+	end
+	if self.args.tutorial then
+		if (self.args.tutorial:find("campfire")) then
+			self.campfire_tut   = true
+		elseif (self.args.tutorial == "tutorial_sleep") then
+			self.sleep_tut = true
+		end
+	end	
+	self:SetupHintFilters()
+	-- ===================================================================
+	-- 	Setup text and prompts, finish init
+	-- ===================================================================
+	local color             = cfg.colors
+	local csv2clr           = csv_argb_to_tbl
+	self.text_color_default = clr_tbl(255, 255, 255, 255)
+	self.text_hidden        = clr_tbl(0, 0, 0, 0)
+	self.text_color_busy    = csv2clr(args.argb_busy)   or color.clr_text_busy  or self.text_color_default
+	self.text_color_light   = csv2clr(args.argb_light)  or color.clr_text_light or self.text_color_default
+	self.text_color_dark    = csv2clr(args.argb_dark)   or color.clr_text_dark  or self.text_color_default
+	self.progress_color     = csv2clr(args.argb_prog)   or color.clr_key_hold or csv_argb_to_tbl({255,255,215,0})
+	self.active_prefix      = args.active_prefix or args.act    or ""
+	self.active_prompt      = args.active_prompt or args.text   or (args.tutorial and trimmed_prompt(gts(args.tutorial))) or ""
+	self.active_suffix      = args.active_suffix or args.suffix or ""
+	self.last_state         = false
+	self:on_option_change()
+	self:BusyState(false)
+	self:ShowPrompt(args.begin_active, "init")
+	-- ===================================================================
+	RegisterScriptCallback("actor_on_net_destroy", self)
+	RegisterScriptCallback("on_option_change", self)
+	RegisterScriptCallback("actor_on_update", self)
+	vl("[%s][InteractPrompt] Completed setup for prompt: %s", self.init_done, self:GetFullPrompt())
+end
+-- =======================================================================
+
+function InteractPrompt:ParseArgs(args)
+	if debug_dump then
+		dump("[InteractPrompt] Passed args:")
+		for k,v in pairs(args) do dump("|| %s = %s", k, v) end
+	end
 	args        = args or {}
 	args.func   = args.func or (function() end)
 	args.event  = self:Event(args.event)
@@ -962,71 +1013,42 @@ function InteractPrompt:__init(anchor, args) super()
 	args.act    = args.act or ""
 	args.name   = args.name or ""
 	args.fixed  = ((args.fixed ~= nil) and args.fixed) or cfg.fixed_screen_pos
-	self.anchor = args.fixed and maingameui or anchor or maingameui
-	if args.fixed then
-		local x,y   = get_fixed_screen_pos()
-		args.locked_screen_pos = vector2():set(x, y)
+	self.args   = args
+end
+
+function InteractPrompt:SetupButtonHandlers()
+	local method = "on_use"
+	if (args.scheme == "ph_button") then
+		method = "on_press"
+	elseif (args.scheme == "ph_code") then
+		method = "on_code"
 	end
-	if args.scheme then
-		if args.is_button then
-			local method = ((args.scheme == "ph_button") and "on_press" or "on_code")
-			self.physbtn_active = (
-				function()
-					local btn = self.args.id and db.storage[self.args.id][args.scheme]
-					return btn and not not btn[method]
-				end
-			)
-		elseif args.scheme == "ph_door" then
-			self:SetupDoorHandlers(args)
+	self.physbtn_active = (
+		function()
+			local btn = self.args.id and db.storage[self.args.id][args.scheme]
+			return btn and not not btn[method]
 		end
+	)
+end
+
+function InteractPrompt:SetupHintFilters(filters)
+	filters = filters or self.args.hint_filters
+	self.args.hint_filters = self.args.hint_filters or {}
+	if (not filters) or (is_empty(filters)) then return end
+	function add_hint_filter(m, r)
+		hintfilters.add(m, r)
+		self.args.hint_filters[m] = r
+		self.filters[m] = function() return hintfilters.get_state(m) end
+		self.prompts[m] = function() return self.filters[m]() and hintfilters.get_text(m) or nil end
 	end
 
-	if debug_dump then
-		dump("[InteractPrompt] Passed args:")
-		for k,v in pairs(args) do dump("|| %s = %s", k, v) end
+	self.filters = {}
+	self.prompts = {}
+	for k,v in pairs(filters) do
+		add_hint_filter(k, v)
 	end
-	if args.hint_filters then
-		vl("Setting up %s hint filters", size_table(args.hint_filters))
-		self.filters = {}
-		self.prompts = {}
-		for k,v in pairs(args.hint_filters) do
-			hintfilters.add(k, v)
-			self.filters[k] = function() return hintfilters.get_state(k) end
-			self.prompts[k] = function() return self.filters[k]() and hintfilters.get_text(k) or nil end
-		end
-		RegisterScriptCallback("on_quickhelp_text_update", self)
-	end
-
-	local color             = cfg.colors
-	local csv2clr           = csv_argb_to_tbl
-	self.text_color_default = clr_tbl(255, 255, 255, 255)
-	self.text_hidden        = clr_tbl(0, 0, 0, 0)
-	self.text_color_busy    = csv2clr(args.argb_busy)   or color.clr_text_busy  or self.text_color_default
-	self.text_color_light   = csv2clr(args.argb_light)  or color.clr_text_light or self.text_color_default
-	self.text_color_dark    = csv2clr(args.argb_dark)   or color.clr_text_dark  or self.text_color_default
-	self.progress_color     = csv2clr(args.argb_prog)   or color.clr_key_hold or csv_argb_to_tbl({255,255,215,0})
-
-	self.active_prefix      = args.active_prefix or args.act    or ""
-	self.active_prompt      = args.active_prompt or args.text   or (args.tutorial and trimmed_prompt(gts(args.tutorial))) or ""
-	self.active_suffix      = args.active_suffix or args.suffix or ""
-	self.args               = args
-	if self.args.tutorial then
-		if (self.args.tutorial:find("campfire")) then
-			self.campfire_tut   = true
-		elseif (self.args.tutorial == "tutorial_sleep") then
-			self.sleep_tut = true
-		end
-	end
-	self.last_state         = false
-	self:on_option_change()
-	self:BusyState(false)
-	self:ShowPrompt(args.begin_active, "init")
-
-	RegisterScriptCallback("actor_on_net_destroy", self)
-	RegisterScriptCallback("on_option_change", self)
-	RegisterScriptCallback("actor_on_update", self)
-	
-	vl("[%s][InteractPrompt] Completed setup for prompt: %s", self.init_done, self:GetFullPrompt())
+	self.args.hint_filters = filters
+	RegisterScriptCallback("on_quickhelp_text_update", self)
 end
 
 function InteractPrompt:GetMark()
@@ -1044,8 +1066,9 @@ function InteractPrompt:GetInvWeightDisplay(weight)
 	return string.format(" ($%s%.2f %s$clr_def)", code, self.weight, st_kg)
 end
 
-function InteractPrompt:SetupDoorHandlers(args)
+function InteractPrompt:SetupDoorHandlers()
 	vl("Setting up door handler object and methods")
+	local args = self.args
 	local ph_door = args.id and db.storage[args.id]["ph_door"]
 
 	self.door = {
@@ -1085,6 +1108,8 @@ function InteractPrompt:SetupDoorHandlers(args)
 		end
 	)
 	args.text = gts(self.door.tip())
+	self.args.hint_filters = {}
+	for k,v in pairs(door.tips) do self.args.hint_filters[v] = v end
 end
 
 
@@ -1165,7 +1190,8 @@ function InteractPrompt:BuildUI()
 	self.drop           = xml:InitStatic("box", self.wnd)
 	self.drop:SetWndPos(vector2():set(-boxlen, -1))
 	self.drop:InitTexture(cfg.main_drop_texture)
-	self.drop:SetTextureColor(get_argb(clamp(cfg.interact_drop_alpha * 255, 0, 255), 255, 255, 255))
+	self:eleSetBaseColorScheme(self.drop, clr_tbl(clamp(cfg.interact_drop_alpha * 255, 0, 255), 255, 255, 255))
+	--self.drop:SetTextureColor(get_argb(clamp(cfg.interact_drop_alpha * 255, 0, 255), 255, 255, 255))
 	self:SetupConnectingLine()
 
 	local one_char = (#args.bind == 1)
@@ -1427,10 +1453,8 @@ end
 
 function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 	-- Adapted from z_item_icon_info in Utjan's Item UI
-	-- TODO: try again to add drop shadows/background to the dots
-	-- Consider trying to arrange them in a pentagon/square so they can fit better
 	if not cfg.show_part_condition then return end
-	if not item_icon_info_mcm then return end
+	if not (z_item_icon_info and item_icon_info_mcm) then return end
 	if self.parts_indicators then
 		for k,v in pairs(self.parts_indicators) do
 			self.parts_indicators[k]:Show(false)
@@ -1449,16 +1473,32 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 	if is_empty(se_parts) then return end
 	local parts = dup_table(se_parts)
 
-	local sep = (cfg.parts_dot_sep_width or 2)
+	local sep = cfg.parts_dot_sep_width or 1
 	local base_x = (cfg.parts_dot_pos_x or 0)
 	self.parts_container = self.xml:InitStatic("box", anchor or self.wnd)
 	self.parts_container:SetWndPos(vector2():set(base_x, cfg.parts_dot_pos_y or 0))
 	self.parts_indicators = self.parts_indicators or {}
+	self.parts_shadows = self.parts_shadows or {}
 
 	self.xml:ParseFile("ui_utjan_icon_info.xml")
+
+	local drop_rad 		= cfg.parts_dot_shadow_radius or 0.5
+	local dot_scale 	= cfg.parts_dot_scale or 1
+	local cond_dot_h 	= dot_scale * 5
+	local cond_dot_w 	= cond_dot_h * cfg.unsquish_ratio
+	local shadow_sz 	= cond_dot_h + (drop_rad * 2)
+	local shadow_a 		= clamp((cfg.parts_dot_shadow_alpha or 0) * 255, 0, 255)
+
 	for part, v in pairs(parts) do
 		if SYS_GetParam(1, part, "cond_part") then
-			self.parts_indicators[part] = self.parts_indicators[part] or self.xml:InitStatic("cond_dot", self.parts_container)
+			if not self.parts_indicators[part] then
+				self.parts_shadows[part]	= self.xml:InitStatic("cond_dot", self.parts_container)
+				self.parts_indicators[part] = self.xml:InitStatic("cond_dot", self.parts_shadows[part])
+				self.parts_shadows[part]:SetWndSize(vector2():set(shadow_sz * cfg.unsquish_ratio, shadow_sz))
+				self.parts_shadows[part]:SetTextureColor(get_argb(shadow_a, 0, 0, 0))
+				self.parts_indicators[part]:SetWndSize(vector2():set(cond_dot_w, cond_dot_h))
+				self.parts_indicators[part]:SetWndPos(vector2():set(drop_rad * cfg.unsquish_ratio, drop_rad))
+			end
 		else
 			parts[part] = nil
 		end
@@ -1466,17 +1506,12 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 
 	local i = 0
 	local size = 0
-	for part, condition in spairs(parts, parts_sort) do
-		local cond_dot_h = 4
-		local cond_dot_w = cond_dot_h * cfg.unsquish_ratio
-		cond_dot_h = cond_dot_h * 1
-		cond_dot_w = cond_dot_w * 1
 
-		self.parts_indicators[part]:SetWndRect(Frect():set(0, 0, cond_dot_w, cond_dot_h))
-		
-		local x = base_x + 1 + (cond_dot_w + sep) * i
+	for part, condition in spairs(parts, z_item_icon_info.parts_sort) do
+		local x = base_x + 1 + ((cond_dot_w + sep) * i)
 		local y = 0
-		self.parts_indicators[part]:SetWndPos(vector2():set(x, y))
+		self.parts_shadows[part]:SetWndPos(vector2():set(x, y))
+		--self.parts_indicators[part]:SetWndPos(vector2():set(x + (drop_rad * cfg.unsquish_ratio), y + drop_rad))
 
 		local c = get_condition_color(condition)
 		local color = get_argb(c.a, c.r, c.g, c.b)
@@ -1484,6 +1519,7 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 		if color then
 			self.parts_indicators[part]:SetTextureColor( color )
 		end
+		self.parts_shadows[part]:Show(true)
 		self.parts_indicators[part]:Show(true)
 		size = x + cond_dot_w + sep
 		i = i + 1
@@ -1553,7 +1589,6 @@ function InteractPrompt:SetBindText(text)
 	self.bind_sh:TextControl():SetText(text)
 end
 
-
 function InteractPrompt:on_key_hold(key)
 	--dump("[%s] InteractPrompt:on_key_hold | key %s", key)
 	if (self.disabled or self.destroyed or self.busystate) then return end
@@ -1594,7 +1629,6 @@ function InteractPrompt:on_key_hold(key)
 		cfg.held_time   = ui_mcm and ui_mcm.hold[key] and ui_mcm.hold[key][self.uid]
 	end
 end
-
 
 function InteractPrompt:on_key_press(key, flags)
 	if (self.disabled or self.destroyed or self.busystate) then return end
@@ -1707,6 +1741,7 @@ function InteractPrompt:ManageFadeAnim(
 		r, g, b, 
 		anim_curve_modifier_func, on_finish_func, abort_func
 	)
+
 	local fade_dir = (alpha_start > alpha_end) and "out" or "in"
 	if (event_id == nil) then event_id = "anim_fade" end
 	local anim_id = event_id.."_"..tostring(time_global())
@@ -1714,19 +1749,32 @@ function InteractPrompt:ManageFadeAnim(
 	g = g or 255
 	b = b or 255
 
-	if active_anims[event_id] then
-		alpha_start = active_anims[event_id].a
-		-- Repeat invocation of non-instanced fade event, abort fade and start over
-		active_anims[event_id] = nil
-		if on_finish_func then on_finish_func(self) end
+	local start_time= time_global()
+	local end_time  = time_global() + duration
+	local mark 		= self:GetMark()
+	local mark_id 	= mark and mark.mark_id or ""
+	if not active_anims[mark_id] then 
+		active_anims[mark_id] = {}
+	end
+
+	--dump("[%s] [fading: %s] AnimateFade passed initial checks, time to fade %s", time_global(), self.fading_out, fade_dir)
+
+	if active_anims[mark_id][event_id] then
+		--dump("[%s] Existing animation found for %s::%s, updating", time_global(), mark_id, event_id)
+		local anim 		= active_anims[mark_id][event_id]
+		anim.start_time = start_time
+		anim.end_time 	= end_time
+		anim.a_start 	= anim.a
+		anim.a_end 		= alpha_end
+		anim.r 			= r
+		anim.g 			= g
+		anim.b 			= b
+		return
 	end
 
 	local anim_state = 0
-	local start_time= time_global()
-	local end_time  = time_global() + duration
 	local anim_curve_modifier_func = anim_curve_modifier_func or function(x) return x end
-	active_anims[event_id] = {
-		instanced   = instanced and true or false,
+	active_anims[mark_id][event_id] = {
 		anim_id     = anim_id,
 		start_time  = start_time,
 		end_time    = end_time,
@@ -1738,19 +1786,22 @@ function InteractPrompt:ManageFadeAnim(
 		g           = g,
 		b           = b,
 	}
-	
+
 	CreateTimeEvent("animate_fade"..event_id..anim_id, time_global(), 0, 
 		function()
 			local abort = abort_func and abort_func(self)
 			if abort then
 				anim_state = 1
 			else
-				local anim = active_anims[event_id]
+				local anim = active_anims[mark_id][event_id]
 				if anim then
 					local x = anim_curve_modifier_func(anim_state)
 					local alpha = lerp(alpha_start, alpha_end, x)
+					anim.a = alpha
 					self.curr_alpha = alpha
+					--dump("[%s] anim_state %s | setting alpha to %s", anim_state, time_global(), alpha)
 					for k,v in pairs(self.elements) do
+						
 						self:SetAlpha(k, alpha, v)
 					end
 				else
@@ -1759,6 +1810,8 @@ function InteractPrompt:ManageFadeAnim(
 			end
 
 			if (anim_state == 1) then
+				active_anims[mark_id][event_id] = nil
+				--dump("[%s] anim complete", time_global())
 				if on_finish_func then on_finish_func(self) end
 				return true
 			end
@@ -1770,7 +1823,6 @@ end
 function InteractPrompt:AnimateFade(inout)
 	if inout and self.fading_in then return end
 	if (not inout) and self.fading_out then return end
-
 
 	local uid = "prompt_fade" .. self.args.event
 	if not self.curr_alpha then
@@ -1798,7 +1850,7 @@ function InteractPrompt:AnimateFade(inout)
 			self.fading_out = true
 			self:ManageFadeAnim(
 				self.curr_alpha, 0, cfg.prompt_fade_out_time, uid .. "out", false, nil, nil, nil, 
-				nil,
+				nil,-- easing.InSine
 				self.UpdatePromptVisibility, self.AbortFadeOut
 			)
 		end
@@ -1821,27 +1873,44 @@ function InteractPrompt:RegisterScriptCallbacks(tf)
 	end
 end
 
-function InteractPrompt:OnVisibilityChange(state, reason)
-	local _ = debug_dump and vl("[%s][InteractPrompt:OnVisibilityChange] to %s%s", time_global(), state, reason)
+function InteractPrompt:UpdateLinkedMark(state)
+	if not self.linked_mark then return end
+	if (state == nil) then state = not self.disabled end
+	--dump("Propagating state %s to linked mark %s", state, self.linked_mark.name)
+	self.linked_mark:ActiveSwap(state)
 
-	self:RegisterScriptCallbacks(state)
+	if state and can_start_popin_anim(self.linked_mark) then
+		init_active_marker_popin(self.linked_mark)
+	end
+end
 
+function InteractPrompt:CheckCampfireStates()
 	if self.campfire_tut then
 		_ = debug_dump and vl("Checking campfire state for %s", self.args.tutorial)
 		local obj = get_nearby_campfire(5, false)
 		if obj then
-			local mark = self:GetMark()
+			local id = obj and obj:id()
+			local mark = id and cfg.markers[id]
 			if mark then
-				mark:ActiveSwap(state)
-				if state and can_start_popin_anim(mark) then
-					init_active_marker_popin(mark)
-				end
+				self.linked_mark = mark
 			end
+			cfg.active_campfire = id
 		else
 			dl("Clearing stuck tutorial %s at %s", self.tutorial, time_global())
+			cfg.active_campfire = nil
 			self:Destroy()
-		return end
+		end
+	elseif self.args.is_campfire then
+		--
+
 	end
+end
+
+function InteractPrompt:OnVisibilityChange(state, reason)
+	local _ = debug_dump and vl("[%s][InteractPrompt:OnVisibilityChange] to %s%s", time_global(), state, reason)
+	self:RegisterScriptCallbacks(state)
+	self:CheckCampfireStates()
+	self:UpdateLinkedMark(state)
 end
 
 function InteractPrompt:ShowPrompt(tf, reason)
@@ -1919,7 +1988,7 @@ function InteractPrompt:on_quickhelp_text_update(raw_text, loc_string, trimmed_t
 	if not (loc_string and self.prompts[loc_string]) then return end
 	if self.args.refresh_text then
 		self.args.text = trimmed_text
-		self:SetPrompt(self.args.text)
+		self:SetPrompt(nil, self.args.text)
 		return
 	end        
 end
@@ -1932,7 +2001,7 @@ function InteractPrompt:UpdateFilteredHints()
 		if hint then
 			if self.args.refresh_text then
 				self.args.text = hint
-				self:SetPrompt(self.args.text)
+				self:SetPrompt(nil, self.args.text)
 				return
 			end            
 		end
@@ -2020,6 +2089,8 @@ function InteractPrompt:actor_on_update()
 	local mark = self:GetMark()
 	if (self.args.tutorial or (mark and mark.is_stalker)) then
 		self:CheckForStuckTutorial()
+		self:CheckCampfireStates()
+		self:UpdateLinkedMark()
 		_ = (not self.args.pri) and mark and mark.is_wounded and self:CheckWoundedStalkers()
 		self:UpdateLongPress()
 		return
@@ -2043,6 +2114,10 @@ function InteractPrompt:Destroy(reason)
 	self:HideDialog()
 	self.hint_filters   = nil
 	self.destroyed      = true
+	if self.linked_mark and self.linked_mark.use_pri then
+		self.linked_mark:ActiveSwap(false)
+		self.linked_mark.use_pri:ShowPrompt(false)
+	end
 	get_hud():RemoveDialogToRender(self)
 	
 	if reason then
@@ -2410,7 +2485,7 @@ function get_args_for_valid_objects(obj)
 	if not args.texture then return end
 
 	local method_txt = (method > 1) and "iteration" or (method > 0) and "kind" or "section"
-	dl("get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
+	local _ = (DEV_DEBUG or debuglogs) and printf("[DotMarks] get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
 	return args
 end
 
@@ -2621,11 +2696,11 @@ function unregister_scanned_entity(id)
 	if ind then
 		nearby_pickups[ind] = nil
 	end
-	cfg.in_pickup_range[id] = nil
-	pickup_index[id] = nil
-	cfg.invboxes[id] = nil
-	cfg.target_data[id] = nil
 	scanned[id] = nil
+	cfg.invboxes[id] = nil
+	pickup_index[id] = nil
+	cfg.target_data[id] = nil
+	cfg.in_pickup_range[id] = nil
 	if cfg.markers[id] then
 		local mark = cfg.markers[id]
 		if mark.use_pri then
@@ -2645,6 +2720,9 @@ function unregister_scanned_entity(id)
 	vl("[%s] Unregistering scanned entity for %s and nulling all pointers to it", time_global(), nameid(name, id))
 end
 
+function mark_is_shown(id)
+	return id and cfg.markers[id] and cfg.markers[id].is_shown
+end
 
 function marked_obj_has_ammo(id)
 	return id and cfg.markers[id] and (cfg.markers[id].ammo_count and cfg.markers[id].ammo_count > 0)
@@ -2741,7 +2819,6 @@ function scan_nearby_object(obj)
 		args.mark_id    = m_id
 		args.name       = args.name or find_best_localization(obj, nil, sec) or nil
 		args.preset     = "dotmark"
-
 		if debug_dump then
 			vl("Passing the following args to utils_catspaw_hudmarks:")
 			for k,v in pairs(args) do
@@ -3384,46 +3461,6 @@ function cycle_targeted_pickup(dir)
 	vl("Pickup cycled | prev ind %s id %s | new ind %s id %s", ind_curr, nearby_pickups[ind_curr], ind_new, locked_id)
 end
 
-
---[[
--- fixes cycling to items behind the player, but broken - investigate why
-function cycle_targeted_pickup(dir)
-	if not (dir and get_current_target()) then return end
-	local max       = size_table(nearby_pickups)
-	local _ = debug_dump and vl("max %s | in_pickup_range %s", max, size_table(cfg.in_pickup_range))
-	if (max < 2) or is_empty(cfg.in_pickup_range) then return end
-	local id_curr   = get_current_target()
-	local ind_curr  = pickup_index[id_curr] or 1
-	local checks    = 0
-	local ind_new
-	local curr = ind_curr
-	local function cycle()
-		checks = checks + 1
-		if (dir > 0) then
-			curr     = (curr < max) and (curr + 1) or 1
-		else
-			curr     = (curr > 1) and (curr - 1) or max
-		end
-		local id = nearby_pickups[curr]
-		local mark = id and cfg.markers[id]
-		if not (mark and mark.is_shown) then
-			if (checks < max) then
-				cycle()
-				return
-			else
-				return
-			end
-		end
-		ind_new = curr
-	end
-	cycle()
-
-	locked_id       = nearby_pickups[ind_new]
-	local _         = ind_new and (ind_new ~= ind_curr) and play_snd_path(cfg.snd_path_blip)
-	vl("Pickup cycled | prev ind %s id %s | new ind %s id %s", ind_curr, nearby_pickups[ind_curr], ind_new, locked_id)
-end
---]]
-
 function reset_nearby_item_tables()
 	locked_id       = nil
 	actor_moved     = true
@@ -3445,15 +3482,17 @@ function update_nearby_pickups()
 
 	local i = 1
 	for k,v in spairs(cfg.in_pickup_range) do
-		nearby_pickups[i] = k
-		pickup_index[k] = i
-		i = i + 1
+		if mark_is_shown(k) then
+			nearby_pickups[i] = k
+			pickup_index[k] = i
+			i = i + 1
+		end
 	end
 	actor_moved = false
 end
 
 function setup_tutorial_prompt(tutorial)
-	dump("Need to set up a new interact UI for tutorial %s", tutorial)
+	dl("Need to set up a new interact UI for tutorial %s", tutorial)
 	local args = get_cfg_for_type("args", "Tutorials") or {}
 	args.tutorial           = tutorial
 	args.fixed              = true
@@ -3529,13 +3568,18 @@ function do_garbage_collection()
 	end
 end
 
-function check_hint_filters()
+function update_hint_filters()
 	if not (cfg.hint_filter and cfg.hint_filter.enabled) then return end
+	local hint = cfg.hint_filter.last_raw_text
 	if is_empty(cfg.hint_filter.enabled) then return end
 	local text = cfg.hint_filter.update_text()
+	if not text then return end
+	--dump("[%s] Hint filter update%s", time_global(), text and (" - text is: "..text) or ", no text")
 end
 
-local function perform_debugging_checks() end
+local function perform_debugging_checks()
+	dump("last target: %s | crosshair %s", hmm.last_target, hmm.last_crosshair)
+end
 
 -- =======================================================================
 --      MAIN SCAN LOOP
@@ -3543,12 +3587,8 @@ local function perform_debugging_checks() end
 function actor_on_update()
 	--perform_debugging_checks() -- only uncommented when needed
 	if not scanning then return end
+	update_hint_filters()
 	cfg.actor_comm  = character_community(db.actor):sub(7)
-	-- ===================================================================
-	--  Hint filters
-	--  Watches and manages the UIStaticQuickHelp text prompts
-	-- ===================================================================
-	check_hint_filters()
 	-- ===================================================================
 	--  Tutorial monitors
 	--  Watches for state flags set by modxml_tutorial_hooks.script

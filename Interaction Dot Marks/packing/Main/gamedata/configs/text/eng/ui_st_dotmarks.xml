@@ -1118,4 +1118,18 @@
 		\nThe default animation just briefly causes the actor to crouch and look at the stalker while the usage sound plays. If you have the Animated NPC Healing addon installed, its animation is MUCH better and DotMarks will use that instead.</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale">
+		<text>Size of the part condition dots</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale_desc">
+		<text>This slider adjusts the size of the part condition dots in DotMarks. A value of 1 is their default intended size, while zero will hide these icons entirely.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_shadow_alpha">
+		<text>Part dots drop shadow transparency</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_shadow_alpha_desc">
+		<text>Sets the alpha (transparency) channel for the drop shadows underneath the part condition dots. Set to zero to disable the drop shadows.</text>
+	</string>
+
 </string_table>

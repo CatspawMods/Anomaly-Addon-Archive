@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.12-b5" -- Still a pre-release test build!
-release_date    = 20250424
+script_version  = "0.12-b6" -- Still a pre-release test build!
+release_date    = 20250425
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -181,8 +181,8 @@ local base_config = {
                 if not obj then return end
                 if IsItem("quest", sec or obj:section()) then return true end
                 -- Stop there, that's good enough to match
-                local scheme = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
-                return (scheme == "ph_button") or (scheme == "ph_code")
+                local scheme = get_scheme_for_obj(obj)
+                return (scheme == "ph_button") or (scheme == "ph_code") or (scheme == "ph_idle")
                 -- Catches physics objects meant for interaction, like the Miracle Machine buttons
             end
         ),
@@ -268,7 +268,7 @@ local base_config = {
                     -- Causes marker position to be based on this bone
                     pos_adjust      = vector():set(0, 0.1, 0),
                     -- Adjust final marker world pos additively by this value
-                    texture         = is_enemy and "" or cfg.marker_dotmark,
+                    texture         = cfg.marker_dotmark,
                     hint_filters    = {["character_use"] = "character_use"},
                     -- Hint filters specify localization strings that this marker's primary 
                     -- interaction prompt should watch for and erase from the QuickHelp static, 
@@ -515,8 +515,10 @@ local base_config = {
                     line_adj_h      = -8,
                     line_adj_y      = 8,
                     far_fade_dist   = early_scan_radius() - 1.5,
-                    far_hide_dist   = early_scan_radius() - 0.5,
-                    far_end_dist    = early_scan_radius() + 5,
+                    far_hide_dist   = 1,
+                    scale_dist_min  = early_scan_radius() - 1.5,
+                    scale_dist_mid  = early_scan_radius() - 0.5,
+                    scale_dist_max  = early_scan_radius(),
                     width           = 16,
                     height          = 16,
                 }
@@ -665,22 +667,23 @@ local base_config = {
                 if not obj then return end
                 local visual    = obj:get_visual_name()
                 local id        = obj:id()
-                local scheme    = obj and obj:id() and db.storage[obj:id()] and db.storage[obj:id()].active_scheme
-                local ph_button = id and scheme and (scheme == "ph_button") and db.storage[id][scheme]
-                local ph_code   = id and scheme and (scheme == "ph_code") and db.storage[id][scheme]
-                local is_button = (ph_button or ph_code)
+                local scheme    = get_scheme_for_obj(obj)
+                local ph_button = (scheme == "ph_button") and db.storage[id][scheme]
+                local ph_code   = (scheme == "ph_code") and db.storage[id][scheme]
+                local ph_idle   = (scheme == "ph_idle") and db.storage[id][scheme]
+                local is_button = (ph_button or ph_code or ph_idle)
                 local is_pickup = not is_button
                 if is_pickup then
                     set_target_data(id, cfg.metadata_types.is_pickup, not is_button)
                 end
                 local vadjust   = visual and cfg.button_visuals[visual] or 0
                 return {
-                    logged_type     = (ph_button or ph_code) and "a quest interaction" or "a quest item",
-                    is_button       = is_button,
+                    logged_type     = is_button and "a quest interaction" or "a quest item",
+                    is_button       = is_button or nil,
                     visual          = visual,
                     scheme          = scheme or nil,
-                    is_pickup       = is_pickup,
-                    refresh_text    = is_button,
+                    is_pickup       = is_pickup or nil,
+                    refresh_text    = is_button or nil,
                     no_sec          = true,
                     pos_adjust      = vector():set(0, vadjust, 0),
                     bone            = get_best_pos_bone(obj) or nil,
@@ -689,6 +692,7 @@ local base_config = {
                     {
                         ["st_codelock"] = "st_codelock",
                         ["st_make_a_wish"] = "st_make_a_wish",
+                        ["st_lx8_lift_button"] = "st_lx8_lift_button",
                         ["tip_need_access_card"] = "tip_need_access_card",
                         ["pas_b400_tip_switcher"] = "pas_b400_tip_switcher",
                         ["tips_rad_switcher_press"] = "tips_rad_switcher_press",
@@ -750,6 +754,7 @@ local base_config = {
                 local args = {
                     logged_type         = "a door",
                     texture             = cfg.marker_dotmark,
+                    refresh_text        = true,
                     is_door             = true,
                     no_sec              = true,
                     bone                = bone,
@@ -939,6 +944,7 @@ local base_config = {
         set_state = (
             function(m, state)
                 if not (m and cfg.hint_filter.filters and cfg.hint_filter.filters[m]) then return end
+                local last_state = cfg.hint_filter.filters[m].state
                 cfg.hint_filter.filters[m].state = state
                 if state then
                     if cfg.hint_filter.last_active and (cfg.hint_filter.last_active ~= m) then
@@ -946,6 +952,7 @@ local base_config = {
                     end
                     cfg.hint_filter.last_active = m
                 end
+                if (last_state == state) then return true end
                 vl("State for hint filter %s is now %s", m, state)
                 return true
             end
@@ -989,7 +996,9 @@ local base_config = {
             function()
                 local hf = cfg.hint_filter
                 hf.last_raw_text = get_quickhelp_text()
-                if not hf.last_raw_text then
+                if hf.last_raw_text then
+                    --dump("QuickHelp raw text: %s", hf.last_raw_text)
+                else
                     -- No hint
                     if hf.last_active then
                         hf.set_state(hf.last_active, false)
@@ -999,6 +1008,7 @@ local base_config = {
                 local text = trimmed_prompt(hf.last_raw_text)
                 local match = text and hf.trims[text]
                 if match then
+                    --dump("QuickHelp match: %s = %s", hf.last_raw_text, match)
                     -- QuickHelp text matches active filter
                     hf.set_state(match, true)
                     hf.last_active = match
@@ -1006,6 +1016,7 @@ local base_config = {
                 local flags = match and { text = hf.filters[match].ts_repl or nil } or {}
                 SendScriptCallback("on_quickhelp_text_update", hf.last_raw_text, hf.last_active, hf.get_text(hf.last_active), flags)
                 if cfg.hide_van_interact_ui then
+                    -- Hide vanilla UI
                     set_quickhelp_text()
                 elseif flags.text and flags.text ~= text then
                     set_quickhelp_text(flags.text)
@@ -1032,6 +1043,11 @@ function is_special_case_npc(obj)
     )
 end
 
+function get_scheme_for_obj(obj)
+    local id        = obj and obj:id()
+    local scheme    = id and db.storage[id] and db.storage[id].active_scheme
+    return scheme, scheme and db.storage[id][scheme]
+end
 
 function get_quickhelp_text()
     return ui_hud_dotmarks.get_quickhelp_text()

@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.9"
-release_date    = 20250420
+script_version  = "0.10"
+release_date    = 20250425
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -669,6 +669,25 @@ function is_object_already_targeted(id)
     local _ = debug_dump and vl("is_object_already_targeted(%s): %s | pickup: %s | look_target: %s | crosshair: %s", id, result, is_pickup, is_target, is_xhair)
 end
 
+function init_hud_mark(xml, texture, args)
+    if not xml then return end
+    args = args or {}
+    local marker = xml:InitStatic("marker", args.anchor or ActorMenu.get_maingame())
+    vl("* Initting texture %s for marker", texture or "[BLANK]")
+    marker:InitTexture(texture or "")
+    if args.color then
+        marker:SetTextureColor(args.color)
+    end
+    if args.pos or args.screen_pos then
+        local spos = args.screen_pos
+        if args.pos then
+            spos = world_to_ui(args.pos, nil, nil, true)
+        end
+        if not spos then return marker end
+        marker:SetWndPos(spos)
+    end
+    return marker
+end
 
 class "UIHUDMarker" (CUIScriptWnd)
 -- ======================================================================
@@ -993,7 +1012,6 @@ function UIHUDMarker:InitSettings(args)
     ) end
 end
 
-
 function UIHUDMarker:InitMarker()
     self:SetAutoDelete(true)
     self.element_list = {
@@ -1008,20 +1026,19 @@ function UIHUDMarker:InitMarker()
     end
     vl("[UIHUDMarker:InitMarker][%s] Loading marker UI from %s", self.mark_id, self.xmlfile)
     xml:ParseFile(self.xmlfile)
-    if (not self.marker) then
-        self.marker     = xml:InitStatic("marker", self)
-    end
-    vl("* Initting texture %s for marker on %s", self.texture or "[BLANK]", self.id)
-    self.marker:InitTexture(self.texture or "")
+
+
     local color = GetARGB(255, 255, 255, 255)
     if self.custom_argb and not is_empty(self.custom_argb) then
         local pcc = self.custom_argb
         vl("* Marker %s has custom ARGB %s,%s,%s,%s", self.id, pcc.a, pcc.r, pcc.g, pcc.b)
         color = GetARGB(pcc.a,pcc.r,pcc.g,pcc.b)
     end
-    self.marker:SetTextureColor(color) -- this may require logic adjustment for transparency interacting with fades
+    if (not self.marker) then
+        self.marker     = init_hud_mark(xml, self.texture, { color = color, anchor = self })
+    end
     if (not self.label) then
-        self.label = xml:InitStatic("marker:label",self)
+        self.label = xml:InitStatic("marker:label", self)
     end
     self.label:TextControl():SetTextColor( GetARGB(255,230,230,230) )
     self.label:SetWndPos(vector2():set(0, self.hint_y_adj))
@@ -1040,19 +1057,19 @@ function UIHUDMarker:InitMarker()
     self:on_localization_change()
 
     if (not self.dist) then
-        self.dist       = xml:InitStatic("marker:distance",self)
+        self.dist       = xml:InitStatic("marker:distance", self)
     end
     self.dist:TextControl():SetTextColor( GetARGB(255,230,230,230) )
     self.dist:TextControl():SetFont(GetFontSmall())
     self.label:SetWndPos(vector2():set(0, self.dist_y_adj))
     if (not self.dist_sh) then
-        self.dist_sh    = xml:InitStatic("marker:distance_sh",self.dist)
+        self.dist_sh    = xml:InitStatic("marker:distance_sh", self.dist)
     end
     self.dist_sh:TextControl():SetTextColor( GetARGB(255,0,0,0) )
     self.dist_sh:TextControl():SetFont(GetFontSmall())
     self.dist_sh:SetWndPos(vector2():set(1, 1))
     if (not self.wref) then
-        self.wref       = xml:InitStatic("marker:distance",self.dist)
+        self.wref       = xml:InitStatic("marker:distance", self.dist)
     end
     self.wref:TextControl():SetFont(GetFontSmall())
     self.wref:Show(false)    

@@ -1127,4 +1127,19 @@
 		\nѕо умолчанию анимаци€ лишь ненадолго заставл€ет актера приседать и смотреть на преследовател€, пока играет звук использовани€. ≈сли у вас установлен аддон Animated NPC Healing, его анимаци€ намного лучше, и DotMarks будет использовать ее вместо этого.</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale">
+		<text>Size of the part condition dots</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale_desc">
+		<text>Ётот ползунок регулирует размер точек состо€ни€ детали.
+ѕри значении 1 они будут иметь размер по умолчанию, а при нулевом значении эти значки будут полностью скрыты.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_shadow_alpha">
+		<text>ѕрозрачность тени точек состо€ни€ компонента</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_shadow_alpha_desc">
+		<text>”станавливает альфа-канал (прозрачность) дл€ тени точек состо€ни€ компонента. ”становите нулевое значение, чтобы отключить тени. ”становите нулевое значение, чтобы отключить основные тени.</text>
+	</string>
+
 </string_table>

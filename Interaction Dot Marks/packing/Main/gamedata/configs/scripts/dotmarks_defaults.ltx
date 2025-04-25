@@ -96,7 +96,7 @@ tut_check_interval 			= 1949
 ; Interval in ms between tutorial garbage collection checks, cleans up stuck prompts
 near_scan_radius            = 4
 ; Radius in meters of the near scan (affects many other things)
-early_scan_radius           = 2
+early_scan_radius           = 3
 ; Radius in meters beyond the near scan for the early scan
 use_skill_system            = true
 ; Enable Skill System integration
@@ -157,7 +157,8 @@ fddar_disable_walk 			= false
 ; These should get populated at runtime with the current values from FDDA/FDDAR's MCM settings
 item_use_delay 				= 0.5
 ; Delay between taking an item and trying to use it 
-; Required to give FDDA pickup animation time to begin
+; Required to give the FDDA pickup animation time to begin
+; The item's use will not actually be triggered until FDDA's animation has completed
 item_use_timeout 			= 1200
 ; The maximum amount of time a delayed action will wait for an animation to complete
 ; before it times out and executes the action to avoid stuck timeevents
@@ -215,7 +216,6 @@ prompt_fade_in_time 		= 250
 ; Time in ms for the fade-in effect on prompts
 prompt_fade_out_time 		= 150
 ; Time in ms for the fade-out effect
-; Doesn't seem to be working - investigate as low priority
 tutorial_prompt_x 			= 512
 tutorial_prompt_y 			= 600
 ; Screen pos for the "tutorial" prompts at the bottom of the screen
@@ -275,7 +275,13 @@ show_parts_armor 			= true
 ; If Utjan's Item UI is installed, shows part condition indicators for outfits and headgear
 parts_wpo_colors 			= true
 ; Uses Weapon Parts Overhaul condition color thresholds
-parts_dot_sep_width 		= 1
+parts_dot_scale				= 1
+; Size of the part condition dots
+parts_dot_shadow_radius 	= 0.5
+; How far drop shadows extend beyond the edges of the dots
+parts_dot_shadow_alpha 		= 0.75
+; Opacity of the drop shadows for the part condition dots, 0 disables
+parts_dot_sep_width 		= 0.25
 ; Spacing between the part condition dots
 parts_dot_pos_x 			= -7
 parts_dot_pos_y				= -4
@@ -384,14 +390,13 @@ hover_dist 			= 3 	; distance in meters within which a mark can be hovered
 near_fade_dist      = 0 	; dotmarks shouldn't fade out when close
 near_hide_dist      = -1	; dotmarks shouldn't disappear completely when close
 near_end_dist       = -1	; dotmarks don't terminate on proximity
-far_hide_dist       = 0.5 	; dotmarks hide this far past the far_fade_dist (based on near_scan_radius)
 los_dist_min        = 0.15	; any closer than this and LOS is assumed true
 lost_los_dist 		= 0.5 	; LOS smoothing (LOS result cache) is disabled beyond this distance
 lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
 width               = 6		; texture width (in canvas units)
 height              = 6		; texture height (in canvas units)
 update_int          = 15	; update interval in ms for the marker itself
-skip_online_checks 	= true 	; Optimization, we can assume markers will always be online and on the same map
+skip_online_checks 	= true 	; Optimization, we can assume dotmarks will always be online and on the same map
 skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
 skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
 
@@ -495,18 +500,13 @@ load_argb 	= argb_dot_focus
 width       = 12
 height      = 12
 line_adj_h  = -11
-;line_adj_x  = 3.25
-;line_adj_y  = 10
 
 [swap_butcher]
-; 
 texture     = ui_catsy_marker_butcher
 load_argb 	= argb_icon_butcher
 width       = 16
 height      = 16
 line_adj_h  = -11
-;line_adj_x  = 4
-;line_adj_y  = 11
 
 [swap_door]
 texture     = ui_catsy_marker_door
@@ -514,8 +514,6 @@ load_argb 	= argb_icon_door
 width       = 20
 height      = 20
 line_adj_h  = -12
-;line_adj_x  = 4
-;line_adj_y  = 12
 
 [swap_stash]
 texture     = ui_catsy_marker_stash
@@ -523,8 +521,6 @@ load_argb 	= argb_icon_stash
 width       = 14
 height      = 14
 line_adj_h  = -13
-;line_adj_x  = 3
-;line_adj_y  = 12
 
 [swap_talk]
 texture     = ui_catsy_marker_talk
@@ -532,32 +528,23 @@ load_argb 	= argb_icon_talk
 width       = 16
 height      = 16
 line_adj_h  = -11
-;line_adj_x  = 4
-;line_adj_y  = 11
 
 [swap_service]
 width       = 18
 height      = 18
 line_adj_h  = -11
-;line_adj_x  = 4
-;line_adj_y  = 11
 
 [swap_task_pri]
 texture 	= ui_catsy_marker_task_pri
 width       = 18
 height      = 18
 line_adj_h  = -11
-;line_adj_x  = 4
-;line_adj_y  = 11
-
 
 [swap_task_sec]
 texture 	= ui_catsy_marker_task_sec
 width       = 18
 height      = 18
 line_adj_h  = -13
-;line_adj_x  = 4
-;line_adj_y  = 13
 
 ; ================================================================================
 ; 	DON'T TOUCH BELOW THIS LINE
@@ -634,10 +621,11 @@ dynamics\door\door_old_wood_120x240_01 	= 0
 dynamics\door\door_wood_130x250_01 		= 0
 dynamics\door\door_metal_220x260_01_l 	= -0.475
 dynamics\door\door_metal_220x260_01_r 	= -0.475
+dynamics\door\door_ship_high_l 			= 0
+dynamics\door\door_ship_high_r 			= 0
 
 [button_visuals]
 ; The code lock in X8
-; Need to check the elevator back out
 dynamics\door\door_katakomb_big_2_lock 	= 0.25
 
 [explosive_tools]
@@ -782,6 +770,7 @@ joint1
 
 [reset_table]
 20250423
+20250425
 
 [reset_20250423]
 pri_use_x_offset 		= true
@@ -789,6 +778,12 @@ pri_use_y_offset 		= true
 sec_use_x_offset 		= true
 sec_use_y_offset 		= true
 hide_connecting_line 	= true
+
+[reset_20250425]
+prompt_fade_in_time 	= true
+prompt_fade_out_time 	= true
+near_scan_radius 		= true
+early_scan_radius 		= true
 
 ; =================================================================================
 [mcm_paths]
@@ -848,6 +843,8 @@ sp_icon_pos_x 			= dotmarks/dmarkmods/
 sp_icon_pos_y 			= dotmarks/dmarkmods/
 parts_dot_pos_x 		= dotmarks/dmarkmods/
 parts_dot_pos_y 		= dotmarks/dmarkmods/
+parts_dot_scale			= dotmarks/dmarkmods/
+parts_dot_shadow_alpha 	= dotmarks/dmarkmods/
 haru_skill_coef 		= dotmarks/dmarkmods/
 skill_upd_interval 		= dotmarks/dmarkmods/
 haru_skill_name 		= dotmarks/dmarkmods/
@@ -904,7 +901,7 @@ early_scan_radius 		= dotmarks/dmarkadv/
 keybind_bg_style 		= dotmarks/dmarkadv/
 hidden_show_prompts		= dotmarks/dmarkadv/
 prompt_fade_in_time		= dotmarks/dmarkadv/
-;prompt_fade_out_time	= dotmarks/dmarkadv/
+prompt_fade_out_time	= dotmarks/dmarkadv/
 font_main_prompt 		= dotmarks/dmarkadv/
 font_item_card 			= dotmarks/dmarkadv/
 item_card_icon_sz 		= dotmarks/dmarkadv/

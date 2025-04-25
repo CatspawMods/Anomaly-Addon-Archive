@@ -368,16 +368,33 @@ function get_mods_menu()
 		},
 		{ id = "bodies_use_paw_patches",  	type = "check", 	val = 1, def = cfg.bodies_use_paw_patches },
 		{ id = "bodies_use_mpda_rules",	  	type = "check", 	val = 1, def = cfg.bodies_use_mpda_rules },
+
+		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+
 		{ id = "show_prompt_during_anim", 	type = "check", 	val = 1, def = cfg.show_prompt_during_anim },
 		{ id = "prompt_busy_during_anim",	type = "check", 	val = 1, def = cfg.prompt_busy_during_anim },
 		{ id = "item_use_delay", 			type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.item_use_delay },
+
+		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+
 		{ id = "takeall_does_autoloot", 	type = "check", 	val = 1, min = -384, max = 768, def = cfg.takeall_does_autoloot },
 		{ id = "hijack_autoloot_keybind", 	type = "check", 	val = 1, min = -384, max = 768, def = cfg.hijack_autoloot_keybind },
+
+		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+
 		{ id = "sp_hide_junk_items", 		type = "check", 	val = 1, def = cfg.sp_hide_junk_items },
 		{ id = "sp_icon_pos_x", 			type = "input", 	val = 2, min = -512, max = 1024, def = cfg.sp_icon_pos_x},
 		{ id = "sp_icon_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.sp_icon_pos_y },
+
+		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+
 		{ id = "parts_dot_pos_x", 			type = "input", 	val = 2, min = -512, max = 1024, def = cfg.parts_dot_pos_x },
 		{ id = "parts_dot_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.parts_dot_pos_y },
+		{ id = "parts_dot_scale", 			type = "track", 	val = 2, min = 0, step = 0.1, max = 2, def = cfg.parts_dot_scale },
+		{ id = "parts_dot_shadow_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.parts_dot_shadow_alpha },
+
+		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+
 		{ id = "use_skill_system", 			type = "check", 	val = 1, def = cfg.use_skill_system },
 		{ id = "haru_skill_coef", 			type = "input", 	val = 2, min = 0, max = 5, step = 0.01, def = cfg.haru_skill_coef },
 		{ id = "skill_upd_interval", 		type = "input", 	val = 2, min = 0, max = 120000, step = 1, def = cfg.skill_upd_interval },
@@ -456,7 +473,7 @@ function get_adv_menu()
 		},
 
 		{ id = "prompt_fade_in_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_in_time },
-		--{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
+		{ id = "prompt_fade_out_time", 	type = "track",		val = 2, min = 0, step = 1, max = 1000, def = cfg.prompt_fade_out_time },
 		{ id = "popin_anim_dur", 		type = "track",		val = 2, min = 0, step = 1, max = 2000, def = cfg.popin_anim_dur },
 
 		{ id = "action_text_pos_x", 	type = "input", 	val = 2, min = -384, max = 768, def = cfg.action_text_pos_x },
@@ -499,8 +516,8 @@ function get_adv_menu()
 		{ id = "divider", type= "line" },
 		{ id = "near_scan_interval", 	type = "input", 	val = 2, min = 0, max = 10000, step = 1, def = cfg.near_scan_interval },
 		{ id = "early_scan_interval", 	type = "input", 	val = 2, min = 0, max = 30000, step = 1, def = cfg.early_scan_interval },
-		{ id = "near_scan_radius", 		type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.near_scan_radius },
-		{ id = "early_scan_radius", 	type = "input", 	val = 2, min = 0, max = 500, step = 0.5, def = cfg.early_scan_radius },
+		{ id = "near_scan_radius", 		type = "input", 	val = 2, min = 2, max = 25, step = 0.5, def = cfg.near_scan_radius },
+		{ id = "early_scan_radius", 	type = "input", 	val = 2, min = 2, max = 25, step = 0.5, def = cfg.early_scan_radius },
 
 		{ id = "divider", type= "line" },
 	}
