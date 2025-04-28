@@ -22,11 +22,13 @@ script_name     = "ui_hud_dotmarks"
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
 	TODO (all non-critical):
+	- Deploying IEDs pretty much working, anim for it is not
+		Look at an option to pick up deployed IEDs!
 	- Add "welcome" message similar to PAW, controlled by MCM flag
 	- Update GH documentation with new Utjan settings
+	- Correct the MCM text and documentation for changed defaults
 
 	BEFORE PUBLIC RELEASE:
-	- Correct the MCM text and documentation for changed defaults
 	- Re-validate EVERY FEATURE individually - all must pass in same build
 
 	POST-RELEASE:
@@ -197,21 +199,22 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 							handle_npc_death(obj)
 							return
 						end
+						mark.is_wounded = xr_wounded.is_wounded(obj) or nil
 						mark.is_enemy   = mark.comm and game_relations.is_factions_enemies(cfg.actor_comm, mark.comm)
-						mark.is_wounded = IsWounded(obj) or nil
 						mark.is_mute    = not obj:is_talk_enabled()
 						mark.hidden     = (mark.hidden and mark.is_mute) or (mark.is_enemy and not mark.is_wounded)
-						--dump("%s is %s stalker | enemy %s | wounded %s | mute %s", mark.name, mark.is_enemy, mark.is_wounded, mark.is_mute)
-						if mark.is_wounded and not (mark.was_wounded) then
-							mark.was_wounded 	= true
-							--local wounded 		= load_var(obj, "wounded_state")
-							--local state 		= state_mgr.get_state(obj)
-							--dump("%s detected as wounded: %s | state: %s", mark.name, wounded, state)
-							if mark.is_enemy then
-								-- do nothing at this time, enemies with surrender dialog can talk
-							else
-								set_secondary_action(mark)
+						--dump("%s is %s NPC | enemy %s | wounded %s was %s | mute %s", mark.name, mark.comm, mark.is_enemy, mark.is_wounded, mark.was_wounded, mark.is_mute)
+						if mark.is_wounded then
+							if not (mark.was_wounded or cfg.heal_cooldown_active) then
+								mark.was_wounded 	= true
+								if mark.is_enemy then
+									-- do nothing at this time, enemies with surrender dialog can talk
+								else
+									set_secondary_action(mark)
+								end
 							end
+						elseif mark.was_wounded then
+							end_mark_wounded_state(mark)
 						end
 						if mark.is_mute then
 							show_pri = false
@@ -222,7 +225,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 						end
 					end
 					local dist          = mark.last_dist or 999
-					local in_range      = dist <= (mark.interact_dist or 2.5)
+					local in_range      = is_in_range(id, dist, mark)
 					local hide          = mark.hidden --(mark.hidden or (not in_range))
 					local _             = (not hide) and dump("[DotMarks] [%s][%s] Visibility and UI checks for %s | dist %s", mark.id, now, mark.name or mark.tutorial or mark.text, dist)
 					
@@ -337,7 +340,8 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 								if mark.is_campfire then
 									show_pri = cfg.active_campfire and (cfg.active_campfire == mark.id)
 								elseif mark.is_pickup then
-									if mark.glowstick_sec and can_pickup_glowstick(obj, id, dist) then
+									--if mark.is_glowstick and can_interact_physpickup(obj, id, dist) then
+									if mark.physics_obj and can_interact_physpickup(obj, id, dist) then
 										if (not cfg.available_pickup) then
 											cfg.available_pickup = id
 										end
@@ -363,7 +367,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 										not_hidden_by_anim
 									)
 								end
-								if mark.condition and cfg.show_item_condition then
+								if mark.show_condition then
 									-- Update condition for degradable objects
 									local cond = obj:condition()
 									if cond ~= mark.condition then
@@ -373,7 +377,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 									end
 								end
 							end
-							--dump("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id), show_pri)
+							--dump("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id))
 							if mark.use_pri then
 								mark.use_pri:ShowPrompt(show_pri)
 							end
@@ -393,14 +397,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 										elseif mark.is_container then
 											show_sec    = show_pri and mark.has_items
 										elseif mark.was_wounded then
-											if mark.is_wounded and not cfg.healing_stalker then
-												if mark.is_wounded then
-													show_sec = not not mark.alt_interact.avail_aid
-												else
-													show_sec = false
-													end_mark_wounded_state(mark)
-												end
-											end
+											show_sec 	= show_pri and validate_wounded_prompt(mark)
 										end
 										dump("[DotMarks] Checking whether to show alt interact prompt for %s | show_pri %s | targeted %s", mark.name, show_pri, targeted)
 									end
@@ -445,6 +442,9 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 				function(mark, args)
 					if not (mark.is_pickup or mark.is_stalker or mark.container or mark.is_workshop) then return end
 					local pri_shown = (mark and mark.use_pri and mark.use_pri.wnd and mark.use_pri.wnd:IsShown())
+					if mark.is_pickup and not pri_shown then
+						pri_shown = not not pickup_index[mark.id]
+					end
 					return pri_shown and true or nil
 				end
 			),
@@ -516,6 +516,196 @@ end
 
 -- ======================================================================
 
+function get_interact_distance(id, mark)
+	if not mark then mark = (id and cfg.markers[id]) end
+	return mark and mark.interact_dist or cfg.obj_interact_dist or 2.5
+end
+
+function is_in_range(id, dist, mark)
+	mark = mark or (id and cfg.markers[id])
+	if not mark then
+		local obj = id and get_game_object(id)
+		if not (obj and db.actor) then return end
+		dist = db.actor:position():distance_to(obj:position())
+	end
+	dist = dist or (mark and mark.last_dist) or 999
+	return dist <= get_interact_distance(nil, mark)
+end
+
+function get_ied_mode(id, active_check)
+	local data = id and txr_mines._mines[id]
+	local mode = data and data.mode
+	if active_check and mode then
+		mode = data.active and mode or nil
+	end
+	return mode
+end
+
+function get_remaining_ied_time(id)
+	local data = id and txr_mines._mines[id]
+	local mode = data and data.mode
+	if (mode == cfg.mine_modes.MODE_TIMER) then
+		local now = get_time_elapsed()
+		local left = data.exp_time - now
+		return left, mode
+	end
+	return nil, mode
+end
+
+function game_seconds(gametime)
+	return gametime and (gametime > 0)  and (gametime / level.get_time_factor())
+end
+
+function is_still_wounded(mark, args)
+	return mark and mark.is_wounded
+end
+
+function validate_wounded_prompt(mark, args)
+	if not mark then return end
+	if not cfg.healing_stalker then
+		if mark.is_wounded then
+			return not not mark.alt_interact.avail_aid
+		elseif mark.was_wounded then
+			end_mark_wounded_state(mark)
+		end
+	end
+end
+
+function ied_anim_cycle_func(state, mark)
+	-- none of this currently works properly
+	if not mark then return end
+	local id = mark.id
+	local data = id and txr_mines._mines[id]
+	local mode = data and data.mode
+	local now = get_time_elapsed()
+	local boom = data and data.exp_time
+	local left = boom and (boom - now)
+	local secs = game_seconds(left)
+	local cycle = 1
+	local dgr = (txr_mines.TRIGGER_RADIUS or 2.5) + 2.5
+	local tooclose = mark.last_dist and mark.last_dist < dgr
+	local anim = active_anims[mark.mark_id].ied
+	if (mode == 0) then
+		local dist = clamp(mark.last_dist or 10, 5, 10)
+		local max = 10
+		local warn = lerp(2.5, 10, dist)
+		anim.cycle_dur = 1000 - (warn * 850)
+	elseif (mode == 1) then
+		if secs < 10 then
+			if (secs < 5) then
+				cycle = (state % 0.25)
+			elseif (state < 0.4) then
+				cycle = (state % 0.2)
+			else
+			end
+		end
+	end
+
+	eased = easing.easeOutElastic(cycle)
+	--("[%s] ied_anim_cycle_func: state %s | cycle %s | eased %s", time_global(), state, cycle, eased)
+	return eased
+end
+
+function do_marker_anim_cycle(
+		mark_id,
+		w_start, h_start, w_end, h_end, duration,
+		anim_func, on_finish_func, abort_func
+	)
+	if not mark_id then return end
+	local anim_state 	= 0
+	local anim_id 		= mark_id .. "_popin"
+	local mark      	= hmm:GetMarker(mark_id)
+	if not mark then return end
+
+	if not active_anims[mark_id] then
+		active_anims[mark_id] = {}
+	end
+
+	local start_time= time_global()
+	local end_time  = time_global() + duration
+
+	anim_func = anim_func or function(x) return x end
+	active_anims[mark_id].ied = {
+		mark_id     = mark_id,
+		anim_id     = anim_id,
+		active      = true,
+		cycle_dur 	= duration,
+		w_start     = function(mark) return mark and mark.is_active and mark.args.width or w_start or 0 end,
+		w_end       = function(mark) return mark and mark.is_active and mark.active_swap.width or mark.args.width or w_end or 0 end,
+		h_start     = function(mark) return mark and mark.is_active and mark.args.height or h_start or 0 end,
+		h_end       = function(mark) return mark and mark.is_active and mark.active_swap.height or mark.args.height or h_end or 0 end,
+	}
+	
+	
+	CreateTimeEvent("animate_ied_"..mark_id, time_global(), 0, 
+		function()
+			local now = time_global()
+			if abort_func and abort_func() then
+				anim_state = -1
+			else
+				local anim = active_anims[mark_id].ied
+				local mark = hmm:GetMarker(mark_id)
+				if not mark then
+					anim_state = -1
+				elseif anim and anim.active then
+					if now > end_time then
+						anim_state = 1
+						start_time = now
+						end_time = now + anim.cycle_dur
+					end
+
+					local x = anim_func(anim_state, mark) or 1
+					anim.w = lerp(anim.w_start(mark), anim.w_end(mark), x)
+					anim.h = lerp(anim.h_start(mark), anim.h_end(mark), x)
+					mark.base_w = anim.w or anim.w_end(mark)
+					mark.base_h = anim.h or anim.h_end(mark)
+					set_adjusted_marker_size(mark_id)
+				else
+					anim_state = -1
+				end
+			end
+
+			if (anim_state == -1) then
+				if on_finish_func then on_finish_func() end
+				active_anims[mark_id].ied = nil
+				return true
+			end
+			anim_state = math.min(1, normalize(time_global(), start_time, end_time))
+		end
+	)
+end
+
+function init_ied_mark_anim(mark)
+	if not cfg.anim_ied_hazard then return end
+	if not mark then return end
+	local id = mark.id
+	local mode = get_ied_mode(id, true)
+	if not mode then return end
+
+	do_marker_anim_cycle(
+		mark.mark_id,
+		mark.args.width * 0.5, mark.args.height * 0.5,
+		mark.args.width, mark.args.height,
+		1000,
+		ied_anim_cycle_func,
+		nil,
+		nil
+	)
+end
+
+function get_ied_text()
+	if cfg.mine_mode < 0 then return end
+	local timer = (cfg.mine_mode == 1) and (cfg.bomb_timer or 30) or ""
+	local iedstr = "ui_mcm_lst_dmarks_iedmode_"..tostring(cfg.mine_mode)
+	local iedtext = gts(iedstr)
+	if (cfg.mine_mode == 1) then
+		iedtext = string.format(iedtext, timer)
+	end
+	
+	dump("get_ied_text: mode %s | timer %s | str %s | text %s", cfg.mine_mode, timer, iedstr, iedtext)
+	return iedtext
+end
+
 function IsWounded(obj)
 	local var = load_var(obj, "wounded_state")
 	return var and (var ~= "") and (var ~= "nil")
@@ -528,8 +718,16 @@ function end_mark_wounded_state(mark)
 	mark.was_wounded = nil
 	cfg.healing_stalker = nil
 	mark.checked_for_sec = nil
-	local obj = mark.id and get_game_object(mark.id)
-	mark.alt_interact:Destroy("NPC is no longer wounded")
+	if mark.alt_interact then
+		mark.alt_interact:Destroy("NPC is no longer wounded")
+	end
+	cfg.heal_cooldown_active = true
+	CreateTimeEvent("dmark_heal_cooldown", 0, 2, (
+		function()
+			cfg.heal_cooldown_active = false
+			return true
+		end
+	))
 end
 
 function log_marker_update_loop(mark)
@@ -608,7 +806,7 @@ function fdda_handles_pickups()
 end
 
 function item_pickup_intercept(obj, flags)
-	if killswitch("pickup") then return end
+	if killswitch("pickup") then return obj end
 	-- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
 	-- Called by my monkeypatch of FDDA/FDDAR's pickup if they are
 	local now = time_global()
@@ -626,7 +824,7 @@ function item_pickup_intercept(obj, flags)
 		end
 	end
 
-	vl("[%s][item_pickup_intercept] Actor tried to take item %s", now, nameid(obj))
+	vl("[%s][ret_val: %s][item_pickup_intercept] Actor tried to take item %s", now, flags.ret_value, nameid(obj))
 
 	local curr_target, taken_obj
 	curr_target = get_current_target()
@@ -634,18 +832,19 @@ function item_pickup_intercept(obj, flags)
 	
 	if taken_obj then
 		dl("[%s][item_pickup_intercept] Actor will take item %s", now, nameid(taken_obj))
-		if cfg.markers[curr_target] then
-			cfg.markers[curr_target]:HideAll("dotmarks taking item")
-		end
 		if flags.ret_value then
-		-- The monkeypatch in z_fdda_pickup_intercept_dotmarks sets flags.ret_value to false
-		-- if flags.ret_value is already false when it gets to DotMarks, DotMarks will assume
-		-- that FDDA is handling the pickup part
-
-		-- However, some items don't appear to respond to this handling, so we use them manually
-		-- based on the cfg.manual_use table
-			vl("flags.ret_value is %s, manually taking %s", flags.ret_value, nameid(taken_obj))
-			db.actor:take_item(taken_obj)
+			flags.ret_value = false
+			local mark = cfg.markers[curr_target]
+			if flags.skip_anim and not (mark and mark.physics_obj) then
+				vl("flags.ret_value is %s, DotMarks will handle pickup %s", flags.ret_value, nameid(taken_obj))
+				db.actor:take_item(taken_obj)
+				return
+			end
+			if mark then
+				mark:HideAll("dotmarks taking item")
+			end
+			fake_take_anim(mark)
+			return
 		end
 	end
 	return taken_obj
@@ -946,7 +1145,7 @@ function InteractPrompt:__init(anchor, args) super()
 	-- ===================================================================
 	--	Setup special handlers and hint filters
 	-- ===================================================================
-	self.anchor = self.args.fixed and maingameui or anchor or maingameui
+	self.anchor 	= self.args.fixed and maingameui or anchor or maingameui
 	if self.args.fixed then
 		local x,y   = get_fixed_screen_pos()
 		self.args.locked_screen_pos = vector2():set(x, y)
@@ -992,6 +1191,67 @@ function InteractPrompt:__init(anchor, args) super()
 end
 -- =======================================================================
 
+function InteractPrompt:CycleBombMode(bind)
+	if self.disabled or (not self.args.iedtext) then return end
+	local max = cfg.rce_installed and 2 or 1
+	if bind == cfg.bind_fmnext then
+		cfg.mine_mode = cfg.mine_mode + 1
+		if cfg.mine_mode > max then cfg.mine_mode = 0 end
+	else
+		cfg.mine_mode = cfg.mine_mode - 1
+		if cfg.mine_mode < 0 then cfg.mine_mode = max end
+	end
+	play_snd_path(cfg.snd_path_blip)
+	self.active_prompt = self.args.iedtext .. " " .. get_ied_text()
+	self:SetPrompt()
+end
+
+function InteractPrompt:SetBombTimer(direction)
+	if self.disabled or (not self.args.iedtext) then return end
+	local min = cfg.bomb_timer_min or 10
+	local max = cfg.bomb_timer_max or 120
+	local inc = cfg.bomb_timer_inc or 5
+
+	cfg.bomb_timer = (cfg.bomb_timer or 30) + (direction * inc)
+	if cfg.bomb_timer > max then
+		cfg.bomb_timer = min
+	elseif cfg.bomb_timer < min then
+		cfg.bomb_timer = max
+	end
+	play_snd_path(cfg.snd_path_blip)
+	self.active_prompt = self.args.iedtext .. " " .. get_ied_text()
+	self:SetPrompt()
+end
+
+function InteractPrompt:on_mouse_wheel(scroll_dir, flags)
+	if not cfg.sec_use_mousewheel_timer then return end
+	local id = targeted_deployable_bomb()
+	if not id then return end
+	local direction = (scroll_dir > 0) and 1 or -1
+	self:SetBombTimer(direction)
+	flags.ret_value = false
+end
+
+function InteractPrompt:on_before_key_press(key, bind, dis, flags)
+	--dump("InteractPrompt:on_before_key_press | key %s | bind %s", key, bind)
+	if self.args.iedmode then
+		if cfg.sec_use_firemode_mines and ((bind == cfg.bind_fmprev) or (bind == cfg.bind_fmnext)) then
+			local id = targeted_deployable_bomb()
+			if not id then return end
+			self:CycleBombMode(bind)
+			flags.ret_value = false
+		end
+	elseif self.args.is_glowstick then
+		if (bind == key_bindings.kUSE) then
+			local obj = get_game_object(self.args.id)
+			vl("Forcing actor to take glowstick")
+			flags.ret_value = false
+			item_pickup_intercept(obj, {force = true, ret_value = true, skip_anim = skip_anim})
+			self:Destroy("actor took glowstick")
+		end
+	end
+end
+
 function InteractPrompt:ParseArgs(args)
 	if debug_dump then
 		dump("[InteractPrompt] Passed args:")
@@ -1015,7 +1275,10 @@ function InteractPrompt:ParseArgs(args)
 		local ydiff = syoff - pyoff
 		args.yoffset = args.yoffset - ydiff + fontscale(ydiff)
 	end
-
+	if args.iedmode then
+		args.iedtext = args.text
+		args.text = args.iedtext .. " " .. args.iedmode
+	end
 	args.act    = args.act or ""
 	args.name   = args.name or ""
 	args.fixed  = ((args.fixed ~= nil) and args.fixed) or cfg.fixed_screen_pos
@@ -1301,9 +1564,10 @@ function InteractPrompt:SetupSuffix(obj)
 	local cls       = self.args.clsid or obj:clsid()
 	local has_cond  = (sec and cls) and (utils_item.is_degradable(nil, sec) or IsWeapon(nil, cls) or IsOutfit(nil, cls) or IsHeadgear(nil, cls))
 	local is_mag    = magazine_binder and sec and magazine_binder.is_magazine(sec)
-	local gear_cnd  = (self.args.has_parts and cfg.show_item_condition)
+	local wpn_cnd 	= (self.args.is_weapon and cfg.show_gun_condition)
+	local gear_cnd  = (self.args.has_parts and cfg.show_item_condition) and not self.args.is_weapon
+	local part_cnd 	= (self.args.is_part_cnd and cfg.show_item_condition)
 	local batt_cnd  = ((self.args.has_power or self.args.has_battery) and cfg.show_item_charge)
-
 	if self.args.multi_uses then
 		-- Setup suffix text for multiuse items
 		if cfg.show_multi_uses and (self.args.multi_uses > 1) then
@@ -1311,9 +1575,11 @@ function InteractPrompt:SetupSuffix(obj)
 		else
 			self.active_suffix = ""
 		end
-	elseif has_cond and (gear_cnd or batt_cnd) and (not is_mag) then
+	elseif has_cond and (wpn_cnd or gear_cnd or batt_cnd or part_cnd) and (not is_mag) then
 		-- Setup suffix text for degradable items
 		local cond = obj and obj:condition()
+		vl("%s show_condition | wpn %s | gear %s | batt %s | part %s", self.args.name, wpn_cnd, gear_cnd, batt_cnd, part_cnd)
+		self.show_condition = true
 		self:SetConditionText(sec, cond)
 	else
 		self.active_suffix = ""
@@ -1363,7 +1629,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 	if (not cfg.show_item_card) or (not self.args.is_pickup) then return end
 	if self.itemcard then self.itemcard:Show(false) end
 	obj = obj or (self.args.id and get_game_object(self.args.id))
-	sec = self.args.glowstick_sec or (obj and obj:section())
+	sec = self.args.inv_section or (obj and obj:section())
 	if not sec then return end
 
 	self.weight     = dec2(ini_sys:r_float_ex(sec,"inv_weight") or 0)
@@ -1637,6 +1903,7 @@ function InteractPrompt:on_key_hold(key)
 end
 
 function InteractPrompt:on_key_press(key, flags)
+	-- make sure to test with all input types, not just long press
 	if (self.disabled or self.destroyed or self.busystate) then return end
 
 	if (key == self.args.key) then
@@ -1644,13 +1911,15 @@ function InteractPrompt:on_key_press(key, flags)
 			self.args.func()
 			return
 		end
+		local obj = get_game_object(self.args.id)
+		local mark = self:GetMark()
 
 		if (self.args.mode == 0) then
-			ui_mcm.simple_press(self.uid, key, self.args.func)
+			ui_mcm.simple_press(self.uid, key, self.args.func, obj, mark)
 		end
 	
 		if (self.args.mode == 1) and ui_mcm.get_mod_key(self.args.mod) and ui_mcm.double_tap(self.uid, key) then
-			self.args.func()
+			self.args.func(obj, mark)
 			return
 		end
 	end    
@@ -1871,15 +2140,37 @@ function InteractPrompt:RegisterScriptCallbacks(tf)
 	if self.callbacks_set and not tf then
 		UnregisterScriptCallback("on_key_hold", self)
 		UnregisterScriptCallback("on_key_press", self)
+		if self.args.physics_obj or self.args.iedmode then
+			UnregisterScriptCallback("on_before_key_press", self)
+			if self.args.iedmode and cfg.sec_use_mousewheel_timer then
+				UnregisterScriptCallback("on_mouse_wheel", self)
+			end
+		end
 		self.callbacks_set = false
 	elseif tf and not self.callbacks_set then
 		RegisterScriptCallback("on_key_hold", self)
 		RegisterScriptCallback("on_key_press", self)
+		if self.args.physics_obj or self.args.iedmode then
+			RegisterScriptCallback("on_before_key_press", self)
+			if self.args.iedmode and cfg.sec_use_mousewheel_timer then
+				RegisterScriptCallback("on_mouse_wheel", self)
+			end
+		end
 		self.callbacks_set = true
 	end
 end
 
-function InteractPrompt:UpdateLinkedMark(state)
+function InteractPrompt:MarkConditionsValid()
+	if self.args.func_valid then
+		return self.args.func_valid(self:GetMark(), self.args)
+	end
+	return true
+end
+
+function InteractPrompt:UpdateMark(state)
+	if not self:MarkConditionsValid() then
+		self:Destroy("invalid prompt")
+	end
 	if not self.linked_mark then return end
 	if (state == nil) then state = not self.disabled end
 	--dump("Propagating state %s to linked mark %s", state, self.linked_mark.name)
@@ -1916,7 +2207,7 @@ function InteractPrompt:OnVisibilityChange(state, reason)
 	local _ = debug_dump and vl("[%s][InteractPrompt:OnVisibilityChange] to %s%s", time_global(), state, reason)
 	self:RegisterScriptCallbacks(state)
 	self:CheckCampfireStates()
-	self:UpdateLinkedMark(state)
+	self:UpdateMark(state)
 end
 
 function InteractPrompt:ShowPrompt(tf, reason)
@@ -1977,13 +2268,15 @@ end
 
 function InteractPrompt:UpdateLongPress()
 	if self.longpress and not self.args.pri then
+		local mark = self:GetMark()
 		--dump("[%s] InteractPrompt:UpdateLongPress", time_global())
-		if (not self.busystate) and (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
+		if mark.is_active and (not self.busystate) and (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
 			self.peak_hold = time_continual() - (cfg.held_time or 0)
 			local prog = (self.peak_hold / self.hold_time)
 			self.longpress:SetProgressPos(prog)
 			CUIScriptWnd.Update(self)
 		else
+			self.peak_hold = nil
 			self.longpress:SetProgressPos(0)
 		end
 	end
@@ -2033,8 +2326,16 @@ function InteractPrompt:UpdateAnimBusyState()
 end
 
 function InteractPrompt:UpdatePrimaryInteractText()
-	if self.prompts then return end
-	-- Skip any markers already checked against hint filters
+	if self.args.iedmode then
+		self.active_prompt = self.args.iedtext .. " " .. get_ied_text()
+		-- Update IED text
+		return
+	elseif self.prompts then
+		-- Skip any markers checked against hint filters
+		return
+	end
+
+	-- Check any special cases that slip through	
 	if (
 		self.door or
 		(not self.args.text) or
@@ -2097,7 +2398,7 @@ function InteractPrompt:actor_on_update()
 	if (self.args.tutorial or (mark and mark.is_stalker)) then
 		self:CheckForStuckTutorial()
 		self:CheckCampfireStates()
-		self:UpdateLinkedMark()
+		self:UpdateMark()
 		_ = (not self.args.pri) and mark and mark.is_wounded and self:CheckWoundedStalkers()
 		self:UpdateLongPress()
 		return
@@ -2307,6 +2608,38 @@ function show_interaction_dots(tf)
 	cfg.hide_interaction_dots = not tf
 end
 
+function get_physpickup_name(mark)
+	local text
+
+end
+
+function get_physpickup_action_text(mark)
+	local text
+	if mark.is_glowstick then
+		text = gts("st_alti_take").." "..mark.name
+	elseif mark.is_disarmable then
+		text = gts("st_alti_disarm") .." "..trimmed_prompt(mark.name)
+	end
+	return text
+end
+
+function take_glowstick(id)
+	local obj = id and get_game_object(id)
+	if (obj and obj:section() == "lights_glowstick") then
+		local glowsticks = zz_glowstick_mcm.glowsticks
+		local pos2d = game.world2ui(obj:position())
+		if (pos2d.x < 350 or pos2d.x > 750 or pos2d.y < 250 or pos2d.y > 500) then return end
+		if (not obj:get_hanging_lamp():is_on()) then return end
+
+		local section = glowsticks[id][1] or "device_glowstick"
+		local con_d = glowsticks[id][2]
+		local newid = alife_create_item(section, db.actor, {cond = con_d}).id
+		glowsticks[id] = nil
+		alife_release_id(id)
+		CreateTimeEvent("glowstick", "try_draw_on_take", 0.1, zz_glowstick_mcm.try_draw_on_take, newid)
+	end
+end
+
 -- =======================================================================
 -- 		DEPENDENCY CHECK
 --	Checks all hard dependencies one by one, logs which ones fail, and 
@@ -2429,6 +2762,10 @@ function stop_scanning()
 	return true
 end
 
+function actor_on_net_destroy()
+	stop_scanning()
+end
+
 function is_object_scannable(item_class)
 	return not not (item_class and cfg.scan[item_class])
 end
@@ -2457,7 +2794,7 @@ function get_args_for_valid_objects(obj)
 		args.id         = id
 		args.clsid      = cls
 		args.kind       = kind
-		args.section    = args.glowstick_sec or sec
+		args.section    = args.inv_section or sec
 		args.hidden     = not is_object_scannable(iclass)
 		args.has_power  = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
 	end
@@ -2508,13 +2845,6 @@ end
 
 -- =======================================================================
 
---[[
-function handle_primary_interact()
-	-- no additional logic at this time, just need a stub function here
-	-- Still necessary? Validate, pretty sure I can write around the need for a stub
-end
---]]
-
 function setup_pri_interact_prompt(mark, args)
 	dl("[%s] setup_pri_interact_prompt for %s", mark.mark_id or "fixed interaction", args and (args.name or args.logged_type) or "unknown type with no passed args")
 	if not mark then return end
@@ -2529,7 +2859,14 @@ function setup_pri_interact_prompt(mark, args)
 	local int_text  = trimmed_prompt(get_quickhelp_text())
 
 	if mark.is_pickup then
-		int_text = gts("st_alti_take") .. " " .. (mark.money or mark.name)
+		if mark.physics_obj then
+			int_text = get_physpickup_action_text(mark)
+		else
+			int_text = nil
+		end
+		if not int_text then
+			int_text = gts("st_alti_take") .. " " .. (mark.money or mark.name)
+		end
 	elseif mark and mark.is_stalker and mark.is_alive then
 		int_text = gts("st_alti_speak") .. " " .. mark.name
 	elseif mark and mark.is_door then
@@ -2549,7 +2886,7 @@ function setup_pri_interact_prompt(mark, args)
 		bind        = bind_text,
 		key         = key,
 		section     = section,
-		func        = args and args.pri_handler_func or (function() end),
+		func        = args and args.handler_func or (function() end),
 		event       = "pri_interact",
 		monitors    = mark.monitors,
 	}
@@ -2566,7 +2903,7 @@ function setup_sec_interact_prompt(mark)
 	if mark.checked_for_sec then return end
 	mark.checked_for_sec = true
 	local id        = mark.id
-	vl("[%s][%s] setup_sec_interact_prompt for %s", id, mark.mark_id, mark.name)
+	dl("[%s][%s] setup_sec_interact_prompt for %s", id, mark.mark_id, mark.name)
 	local anchor    = mark.marker
 	local obj       = id and get_game_object(id)
 	local section   = obj and obj:section()
@@ -2574,7 +2911,8 @@ function setup_sec_interact_prompt(mark)
 	local act_text  = (mode == 2) and gts("st_alti_hold").." " or (mode == 1) and gts("st_alti_doubletap").." " or ""
 	local bind_text = bindtext(cfg.bind_sec_interact, cfg.modk_sec_interact)
 	local int_text  = ""
-	local func      = handle_secondary_interact
+	local iedmode 	= nil
+	local func      = mark.handler_func or handle_secondary_interact
 
 	if obj and IsWeapon(obj) then
 		if not cfg.sec_enable_unload_act then return end
@@ -2590,9 +2928,15 @@ function setup_sec_interact_prompt(mark)
 			mark.name
 		)
 		func = unload_and_take_ammo
+	elseif mark.placeable_mine then
+		iedmode = get_ied_text()
+		if not iedmode then return end
+		int_text = string.format(gts("st_alti_ied"), trimmed_prompt(mark.name))
+		func = plant_bomb
 	elseif mark.is_wounded then
 		if not cfg.sec_enable_heal_act then return end
 		func = help_wounded_stalker
+		func_valid = is_still_wounded
 	elseif mark.hf_workshop then
 		int_text = gts("st_hf_workshop_menu")
 	elseif mark.is_container then
@@ -2681,15 +3025,17 @@ function setup_sec_interact_prompt(mark)
 	end
 
 	local args = {
-		mark    = mark,
-		name    = mark.name,
-		text    = int_text,
-		act     = act_text,
-		bind    = bind_text,
-		long    = (mode == 2),
-		func    = func,
-		id      = id,
-		event   = "sec_interact",
+		mark    	= mark,
+		iedmode 	= iedmode,
+		name    	= mark.name,
+		text    	= int_text,
+		act     	= act_text,
+		bind    	= bind_text,
+		long    	= (mode == 2),
+		func    	= func,
+		id      	= id,
+		func_valid 	= func_valid,
+		event   	= "sec_interact",
 	}
 
 	mark.alt_interact = InteractPrompt(anchor or maingameui, args)
@@ -2699,6 +3045,7 @@ function set_secondary_action(mark)
 	if not mark then return end
 	if mark.alt_interact then
 		mark.alt_interact:Destroy("reinit as something else")
+		mark.alt_interact = nil
 	end
 	setup_sec_interact_prompt(mark)
 end
@@ -2709,6 +3056,12 @@ local scanned = {}
 
 function unregister_scanned_entity(id)
 	if not id then return end
+	if (locked_id == id) then
+		locked_id = nil
+	end
+	if (targeted_id == id) then
+		targeted_id = nil
+	end
 	local ind = pickup_index[id]
 	if ind then
 		nearby_pickups[ind] = nil
@@ -2737,6 +3090,12 @@ function unregister_scanned_entity(id)
 	vl("[%s] Unregistering scanned entity for %s and nulling all pointers to it", time_global(), nameid(name, id))
 end
 
+function set_loot_window_flag(val, reason)
+	cfg.block_loot_window = val
+	local text = val and "Setting to: " or "Clearing"
+	vl("[%s] Flag cfg.block_loot_window: %s%s%s", time_global(), text, val or "", reason and (" ("..reason..")") or "")
+end
+
 function mark_is_shown(id)
 	return id and cfg.markers[id] and cfg.markers[id].is_shown
 end
@@ -2745,8 +3104,8 @@ function marked_obj_has_ammo(id)
 	return id and cfg.markers[id] and (cfg.markers[id].ammo_count and cfg.markers[id].ammo_count > 0)
 end
 
-function can_pickup_glowstick(obj, id, dist)
-	if dist > (cfg.obj_interact_dist or 2.5) then return false end
+function can_interact_physpickup(obj, id, dist)
+	if dist > get_interact_distance(id) then return false end
 	obj         = obj or (id and get_game_object(id))
 	id          = id or (obj and obj:id())
 	local pos   = obj and obj:position()
@@ -2756,7 +3115,7 @@ end
 
 function obj_has_available_sec_interact(obj, id, mark)
 	if not (obj or id) then return end
-	if mark and (mark.no_sec or mark.is_display) then return false end
+	if (not mark) or (mark.no_sec or mark.is_display) then return false end
 
 	id = id or (obj and safeid(obj))
 	obj = obj or (id and get_game_object(id))
@@ -2770,6 +3129,7 @@ function obj_has_available_sec_interact(obj, id, mark)
 	local is_readable   = (mark and mark.is_readable)
 	local has_batteries = (mark and mark.has_battery)
 	local is_backpack   = (mark and mark.is_backpack)
+	local is_mine 		= (mark and mark.placeable_mine)
 	local is_interact   = mark.is_container or mark.hf_workshop
 
 	local required      = (
@@ -2777,6 +3137,7 @@ function obj_has_available_sec_interact(obj, id, mark)
 		has_batteries or
 		is_readable or
 		has_ammo or
+		is_mine or
 		is_interact
 	)
 
@@ -2793,6 +3154,7 @@ function obj_has_available_sec_interact(obj, id, mark)
 		has_interact,
 		is_interact,
 		has_batteries,
+
 		has_ammo,
 		is_consumable,
 		is_readable,
@@ -2800,7 +3162,6 @@ function obj_has_available_sec_interact(obj, id, mark)
 	)
 	return has_interact
 end
-
 
 function scan_nearby_object(obj)
 	local id  = obj and obj:id()
@@ -2810,7 +3171,7 @@ function scan_nearby_object(obj)
 	if scanned[id] then
 		-- Skip previously-scanned IDs if their name matches, otherwise clear the table entry assuming it's a reused ID
 		if scanned[id] == name then
-			dump("%s has already been scanned, skipping", nameid(name, id))
+			--dump("%s has already been scanned, skipping", nameid(name, id))
 		return end
 		dl("%s has a new name, assuming the ID has been reused and clearing entry", id)
 		scanned[id] = nil
@@ -2827,7 +3188,7 @@ function scan_nearby_object(obj)
 		-- Already a marker for this ID, skip
 	else
 		scanned[id] = name
-		dl("[DotMarks] scanning unmarked object %s | clsid %s | [%s]", nameid(name, id), cls, sec)
+		dl("Scanning unmarked object %s | clsid %s | [%s]", nameid(name, id), cls, sec)
 		local args  = get_args_for_valid_objects(obj)
 		if not args then return end
 
@@ -2846,6 +3207,11 @@ function scan_nearby_object(obj)
 		if not cfg.markers then cfg.markers = {} end
 		cfg.markers[id] = hmm:AddMarker(args)
 		local mark = cfg.markers[id]
+		if mark.is_pickup then
+			if cfg.pickup_los_pos_adj and not mark.los_pos_adjust then
+				mark.los_pos_adjust = vector():set(0, cfg.pickup_los_pos_adj, 0)
+			end
+		end
 
 		if (not cfg.hide_pri_interact_ui) and not (args.no_pri) then
 			setup_pri_interact_prompt(mark, args)
@@ -2856,7 +3222,8 @@ function scan_nearby_object(obj)
 		if (not mark.active_swap) and cfg.enable_icon_targetdot then
 			mark.active_swap = cfg.swap_dotactive
 		end
-		
+		--init_ied_mark_anim(mark) -- not working yet
+
 		has_cond = (sec and cls) and (utils_item.is_degradable(nil, sec) or IsWeapon(nil, cls) or IsOutfit(nil, cls) or IsHeadgear(nil, cls))
 		local is_mag = magazine_binder and sec and magazine_binder.is_magazine(sec)
 		if has_cond and not is_mag then
@@ -2954,8 +3321,80 @@ function update_targeted_object()
 end
 
 
-function actor_on_net_destroy()
-	stop_scanning()
+function fake_take_anim(mark)
+	if not (mark and mark.id and lam2 and liz_fdda_redone_item_pickup) then return end
+	vl("Faking take animation for %s", mark.name)
+	-- This is largely a stripped-down copy of the item-take animation function in FDDAR
+	--if something other than pickup is playing right now, don't do anything
+	if lam2.is_running() and not lam2.get_action_with_tag("item_pickup") then return end
+	--if have body search in queue don't pickup items. Body search have priority
+	if lam2.get_action_with_tag("body_search") then return end
+
+	local hand, anm_name
+	local id 	= mark.id
+	local wpn 	= db.actor:active_slot() ~= 0
+	local det 	= db.actor:active_detector() or nil
+	local rhf 	= (not wpn and not liz_fdda_redone_item_pickup.is_hand_busy(0)) == true and true or false
+	local lhf 	= (not det and not liz_fdda_redone_item_pickup.is_hand_busy(1)) == true and true or false
+
+	if rhf and lhf then
+		hand = math.random(0,1)
+		local al = {
+			[0] = "anm_ea_taker",
+			[1] = "anm_ea_takel"
+		}
+		anm_name = al[hand]
+	elseif rhf then
+		hand = 0
+		anm_name = "anm_ea_taker"
+	elseif lhf then
+		hand = 1
+		anm_name = wpn and "anm_ea_takelw" or "anm_ea_takel"
+	elseif wpn and det then
+		hand = 1
+		anm_name = wpn and "anm_ea_takelw" or "anm_ea_takel"
+	else
+		return
+	end
+
+	liz_fdda_redone_item_pickup.set_hand_busy(hand, 1)
+
+	local action = lam2.get_template_action_play_animation()
+	action.tag = "item_pickup"
+	action.name = "item_pickup_" .. hand
+	action.hands = hand
+	action.sec = "item_ea_take_hud"
+	action.anm = anm_name
+	action.anm_blend = true
+	action.speed = cfg.fddar_pickup_speed or 1.2
+	action.on_enter = function (self)
+		liz_fdda_redone_item_pickup.set_hand_busy(self.hands, self.duration)
+	end
+	action.on_execute = function (self, time)
+		if time > self.duration / 2 then
+			if self.on_take then self:on_take() end
+		end
+		if time > self.duration / 2 then
+			if self.is_short then
+				return lam2.states.success
+			end
+		end
+	end
+	if id then
+		action.on_take = function(self)
+			if mark.is_glowstick and zz_glowstick_mcm then
+				take_glowstick(id)
+			elseif not mark.physics_obj then
+				local obj = get_game_object(id)
+				force_actor_to_take(obj, true)
+			end
+		end
+	end
+	local current_pickup_action = lam2.get_action_with_tag("item_pickup")
+	if current_pickup_action then current_pickup_action.is_short = true end
+	--]]
+	lam2.add_action(action)
+	return true
 end
 
 function get_inventory_table(box, id)
@@ -3053,44 +3492,13 @@ end
 
 function try_init_heal_anim(npc, mark, exec_func)
 	end_mark_wounded_state(mark)
-	cfg.hidden_before_anim = mark.hidden
-	mark.hidden = true
+	anim_playing 			= true
+	cfg.hidden_before_anim 	= mark.hidden
+	mark.hidden 			= true
 	if npc and exec_func and cfg.sec_enable_heal_anim and not cfg.healing_stalker then
 		if zzz_wounded_heal_anim then
 			cfg.healing_stalker = npc:id()
 			zzz_wounded_heal_anim.use_injector(npc)
-		elseif liz_fdda_redone_body_search then
-			-- Largely adapted from FDDAR's body search
-			cfg.healing_stalker = npc:id()
-			local pos = npc and utils_obj.safe_bone_pos(npc, "bip01_spine1") or npc:position()
-			db.actor:actor_look_at_point(liz_fdda_redone_body_search.clamp_target_pos_height(pos, 10))
-			local is_crouching = IsMoveState('mcCrouch')
-			local is_crouch_togglable = get_console_cmd(1, "g_crouch_toggle")
-			if not is_crouch_togglable then exec_console_cmd("g_crouch_toggle 1") end
-			level.press_action(bind_to_dik(key_bindings.kCROUCH))
-			level.release_action(bind_to_dik(key_bindings.kCROUCH))
-			db.actor:hide_weapon()
-			level.disable_input()
-
-			local end_time = time_global() + 500
-
-			CreateTimeEvent("dotmarks_heal_stalker", 0, 0, (
-				function()
-					if time_global() > end_time then
-						utils_obj.play_sound("interface\\inv_stim_4p3")
-						cfg.healing_stalker = nil
-						exec_func(npc, mark, true)
-						db.actor:actor_stop_look_at_point()
-						level.enable_input()
-						if is_crouching ~= IsMoveState('mcCrouch') then
-							level.press_action(bind_to_dik(key_bindings.kCROUCH))
-							level.release_action(bind_to_dik(key_bindings.kCROUCH))
-							if not is_crouch_togglable then exec_console_cmd("g_crouch_toggle 0") end
-						end                    
-						return true
-					end
-				end
-			))
 		end
 		return true
 	end
@@ -3110,11 +3518,12 @@ function help_wounded_stalker(npc, mark, skip_anim_check)
 		vl("[%s] help_wounded_stalker: search anim check, not processing on this call", time_global())
 		return true
 	end
-	mark.hidden = cfg.hidden_before_anim
-	cfg.hidden_before_anim = nil
+	mark.hidden 			= cfg.hidden_before_anim
+	anim_playing 			= false
+	cfg.hidden_before_anim 	= nil
 	if not (npc and mark) then return true end
-	local medkit    = cheapest_medical_help_owned()
-	local count     = medkit and actor_aid_item_count(medkit)
+	local medkit    		= cheapest_medical_help_owned()
+	local count     		= medkit and actor_aid_item_count(medkit)
 	if (not count) or (count < 1) then return true end
 	alife_create_item("medkit_script", npc)
 	xr_wounded.unlock_medkit(npc)
@@ -3142,7 +3551,7 @@ function try_init_search_anim(box, mark, exec_func)
 		action_start.is_show_ui = true
 		lam2.add_action(action_start)
 		local action_idle = fddar_bodysearch.get_template_action_looting_idle(box)
-		cfg.block_loot_window = time_global()
+		set_loot_window_flag(time_global(), "anim start")
 		action_idle.on_execute = (
 			function (self, time)
 				if npc_loot_claim and npc_loot_claim.actor_looting_claimed then
@@ -3167,7 +3576,7 @@ function try_init_search_anim(box, mark, exec_func)
 			function()
 				if (not anim_playing) then
 					exec_func(box, mark, true)
-					cfg.block_loot_window = nil
+					set_loot_window_flag(nil, "anim complete")
 					return true
 				end
 			end
@@ -3187,6 +3596,123 @@ function update_mark_after_autoloot(obj)
 		mark.alt_interact:Prompt(mark.alt_interact.args.name)
 		mark.alt_interact:SetPrompt()
 	end
+end
+
+function try_init_disarm_anim(obj, mark, skip_anim_check)
+	-- placeholder, no current anim will stand in for it
+	-- maybe the two-handed take anim?
+	return false
+end
+
+function remove_bomb(mark)
+	if not (mark and mark.id and mark.is_disarmable) then return true end
+	vl("Disarming %s and returning a copy of %s", mark.name, mark.inv_section)
+	local se_obj 	= alife_create_item(mark.inv_section, db.actor)
+	txr_mines._mines[mark.id] = nil
+	unregister_scanned_entity(mark.id)
+	alife_release_id(mark.id)
+	return true 
+end
+
+
+function disarm_ied(obj, mark, skip_anim_check)
+	dl("disarm_ied | obj %s | mark %s | en %s", obj, mark, cfg.enable_disarm_ied_act)
+	if not (obj and mark and cfg.enable_disarm_ied_act) then return end
+	if (not skip_anim_check) and try_init_bomb_anim(obj, mark, plant_bomb) then
+		vl("[%s] disarm_ied: disarm anim check, not deploying on this call", time_global())
+		return true
+	end
+	if mark.func_allow_interact then
+		local flags = {ret_value = true}
+		func_allow_interact(mark, flags)
+		if not flags.ret_value then return true end
+	end
+	CreateTimeEvent(0, "release_planted_mine", cfg.defuse_obj_delay or 1, remove_bomb, mark)
+end
+
+
+function replace_invitem_with_bomb(obj, mode, delay)
+	-- Essentially a variation of txr_mines.plant_bomb
+	--vl("replace_invitem_with_bomb(%s,%s,%s)", obj and obj:name(), mode, delay)
+	if not (obj and mode) then return end
+	
+	local now 		= get_time_elapsed()
+	local used_sec 	= obj:section()
+	local used_id 	= obj:id()
+	local bomb_sec	= txr_mines.EXPLOSIVE_SECTION_LOOKUP[used_sec]
+	local pos 		= obj:position()
+	local lvid 		= obj:level_vertex_id()
+	local gvid 		= obj:game_vertex_id()
+	local bomb_obj 	= alife_create(bomb_sec, pos, lvid, gvid)
+	local bomb_id 	= bomb_obj.id
+	
+	_ = txr_mines.FX_BY_SECTION[used_sec] and actor_effects.play_item_fx(txr_mines.FX_BY_SECTION[used_sec])
+	
+	local witnesses = {}
+	for i in pairs(db.OnlineStalkers) do
+		local id 	= db.OnlineStalkers[i]
+		local npc 	= level.object_by_id(id)
+		if npc and IsStalker(npc) and npc:alive() then
+			if npc:see(db.actor) then
+				-- NPC witnessed player plant bomb
+				witnesses[id] = now + math.random(txr_mines.MIN_FORGET_TIME, txr_mines.MAX_FORGET_TIME) * level.get_time_factor()
+			end
+		end
+	end
+	txr_mines._mines[bomb_id] = {
+		exp_time 	= now + (delay or txr_mines.FUSE_TIME) * level.get_time_factor(),
+		mode 		= mode,
+		witnesses 	= witnesses,
+		active 		= true,
+		mine_type 	= obj:section(),
+		mine_freq 	= item_radio.get_freq()
+	}
+		
+	CreateTimeEvent(0, "release_planted_mine", 0, txr_mines.release_item, used_id)
+
+	if not cfg.rce_installed then return end
+	-- For Remote Controlled Explosives compatibility
+	if mode == cfg.mine_modes.MODE_REMOTE and item_radio.get_freq() then
+		actor_menu.set_msg(1, gts("st_plant_explosive_remote_freq").. " ".. tostring(item_radio.get_freq()).. " MHz", 4)
+		level.map_add_object_spot_ser(
+			bomb_id,
+			"alife_presentation_squad_monster_1",
+			gts("st_plant_explosive_remote_map_marker_pt1") .. " ".. txr_mines.EXPLOSIVE_TYPE[obj:section()].. ", ".. gts("st_plant_explosive_remote_map_marker").. " ".. tostring(item_radio.get_freq()).. " MHz"
+		)
+	end
+	if mode == cfg.mine_modes.MODE_PROX then
+		level.map_add_object_spot_ser(
+			bomb_id,
+			"alife_presentation_squad_monster_1",
+			gts("st_plant_explosive_proximity_map_marker") .. " ".. EXPLOSIVE_TYPE[obj:section()]
+		)
+	end
+	if mode == cfg.mine_modes.MODE_TIMER then
+		level.map_add_object_spot_ser(
+			bomb_id,
+			"alife_presentation_squad_monster_1",
+			gts("st_plant_explosive_timed_map_marker") .. " ".. EXPLOSIVE_TYPE[obj:section()]
+		)
+	end
+end
+
+function try_init_bomb_anim(obj, mark, skip_anim_check)
+	-- placeholder, no current anim will stand in for it
+	-- maybe the take anim? one or two handed?
+	return false
+end
+
+function plant_bomb(ied, mark, skip_anim_check)
+	if (cfg.mine_mode < 0) or not ied then return end
+	if (not skip_anim_check) and try_init_bomb_anim(ied, mark, plant_bomb) then
+		vl("[%s] plant_bomb: bomb anim check, not deploying on this call", time_global())
+		return true
+	end
+	cfg.bomb_timer 	= cfg.bomb_timer or 30
+	local timer 	= (cfg.mine_mode ~= 0) and cfg.bomb_timer or nil
+	vl("[%s] plant_bomb: mode %s | timer %s", time_global(), cfg.mine_mode, cfg.bomb_timer)
+	replace_invitem_with_bomb(ied, cfg.mine_mode, timer)
+	return true
 end
 
 function trigger_autoloot(box, mark, skip_anim_check)
@@ -3329,11 +3855,12 @@ function unpack_batteries(obj)
 	mark.use_pri:SetPrompt()
 end
 
-function is_obj_interact_dist(obj)
-	if not (obj and db.actor) then return end
-	local pos = obj:center()
-	return pos and (pos:distance_to(db.actor:center()) <= (cfg.obj_interact_dist or 2.5))
-end
+--function is_obj_interact_dist(obj)
+	--return is_in_range(obj and obj:id())
+	--if not (obj and db.actor) then return end
+	--local pos = obj:center()
+	--return pos and (pos:distance_to(db.actor:center()) <= (cfg.obj_interact_dist or 2.5))
+--end
 
 
 function prompt_blocked_by_anim()
@@ -3382,10 +3909,11 @@ function delay_action_for_anim(args)
 	return true
 end
 
-function force_actor_to_take(obj)
+function force_actor_to_take(obj, skip_anim)
+	if not obj then return end
 	vl("Forcing actor to take %s via active pickup callback", obj and obj:name())
 	local send_pickup_callback = fdda_callback or item_pickup_intercept
-	send_pickup_callback(obj, {force = true, ret_value = true})
+	send_pickup_callback(obj, {force = true, ret_value = true, skip_anim = skip_anim})
 end
 
 function take_and_use(obj)
@@ -3435,8 +3963,9 @@ function handle_secondary_interact(obj)
 	-- Get target object and do validation checks
 	local id = get_current_target()
 	obj = obj or (id and get_game_object(id))
-	if not is_obj_interact_dist(obj) then return end
+	--if not is_obj_interact_dist(obj) then return end
 	local mark = cfg.markers[id]
+	if not is_in_range(id, nil, mark) then return end
 	local prompt = mark and mark.alt_interact
 	if cfg.prompt_busy_during_anim and prompt and prompt.busystate then return end
 
@@ -3480,16 +4009,28 @@ function cycle_targeted_pickup(dir)
 end
 
 function reset_nearby_item_tables()
-	locked_id       = nil
 	actor_moved     = true
+	locked_id       = nil
 	cfg.last_pickup = nil
 	nearby_pickups  = {}
 	pickup_index    = {}
 end
 
-function update_nearby_pickups()
-	local actor_moving = (level.actor_moving_state() > 0)
+function update_actor_move_state()
+	if not db.actor then return end
+	actor_moving = (level.actor_moving_state() > 0)
 	if actor_moving then
+		if not cfg.last_actor_pos then
+			cfg.last_actor_pos = db.actor:position()
+		end
+		local dist = db.actor:position():distance_to(cfg.last_actor_pos)
+		actor_moving = dist > (cfg.actor_move_threshold or 0.1)
+	end
+	return actor_moving
+end
+
+function update_nearby_pickups()
+	if update_actor_move_state() then
 		reset_nearby_item_tables()
 		return true
 	end
@@ -3582,7 +4123,8 @@ function do_garbage_collection()
 	end
 	if cfg.block_loot_window then
 		if (now - cfg.block_loot_window) > 3000 then
-			cfg.block_loot_window = nil
+			vl("cfg.block_loot_window has been set for longer than 3 seconds, clearing")
+			set_loot_window_flag(nil, "timeout")
 		end
 	end
 end
@@ -3606,6 +4148,7 @@ end
 function actor_on_update()
 	--perform_debugging_checks() -- only uncommented when needed
 	if not scanning then return end
+	do_garbage_collection()
 	update_hint_filters()
 	cfg.actor_comm  = character_community(db.actor):sub(7)
 	-- ===================================================================
@@ -3663,16 +4206,20 @@ function actor_on_update()
 			scan_nearby_entities(early_scan_radius())
 		end
 	end
-	do_garbage_collection()
 end
 
 -- =======================================================================
 
+function targeted_deployable_bomb()
+	local id = get_current_target()
+	local mark = id and cfg.markers[id]
+	return mark and mark.placeable_mine and id or nil
+end
 
 function on_before_key_press(key, bind, dis, flags)
 	if cfg.watch_use and (key == use_dik) then
 		cfg.use_released = nil
-		cfg.block_loot_window = time_global()
+		set_loot_window_flag(time_global(), "key press")
 		--dump("[%s][on_before_key_press] Beginning hold of key %s", time_global(), key)
 		cfg.held_key = key
 		local id = get_current_target()
@@ -3692,7 +4239,7 @@ function do_use_release_action_manually(id)
 		dump("[%s] No completed hold action, item pickup should occur", time_global())
 		force_actor_to_take(obj)
 	elseif is_target_container(id, obj:clsid()) then
-		dump("[%s] No completed hold action, target is a container", time_global())
+		dl("[%s] No completed hold action, target is a container", time_global())
 		if is_body_claimed(id) then
 			if cfg.grok_claim then
 				vl("Calling Grok loot claim")
@@ -3704,26 +4251,28 @@ function do_use_release_action_manually(id)
 				vl("Calling NPC loot claim")
 				npc_loot_claim.actor_looting(obj)
 				if npc_loot_claim.actor_looting_claimed then return end
-				dump("Loot claim passed, looting")
+				vl("Loot claim passed, looting")
 			end
 		end
 
 		if z_ui_inventory_dotmarks then
-			dump("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
+			dl("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
 			cfg.use_released = nil
 			obj:use(db.actor)
 		else
 			alert("ERROR! z_ui_inventory_dotmarks could not be found, please reinstall DotMarks")
 		end
 	elseif mark and mark.is_stalker and mark.is_wounded then
-		dump("Forcing actor to talk with wounded NPC")
+		dl("Forcing actor to talk with wounded NPC")
 		cfg.use_released = nil
 		xr_effects.force_talk(db.actor, obj, {true})
+	else
+		vl("No manual action found for %s, assume engine will handle it", nameid(obj, id))
 	end
 end
 
 function on_key_release(key)
-	cfg.block_loot_window = nil
+	set_loot_window_flag(nil, (key == use_dik) and "released use key")
 	if key == cfg.held_mod then cfg.held_mod = nil end
 	if (key == cfg.held_key) then
 		if (key == use_dik) then
@@ -3733,8 +4282,10 @@ function on_key_release(key)
 			if not id then return end
 			local dur = cfg.holding and cfg.holding.peak_hold
 			local time = cfg.holding and cfg.holding.hold_time
-			dump("[%s] on_key_release: use key was just released | dur held %s | hold time %s", cfg.use_released, dur, time)
-			if not (dur and time and (dur >= time)) then
+			local can_trigger_action = not (dur and time and (dur >= time))
+			local action_text = (DEV_DEBUG or debuglogs or debug_dump) and can_trigger_action and ", checking for action" or ", no action to trigger"
+			dump("[%s] use key released%s | set at %s | dur held %s | hold time %s", time_global(), action_text, cfg.use_released, dur, time)
+			if can_trigger_action then
 				do_use_release_action_manually(id)
 			end
 		end
@@ -3808,20 +4359,26 @@ end
 
 function handle_npc_death(npc)
 	local id = npc and npc:id()
+	if not (id and cfg.markers[id]) then return end
 	vl("NPC %s has died, unregistering them and re-registering as corpse object", nameid(npc))
 	unregister_scanned_entity(id)
 	scan_nearby_object(npc)
 end
 
-function on_mouse_wheel(scroll_dir, flags)
-	if  (not cfg.wheel_cycles_pickups) or
-		(not get_current_target()) or
+function ignore_mouse_wheel()
+	return (
+		axr_main.scoped_weapon_is_zoomed or
+		axr_main.binoc_is_zoomed or
 		actor_menu.inventory_opened() or
-		(item_device and item_device.is_pda_active()) or
-		(ui_workshop.GUI and ui_workshop.GUI:IsShown()) or
-		axr_main.binoc_is_zoomed or axr_main.scoped_weapon_is_zoomed then
-	return end
+		item_device.is_pda_active() or
+		(ui_workshop.GUI and ui_workshop.GUI:IsShown())
+	)
+end
 
+function on_mouse_wheel(scroll_dir, flags)
+	local id = get_current_target()
+	if (not cfg.wheel_cycles_pickups) then return end
+	if (not id) or ignore_mouse_wheel() then return end
 	local direction         = (scroll_dir > 0) and 1 or -1
 	local _ = debug_dump and vl("on_mouse_wheel: %s | direction: %s", scroll_dir, direction)
 	cycle_targeted_pickup(direction)
@@ -3848,6 +4405,11 @@ function parse_file_data()
 		local ver = tonumber(k)
 		local res = "reset_" .. tostring(k)
 		cfg.version_resets[ver] = ini_cfg:collect_section(res)
+	end
+	cfg.mine_mode = clamp(cfg.sec_mode_setupthebomb or 0, -1, 2)
+	cfg.rce_installed = not not txr_mines.func_remote_plant
+	for k,v in pairs (txr_mines.EXPLOSIVE_SECTION_LOOKUP) do
+		cfg.disarmables[v] = k
 	end
 	if cfg.colors then
 		for k,v in pairs(cfg.colors) do
@@ -4092,6 +4654,8 @@ function on_option_change()
 			v:Destroy(nil, "reset after on_option_change")
 		end
 	end
+	cfg.bind_fmprev = key_bindings.kWPN_FIREMODE_PREV
+	cfg.bind_fmnext = key_bindings.kWPN_FIREMODE_NEXT
 	reset_nearby_item_tables()
 	set_handler_callbacks()
 	st_kg           = gts("st_kg")

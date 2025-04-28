@@ -6,7 +6,7 @@
     These patches are necessary in order for DotMarks to interact properly
     with the Animated NPC Healing addon. Their use_injector script doesn't
     accept an object or ID, it just assumes you're in a dialog and tries
-    to get_talking_npc().
+    to get_speaker().
 
     This patch cause it to accept a passed NPC object or the current
     target object as well.
@@ -36,7 +36,7 @@ if zzz_wounded_heal_anim and not zzz_wounded_heal_anim.ignore_dotmarks_fix then
 		if (not npc) then
 			npc = ui_hud_dotmarks.get_current_target_obj()
 			if not npc then
-				npc = get_talking_npc()
+				npc = get_speaker()
 			end
 		end
 

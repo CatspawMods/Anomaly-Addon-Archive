@@ -38,6 +38,10 @@
 		<text>Take and use</text>
 	</string>
 
+	<string id="st_alti_disarm">
+		<text>Disarm and take</text>
+	</string>
+
 	<string id="st_alti_cannot">
 		<text>Can't</text>
 	</string>
@@ -76,6 +80,30 @@
 
 	<string id="st_alti_heal">
 		<text>Use %s to heal %s</text>
+	</string>
+
+	<string id="st_alti_ied">
+		<text>Plant %s</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_action_disabled">
+		<text>Action unavailable</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_ied_timer">
+		<text>with a definable timer</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_iedmode_0">
+		<text>as a proximity mine</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_iedmode_1">
+		<text>with a %s-second timer</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_iedmode_2">
+		<text>with a remote detonator</text>
 	</string>
 
 	<string id="st_use_workshop">
@@ -586,13 +614,20 @@
 		<text>If enabled, a small display will be shown beside the primary interaction prompt, showing its weight and value and (optionally, with Utjan's addon) indicator dots for the condition of weapon/armor parts.</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkmain_show_gun_condition">
+		<text>Show weapon condition percentage</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_show_gun_condition_desc">
+		<text>If enbabled, the condition of weapons will be appended to the name of the item.\n
+
+		\nThis option is disabled by default in GAMMA, which does not use weapon condition.</text>
+	</string>
+		
 	<string id="ui_mcm_dotmarks_dmarkmain_show_item_condition">
-		<text>Show gear condition percentage</text>
+		<text>Show item condition percentage</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmain_show_item_condition_desc">
-		<text>If enbabled, the condition of weapons, outfits and headgear will be appended to the name of the item.\n
-
-		\nThis option is disabled by default in GAMMA, which does not use item condition.</text>
+		<text>If enbabled, the condition of outfits, headgear, and other non-weapon objects will be appended to the name of the item.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmain_show_item_charge">
@@ -1113,13 +1148,11 @@
 		\nUnlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and it will show you on the prompt which one it will use, as well as how many uses you have remaining.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim">
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_heal_anim">
 		<text>Enable animation for healing action</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim_desc">
-		<text>Enables an animation when healing wounded stalkers using the secondary action.\n
-
-		\nThe default animation just briefly causes the actor to crouch and look at the stalker while the usage sound plays. If you have the Animated NPC Healing addon installed, its animation is MUCH better and DotMarks will use that instead.</text>
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_heal_anim_desc">
+		<text>If you have the Animated NPC Healing addon installed, this option enables an animation when healing wounded stalkers using the secondary action.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale">
@@ -1135,5 +1168,19 @@
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_shadow_alpha_desc">
 		<text>Sets the alpha (transparency) channel for the drop shadows underneath the part condition dots. Set to zero to disable the drop shadows.</text>
 	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_mode_setupthebomb">
+		<text>Default IED placement mode</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_mode_setupthebomb_desc">
+		<text>Sets the default placement mode for IEDs deployed using a secondary action, or disables that action to make it unavailable.\n
+
+		\nWhen targeting an undeployed IED pickup item, you can use the Fire Mode keybinds to cycle placement mode, and the mouse wheel to set the duration of the timer.\n
+
+		\nThe remote detonator option requires the Remote Controlled Explosives addon.</text>
+	</string>
+
+
+
 
 </string_table>

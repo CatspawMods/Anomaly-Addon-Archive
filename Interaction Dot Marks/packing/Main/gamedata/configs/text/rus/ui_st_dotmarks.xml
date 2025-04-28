@@ -78,6 +78,30 @@
 		<text>Используйте %s, чтобы вылечить %s</text>
 	</string>
 
+	<string id="st_alti_ied">
+		<text>Заложить %s</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_action_disabled">
+		<text>Действие отключено</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_ied_timer">
+		<text>с задаваемым таймером</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_iedmode_0">
+		<text>как бесконтактный мина</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_iedmode_1">
+		<text>с %s-секундным таймером</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_iedmode_2">
+		<text>с помощью дистанционного детонатора</text>
+	</string>
+
 	<string id="st_use_workshop">
 		<text>Используйте верстак</text>
 	</string>
@@ -592,13 +616,20 @@
 		<text>Если эта функция включена, рядом с основной подсказкой взаимодействия будет отображаться небольшой дисплей, показывающий ее вес и стоимость, а также (опционально, с помощью аддона Utjan) индикаторные точки, показывающие состояние частей оружия/брони.</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkmain_show_gun_condition">
+		<text>Показать процентное соотношение состояния оружия</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmain_show_gun_condition_desc">
+		<text>Если опция включена, состояние оружия будет добавлено к названию предмета.\n
+
+		\nЭта опция отключена по умолчанию в GAMMA, которая не использует состояние предметов.</text>
+	</string>
+		
 	<string id="ui_mcm_dotmarks_dmarkmain_show_item_condition">
 		<text>Показать процентное соотношение состояния шестерен</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmain_show_item_condition_desc">
-		<text>Если опция включена, состояние оружия, экипировки и головных уборов будет добавлено к названию предмета.\n
-
-		\nЭта опция отключена по умолчанию в GAMMA, которая не использует состояние предметов.</text>
+		<text>Если включено, то экипировки, головных уборов и других предметов, не относящихся к оружию, будет добавлен к названию предмета.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmain_show_item_charge">
@@ -1122,13 +1153,11 @@
 		\nВ отличие от ванильной функции, эта позволит вам использовать любую имеющуюся у вас mедицинский набор или стимпак - но всегда будет стараться использовать самую дешевую, и в подсказке будет показано, какую из них вы будете использовать, а также сколько у вас осталось использований.</text>
 	</string>
 
-	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim">
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_heal_anim">
 		<text>Включите анимацию для действия исцеления</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_heal_anim_desc">
-		<text>Включает анимацию при лечении раненых преследователей с помощью вторичного действия.\n
-
-		\nПо умолчанию анимация лишь ненадолго заставляет актера приседать и смотреть на преследователя, пока играет звук использования. Если у вас установлен аддон Animated NPC Healing, его анимация намного лучше, и DotMarks будет использовать ее вместо этого.</text>
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_heal_anim_desc">
+		<text>Если у вас установлен аддон «Анимированное исцеление NPC», эта опция включает анимацию при исцелении раненых сталкеров с помощью вторичного действия.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale">
@@ -1144,6 +1173,17 @@
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_shadow_alpha_desc">
 		<text>Устанавливает альфа-канал (прозрачность) для тени точек состояния компонента. Установите нулевое значение, чтобы отключить тени. Установите нулевое значение, чтобы отключить основные тени.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_sec_mode_setupthebomb">
+		<text>Режим размещения СВУ по умолчанию</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_sec_mode_setupthebomb_desc">
+		<text>Устанавливает режим размещения по умолчанию для СВУ, развернутых с помощью вторичного действия, или отключает это действие, делая его недоступным.\n
+
+		\nПри нацеливании на неразвернутое СВУ вы можете использовать клавиши режима стрельбы для выбора режима размещения, а колесико мыши для установки длительности таймера.\n
+
+		\nДля опции дистанционного взрывателя требуется аддон Remote Controlled Explosives.</text>
 	</string>
 
 </string_table>

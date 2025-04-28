@@ -21,6 +21,7 @@ bones
 breakable_box_visuals
 button_visuals
 colors
+disarmables
 display_cases
 door_visuals
 dotmark_preset
@@ -33,6 +34,8 @@ manual_use
 markers
 mcm_paths
 metadata_types
+metrics
+mine_modes
 monitors
 notable_npcs
 pending_actions
@@ -115,6 +118,27 @@ sec_enable_heal_act			= true
 ; Enables the "heal wounded" secondary action for downed stalkers
 sec_enable_heal_anim 		= true
 ; Enables animation for the "heal wounded" secondary action
+enable_disarm_ied_act 		= true
+; Enables the "disarm IED" action for placed bombs
+sec_mode_setupthebomb 		= 0
+; Default mode for "place bomb" secondary action
+; 	-1 	= disabled, action unavailable
+; 	0 	= proximity
+; 	1 	= timer
+; 	2 	- remote (only with Remote Controlled Explosives addon)
+sec_use_firemode_mines 		= true
+; Use the fire mode keys to cycle mine deployment mode when targeting a placeable mine
+sec_use_mousewheel_timer 	= true
+; Use the mouse wheel to change the timer when targeting a placeable mine
+bomb_timer_min 				= 5
+; Minimum timer that can be set for an IED--and I really don't recommend going lower than this
+bomb_timer_max 				= 360
+; Maximum bomb timer value - could get very creative staggering timed charges
+bomb_timer_inc 				= 5
+; Increment for scrolling the timer with the mouse wheel
+anim_ied_hazard 			= false
+; Animates the size of IED markers to indicate proximity or time to detonation
+; WIP feature, still broken and disabled
 search_anim_on_takeall 		= true
 ; Play FDDA Redone's "body search" animation when executing a container secondary action
 ; Will only take effect if the animation is enabled in FDDAR
@@ -159,6 +183,9 @@ item_use_delay 				= 0.5
 ; Delay between taking an item and trying to use it 
 ; Required to give the FDDA pickup animation time to begin
 ; The item's use will not actually be triggered until FDDA's animation has completed
+defuse_obj_delay 			= 0.4
+; Like item_use_delay, but for disarming IEDs, which require a little more time since they
+; have to be despawned manually
 item_use_timeout 			= 1200
 ; The maximum amount of time a delayed action will wait for an animation to complete
 ; before it times out and executes the action to avoid stuck timeevents
@@ -251,6 +278,10 @@ hidden_marks_on_disabled 	= true
 ; If this option is false, no marker will be generated at all, and thus no interaction prompts are possible
 hide_mute_stalkers 			= true
 ; Don't show any marker at all for stalkers who have no dialogue
+actor_move_threshold 		= 0.1
+; Distance actor must move in order to clear the nearby pickup cache
+pickup_los_pos_adj 			= 0.05
+; Vertical adjustment to pickup item pos for purposes of determining LOS
 wheel_cycles_pickups 		= true
 ; Mouse wheel cycles through targeted pickup, if there is more than one in range
 snd_path_blip 				= catspaw\paw_blip
@@ -261,8 +292,11 @@ bodies_use_mpda_rules 		= false
 ; If enabled, body markers will use the same visibility rules as bodies in Milspec PDA
 show_multi_uses 			= true
 ; Append the number of uses to the name of multi-use items with more than one remaining charge
+show_gun_condition 			= true
+; Shows a weapon's percentage condition suffixed to the item name, if applicable
+; Disabled by default in GAMMA
 show_item_condition 		= true
-; Shows the item's percentage condition suffixed to the item name, if applicable
+; Shows a non-weapon item's percentage condition suffixed to the item name, if applicable
 show_item_charge 			= true
 ; Shows the item's percentage of battery charge suffixed to the item name, if applicable
 show_condition_color 		= true
@@ -331,6 +365,7 @@ argb_service_mech
 argb_service_medic
 argb_service_guide
 argb_service_leader
+fddar_pickup_speed
 ; Placeholders that get set at runtime
 ; A config key needs to be in this list in order to be loaded by MCM
 
@@ -405,6 +440,11 @@ is_pickup 		= 0
 is_container 	= 1
 is_stalker 		= 2
 is_empty_mutant	= 3
+
+[mine_modes]
+MODE_PROX	= 0
+MODE_TIMER	= 1
+MODE_REMOTE	= 2
 
 [tutorial_hints]
 ; Used internally to generate the appropriate text based on the active tutorial state
@@ -771,6 +811,7 @@ joint1
 [reset_table]
 20250423
 20250425
+20250427
 
 [reset_20250423]
 pri_use_x_offset 		= true
@@ -784,6 +825,9 @@ prompt_fade_in_time 	= true
 prompt_fade_out_time 	= true
 near_scan_radius 		= true
 early_scan_radius 		= true
+
+[reset_20250427]
+show_item_condition 	= true
 
 ; =================================================================================
 [mcm_paths]
@@ -808,6 +852,7 @@ show_item_card  		= dotmarks/dmarkmain/
 show_item_charge 		= dotmarks/dmarkmain/
 show_multi_uses 		= dotmarks/dmarkmain/
 sp_flag_favejunk		= dotmarks/dmarkmain/
+show_gun_condition 		= dotmarks/dmarkmain/
 show_item_condition 	= dotmarks/dmarkmain/
 show_condition_color 	= dotmarks/dmarkmain/
 show_stash_weight 		= dotmarks/dmarkmain/
@@ -828,7 +873,7 @@ sec_enable_use_act 		= dotmarks/dmarksec/
 sec_enable_unload_act 	= dotmarks/dmarksec/
 sec_enable_takeall_act 	= dotmarks/dmarksec/
 sec_enable_heal_act 	= dotmarks/dmarksec/
-sec_enable_heal_anim 	= dotmarks/dmarksec/
+sec_mode_setupthebomb 	= dotmarks/dmarksec/
 ; =================================================================================
 ; Other addons menu
 ; =================================================================================
@@ -838,6 +883,7 @@ bodies_use_mpda_rules 	= dotmarks/dmarkmods/
 show_prompt_during_anim = dotmarks/dmarkmods/
 prompt_busy_during_anim = dotmarks/dmarkmods/
 item_use_delay	 		= dotmarks/dmarkmods/
+sec_enable_heal_anim 	= dotmarks/dmarkmods/
 sp_hide_junk_items		= dotmarks/dmarkmods/
 sp_icon_pos_x 			= dotmarks/dmarkmods/
 sp_icon_pos_y 			= dotmarks/dmarkmods/
@@ -925,6 +971,7 @@ bind_char_scale			= dotmarks/dmarkadv/
 ; =================================================================================
 fddar_multipickup 		= fddar/pickup/multipickup
 fddar_pickup_anim 		= fddar/pickup/enable
+fddar_pickup_speed 		= fddar/pickup/speed
 fddar_body_search 		= fddar/body_search/enable
 fddar_container_search 	= fddar/body_search/enable_anm_for_containers
 fddar_disable_walk 		= fddar/body_search/disable_walk

@@ -297,13 +297,14 @@ function get_main_menu()
 			dmark_bpos 		= 8,
 		},
 
-		{ id = "show_item_card", 		type = "check", 	val = 1, def = cfg.show_item_card, precondition = { dotmarks_mcm.load_success } },
 		{ id = "show_item_charge", 		type = "check", 	val = 1, def = cfg.show_item_charge, precondition = { dotmarks_mcm.load_success } },
-		{ id = "show_multi_uses", 		type = "check", 	val = 1, def = cfg.show_multi_uses, precondition = { dotmarks_mcm.load_success } },
-		{ id = "sp_flag_favejunk", 		type = "check", 	val = 1, def = cfg.sp_flag_favejunk, precondition = { dotmarks_mcm.load_success } },
-		{ id = "show_item_condition", 	type = "check", 	val = 1, def = cfg.show_item_condition and not utils_catspaw_common.using_gamma_modpack, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_gun_condition", 	type = "check", 	val = 1, def = cfg.show_gun_condition and not utils_catspaw_common.using_gamma_modpack, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_item_condition", 	type = "check", 	val = 1, def = cfg.show_item_condition, precondition = { dotmarks_mcm.load_success } },
 		{ id = "show_condition_color", 	type = "check", 	val = 1, def = cfg.show_condition_color, precondition = { dotmarks_mcm.load_success } },
 		{ id = "show_stash_weight", 	type = "check", 	val = 1, def = cfg.show_stash_weight, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_item_card", 		type = "check", 	val = 1, def = cfg.show_item_card, precondition = { dotmarks_mcm.load_success } },
+		{ id = "show_multi_uses", 		type = "check", 	val = 1, def = cfg.show_multi_uses, precondition = { dotmarks_mcm.load_success } },
+		{ id = "sp_flag_favejunk", 		type = "check", 	val = 1, def = cfg.sp_flag_favejunk, precondition = { dotmarks_mcm.load_success } },
 		{ id = "wheel_cycles_pickups", 	type = "check", 	val = 1, def = cfg.wheel_cycles_pickups, precondition = { dotmarks_mcm.load_success } },
 
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha, precondition = { dotmarks_mcm.load_success } },
@@ -350,7 +351,14 @@ function get_sec_menu()
 		{ id = "sec_enable_unload_act", type = "check", 	val = 1, def = cfg.sec_enable_unload_act },
 		{ id = "sec_enable_takeall_act",type = "check", 	val = 1, def = cfg.sec_enable_takeall_act },
 		{ id = "sec_enable_heal_act",	type = "check", 	val = 1, def = cfg.sec_enable_heal_act },
-		{ id = "sec_enable_heal_anim", 	type = "check", 	val = 1, def = cfg.sec_enable_heal_anim },
+		{ id = "sec_mode_setupthebomb", type= "list", 		val = 2, def = cfg.sec_mode_setupthebomb, 
+			content = {
+			   {0,"dmarks_iedmode_0"},
+			   {1,"dmarks_ied_timer"},
+			   {2,"dmarks_iedmode_2"},
+			   {-1,"dmarks_action_disabled"}
+			}
+		},
 	}
 end
 
@@ -369,31 +377,33 @@ function get_mods_menu()
 		{ id = "bodies_use_paw_patches",  	type = "check", 	val = 1, def = cfg.bodies_use_paw_patches },
 		{ id = "bodies_use_mpda_rules",	  	type = "check", 	val = 1, def = cfg.bodies_use_mpda_rules },
 
-		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+		{ id = "divider", type= "line" },
 
 		{ id = "show_prompt_during_anim", 	type = "check", 	val = 1, def = cfg.show_prompt_during_anim },
 		{ id = "prompt_busy_during_anim",	type = "check", 	val = 1, def = cfg.prompt_busy_during_anim },
 		{ id = "item_use_delay", 			type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.item_use_delay },
 
-		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+		{ id = "sec_enable_heal_anim", 		type = "check", 	val = 1, def = cfg.sec_enable_heal_anim },
+
+		{ id = "divider", type= "line" },
 
 		{ id = "takeall_does_autoloot", 	type = "check", 	val = 1, min = -384, max = 768, def = cfg.takeall_does_autoloot },
 		{ id = "hijack_autoloot_keybind", 	type = "check", 	val = 1, min = -384, max = 768, def = cfg.hijack_autoloot_keybind },
 
-		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+		{ id = "divider", type= "line" },
 
 		{ id = "sp_hide_junk_items", 		type = "check", 	val = 1, def = cfg.sp_hide_junk_items },
 		{ id = "sp_icon_pos_x", 			type = "input", 	val = 2, min = -512, max = 1024, def = cfg.sp_icon_pos_x},
 		{ id = "sp_icon_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.sp_icon_pos_y },
 
-		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+		{ id = "divider", type= "line" },
 
 		{ id = "parts_dot_pos_x", 			type = "input", 	val = 2, min = -512, max = 1024, def = cfg.parts_dot_pos_x },
 		{ id = "parts_dot_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.parts_dot_pos_y },
 		{ id = "parts_dot_scale", 			type = "track", 	val = 2, min = 0, step = 0.1, max = 2, def = cfg.parts_dot_scale },
 		{ id = "parts_dot_shadow_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.parts_dot_shadow_alpha },
 
-		{ id = "divider", type= "line", precondition = { dotmarks_mcm.load_success } },
+		{ id = "divider", type= "line" },
 
 		{ id = "use_skill_system", 			type = "check", 	val = 1, def = cfg.use_skill_system },
 		{ id = "haru_skill_coef", 			type = "input", 	val = 2, min = 0, max = 5, step = 0.01, def = cfg.haru_skill_coef },
