@@ -399,7 +399,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_x_offset_desc">
 		<text>Adjust the prompt's position horizontally. Allowed values are -512 to 1024.
 			\n 
-			\nDefault: -10
+			\nDefault: -13
 		</text>
 	</string>
 
@@ -409,7 +409,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_pri_use_y_offset_desc">
 		<text>Adjust the prompt's position vertically. Allowed values are -384 to 768.
 			\n 
-			\nDefault: 28
+			\nDefault: 24
 		</text>
 	</string>
 
@@ -419,7 +419,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_sec_use_x_offset_desc">
 		<text>Adjust the prompt's position horizontally. Allowed values are -512 to 1024.
 			\n 
-			\nDefault: -10
+			\nDefault: -9
 		</text>
 	</string>
 
@@ -937,7 +937,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_x_desc">
 		<text>Adjusts the horizontal offset of the action text. This is the text that says what the interaction does, e.g. "pick up the thing".
 		 \n
-		\nDefault: 24</text>
+		\nDefault: 20</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y">
@@ -946,7 +946,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_action_text_pos_y_desc">
 		<text>Adjusts the vertical offset . This is the text that says what the interaction does, e.g. "pick up the thing".
 		 \n
-		\nDefault: 3.5</text>
+		\nDefault: 3</text>
 	</string>	
 
 	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_x">
@@ -964,7 +964,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_bind_text_pos_y_desc">
 		<text>Adjusts the vertical offset of the keybind text within its icon box. This is the text that says what key or button you press, e.g. "T".
 		 \n
-		\nDefault: 2.5</text>
+		\nDefault: 3.5</text>
 	</string>	
 
 	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale">

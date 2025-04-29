@@ -22,20 +22,23 @@ script_name     = "ui_hud_dotmarks"
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
 	TODO (all non-critical):
-	- Deploying IEDs pretty much working, anim for it is not
-		Look at an option to pick up deployed IEDs!
+	- Deploying IEDs pretty much working, marker anim for it is not
+		May need to table that until after release
 	- Add "welcome" message similar to PAW, controlled by MCM flag
-	- Update GH documentation with new Utjan settings
+		May be a post-release thing
+	- Update GH documentation with new Utjan and IED settings
 	- Correct the MCM text and documentation for changed defaults
 
 	BEFORE PUBLIC RELEASE:
+	- FEATURE FREEZE is now in effect - nothing new gets added
 	- Re-validate EVERY FEATURE individually - all must pass in same build
 
 	POST-RELEASE:
 	- MCM live preview for prompt elements - lots of work
 	- Encyclopedia entry/entries - relatively easy, just need writing
 	- NPE module(s) - not hard, but time-consuming and low priority
-	- Try to improve the drop shadows on the item card elements
+	- Improve the drop shadows on the item card elements, they fugly
+
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -192,6 +195,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					local id            = mark.id
 					local obj           = id and get_game_object(id)
 					if not obj then return end
+
 					local show_pri      = true
 					if mark.is_stalker and mark.is_alive then
 						local alive = obj:alive()
@@ -515,6 +519,69 @@ function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
 end
 
 -- ======================================================================
+
+
+function uiscale(i)
+	return (i or 0) * (cfg.ui_scale or 1)
+end
+
+function get_font(num)
+	return fonts[tonumber(num) or cfg.font_main_prompt or fallback_font]
+end
+
+function get_font_obj(num)
+	local font = get_font(num)
+	return font and font.font
+end
+
+function get_font_xoff(num)
+	local font = get_font(num)
+	return font and tonumber(font.xoff) or 0
+end
+
+function get_font_width(num)
+	local font = get_font(num)
+	return font and tonumber(font.width or font.size) or 16
+end
+
+function get_font_height(num)
+	local font = get_font(num)
+	return font and tonumber(font.height or font.width or font.size) or 16
+end
+
+function get_font_scale_w(num)
+	local scale = get_font_width(num) / 16
+	return scale
+end
+
+function get_font_scale_h(num)
+	local scale = get_font_height(num) / 16
+	return scale
+end
+
+function fontscale_w(i)
+	return i * get_font_scale_w(num)
+end
+
+function fontscale_h(i)
+	return i * get_font_scale_h(num)
+end
+
+function setwndpos(element, x, y)
+	if not element then return end
+	element:SetWndPos(vector2():set(
+		uiscale(x or 0),
+		uiscale(y or 0)
+	))
+end
+
+function setwndsize(element, w, h)
+	if not element then return end
+	element:SetWndSize(vector2():set(
+		uiscale(w or 0),
+		uiscale(h or 0)
+	))
+end
 
 function get_interact_distance(id, mark)
 	if not mark then mark = (id and cfg.markers[id]) end
@@ -1273,7 +1340,7 @@ function InteractPrompt:ParseArgs(args)
 		local sxoff = cfg.sec_use_x_offset
 		local syoff = cfg.sec_use_y_offset
 		local ydiff = syoff - pyoff
-		args.yoffset = args.yoffset - ydiff + fontscale(ydiff)
+		args.yoffset = args.yoffset - ydiff + fontscale_h(ydiff)
 	end
 	if args.iedmode then
 		args.iedtext = args.text
@@ -1286,6 +1353,7 @@ function InteractPrompt:ParseArgs(args)
 end
 
 function InteractPrompt:SetupButtonHandlers()
+	vl("[%s] InteractPrompt:SetupButtonHandlers | scheme: %s", self.args.section, self.args.scheme)
 	local method = "on_use"
 	if (self.args.scheme == "ph_button") then
 		method = "on_press"
@@ -1294,8 +1362,8 @@ function InteractPrompt:SetupButtonHandlers()
 	end
 	self.physbtn_active = (
 		function()
-			local btn = self.args.id and db.storage[self.args.id][self.args.scheme]
-			return btn and not not btn[method]
+			local btn = self.args.id and self.args.scheme and db.storage[self.args.id][self.args.scheme]
+			return btn and method and not not btn[method]
 		end
 	)
 end
@@ -1401,10 +1469,10 @@ end
 function InteractPrompt:SetLinePos(x, y)
 	local xoff, yoff 	= self:GetPosOffsets()
 
-	self.line:SetWndPos(vector2():set(
+	setwndpos(self.line,
 		(x or 0) + 15 	+ (self.args.line_adj_x or 0),
 		(y or 0) + -15	+ (self.args.line_adj_y or 0)
-	))
+	)
 end
 
 
@@ -1416,7 +1484,7 @@ function InteractPrompt:UpdateMainWndPos(mark)
 	local adj_h 	= ((mark and mark.height or 6) - (arg_tbl.height or 6)) * 0.5
 	local x         = self.args.xoffset + adj_w
 	local y         = self.args.yoffset + adj_h
-	self.wnd:SetWndPos(vector2():set(x, y))
+	setwndpos(self.wnd, x, y)
 end
 
 
@@ -1431,7 +1499,7 @@ function InteractPrompt:SetupConnectingLine()
 			(self.args.line_adj_x or 0) + -3.5,
 			(self.args.line_adj_y or 0) + 3
 		)
-		self.line:SetWndSize(vector2():set(5 + (self.args.line_adj_w or 0), 26 + (self.args.line_adj_h or 0)))
+		setwndsize(self.line, 5 + (self.args.line_adj_w or 0), 26 + (self.args.line_adj_h or 0))
 	else
 		self.line:Show(false)
 	end
@@ -1449,7 +1517,7 @@ function InteractPrompt:BuildUI()
 	local xml           = self.xml
 	xml:ParseFile(cfg.interact_uifile)
 	local args          = self.args
-	local boxlen        = fontscale(#args.bind * cfg.bind_char_scale)
+	local boxlen        = fontscale_w(#args.bind * cfg.bind_char_scale)
 	local boxpos        = -(boxlen - 4)
 	self.args.style     = cfg.keybind_bg_style or 0
 	self.black_text     = (self.args.style > 1)
@@ -1457,7 +1525,10 @@ function InteractPrompt:BuildUI()
 	self.wnd            = xml:InitStatic("alt_interact", self.anchor)
 
 	self.drop           = xml:InitStatic("box", self.wnd)
-	self.drop:SetWndPos(vector2():set(-boxlen, -1))
+	setwndpos(self.drop,
+		-boxlen + fontscale_w(cfg.interact_drop_x),
+		fontscale_h(cfg.interact_drop_y)
+	)
 	self.drop:InitTexture(cfg.main_drop_texture)
 	self:eleSetBaseColorScheme(self.drop, clr_tbl(clamp(cfg.interact_drop_alpha * 255, 0, 255), 255, 255, 255))
 	--self.drop:SetTextureColor(get_argb(clamp(cfg.interact_drop_alpha * 255, 0, 255), 255, 255, 255))
@@ -1468,7 +1539,7 @@ function InteractPrompt:BuildUI()
 	if one_char then
 		self.prompt     = xml:InitStatic("alt_interact:prompt", self.wnd)
 		self.prompt:InitTexture("ui_catsy_keybind_bg_single_v" .. self.args.style)
-		self.prompt:SetWndSize(vector2():set(fontscale(15), fontscale(20)))
+		setwndsize(self.prompt, fontscale_w(15), fontscale_h(20))
 	else
 		self.prompt     = xml:InitStatic("box", self.wnd)
 		
@@ -1480,14 +1551,14 @@ function InteractPrompt:BuildUI()
 		self.prompt_r:InitTexture("ui_catsy_keybind_bg_right_v" .. args.style)
 
 		stretch_adj     = 2
-		self.prompt_l:SetWndSize(vector2():set(fontscale(5.3125), fontscale(20)))
-		self.prompt_l:SetWndPos(vector2():set(0, 0))
-		self.prompt_c:SetWndSize(vector2():set(boxlen, fontscale(20)))
-		self.prompt_c:SetWndPos(vector2():set(fontscale(5.1125), 0))
-		self.prompt_r:SetWndPos(vector2():set(fontscale(4.78) + boxlen, 0))
-		self.prompt_r:SetWndSize(vector2():set(fontscale(5.3125), fontscale(20)))
+		setwndsize(self.prompt_l, fontscale_w(5.3125), fontscale_h(20))
+		setwndpos(self.prompt_l, 0, 0)
+		setwndsize(self.prompt_c, boxlen, fontscale_h(20))
+		setwndpos(self.prompt_c, fontscale_w(5.1125), 0)
+		setwndpos(self.prompt_r, fontscale_w(4.78) + boxlen, 0)
+		setwndsize(self.prompt_r, fontscale_w(5.3125), fontscale_h(20))
 	end
-	self.prompt:SetWndPos(vector2():set(boxpos or 0, 0))
+	setwndpos(self.prompt, boxpos or 0, 0)
 
 	-- Set up long press progress indicator
 	if args.long then
@@ -1499,25 +1570,30 @@ function InteractPrompt:BuildUI()
 	-- Set up text drop shadows
 	self.bind_sh        = xml:InitStatic("alt_interact:label", self.prompt)
 	self.label_sh       = xml:InitStatic("alt_interact:label", self.wnd)
-	self.bind_sh:SetWndSize(vector2():set((boxlen or 0) + fontscale(15), fontscale(20)))
-	self.bind_sh:SetWndPos(vector2():set(fontscale(stretch_adj + cfg.bind_text_pos_x + 1.5), fontscale(cfg.bind_text_pos_y - 0.25)))
-	self.label_sh:SetWndPos(vector2():set(fontscale(cfg.action_text_pos_x + 0.5), fontscale(cfg.action_text_pos_y)))
-	self.bind_sh:TextControl():SetFont(get_font())
-	self.label_sh:TextControl():SetFont(get_font())
+	setwndsize(self.bind_sh, (boxlen or 0) + fontscale_w(15), fontscale_h(20))
+	setwndpos(self.bind_sh,
+		get_font_xoff() + fontscale_w(stretch_adj + cfg.bind_text_pos_x + 1.5),
+		fontscale_h(cfg.bind_text_pos_y - 0.25)
+	)
+	setwndpos(self.label_sh, 
+		get_font_xoff() + fontscale_w(cfg.action_text_pos_x + 0.5),
+		fontscale_h(cfg.action_text_pos_y)
+	)
+	self.bind_sh:TextControl():SetFont(get_font_obj())
+	self.label_sh:TextControl():SetFont(get_font_obj())
 
 	-- Keybind text indicator
 	self.bind           = xml:InitStatic("alt_interact:label", self.prompt)
 	self:eleSetBaseColorScheme(self.bind, self.black_text and self.text_color_dark or self.text_color_light)
-	self.bind:TextControl():SetFont(get_font())
+	self.bind:TextControl():SetFont(get_font_obj())
 
 	self:SetBindText(bindtext(self:BindKey(), self:ModKey()))
 
-	self.bind:SetWndSize(vector2():set((boxlen or 0) + fontscale(15), fontscale(20)))
-	if one_char then
-		self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + cfg.bind_text_pos_x + 1.5), fontscale(cfg.bind_text_pos_y)))
-	else
-		self.bind:SetWndPos(vector2():set(fontscale(stretch_adj + cfg.bind_text_pos_x), fontscale(cfg.bind_text_pos_y)))
-	end
+	setwndsize(self.bind, (boxlen or 0) + fontscale_w(15), fontscale_h(20))
+	setwndpos(self.bind,
+		get_font_xoff() + fontscale_w(stretch_adj + cfg.bind_text_pos_x + (one_char and 1.5 or 0)),
+		fontscale_h(cfg.bind_text_pos_y)
+	)
 
 	-- Width reference static
 	self.lref      = xml:InitStatic("box", self.wnd)
@@ -1526,8 +1602,8 @@ function InteractPrompt:BuildUI()
 	-- Prompt text label
 	self.label          = xml:InitStatic("alt_interact:label", self.wnd)
 	self:eleSetBaseColorScheme(self.label, self.text_color_light)
-	self.label:SetWndPos(vector2():set(fontscale(cfg.action_text_pos_x), fontscale(cfg.action_text_pos_y)))
-	self.label:TextControl():SetFont(get_font())
+	setwndpos(self.label, get_font_xoff() + fontscale_w(cfg.action_text_pos_x), fontscale_h(cfg.action_text_pos_y))
+	self.label:TextControl():SetFont(get_font_obj())
 
 	self:eleSetBaseColorScheme(self.bind_sh, self.text_color_dark)
 	if self.black_text then
@@ -1611,7 +1687,7 @@ function InteractPrompt:UpdatePromptLength()
 	self.prompt_length  = self.lref:GetWidth() + 25
 	if len == self.prompt_length then return self.prompt_length end
 	if self.itemcard then
-		self.itemcard:SetWndPos(vector2():set(cfg.item_card_pos_x + self.prompt_length, cfg.item_card_pos_y or 0))
+		setwndpos(self.itemcard, cfg.item_card_pos_x + self.prompt_length, cfg.item_card_pos_y or 0)
 	end
 	return self.prompt_length
 end
@@ -1636,7 +1712,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 	local value     = dec2(ini_sys:r_float_ex(sec,"cost") or 0)
 
 	xml:ParseFile(cfg.interact_uifile)
-	local offset    = fontscale(self:UpdatePromptLength())
+	local offset    = fontscale_w(self:UpdatePromptLength())
 	self.itemcard   = self.xml:InitStatic("box", anchor or self.wnd)
 
 	local icon_sz   = cfg.item_card_icon_sz
@@ -1645,57 +1721,57 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 	local text_y    = cfg.item_card_text_y
 	local elem_x    = cfg.item_card_elem_x
 	local elem_y    = cfg.item_card_elem_y
-	local elem_h    = fontscale(cfg.item_card_elem_h)
+	local elem_h    = fontscale_w(cfg.item_card_elem_h)
 	local icon_x    = cfg.item_card_icon_x
 	local icon_y    = cfg.item_card_icon_y
 
-	self.itemcard:SetWndPos(vector2():set(wnd_x + offset, wnd_y))
+	setwndpos(self.itemcard, wnd_x + offset, wnd_y)
 
 	self.card_wgt = self.xml:InitStatic("box", self.itemcard)
-	self.card_wgt:SetWndPos(vector2():set(elem_x, elem_y))
+	setwndpos(self.card_wgt, elem_x, elem_y)
 	self.card_wgt_icon = self.xml:InitStatic("box", self.card_wgt)
-	self.card_wgt_icon:SetWndSize(vector2():set(icon_sz * cfg.unsquish_ratio, icon_sz))
-	self.card_wgt_icon:SetWndPos(vector2():set(icon_x, icon_y))
+	setwndsize(self.card_wgt_icon, icon_sz * cfg.unsquish_ratio, icon_sz)
+	setwndpos(self.card_wgt_icon, icon_x, icon_y)
 	self.card_wgt_icon:InitTexture(cfg.item_card_icon_weight)
 	self.card_wgt_icon:Show(true)
 
 	offset = elem_x + self.card_wgt_icon:GetWidth()
 	self.card_wgt_text = self.xml:InitStatic("box", self.card_wgt)
-	self.card_wgt_text:SetWndSize(vector2():set(0, elem_h))
-	self.card_wgt_text:SetWndPos(vector2():set(offset, text_y))
-	self.card_wgt_text:TextControl():SetFont(get_font(cfg.font_item_card or 0))
+	setwndsize(self.card_wgt_text, 0, elem_h)
+	setwndpos(self.card_wgt_text, offset, text_y)
+	self.card_wgt_text:TextControl():SetFont(get_font_obj(cfg.font_item_card or 0))
 	self.card_wgt_text:TextControl():SetText(self.weight)
 	self.card_wgt_text:AdjustWidthToText()
 	self.card_wgt_text:Show(true)
 	self:UpdateWeightColor()
 
 	local weight_w = offset + self.card_wgt_text:GetWidth()
-	self.card_wgt:SetWndSize(vector2():set(weight_w + 6, elem_h))
+	setwndsize(self.card_wgt, weight_w + 6, elem_h)
 	self.card_wgt:InitTexture("ui_dotmarks_card_drop")
 	self.card_wgt:SetTextureColor(getargb( cfg.colors.clr_card_drop ))
 
 	offset = elem_x
 	self.card_val = self.xml:InitStatic("box", self.itemcard)
-	self.card_val:SetWndPos(vector2():set(offset, elem_y + elem_h))
+	setwndpos(self.card_val, offset, elem_y + elem_h)
 	self.card_val_icon = self.xml:InitStatic("box", self.card_val)
-	self.card_val_icon:SetWndSize(vector2():set(icon_sz * cfg.unsquish_ratio, icon_sz))
-	self.card_val_icon:SetWndPos(vector2():set(icon_x, icon_y))
+	setwndsize(self.card_val_icon, icon_sz * cfg.unsquish_ratio, icon_sz)
+	setwndpos(self.card_val_icon, icon_x, icon_y)
 	self.card_val_icon:InitTexture(cfg.item_card_icon_value)
 	self.card_val_icon:SetTextureColor(getargb( cfg.colors.clr_text_light ))
 	self.card_val_icon:Show(true)
 
 	offset = elem_x + self.card_val_icon:GetWidth()
 	self.card_val_text = self.xml:InitStatic("box", self.card_val)
-	self.card_val_text:SetWndSize(vector2():set(0, elem_h))
-	self.card_val_text:SetWndPos(vector2():set(offset, text_y - 0.5))
-	self.card_val_text:TextControl():SetFont(get_font(cfg.font_item_card or 0))
+	setwndsize(self.card_val_text, 0, elem_h)
+	setwndpos(self.card_val_text, offset, text_y - 0.5)
+	self.card_val_text:TextControl():SetFont(get_font_obj(cfg.font_item_card or 0))
 	self.card_val_text:TextControl():SetText(value)
 	self.card_val_text:TextControl():SetTextColor(getargb( cfg.colors.clr_text_light )) 
 	self.card_val_text:AdjustWidthToText()
 	self.card_val_text:Show(true)
 
 	local value_w = offset + self.card_val_text:GetWidth()
-	self.card_val:SetWndSize(vector2():set(value_w + 6, elem_h))
+	setwndsize(self.card_val, value_w + 6, elem_h)
 	self.card_val:InitTexture("ui_dotmarks_card_drop")
 	self.card_val:SetTextureColor(getargb( cfg.colors.clr_card_drop ))
 	
@@ -1719,8 +1795,11 @@ function InteractPrompt:UpdateFaveJunkIcon()
 	self.card_sp_icon:Show(has_icon)
 	if not has_icon then return end
 
-	self.card_sp_icon:SetWndPos(vector2():set(self.longest_card + fontscale(cfg.sp_icon_pos_x or 0), (cfg.sp_icon_pos_y or 0)))
-	self.card_sp_icon:SetWndSize(vector2():set(16 * cfg.unsquish_ratio, 16))    
+	setwndpos(self.card_sp_icon,
+		self.longest_card + fontscale_w(cfg.sp_icon_pos_x or 0),
+		(cfg.sp_icon_pos_y or 0)
+	)
+	setwndsize(self.card_sp_icon, 16 * cfg.unsquish_ratio, 16)
 end
 
 function InteractPrompt:SetupUtjanPartDots(anchor, obj)
@@ -1748,7 +1827,7 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 	local sep = cfg.parts_dot_sep_width or 1
 	local base_x = (cfg.parts_dot_pos_x or 0)
 	self.parts_container = self.xml:InitStatic("box", anchor or self.wnd)
-	self.parts_container:SetWndPos(vector2():set(base_x, cfg.parts_dot_pos_y or 0))
+	setwndpos(self.parts_container, base_x, cfg.parts_dot_pos_y or 0)
 	self.parts_indicators = self.parts_indicators or {}
 	self.parts_shadows = self.parts_shadows or {}
 
@@ -1766,10 +1845,10 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 			if not self.parts_indicators[part] then
 				self.parts_shadows[part]	= self.xml:InitStatic("cond_dot", self.parts_container)
 				self.parts_indicators[part] = self.xml:InitStatic("cond_dot", self.parts_shadows[part])
-				self.parts_shadows[part]:SetWndSize(vector2():set(shadow_sz * cfg.unsquish_ratio, shadow_sz))
+				setwndsize(self.parts_shadows[part], shadow_sz * cfg.unsquish_ratio, shadow_sz)
 				self.parts_shadows[part]:SetTextureColor(get_argb(shadow_a, 0, 0, 0))
-				self.parts_indicators[part]:SetWndSize(vector2():set(cond_dot_w, cond_dot_h))
-				self.parts_indicators[part]:SetWndPos(vector2():set(drop_rad * cfg.unsquish_ratio, drop_rad))
+				setwndsize(self.parts_indicators[part], cond_dot_w, cond_dot_h)
+				setwndpos(self.parts_indicators[part], drop_rad * cfg.unsquish_ratio, drop_rad)
 			end
 		else
 			parts[part] = nil
@@ -1782,7 +1861,7 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 	for part, condition in spairs(parts, z_item_icon_info.parts_sort) do
 		local x = base_x + 1 + ((cond_dot_w + sep) * i)
 		local y = 0
-		self.parts_shadows[part]:SetWndPos(vector2():set(x, y))
+		setwndpos(self.parts_shadows[part], x, y)
 		--self.parts_indicators[part]:SetWndPos(vector2():set(x + (drop_rad * cfg.unsquish_ratio), y + drop_rad))
 
 		local c = get_condition_color(condition)
@@ -1796,7 +1875,7 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 		size = x + cond_dot_w + sep
 		i = i + 1
 	end
-	self.parts_container:SetWndSize(vector2():set(size, 0))
+	setwndsize(self.parts_container, size, 0)
 	self.parts_container:InitTexture(cfg.main_drop_texture)
 end
 
@@ -2263,7 +2342,7 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
 	self.lref:TextControl():SetText(plain_text or new_text)
 	self.lref:AdjustWidthToText()
 	local pos = self:UpdatePromptLength()
-	self.drop:SetWndSize(vector2():set(pos + fontscale(55), fontscale(22)))
+	setwndsize(self.drop, pos + fontscale_w(cfg.interact_drop_w or 55), fontscale_h(cfg.interact_drop_h or 25))
 end
 
 function InteractPrompt:UpdateLongPress()
@@ -2436,25 +2515,6 @@ end
 -- =======================================================================
 --      MAIN LOGIC
 -- =======================================================================
-
-function get_font(num)
-	local font = fonts[num or cfg.font_main_prompt or fallback_font]
-	return font and font.font
-end
-
-function get_font_size(num)
-	local font = fonts[num or cfg.font_main_prompt or fallback_font]
-	return font and font.size
-end
-
-function get_font_scale(num)
-	local scale = get_font_size() / 16
-	return scale
-end
-
-function fontscale(i)
-	return i * get_font_scale()
-end
 
 function init_target_metadata(id, meta_dat)
 	if not cfg.target_data[id] then

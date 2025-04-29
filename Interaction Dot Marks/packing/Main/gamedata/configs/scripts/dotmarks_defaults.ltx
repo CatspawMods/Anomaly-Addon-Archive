@@ -85,6 +85,8 @@ marker_dotactive 			= ui_catsy_marker_dotactive
 ; Texture for the "active" object that currently has interact focus
 main_drop_texture 			= ui_dotmarks_main_drop
 ; Texture used for the main prompt drop shadow
+ui_scale 					= 1.0
+; Scale the graphical UI elements - does not affect font size
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 near_scan_interval          = 104
@@ -212,10 +214,10 @@ hide_van_interact_ui		= true
 ; Disable the vanilla interaction prompts
 hide_drop_shadow 			= false
 ; Disable the drop shadow beneath prompts
-pri_use_x_offset 			= -15
-pri_use_y_offset 			= 25
-sec_use_x_offset 			= -15
-sec_use_y_offset 			= 45
+pri_use_x_offset 			= -13
+pri_use_y_offset 			= 24
+sec_use_x_offset 			= -9
+sec_use_y_offset 			= 48
 ; Screen positions for the primary and secondary interact prompts
 ; By default these are measured from the attached interaction dot
 fixed_screen_pos 			= false
@@ -235,6 +237,16 @@ font_item_card				= 0
 ; The default small font has no Cyrillic support, but only needs to display numbers
 interact_drop_alpha 		= 0.7
 ; Opacity of the interaction drop shadows
+interact_drop_x 			= 0
+; Adjusts the X position of the main drop shadow
+interact_drop_y 			= -2.5
+; Adjusts the Y position of the main drop shadow
+interact_drop_w 			= 55
+; Adjusts the base width of the main drop shadow
+; This base value is then adjusted by text length and font size
+interact_drop_h 			= 25
+; Adjusts the base height of the main drop shadow
+; This base value is then adjusted by text length and font size
 dot_marker_size 			= 1
 ; Scale multiplier for the size of the dot markers
 bodies_use_paw_patches 		= false
@@ -321,13 +333,13 @@ parts_dot_pos_x 			= -7
 parts_dot_pos_y				= -4
 ; Position of the part condition indicator, relative to the end of the prompt
 bind_text_pos_x  			= 3
-bind_text_pos_y				= 3
+bind_text_pos_y				= 3.5
 ; Adjust position of the keybind text
 bind_char_scale 			= 5.825
 ; Multiplied by the number of characters in the keybind text as part of the width of the icon
 ; This value is tuned for the default font, Letterica16
-action_text_pos_x 			= 24
-action_text_pos_y 			= 2.5
+action_text_pos_x 			= 20
+action_text_pos_y 			= 3
 ; Adjust position of the action text (e.g. "Pick up/use the thing")
 show_item_card 				= true
 ; Show an item card pop-up when targeting a pickup
@@ -428,6 +440,7 @@ near_end_dist       = -1	; dotmarks don't terminate on proximity
 los_dist_min        = 0.15	; any closer than this and LOS is assumed true
 lost_los_dist 		= 0.5 	; LOS smoothing (LOS result cache) is disabled beyond this distance
 lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
+los_check_flags 	= 2 	; LOS only blocked by objects, not statics
 width               = 6		; texture width (in canvas units)
 height              = 6		; texture height (in canvas units)
 update_int          = 15	; update interval in ms for the marker itself
@@ -812,6 +825,7 @@ joint1
 20250423
 20250425
 20250427
+20250428
 
 [reset_20250423]
 pri_use_x_offset 		= true
@@ -828,6 +842,16 @@ early_scan_radius 		= true
 
 [reset_20250427]
 show_item_condition 	= true
+
+[reset_20250428]
+pri_use_x_offset 		= true
+pri_use_y_offset 		= true
+sec_use_x_offset 		= true
+sec_use_y_offset 		= true
+bind_text_pos_x 		= true
+bind_text_pos_y 		= true
+action_text_pos_x 		= true
+action_text_pos_y 		= true
 
 ; =================================================================================
 [mcm_paths]

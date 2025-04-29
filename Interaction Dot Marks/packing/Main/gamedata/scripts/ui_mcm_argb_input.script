@@ -23,8 +23,8 @@
 	See "FUNCTOR USAGE" below for more details.
 -- ====================================================================]]
 script_name     = "ui_mcm_argb_input"
-script_version  = "2.1"
-release_date    = 20250410
+script_version  = "2.1.1"
+release_date    = 20250428
 -- ======================================================================
 local UIMCM, UIMM
 RegisterScriptCallback("main_menu_on_init", ( function(m)  UIMM = m end ))
@@ -306,7 +306,7 @@ function UIARGBControl:UpdatePreviewStatic()
 end
 
 function UIARGBControl:SetColor(color, value)
-	value = value and clamp(value, 0, 255) or 0
+	value = value and clamp(tonumber(value) or 0, 0, 255) or 0
 	self.argb[color] = value
 	self:SetColorText(color, tostring(value))
 	self:UpdatePreviewStatic()

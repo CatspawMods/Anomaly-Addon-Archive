@@ -271,6 +271,10 @@ function get_next_avail_index(t, first, last, step)
 	end
 end
 
+function get_millicycle()
+    return (time_global() % 1000) * 0.001
+end
+
 function get_next_tg_interval(interval, variance, stamp)
 	-- For throttling looping functions to not act on every tick
 	-- Randomizes the next check by 5% of the interval to avoid stacking updates
