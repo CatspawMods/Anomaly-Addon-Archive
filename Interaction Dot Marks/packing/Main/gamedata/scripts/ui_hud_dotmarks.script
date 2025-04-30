@@ -32,6 +32,7 @@ script_name     = "ui_hud_dotmarks"
 	BEFORE PUBLIC RELEASE:
 	- FEATURE FREEZE is now in effect - nothing new gets added
 	- Re-validate EVERY FEATURE individually - all must pass in same build
+		See test plan
 
 	POST-RELEASE:
 	- MCM live preview for prompt elements - lots of work
@@ -1476,15 +1477,23 @@ function InteractPrompt:SetLinePos(x, y)
 	)
 end
 
+function InteractPrompt:GetMainWndPos(mark, x, y)
+	mark 			= mark or self.linked_mark or self:GetMark() or {}
+	if self.linked_mark then
 
-function InteractPrompt:UpdateMainWndPos(mark)
-	if self.args.locked_screen_pos then return end
-	mark 			= mark or self:GetMark() or {}
+	end
 	local arg_tbl 	= mark.is_active and mark.task_swap or mark.active_swap or mark.args or {}
 	local adj_w 	= ((mark and mark.width or 6) - (arg_tbl.width or 6)) * 0.5
 	local adj_h 	= ((mark and mark.height or 6) - (arg_tbl.height or 6)) * 0.5
-	local x         = self.args.xoffset + adj_w
-	local y         = self.args.yoffset + adj_h
+	local new_x 	= (x or 0) + self.args.xoffset + adj_w
+	local new_y		= (y or 0) + self.args.yoffset + adj_h
+	--dump("x %s + xoff %s + adj_w %s: %s | y %s + yoff %s + adj_h %s: %s", x, self.args.xoffset, adj_w, new_x, y, self.args.yoffset, adj_h, new_y)
+	return new_x, new_y
+end
+
+function InteractPrompt:UpdateMainWndPos(mark, x, y)
+	if self.args.locked_screen_pos then return end
+	x, y 			= self:GetMainWndPos(mark, x, y)
 	setwndpos(self.wnd, x, y)
 end
 
@@ -2241,21 +2250,37 @@ function InteractPrompt:RegisterScriptCallbacks(tf)
 end
 
 function InteractPrompt:MarkConditionsValid()
+	local mark = self:GetMark()
+	if self.args.mark_id and (not mark) or (mark and mark.destroying) then
+		self:Destroy("parent mark missing or invalid")
+		return
+	end
 	if self.args.func_valid then
-		return self.args.func_valid(self:GetMark(), self.args)
+		return self.args.func_valid(mark, self.args)
 	end
 	return true
+end
+
+function InteractPrompt:SyncWndPos(mark)
+	mark 		= mark or self.linked_mark or self:GetMark()
+	if not mark then return end
+	local x, y 	= self:GetMainWndPos(mark, x, y)
+	local pos 	= mark.marker:GetWndPos()
+	x 			= (pos and pos.x or 0) + (x or 0)
+	y 			= (pos and pos.y or 0) + (y or 0)
+	setwndpos(self.wnd, x, y)
 end
 
 function InteractPrompt:UpdateMark(state)
 	if not self:MarkConditionsValid() then
 		self:Destroy("invalid prompt")
 	end
-	if not self.linked_mark then return end
+	if not (self.linked_mark and self.linked_mark.mark_id) then return end
 	if (state == nil) then state = not self.disabled end
 	--dump("Propagating state %s to linked mark %s", state, self.linked_mark.name)
 	self.linked_mark:ActiveSwap(state)
-
+	self:SyncWndPos(self.linked_mark)
+	--self:UpdateMainWndPos(self.linked_mark)
 	if state and can_start_popin_anim(self.linked_mark) then
 		init_active_marker_popin(self.linked_mark)
 	end
@@ -2350,7 +2375,7 @@ function InteractPrompt:UpdateLongPress()
 	if self.longpress and not self.args.pri then
 		local mark = self:GetMark()
 		--dump("[%s] InteractPrompt:UpdateLongPress", time_global())
-		if mark.is_active and (not self.busystate) and (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
+		if mark and mark.is_active and (not self.busystate) and (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
 			self.peak_hold = time_continual() - (cfg.held_time or 0)
 			local prog = (self.peak_hold / self.hold_time)
 			self.longpress:SetProgressPos(prog)
@@ -4116,7 +4141,7 @@ function setup_tutorial_prompt(tutorial)
 	dl("Need to set up a new interact UI for tutorial %s", tutorial)
 	local args = get_cfg_for_type("args", "Tutorials") or {}
 	args.tutorial           = tutorial
-	args.fixed              = true
+	args.fixed              = (not args.is_campfire)
 	args.anchor             = maingameui
 	args.active_prompt      = trimmed_prompt(gts(cfg.tutorial_hints[tutorial]))
 	args.logged_type        = "tutorial prompt"

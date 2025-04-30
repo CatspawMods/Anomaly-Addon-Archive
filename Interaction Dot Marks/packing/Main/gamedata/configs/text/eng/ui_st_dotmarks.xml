@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250316
+    Updated: 20250428
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -1179,8 +1179,5 @@
 
 		\nThe remote detonator option requires the Remote Controlled Explosives addon.</text>
 	</string>
-
-
-
 
 </string_table>
