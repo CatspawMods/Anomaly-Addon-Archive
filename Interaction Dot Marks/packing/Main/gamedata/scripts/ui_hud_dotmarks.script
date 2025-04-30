@@ -899,10 +899,11 @@ function item_pickup_intercept(obj, flags)
 	
 	if taken_obj then
 		dl("[%s][item_pickup_intercept] Actor will take item %s", now, nameid(taken_obj))
+		local handle_take = flags.skip_anim or not fdda_callback
 		if flags.ret_value then
 			flags.ret_value = false
 			local mark = cfg.markers[curr_target]
-			if flags.skip_anim and not (mark and mark.physics_obj) then
+			if handle_take and not (mark and mark.physics_obj) then
 				vl("flags.ret_value is %s, DotMarks will handle pickup %s", flags.ret_value, nameid(taken_obj))
 				db.actor:take_item(taken_obj)
 				return

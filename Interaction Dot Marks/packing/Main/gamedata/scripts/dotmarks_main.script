@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.12-b10" -- Still a pre-release test build!
-release_date    = 20250428
+script_version  = "0.12-b11" -- Still a pre-release test build!
+release_date    = 20250429
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -1252,9 +1252,8 @@ end
 --      FONT SETUP
 -- =======================================================================
 fonts = {
-    -- May need to at some point separate height and width scales
-    [0] = { xoff = 0,   width   = 10, height    = 10, font = GetFontSmall()}, -- need accurate size
-    [1] = { xoff = -2,  width   = 20, height    = 16, font = GetFontMedium()}, -- need accurate size
+    [0] = { xoff = 0,   width   = 10, height    = 10, font = GetFontSmall()}, -- need accurate size, but very low priority
+    [1] = { xoff = -2,  width   = 20, height    = 16, font = GetFontMedium()},
     [2] = { xoff = 0,   width   = 16, height    = 16, font = GetFontLetterica16Russian()},
     [3] = { xoff = 0,   width   = 18, height    = 18, font = GetFontLetterica18Russian()},
     [4] = { xoff = 0,   width   = 30, height    = 30, font = GetFontLetterica25()},

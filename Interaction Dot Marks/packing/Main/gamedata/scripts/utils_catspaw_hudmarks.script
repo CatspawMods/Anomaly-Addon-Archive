@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.10"
-release_date    = 20250425
+script_version  = "0.11-b1" -- still technically in beta until DotMarks
+release_date    = 20250428
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -26,13 +26,13 @@ release_date    = 20250425
 -- ======================================================================
 
     TL;DR:
-    Parameterized functions for putting icons on the HUD in world space.
+    Parameterized functions for floating icons on the HUD in world space.
 
     See "HUD MARKER MANAGER USAGE" below for usage of the mark manager.
 
     See "HUD MARKER CLASS USAGE" below for usage of the marker class.
 
-    Markers may have a performance impact. I'm working on optimizations.
+    A large number of markers may have a performance impact.
 
 -- ===================================================================--]]
 --      DEPENDENCIES
@@ -237,7 +237,7 @@ function check_los_to_obj(id, range, bone, flags, tolerance, pos_adjust)
     local res = ray and ray:get(pos, device().cam_pos:sub(pos):normalize())
     local ray_diff = dist - math.floor(res and res.distance or range)
     local has_los = ray_diff < (tolerance or 0.3)
-    vl("check_los_to_obj: ID %s dist %s | ray dist %s | diff %s", id, dist, res and res.distance, ray_diff)
+    vl("check_los_to_obj: %s | ID %s dist %s | ray dist %s | diff %s", has_los, id, dist, res and res.distance, ray_diff)
     return has_los
 end
 
@@ -1448,19 +1448,24 @@ function UIHUDMarker:Update()
     end
 
 
-    local se_obj, obj, pin
+    local obj = id and get_game_object(id)
+    if (self.validate_game_object and not obj) or (obj and obj:parent() ~= nil) then
+        vl("Invalid game object, destroying HUD marker | obj exists %s | has parent %s", obj and "exists" or nil, not not (obj and obj:parent()))
+        self:Destroy(nil, "invalid game object")
+        return
+    end
+
+    local se_obj, pin
     if not (self.locked_world_pos or self.locked_screen_pos or self.skip_seobj_check) then
-        se_obj        = self:ValidateMarkerServerObj()
+        se_obj = self:ValidateMarkerServerObj()
+        if not se_obj then return end
 
-        if self.destroying or not se_obj then return end
-
-        obj           = id and get_game_object(id)
-        pin           = paw and self.is_pin and id and paw.pins and paw.pins[id]
+        pin = paw and self.is_pin and id and paw.pins and paw.pins[id]
         -- Destroy marker if ID's object is invalid, or if it's a pin with an invalid pin record
 
-        if ((not obj) or (self.is_pin and not pin)) then
-            vl("Invalid pin or game/server object, destroying HUD marker for pin %s | obj %s | se_obj %s", id or self.name or self.mark_id, obj and "exists" or nil, se_obj and "exists" or nil)
-            self:Destroy(nil, "invalid object or pin")
+        if (self.is_pin and not pin) then
+            vl("Invalid pin or server object, destroying HUD marker for pin %s | se_obj %s", id or self.name or self.mark_id, se_obj and "exists" or nil)
+            self:Destroy(nil, "invalid se_obj or pin")
             return
         end
     end
