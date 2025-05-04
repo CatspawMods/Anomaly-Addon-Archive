@@ -12,7 +12,7 @@
 ; =================================================================================
 [setting_tables]
 ; A list of tables to instantiate and populate with values at runtime
-; Never remove or alter ANY content in this section, you WILL crash your game
+; Never remove or alter ANY of these table names, you WILL crash your game
 blacklisted_clsids
 blacklisted_ids
 blacklisted_kinds
@@ -41,6 +41,7 @@ notable_npcs
 pending_actions
 tutorial_hints
 racked_items
+readable_functors
 reset_table
 scan
 section_lookup
@@ -94,9 +95,6 @@ near_scan_interval          = 104
 ; Unusual numbers are chosen for all intervals as a way of avoiding stacking updates
 early_scan_interval         = 2457
 ; Interval in ms between faraway-object scans
-skill_upd_interval          = 29711
-; Interval in ms between Skill System updates
-; These can be very infrequent, since skill level-ups are usually rare
 tut_check_interval 			= 1949
 ; Interval in ms between tutorial garbage collection checks, cleans up stuck prompts
 near_scan_radius            = 4
@@ -150,6 +148,9 @@ hijack_autoloot_keybind 	= false
 ; If enabled in combination with the above option, DotMarks will try to change the autoloot
 ; keybind to something impossible to press, in order to free up the keybind and ensure that
 ; it is only triggered by DotMarks.
+
+; This is great if you're like me and are horrified by the idea of an addon binding my ALT key
+; to a single action, so that I can't use ALT+key combos. Hell no, why is that the DEFAULT?
 autoloot_hijack_value 		= 999999
 ; An intentionally invalid key that could never be "pressed" and sent under valid circumstances
 haru_skill_name             = scavenging
@@ -160,7 +161,8 @@ mutant_decay_time 			= 7200
 ; Age after which a mutant corpse "decays" and cannot be looted
 bind_sec_interact
 ; DIK code of alternate interact keybind
-; When commented out like this, DotMarks will try to default to your use keybind
+; If this default is unset or invalid (which it intentionally is in the release version),
+; DotMarks will try to default to a long-press of your use keybind
 modk_sec_interact 			= 0
 ; Modifier key of alt interact
 imod_sec_interact 			= 2
@@ -172,7 +174,8 @@ obj_interact_dist 			= 2.5
 ; Object interaction distance in meters (don't increase, things may break)
 target_lenience 			= 0.8
 ; How far from center the crosshair can be for old targeting method
-; Need to look into whether and how much this is still needed
+; Required for properly handling focus detection for glowsticks and other physobjs 
+; that aren't actually true pickups
 fddar_multipickup 			= false
 fddar_pickup_anim 			= false
 fdda_pickup_anim 			= false
@@ -180,7 +183,8 @@ fdda_anims_enabled 			= false
 fddar_body_search 			= false
 fddar_container_search 		= false
 fddar_disable_walk 			= false
-; These should get populated at runtime with the current values from FDDA/FDDAR's MCM settings
+fddar_pickup_speed
+; These should get populated on init and every on_option_change with FDDA/FDDAR's MCM settings
 item_use_delay 				= 0.5
 ; Delay between taking an item and trying to use it 
 ; Required to give the FDDA pickup animation time to begin
@@ -241,7 +245,7 @@ interact_drop_x 			= 0
 ; Adjusts the X position of the main drop shadow
 interact_drop_y 			= -2.5
 ; Adjusts the Y position of the main drop shadow
-interact_drop_w 			= 55
+interact_drop_w 			= 35
 ; Adjusts the base width of the main drop shadow
 ; This base value is then adjusted by text length and font size
 interact_drop_h 			= 25
@@ -290,6 +294,8 @@ hidden_marks_on_disabled 	= true
 ; If this option is false, no marker will be generated at all, and thus no interaction prompts are possible
 hide_mute_stalkers 			= true
 ; Don't show any marker at all for stalkers who have no dialogue
+all_squad_members_talk 		= false
+; Flags whether or not mute visibility includes all squad members
 actor_move_threshold 		= 0.1
 ; Distance actor must move in order to clear the nearby pickup cache
 pickup_los_pos_adj 			= 0.05
@@ -315,10 +321,10 @@ show_condition_color 		= true
 ; Changes the color of the condition text based on the condition
 show_stash_weight 			= false
 ; Iterate stash contents and show their weight on the prompt - may have performance cost
-show_parts_weapons 			= true
-; If Utjan's Item UI is installed, shows part condition indicators for weapons
-show_parts_armor 			= true
-; If Utjan's Item UI is installed, shows part condition indicators for outfits and headgear
+show_parts_dots 			= false
+show_parts_weapons 			= false
+show_parts_armor 			= false
+; If Utjan's Item UI is installed, these are loaded from its MCM settings on_option_change
 parts_wpo_colors 			= true
 ; Uses Weapon Parts Overhaul condition color thresholds
 parts_dot_scale				= 1
@@ -329,9 +335,16 @@ parts_dot_shadow_alpha 		= 0.75
 ; Opacity of the drop shadows for the part condition dots, 0 disables
 parts_dot_sep_width 		= 0.25
 ; Spacing between the part condition dots
-parts_dot_pos_x 			= -7
-parts_dot_pos_y				= -4
+parts_dot_pos_x 			= 0
+parts_dot_pos_y				= 9
 ; Position of the part condition indicator, relative to the end of the prompt
+parts_dot_orientation 		= 2
+; 	0 = horizontal
+; 	1 = vertical
+; 	2 = radial (default)
+parts_dot_centering 		= false
+; Center the parts indicator if fewer than 5 components
+; Not used for radial mode
 bind_text_pos_x  			= 3
 bind_text_pos_y				= 3.5
 ; Adjust position of the keybind text
@@ -346,20 +359,21 @@ show_item_card 				= true
 item_card_icon_sz   		= 7.5
 ; Item card info icon size - e.g weight, value
 item_card_pos_x 			= -9
-item_card_pos_y 			= 0.5
+item_card_pos_y 			= -2
 ; Position of the item card, relative to the end of the prompt
 ; The following are a bunch of settings related to fine-tuning the position of the
 ; item card elements within their containers.
 item_card_icon_weight 		= ui_catsy_marker_weight
 item_card_icon_value 		= ui_catsy_marker_ruble
-item_card_text_y    		= -1
+item_card_text_y    		= 2.5
 ; Adjust vertical position of item card text
 item_card_elem_x    		= 7.5
 item_card_elem_y    		= 0
-item_card_elem_h    		= 10
+item_card_elem_h    		= 12
+item_card_elem_spacing 		= 0
 ; Adjust position and height of the item card rows
 item_card_icon_x    		= 4
-item_card_icon_y    		= 0
+item_card_icon_y    		= 2
 ; Adjust position of the item card icons (weight, value)
 sp_icon_pos_x 				= 10
 sp_icon_pos_y				= 1
@@ -377,7 +391,6 @@ argb_service_mech
 argb_service_medic
 argb_service_guide
 argb_service_leader
-fddar_pickup_speed
 ; Placeholders that get set at runtime
 ; A config key needs to be in this list in order to be loaded by MCM
 
@@ -441,9 +454,9 @@ los_dist_min        = 0.15	; any closer than this and LOS is assumed true
 lost_los_dist 		= 0.5 	; LOS smoothing (LOS result cache) is disabled beyond this distance
 lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
 los_check_flags 	= 2 	; LOS only blocked by objects, not statics
-width               = 6		; texture width (in canvas units)
+width               = 6		; texture width (in canvas units) - will be aspect-corrected
 height              = 6		; texture height (in canvas units)
-update_int          = 15	; update interval in ms for the marker itself
+update_int          = 15	; throttled update interval in ms for the marker itself
 skip_online_checks 	= true 	; Optimization, we can assume dotmarks will always be online and on the same map
 skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
 skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
@@ -486,7 +499,7 @@ clr_cnd_min 	= 255,196,18,18,0
 clr_cnd_mid 	= 255,255,255,118,0.5
 clr_cnd_max 	= 255,107,207,119,1
 ; Vanilla condition lerping colors
-clr_card_drop 	= 170,255,255,255
+clr_card_drop 	= 200,255,255,255
 ; Sets alpha for the item card drop shadow
 clr_text_light 	= 255,240,240,240
 ; Text color for light text on dark background (e.g. drop shadow)
@@ -533,7 +546,7 @@ placeable_pistol_shelf 		= true
 
 [useless_shit]
 ; Section names of things like matches that shouldn't have a secondary interact
-; This probably needs more entries than it currently has
+; This probably needs more entries than it currently has, but most cases are autodetected
 roubles
 box_matches
 compression_bag
@@ -543,6 +556,7 @@ explo_balon_gas
 explo_jerrycan_fuel
 explosive_mobiltank
 explosive_tank
+wpn_binoc
 hand_watch
 ; The hand watch can technically be used to check time, but not much point in adding that
 ; Not for the five people who know and the single person who might ever use one from the ground
@@ -661,7 +675,7 @@ tobacco
 hand_rolling_tobacco
 
 [manual_use]
-; FDDA won't handle usage of these objects at animation end, have to trigger them manually
+; FDDA won't handle usage of these objects at animation end, have to trigger it manually
 joint
 chocolate
 chocolate_p
@@ -686,6 +700,11 @@ dynamics\door\door_katakomb_big_2_lock 	= 0.25
 explo_metalcan_powder
 explosive_tank
 explosive_mobiltank
+
+[readable_functors]
+; Used to match when we're processing a readable object
+item_recipe.func_recipe = true
+item_recipe.func_letter = true
 
 [section_lookup]
 ; First step in object detection and classification
@@ -826,6 +845,7 @@ joint1
 20250425
 20250427
 20250428
+20250503
 
 [reset_20250423]
 pri_use_x_offset 		= true
@@ -853,10 +873,24 @@ bind_text_pos_y 		= true
 action_text_pos_x 		= true
 action_text_pos_y 		= true
 
+[reset_20250503]
+item_card_pos_x 		= true
+item_card_pos_y 		= true
+item_card_text_y 		= true
+item_card_elem_x 		= true
+item_card_elem_y 		= true
+item_card_elem_h 		= true
+item_card_icon_x 		= true
+item_card_icon_y 		= true
+parts_dot_pos_x 		= true
+parts_dot_pos_y 		= true
+sp_icon_pos_x 			= true
+sp_icon_pos_y 			= true
+
 ; =================================================================================
 [mcm_paths]
 ; The paths below allow better iteration through the config table to update MCM
-; settings, and helps me keep track of what settings are in which menu.
+; settings, and help me keep track of what settings are in which menu.
 
 ; Paths with "/" at the end will have the key name appended to get the final path.
 
@@ -868,7 +902,8 @@ action_text_pos_y 		= true
 ; and ignores it during on_option_change.
 
 ; If ever any setting in MCM is not updating itself with user changes, before doing
-; anything else, check to confirm the setting is in the list below.
+; anything else, check to confirm the setting is in the list below--and that it 
+; hasn't been renamed elsewhere.
 ; =================================================================================
 ; Main menu
 ; =================================================================================
@@ -882,8 +917,8 @@ show_condition_color 	= dotmarks/dmarkmain/
 show_stash_weight 		= dotmarks/dmarkmain/
 wheel_cycles_pickups 	= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
-; 	hidden settings, used internally
-welcome_message_shown 	= dotmarks/dmarkmain/
+; 	These last are hidden settings, only used internally
+;welcome_message_shown 	= dotmarks/dmarkmain/ ; not implemented yet
 last_version	 		= dotmarks/dmarkmain/
 last_release 			= dotmarks/dmarkmain/
 ; =================================================================================
@@ -916,7 +951,6 @@ parts_dot_pos_y 		= dotmarks/dmarkmods/
 parts_dot_scale			= dotmarks/dmarkmods/
 parts_dot_shadow_alpha 	= dotmarks/dmarkmods/
 haru_skill_coef 		= dotmarks/dmarkmods/
-skill_upd_interval 		= dotmarks/dmarkmods/
 haru_skill_name 		= dotmarks/dmarkmods/
 takeall_does_autoloot 	= dotmarks/dmarkmods/
 hijack_autoloot_keybind = dotmarks/dmarkmods/
@@ -1001,6 +1035,7 @@ fddar_container_search 	= fddar/body_search/enable_anm_for_containers
 fddar_disable_walk 		= fddar/body_search/disable_walk
 fdda_anims_enabled 		= EA_settings/enable_animations
 fdda_pickup_anim 		= EA_settings/take_item_anim
+show_parts_dots 		= item_icon_info/part_dots/enable
 show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
 show_parts_armor		= item_icon_info/part_dots/show_on_armor
 parts_wpo_grn 			= item_icon_info/part_dots/wpo_green

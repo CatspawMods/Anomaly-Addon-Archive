@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.10.1"
-release_date    = 20250420
+script_version 	= "1.10.2"
+release_date    = 20250503
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -227,11 +227,11 @@ function csv_argb_to_tbl(csv)
     end
 
     return c and {
-        a = c[1] or 255,
-        r = c[2] or 255,
-        g = c[3] or 255,
-        b = c[4] or 255,
-        v = c[5] or nil -- threshold value for use in state lerping
+        a = tonumber(c[1]) or 255,
+        r = tonumber(c[2]) or 255,
+        g = tonumber(c[3]) or 255,
+        b = tonumber(c[4]) or 255,
+        v = tonumber(c[5]) or nil -- threshold value for use in state lerping
     } or nil
 end
 

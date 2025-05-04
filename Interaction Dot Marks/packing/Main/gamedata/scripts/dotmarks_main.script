@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.12-b12" -- Still a pre-release test build!
-release_date    = 20250430
+script_version  = "0.12-b13" -- Still a pre-release test build!
+release_date    = 20250503
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -83,6 +83,13 @@ cfg                     = nil
 
     Most tables and config values are loaded on startup from:
         configs\scripts\dotmarks_defaults.ltx
+
+    The base_config table below is first loaded into the "cfg" table. Then
+    the contents of dotmarks_defaults.ltx are loaded on top of that.
+
+    The ui_hud_dotmarks script imports the metatable of this one, so that
+    the cfg table and all other public keys here are effectively included 
+    in the local namespace of ui_hud_dotmarks.
 -- =====================================================================]]
 local base_config = {
 -- =======================================================================
@@ -263,6 +270,7 @@ local base_config = {
                     is_npc          = true, -- these flags should be obvious
                     is_alive        = true, -- utilized during main loop to speed up checks
                     is_stalker      = true, -- passed through via args to the interaction prompts
+                    vis_ignore_mute = ignores_mute(id, obj),
                     -- Other object classes use similar flags to speed up looping checks.
                     bone            = "bip01_spine1",
                     -- Causes marker position to be based on this bone
@@ -874,14 +882,17 @@ local base_config = {
                 local section = obj:section()
                 local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                is_recipe_known(sec)
+                local readable   = kind and (kind == "i_letter") or nil
                 return {
                     is_pickup       = true,
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = vector():set(0, 0.05, 0),
                     no_sec          = cfg.useless_shit[section] and true or nil,
                     is_part_cnd     = not not (name:match("^prt_w_") or name:match("^prt_o_")) or nil,
-                    is_readable     = kind and (kind == "i_letter") or nil,
+                    is_readable     = readable or nil,
                     -- Book or letter that can be picked up and read as a secondary action
+                    --is_unread       = readable and not is_recipe_known(section),
                     is_backpack     = (obj:clsid() == clsid.equ_backpack) or nil,
                     logged_type     = "miscellaneous loot",
                     texture         = get_cfg_for_type("tex", "Misc") or cfg.marker_dotmark,
@@ -1052,8 +1063,47 @@ local base_config = {
 }
 -- =======================================================================    
 
-function func_disarm_ied(obj, mark)
-    ui_hud_dotmarks.disarm_ied(obj, mark)
+function is_recipe_known(sec)
+    if not sec then return end
+    -- Largely lifted from Utjan's Item UI Improvements
+    local use_map = SYS_GetParam(0, sec, "use_map")
+    local functor = SYS_GetParam(0, sec, "use1_action_functor", "na")
+    local has_note = cfg.readable_functors[functor]
+    local is_pda = functor == "ui_pda_npc_tab.use_view"
+    if not (has_note or is_pda or use_map or (sec == "recipe_cooking_1")) then return end
+
+    local recipe_is_known
+    if use_map then
+        local maps = game_statistics.actor_anomaly_maps or {}
+        --recipe_is_known = maps[use_map] or false
+        return maps[use_map] or false
+    else
+        cfg.workshop_recipes = workshop_autoinject and workshop_autoinject.known_recipe or {}
+        return cfg.workshop_recipes[sec] or ui_pda_encyclopedia_tab.is_unlocked_note("encyclopedia__notes_" .. sec)
+        --recipe_is_known = cfg.workshop_recipes[sec] or ui_pda_encyclopedia_tab.is_unlocked_note("encyclopedia__notes_" .. sec)
+    end
+
+    --local text = gts("ui_utjan_recipe_unread")
+    --if recipe_is_known then
+        --text = gts("ui_utjan_recipe_read")
+        --self.recipe_text:SetTextColor( GetARGB(255, 185, 162, 138))
+    --else
+        --self.recipe_text:SetTextColor( GetARGB(255, 255, 232, 208))
+    --end
+end
+
+function is_squad_leader(npc)
+    return npc and xr_conditions.is_squad_commander(nil, npc)
+end
+
+function ignores_mute(id, obj)
+    ui_hud_dotmarks.vis_ignore_mute(id, obj)
+end
+
+--function func_disarm_ied(obj, mark)
+function func_disarm_ied(id, mark)
+    --ui_hud_dotmarks.disarm_ied(obj, mark)
+    ui_hud_dotmarks.disarm_ied(id, mark)
 end
 
 function is_special_case_npc(obj)
@@ -1166,7 +1216,8 @@ function get_best_pos_bone(obj)
 end
 
 function near_scan_radius()
-    return (cfg.near_scan_radius or 4) + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
+    local radius = (cfg.near_scan_radius or 4) + (cfg.use_skill_system and cfg.skill_bonus_range or 0)
+    return radius
 end
 
 function early_scan_radius()

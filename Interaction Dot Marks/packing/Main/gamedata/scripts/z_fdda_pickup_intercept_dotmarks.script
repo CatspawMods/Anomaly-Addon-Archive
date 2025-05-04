@@ -19,7 +19,7 @@ if fddar_oibp then
     local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("[DotMarks] FDDA Redone detected, patching liz_fdda_redone_item_pickups.actor_on_item_before_pickup")
     liz_fdda_redone_item_pickup.actor_on_item_before_pickup = (
         function(obj, flags)
-            flags.ret_value = not ui_hud_dotmarks.fdda_handles_pickups()
+            flags.ret_value = not (ui_hud_dotmarks.fdda_handles_pickups and ui_hud_dotmarks.fdda_handles_pickups())
             local taken_obj = ui_hud_dotmarks.item_pickup_intercept(obj, flags)
             if taken_obj then
                 fddar_oibp(taken_obj or obj, flags)

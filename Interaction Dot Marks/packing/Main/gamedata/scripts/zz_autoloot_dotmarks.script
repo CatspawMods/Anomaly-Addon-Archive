@@ -73,7 +73,7 @@ if z_auto_looter and not z_auto_looter.ignore_dotmarks_fix then
     end
 
     function z_auto_looter.handle_loot(box)
-        ui_hud_dotmarks.update_mark_after_autoloot(box)
+        ui_hud_dotmarks.update_mark_after_autoloot(box and box:id())
         local collected_items = z_auto_looter.collect_items(box)
         local should_loot = false
 

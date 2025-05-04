@@ -118,6 +118,14 @@
 		<text>(пуст)</text>
 	</string>
 
+	<string id="st_dotmarks_note_read_yes">
+		<text>(прочитана)</text>
+	</string>
+
+	<string id="st_dotmarks_note_read_no">
+		<text>(не прочитана)</text>
+	</string>
+
 	<string id="st_alti_from">
 		<text>из</text>
 	</string>
@@ -324,14 +332,18 @@
 		<text>Включить ведение журнала отладки</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs_desc">
-		<text>Если вы сообщаете о проблеме, включите этот параметр и создайте чистый журнал, в котором будет показана проблема.</text>
+		<text>Если этот флаг включен, DotMarks будет записывать в журнал самые важные события. Если проблема возникла только один раз, и этот флаг не был включен первым, в журнале будет очень мало того, что связано с DotMarks - и он может оказаться бесполезным.\n
+
+		\nОбычно можно оставить этот флаг включенным, пока вы играете, если вы подозреваете проблему и хотите ее поймать.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_verbose">
 		<text>Ведение отладочных журналов в режиме verbose (подробно)</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_verbose_desc">
-		<text>При сообщении о проблеме также включите эту настройку. Это позволит сохранить в журнале наиболее подробную информацию об устранении неполадок.</text>
+		<text>При попытке воспроизвести проблему также включите эту функцию. Он записывает большую часть внутренних действий DotMarks и гарантирует, что журнал будет содержать наиболее подробную информацию об устранении неполадок.\n
+
+		\nЭта настройка очень шумная, и ее не следует оставлять включенной во время нормального игрового процесса.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_interaction_dots">
@@ -1189,5 +1201,22 @@
 
 		\nДля опции дистанционного взрывателя требуется аддон Remote Controlled Explosives.</text>
 	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_all_squad_members_talk">
+		<text>Все члены отряда умеют разговаривать</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_all_squad_members_talk_desc">
+		<text>В ванильной Аномалии разговаривать может только лидер отряда. Включите эту настройку, если вы установили аддон, который снимает ограничение только для лидера, например, опцию установки "Talk to Everyone" в Modular Miscellaneous Tweaks.\n 
+		\nЭта настройка включена по умолчанию в GAMMA, которая включает этот аддон.</text>
+	</string>
+
+    <string id="st_player_skills_hint_scavenging">
+		<text>Даёт увеличенное количество лута со сталкеров.\nЕсли включено в DotMarks MCM, увеличивается дальность видимости метки взаимодействия.\n \nОпыт получается путём обыскивания сталкеров, сталкеры более высокого ранга дают больше опыта. \n \n</text>
+	</string>
+
+
+    <string id="st_skills_stats_dotmark_bonus_range">
+        <text>\n%c[255,255,201,86]•%c[ui_6] Бонусный диапазон маркеров взаимодействия: %c[d_green]+$stat м</text>
+    </string>
 
 </string_table>

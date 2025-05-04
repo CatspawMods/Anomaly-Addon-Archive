@@ -1,0 +1,20 @@
+-- =======================================================================
+--[[    Interaction Dot Marks ("DotMarks")
+-- =======================================================================
+		CONTAINER INTERACTION CONTROL - LOOT WINDOW MONKEYPATCH
+
+    Intercepts level-up events from Haruka's Skill System (or anything
+    based on it that hasn't pooched the name of the level-up function)
+    and passes it along untouched, then notifies DotMarks of the event.
+
+    Does naught if you don't have both Skill System and DotMarks.
+-- =====================================================================]]
+
+if haru_skills and haru_skills.level_up_skill then
+    local haru_levelup = haru_skills.level_up_skill
+    function haru_skills.level_up_skill(name)
+        haru_levelup(name)
+        if not (ui_hud_dotmarks and name == ui_hud_dotmarks.cfg.haru_skill_name) then return end
+        ui_hud_dotmarks.update_skill_bonus_range()
+    end
+end

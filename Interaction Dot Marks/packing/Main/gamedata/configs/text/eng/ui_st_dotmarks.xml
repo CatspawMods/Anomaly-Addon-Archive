@@ -118,6 +118,14 @@
 		<text>(empty)</text>
 	</string>
 
+	<string id="st_dotmarks_note_read_yes">
+		<text>(read)</text>
+	</string>
+
+	<string id="st_dotmarks_note_read_no">
+		<text>(unread)</text>
+	</string>
+
 	<string id="st_alti_from">
 		<text>from</text>
 	</string>
@@ -324,14 +332,18 @@
 		<text>Enable debug logging</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs_desc">
-		<text>If you are reporting a problem, turn this on and generate a clean log that shows the problem happening.</text>
+		<text>With this flag on, DotMarks will log the most important events. If a problem only happened once, and this flag was not turned on first, the log will contain very little that is related to DotMarks--and it may not be useful at all.\n
+
+		\nIt is usually fine to leave this on while you play, if you suspect a problem and want to catch it.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_verbose">
 		<text>Debug logging is verbose (detailed)</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_verbose_desc">
-		<text>When reporting a problem please also enable this. It will ensure that the log contains the most detailed troubleshooting information.</text>
+		<text>When trying to reproduce a problem, please also enable this. It logs most of what DotMarks is doing internally, and it will ensure that the log contains the most detailed troubleshooting information.\n
+
+		\nThis setting is extremely noisy, and should not be left enabled during normal gameplay.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_interaction_dots">
@@ -1179,5 +1191,21 @@
 
 		\nThe remote detonator option requires the Remote Controlled Explosives addon.</text>
 	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_all_squad_members_talk">
+		<text>Treat all squad members as talkative</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_all_squad_members_talk_desc">
+		<text>In vanilla Anomaly, only the leader of a given squad can engage in conversation. Enable this setting if you have installed any addon which removes this leader-only restriction, such as the "Talk to Everyone" install option in Modular Miscellaneous Tweaks.\n 
+		\nThis setting is enabled by default in GAMMA, which includes that addon.</text>
+	</string>
+
+    <string id="st_player_skills_hint_scavenging">
+		<text>Grants increased drops from stalkers.\nIf enabled in DotMarks MCM, grants increased interaction mark visibility range.\n \nLevels are gained by looting stalkers, higher rank stalkers give more exp. \n \n</text>
+	</string>
+
+    <string id="st_skills_stats_dotmark_bonus_range">
+        <text>\n%c[255,255,201,86]•%c[ui_6] Bonus interaction mark range: %c[d_green]+$stat m</text>
+    </string>
 
 </string_table>
