@@ -36,7 +36,7 @@ local play_snd_path 	= dotmarks_main.play_snd_path
 script_version 			= dotmarks_main.script_version or "ersion not found!"
 local csv_argb_to_tbl 	= utils_catspaw_text.csv_argb_to_tbl
 release_date			= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
-local rel_version 		= string.format("$clr_tgrv%s (rel %s)", script_version, release_date)
+local rel_version 		= string.format("$clr_tgrPre-release v%s (rel %s)", script_version, release_date)
 local cfg 				= utils_catspaw_common.load_file_data("scripts\\dotmarks_defaults.ltx", cfg, {logging = debuglogs, called_by = script_name})
 if not utils_catspaw_text.valid_bind(cfg.bind_sec_interact) then
 	cfg.bind_sec_interact = nil
@@ -314,7 +314,7 @@ function get_main_menu()
 		{ id = "interact_drop_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.interact_drop_alpha, precondition = { dotmarks_mcm.load_success } },
 
 		-- Hidden options:
-		{ id = "welcome_message_shown", type = "check", 	val = 1, def = false, precondition = { dotmarks_mcm.hidden} },
+		--{ id = "welcome_message_shown", type = "check", 	val = 1, def = false, precondition = { dotmarks_mcm.hidden} },
 		{ id = "last_version", 			type = "input", 	val = 0, precondition = { dotmarks_mcm.hidden} },
 		{ id = "last_release", 			type = "input", 	val = 2, precondition = { dotmarks_mcm.hidden} },
 		-- These are necessary because MCM ignores ui_mcm.get requests for values that aren't part of a menu

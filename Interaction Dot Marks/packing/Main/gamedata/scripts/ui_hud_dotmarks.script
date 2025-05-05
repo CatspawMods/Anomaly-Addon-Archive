@@ -21,13 +21,9 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
-	CRITICAL:
-	- All delayed calls with objects have been changed to ID references
-		ENSURE THAT ALL SECONDARY ACTIONS ARE RE-TESTED INDIVIDUALLY
-
 	TODO (all non-critical):
 	- Deploying IEDs pretty much working, marker anim for it is not
-		May need to table that until after release
+		May need to table that until after release, not important anyway
 	- Add "welcome" message similar to PAW, controlled by MCM flag
 		May be a post-release thing
 	- Update GH documentation with new Utjan and IED settings
@@ -42,7 +38,7 @@ script_name     = "ui_hud_dotmarks"
 	- MCM live preview for prompt elements - lots of work
 	- Encyclopedia entry/entries - relatively easy, just need writing
 	- NPE module(s) - not hard, but time-consuming and low priority
-	- Improve the drop shadows on the item card elements, they fugly
+	- Unload prompt changes to field strip usable parts for empty guns
 
 -- ===================================================================--]]
 --      DEPENDENCIES
@@ -2006,30 +2002,48 @@ function InteractPrompt:UpdateFaveJunkIcon()
 end
 
 function InteractPrompt:SetupUtjanPartDots(anchor, obj)
-	-- Adapted from z_item_icon_info in Utjan's Item UI
-	if not cfg.show_part_condition then return end
 	if not (z_item_icon_info and item_icon_info_mcm) then return end
+	obj = obj or (self.args.id and get_game_object(self.args.id))
+	vl("[%s][%s] Checking whether to add part dots indicator to %s", time_global(), obj and obj:name())
+	if not (obj and has_parts(obj)) then
+		vl("%s does not have parts, skipping", obj and obj:name())
+		return
+	end
+	-- Adapted from z_item_icon_info in Utjan's Item UI
+	if not cfg.show_part_condition then
+		vl("cfg.show_part_condition is false, skipping")
+		return
+	end
 	if self.parts_indicators then
+		vl("Hiding existing indicator")
 		for k,v in pairs(self.parts_indicators) do
 			self.parts_indicators[k]:Show(false)
 		end
 	end
 
-	obj = obj or (self.args.id and get_game_object(self.args.id))
 	sec = obj and obj:section()
 	cls = obj and obj:clsid()
-
-	if not (obj and has_parts(obj)) then return end
-	if (not cfg.show_parts_weapons) and IsWeapon(nil, cls) then return end
-	if (not cfg.show_parts_armor) and (IsHeadgear(nil, cls) or IsOutfit(nil, cls)) then return end
+	if not (sec and cls) then
+		alert("Invalid object! Skipping setup, but something is very wrong")
+		return
+	elseif (not cfg.show_parts_weapons) and IsWeapon(nil, cls) then
+		vl("Weapon part dots disabled, skipping")
+		return
+	elseif (not cfg.show_parts_armor) and (IsHeadgear(nil, cls) or IsOutfit(nil, cls)) then
+		vl("Armor part dots disabled, skipping")
+		return
+	end
 
 	local se_parts = item_parts.get_parts_con(obj, nil, true)
-	if is_empty(se_parts) then return end
-	local parts = dup_table(se_parts)
-
-	local sep = cfg.parts_dot_sep_width or 1
-	local base_x = (cfg.parts_dot_pos_x or 0)
-	local base_y = (cfg.parts_dot_pos_y or 0)
+	if is_empty(se_parts) then
+		vl("Empty se_parts for %s, skipping", obj)
+		return
+	end
+	vl("All checks passed, setting up part dots indicator")
+	local parts 	= dup_table(se_parts)
+	local sep 		= cfg.parts_dot_sep_width or 1
+	local base_x 	= (cfg.parts_dot_pos_x or 0)
+	local base_y 	= (cfg.parts_dot_pos_y or 0)
 	self.parts_container = self.xml:InitStatic("box", anchor or self.wnd)
 	self.parts_indicators = self.parts_indicators or {}
 	self.parts_shadows = self.parts_shadows or {}
@@ -2111,9 +2125,8 @@ function InteractPrompt:SetupUtjanPartDots(anchor, obj)
 	setwndpos(self.parts_container, base_x, base_y)
 	setwndsize(self.parts_container, size, 0)
 	self.parts_container:InitTexture(cfg.main_drop_texture)
+	dl("Completed part dots indicator setup for %s", nameid(obj))
 end
-
-
 
 function InteractPrompt:eleSetCurrentColor(element, a, r, g, b)
 	if not element then return end
@@ -4767,9 +4780,6 @@ function parse_file_data()
 		[1] = "clr_weight_high",
 		[2] = "clr_weight_over"
 	}
-	cfg.show_parts_weapons 		= cfg.show_parts_weapons and cfg.show_parts_dots
-	cfg.show_parts_armor 		= cfg.show_parts_armor and cfg.show_parts_dots
-	cfg.show_part_condition     = cfg.show_parts_weapons or cfg.show_parts_armor
 	cfg.color_icon_itemcard     = clr_tbl(cfg.color_icon_itemcard)
 	cfg.unsquish_ratio          = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
 	cfg.unsquish                = (function(w) return (w or 0) * (cfg.unsquish_ratio or 1) end)
@@ -5003,6 +5013,9 @@ function on_option_change()
 	reset_nearby_item_tables()
 	set_handler_callbacks()
 	st_kg           = gts("st_kg")
+	cfg.show_parts_weapons 		= cfg.show_parts_weapons and cfg.show_parts_dots
+	cfg.show_parts_armor 		= cfg.show_parts_armor and cfg.show_parts_dots
+	cfg.show_part_condition     = cfg.show_parts_weapons or cfg.show_parts_armor
 	CreateTimeEvent("autoloot_override", 0, 0.25, hijack_autoloot_keybind)
 end
 
