@@ -6,6 +6,8 @@ A blatant imitation of the "interaction dot" HUD markers in Stalker 2, and some 
 Except not quite as cool, because Anomaly is jank. Hopefully this makes it a little less jank.
 
 Also implements a "Secondary Interact" keybind with contextual actions such as unloading a weapon without having to pick it up, or taking everything from a stash without opening the loot window.
+> [!NOTE]
+> Documentation of some features may be incomplete or display WIP defaults. These will be updated as time allows.
 
 # **Requirements**
 Requires **MCM 1.7.0** and the **20250306 modded exes** by demonized, or (better yet) the latest of both:

@@ -1123,9 +1123,9 @@
 		<text>Override Auto Looter keybind</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_hijack_autoloot_keybind_desc">
-		<text>If iTheon's Auto Looter is installed, and both Autoloot options are enabled in this menu, DotMarks will attempt to override the Autoloot keybind with a value that can't be pressed accidentally.\n
+		<text>If iTheon's Auto Looter is installed, and both Autoloot options are enabled in this menu, DotMarks will attempt to completely disable the Autoloot keybind.\n
 
-		\nEnabling this option will allow you to unbind the Looter key and free up the keybind for something else. Disabling it will allow you to still trigger Autoloot independently of DotMarks.</text>
+		\nFor some reason, Autoloot takes over the Alt key by default--it's bad behavior to hijack a basic modifier key like Alt that is used in hundreds of key combos. This option will free up that keybind, while still allowing you to trigger Autoloot via secondary action.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_use_act">

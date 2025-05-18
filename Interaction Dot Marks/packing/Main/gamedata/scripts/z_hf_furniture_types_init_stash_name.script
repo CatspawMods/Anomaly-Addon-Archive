@@ -43,7 +43,6 @@ end
 if hf_furniture_types and not hf_furniture_types.ignore_dotmarks_fix then
 	local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("z_hf_furniture_types_init_stash_name is monkeypatching hf_furniture types to give stashes more useful names")
 	function hf_furniture_types.init_stash(obj_id)
-		printf("patched init_stash fired")
 	    local item_section = ini_sys:r_string_ex(alife_object(obj_id):section_name(), "item_section")
 	    if not item_section then return end
 

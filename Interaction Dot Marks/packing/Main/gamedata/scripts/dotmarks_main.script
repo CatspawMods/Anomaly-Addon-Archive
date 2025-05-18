@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "0.12-b14" -- Still a pre-release test build!
-release_date    = 20250505
+script_version  = "1.0-RC1"
+release_date    = 20250518
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -233,6 +233,16 @@ local base_config = {
                     (cls == clsid.obj_bolt)
                 ) and not (cfg.is_item and cfg.is_item.Quest(obj))
                 -- Should catch anything else that isn't a quest item
+            end
+        ),
+        Addon = (
+            function(obj)
+                if (not cfg.other_addon_is_item) or is_empty(cfg.other_addon_is_item) then return end
+                for k,v in pairs(cfg.other_addon_is_item) do
+                    if k and v and v(obj) then
+                        return true
+                    end
+                end
             end
         )
 
@@ -899,6 +909,14 @@ local base_config = {
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
+        ),
+    -- =======================================================================
+        Addon = (
+            function(obj, addon, ...)
+                local handler = obj and addon and cfg.other_addon_args and cfg.other_addon_args[addon]
+                if not handler then return end
+                return handler(obj, ...)
+            end
         )
     },
 -- =======================================================================    
@@ -1061,7 +1079,16 @@ local base_config = {
         )
     }
 }
--- =======================================================================    
+-- =======================================================================
+
+function register_addon_handler(addon_id, is_item_handler, args_handler)
+    if not addon_id then return end
+    cfg.other_addon_is_item = cfg.other_addon_is_item or {}
+    cfg.other_addon_args = cfg.other_addon_args or {}
+    cfg.other_addon_is_item[addon_id] = is_item_handler
+    cfg.other_addon_args[addon_id] = args_handler
+    dl("Addon %s registered with DotMarks: item handler %s | args handler %s", addon_id, is_item_handler, args_handler)
+end
 
 function is_recipe_known(sec)
     if not sec then return end
@@ -1075,21 +1102,11 @@ function is_recipe_known(sec)
     local recipe_is_known
     if use_map then
         local maps = game_statistics.actor_anomaly_maps or {}
-        --recipe_is_known = maps[use_map] or false
         return maps[use_map] or false
     else
         cfg.workshop_recipes = workshop_autoinject and workshop_autoinject.known_recipe or {}
         return cfg.workshop_recipes[sec] or ui_pda_encyclopedia_tab.is_unlocked_note("encyclopedia__notes_" .. sec)
-        --recipe_is_known = cfg.workshop_recipes[sec] or ui_pda_encyclopedia_tab.is_unlocked_note("encyclopedia__notes_" .. sec)
     end
-
-    --local text = gts("ui_utjan_recipe_unread")
-    --if recipe_is_known then
-        --text = gts("ui_utjan_recipe_read")
-        --self.recipe_text:SetTextColor( GetARGB(255, 185, 162, 138))
-    --else
-        --self.recipe_text:SetTextColor( GetARGB(255, 255, 232, 208))
-    --end
 end
 
 function is_squad_leader(npc)
@@ -1100,9 +1117,7 @@ function ignores_mute(id, obj)
     ui_hud_dotmarks.vis_ignore_mute(id, obj)
 end
 
---function func_disarm_ied(obj, mark)
 function func_disarm_ied(id, mark)
-    --ui_hud_dotmarks.disarm_ied(obj, mark)
     ui_hud_dotmarks.disarm_ied(id, mark)
 end
 

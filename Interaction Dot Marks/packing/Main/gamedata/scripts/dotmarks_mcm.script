@@ -36,7 +36,7 @@ local play_snd_path 	= dotmarks_main.play_snd_path
 script_version 			= dotmarks_main.script_version or "ersion not found!"
 local csv_argb_to_tbl 	= utils_catspaw_text.csv_argb_to_tbl
 release_date			= tostring(dotmarks_main.release_date) or "date not found! Was ui_hud_dotmarks.script overwritten or disabled?"
-local rel_version 		= string.format("$clr_tgrPre-release v%s (rel %s)", script_version, release_date)
+local rel_version 		= string.format("$clr_tgrv%s (rel %s)", script_version, release_date)
 local cfg 				= utils_catspaw_common.load_file_data("scripts\\dotmarks_defaults.ltx", cfg, {logging = debuglogs, called_by = script_name})
 if not utils_catspaw_text.valid_bind(cfg.bind_sec_interact) then
 	cfg.bind_sec_interact = nil

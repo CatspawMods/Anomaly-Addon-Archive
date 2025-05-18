@@ -22,24 +22,17 @@ script_name     = "ui_hud_dotmarks"
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
 	TODO (all non-critical):
-	- Deploying IEDs pretty much working, marker anim for it is not
-		May need to table that until after release, not important anyway
-	- Add "welcome" message similar to PAW, controlled by MCM flag
-		May be a post-release thing
 	- Update GH documentation with new Utjan and IED settings
 	- Correct the MCM text and documentation for changed defaults
-
-	BEFORE PUBLIC RELEASE:
-	- FEATURE FREEZE is now in effect - nothing new gets added
-	- Re-validate EVERY FEATURE individually - all must pass in same build
-		See test plan
+	- WIP IED marker anims not working, but very low priority
+	- Add "welcome" message similar to PAW, controlled by MCM flag
 
 	POST-RELEASE:
 	- MCM live preview for prompt elements - lots of work
 	- Encyclopedia entry/entries - relatively easy, just need writing
 	- NPE module(s) - not hard, but time-consuming and low priority
 	- Unload prompt changes to field strip usable parts for empty guns
-
+	- Possible support for Placeable Explosives addon (PES)
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -101,36 +94,8 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
 end
 
 --set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
-
 -- First two values will be overridden by MCM once the game loads
 -- debug_dump is EXTREMELY noisy and should only ever be manually enabled for a specific reason
-
-function log_metrics(event, fname, val)
-	local fn = fname or script_name
-	local tg = time_global()
-	local ev = event or "heartbeat"
-	cfg.metrics = cfg.metrics or {}
-	cfg.metrics[tg] = cfg.metrics[tg] or {}
-	local i = #cfg.metrics[tg] + 1
-	cfg.metrics[tg][i] = cfg.metrics[tg][i] or {}
-	cfg.metrics[tg][i][fn] = cfg.metrics[tg][i][fn] or {}
-	cfg.metrics[tg][i][fn][ev] = val or ""
-end
-local lm = log_metrics
-
-function dump_metrics()
-	dump(logprefix.."Dumping runtime metrics for %s", script_name)
-	for t,m in pairs(cfg.metrics) do
-		for i = 1,#m do
-			local fns = m[i]
-			for f,evs in pairs(fns) do
-				for e,v in pairs(evs) do
-					dump("[%s][%s][%s][%s][%s]", t, i, f, e, v)
-				end
-			end
-		end
-	end
-end
 
 -- ======================================================================
 --      SHORTCUTS
@@ -553,19 +518,6 @@ function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
 		self.next_update = 0
 	end
 end
-
---[[
-if a_rax_wd then
-	-- Watches the busyhands watchdog script in order to capture data about what happened
-	local tracker = a_rax_wd.track_event
-	function a_rax_wd.track_event(event_id, action_id, func)
-		local ret = tracker(event_id, action_id, func)
-		if (not ret) and (not a_rax_wd.save_detected) and (func and func.script_name = "ui_hud_dotmarks") then
-			dump_metrics()
-		end
-	end
-end
---]]
 
 -- ======================================================================
 
@@ -3136,11 +3088,11 @@ function get_args_for_valid_objects(id)
 	end
 	local args = { logged_type = "something else", section = sec, clsid = cls }
 
-	local function setup_item_args(iclass)
-		args            = get_cfg_for_type("args", iclass, obj) or {}
+	local function setup_item_args(iclass, ...)
+		args            = get_cfg_for_type("args", iclass, obj, ...) or {}
 		if args.iclass_override then
 			iclass      = args.iclass_override
-			args        = get_cfg_for_type("args", iclass, obj) or {}
+			args        = get_cfg_for_type("args", iclass, obj, ...) or {}
 		end
 		args.item_class	= iclass
 		args.id         = id
@@ -3165,9 +3117,10 @@ function get_args_for_valid_objects(id)
 			setup_item_args(ktype)
 		else
 			for item_class, enabled in pairs(cfg.scan) do
-				if cfg.is_item[item_class](obj, sec, cls, kind) then
+				local isitem, special = cfg.is_item[item_class](obj, sec, cls, kind)
+				if isitem then
 					vl("Type found via iteration: %s", item_class)
-					setup_item_args(item_class)
+					setup_item_args(item_class, special)
 					method = 2
 					break
 				end
@@ -3589,7 +3542,6 @@ end
 
 
 function scan_nearby_entities(scan_radius)
-	--lm("start", "scan_nearby_entities", scan_radius)
 	--dump("[%s] scan_nearby_entities(%s)", scan_radius)
 	local pos = db.actor and db.actor:center()
 	if not pos then return end
@@ -3908,6 +3860,7 @@ end
 function try_init_search_anim(id, mark, exec_func)
 	local box = get_game_object(id)
 	if box and exec_func and can_play_search_anim(mark) then
+		vl("Initializing search animation on %s - %s", mark and mark.name, nameid(box))
 		local action_start = fddar_bodysearch.get_template_action_looting_start(box)
 		action_start.is_show_ui = true
 		lam2.add_action(action_start)
@@ -3923,7 +3876,15 @@ function try_init_search_anim(id, mark, exec_func)
 						self.is_input_enabled = true
 						if cfg.fddar_disable_walk then level.enable_input() end
 					end
-					if haru_skills then fddar_bodysearch.haruka_scavanger_effect() end
+					if haru_skills then
+						vl("Triggering scavenger effect on %s", nameid(box))
+						local rank 	= box and ranks.get_obj_rank_name(box)
+						local val 	= rank and haru_skills.rank_table[rank] or 25
+						haru_skills.increase_skill("scavenging", val)
+						-- Skill System doesn't increase the skill if it doesn't find the loot window open,
+						-- so we have to do it manually
+						haru_skills.scavanger_effect(box)
+					end
 					self.force_close = true
 					local action_stop = fddar_bodysearch.get_template_action_looting_end()
 					lam2.add_action_first(action_stop)
@@ -3936,7 +3897,7 @@ function try_init_search_anim(id, mark, exec_func)
 		CreateTimeEvent("dotmarks_fddar_takeall", 0, 0.25, (
 			function()
 				if (not anim_playing) then
-					exec_func(box, mark, true)
+					exec_func(id, mark, true)
 					set_loot_window_flag(nil, "anim complete")
 					return true
 				end
@@ -4510,7 +4471,6 @@ end
 --      MAIN SCAN LOOP
 -- =======================================================================
 function actor_on_update()
-	--lm("start", "actor_on_update")
 	--perform_debugging_checks() -- only uncommented when needed
 	if not scanning then return end
 	do_garbage_collection()

@@ -14,7 +14,7 @@ if haru_skills and haru_skills.level_up_skill then
     local haru_levelup = haru_skills.level_up_skill
     function haru_skills.level_up_skill(name)
         haru_levelup(name)
-        if not (ui_hud_dotmarks and name == ui_hud_dotmarks.cfg.haru_skill_name) then return end
+        if not (ui_hud_dotmarks and ui_hud_dotmarks.cfg and (name == ui_hud_dotmarks.cfg.haru_skill_name)) then return end
         ui_hud_dotmarks.update_skill_bonus_range()
     end
 end

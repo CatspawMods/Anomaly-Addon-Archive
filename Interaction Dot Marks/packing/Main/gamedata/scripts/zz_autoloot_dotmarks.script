@@ -53,7 +53,7 @@ if z_auto_looter and not z_auto_looter.ignore_dotmarks_fix then
         end
         -- Standard looting
         local last_mode = actor_menu.get_last_mode()
-        local object_being_looted = ui_inventory.GUI.npc_id and level.object_by_id(ui_inventory.GUI.npc_id)
+        local object_being_looted = ui_inventory.GUI and ui_inventory.GUI.npc_id and level.object_by_id(ui_inventory.GUI.npc_id)
         if object_being_looted and (not object_being_looted:alive()) and z_auto_looter.valid_modes[last_mode] then
             return object_being_looted
         end
