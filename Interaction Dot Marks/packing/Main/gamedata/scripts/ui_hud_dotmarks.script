@@ -22,7 +22,7 @@ script_name     = "ui_hud_dotmarks"
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
 	TODO (all non-critical):
-	- Update GH documentation with new Utjan and IED settings
+	- Update GH documentation with new Utjan and other settings
 	- Correct the MCM text and documentation for changed defaults
 	- WIP IED marker anims not working, but very low priority
 	- Add "welcome" message similar to PAW, controlled by MCM flag
@@ -32,7 +32,7 @@ script_name     = "ui_hud_dotmarks"
 	- Encyclopedia entry/entries - relatively easy, just need writing
 	- NPE module(s) - not hard, but time-consuming and low priority
 	- Unload prompt changes to field strip usable parts for empty guns
-	- Possible support for Placeable Explosives addon (PES)
+	- Review support for Placeable Explosives addon (PES)
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -554,12 +554,12 @@ function get_font_height(num)
 end
 
 function get_font_scale_w(num)
-	local scale = get_font_width(num) / 16
+	local scale = (get_font_width(num) / 16) * (cfg.font_scale_w or 1)
 	return scale
 end
 
 function get_font_scale_h(num)
-	local scale = get_font_height(num) / 16
+	local scale = (get_font_height(num) / 16) * (cfg.font_scale_h or 1)
 	return scale
 end
 
@@ -668,7 +668,6 @@ function vis_ignore_mute(id)
 		end 
 	end
 	local leader = is_squad_leader(npc)
-	--dump("leader check final result: %s | is_leader %s | cfg set: %s", (not leader) and (not cfg.all_squad_members_talk), leader, cfg.all_squad_members_talk)
 	if (not leader) and (not cfg.all_squad_members_talk) then
 		return false
 	end

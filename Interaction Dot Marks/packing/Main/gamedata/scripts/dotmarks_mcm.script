@@ -50,7 +50,7 @@ color_tokens = {
     ["clr_red"] = "%" .. "%c[255,255,0,0]",
     ["clr_tgr"] = "%" .. "%c[128,90,90,90]",
     ["clr_cmg"] = "%" .. "%c[255,150,150,150]",
-    ["clr_uab"] = "%" .. "%c[255,0,87,183]", -- remember to add to token list once used
+    ["clr_uab"] = "%" .. "%c[255,0,87,183]",
 }
 
 -- ======================================================================
@@ -383,7 +383,7 @@ function get_mods_menu()
 
 		{ id = "divider", type= "line" },
 
-		{ id = "all_squad_members_talk",	type = "check",		val = 1, def = cfg.all_squad_members_talk },
+		{ id = "all_squad_members_talk",	type = "check",		val = 1, def = cfg.all_squad_members_talk or utils_catspaw_common.using_gamma_modpack },
 
 		{ id = "divider", type= "line" },
 
@@ -405,6 +405,14 @@ function get_mods_menu()
 		{ id = "sp_icon_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.sp_icon_pos_y },
 
 		{ id = "divider", type= "line" },
+
+		{ id = "parts_dot_orientation", 	type= "list", 		val = 2, def = cfg.parts_dot_orientation, 
+			content = {
+			   {0,"dmarks_pdot_style_h"},
+			   {1,"dmarks_pdot_style_v"},
+			   {2,"dmarks_pdot_style_r"},
+			}
+		},
 
 		{ id = "parts_dot_pos_x", 			type = "input", 	val = 2, min = -512, max = 1024, def = cfg.parts_dot_pos_x },
 		{ id = "parts_dot_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.parts_dot_pos_y },
@@ -453,7 +461,11 @@ function get_adv_menu()
 		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
 
 		{ id = "divider", type= "line" },
-		
+
+		{ id = "ui_scale", 				type = "track", 	val = 2, min = 0, step = 0.01, max = 2, def = cfg.ui_scale },
+		{ id = "font_scale_w", 			type = "track", 	val = 2, min = 0, step = 0.01, max = 2, def = cfg.font_scale_w },
+		{ id = "font_scale_h", 			type = "track", 	val = 2, min = 0, step = 0.01, max = 2, def = cfg.font_scale_h },
+
 		{id = "keybind_bg_style", type= "list", val = 2, def = cfg.keybind_bg_style, 
 			content = {
 			   {4,"dmarks_kbstyle_s2"},
@@ -496,7 +508,6 @@ function get_adv_menu()
 		{ id = "action_text_pos_y", 	type = "input", 	val = 2, min = -512, max = 1024, def = cfg.action_text_pos_y },
 		{ id = "bind_text_pos_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.bind_text_pos_x },
 		{ id = "bind_text_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.bind_text_pos_y },
-		{ id = "bind_char_scale", 		type = "input", 	val = 2, min = 0, max = 10, def = cfg.bind_char_scale },
 
 		{ id = "divider", type= "line" },
 
@@ -563,8 +574,8 @@ function generate_icons_menu()
 			on_selection_functor= {dotmarks_mcm.on_dotmark_size_select},
 			ui_hook_functor 	= {dotmarks_mcm.init_dotmark_preview},
 			icon 	= cfg.marker_dotmark or "",
-			icon_w 	= (cfg.dotmark_preset.width or 5),-- * 1.5,
-			icon_h 	= (cfg.dotmark_preset.height or 5),-- * 1.5,
+			icon_w 	= (cfg.dotmark_preset.width or 5),
+			icon_h 	= (cfg.dotmark_preset.height or 5),
 			icon_x 	= 370,
 			icon_y 	= 12,
 		},
@@ -697,5 +708,3 @@ function on_mcm_load()
 	}
 	return op
 end
-
- 

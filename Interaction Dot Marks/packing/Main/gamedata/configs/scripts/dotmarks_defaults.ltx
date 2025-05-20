@@ -86,8 +86,6 @@ marker_dotactive 			= ui_catsy_marker_dotactive
 ; Texture for the "active" object that currently has interact focus
 main_drop_texture 			= ui_dotmarks_main_drop
 ; Texture used for the main prompt drop shadow
-ui_scale 					= 1.0
-; Scale the graphical UI elements - does not affect font size
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 near_scan_interval          = 104
@@ -227,6 +225,13 @@ sec_use_y_offset 			= 48
 fixed_screen_pos 			= false
 ; If enabled, screen positions will instead be measured from the upper left of the screen
 ; These are canvas coordinates so 1024x768
+ui_scale 					= 1.0
+; Scale the graphical UI elements
+; Does not affect font sizes, use font_scale_h and font_scale_w for that
+font_scale_h 				= 1.0
+font_scale_w 				= 1.0
+; Fine-tunes the height and width of whatever the current font is
+; Has no effect on UI container or element size, use ui_scale for that
 keybind_bg_style 			= 4
 ; Visual style for the "keyboard key" icons used as background for the name of the bound key
 ; 	0 = no icon
@@ -955,6 +960,7 @@ sec_enable_heal_anim 	= dotmarks/dmarkmods/
 sp_hide_junk_items		= dotmarks/dmarkmods/
 sp_icon_pos_x 			= dotmarks/dmarkmods/
 sp_icon_pos_y 			= dotmarks/dmarkmods/
+parts_dot_orientation 	= dotmarks/dmarkmods/
 parts_dot_pos_x 		= dotmarks/dmarkmods/
 parts_dot_pos_y 		= dotmarks/dmarkmods/
 parts_dot_scale			= dotmarks/dmarkmods/
@@ -1016,6 +1022,9 @@ keybind_bg_style 		= dotmarks/dmarkadv/
 hidden_show_prompts		= dotmarks/dmarkadv/
 prompt_fade_in_time		= dotmarks/dmarkadv/
 prompt_fade_out_time	= dotmarks/dmarkadv/
+ui_scale 				= dotmarks/dmarkadv/
+font_scale_h			= dotmarks/dmarkadv/
+font_scale_w			= dotmarks/dmarkadv/
 font_main_prompt 		= dotmarks/dmarkadv/
 font_item_card 			= dotmarks/dmarkadv/
 item_card_icon_sz 		= dotmarks/dmarkadv/
@@ -1032,7 +1041,6 @@ bind_text_pos_x 		= dotmarks/dmarkadv/
 bind_text_pos_y			= dotmarks/dmarkadv/
 action_text_pos_x		= dotmarks/dmarkadv/
 action_text_pos_y		= dotmarks/dmarkadv/
-bind_char_scale			= dotmarks/dmarkadv/
 ; =================================================================================
 ; Settings loaded from other addons
 ; =================================================================================

@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250428
+    Updated: 20250519
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -509,7 +509,7 @@
 		<text>Hidden items still show interaction prompts</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hidden_show_prompts_desc">
-		<text>If a marker is hidden using for any reason, its interaction prompts will still be shown.
+		<text>If a marker is hidden for any reason, its interaction prompts will still be shown.
 			\n
 			\nNOTE: If this option is not enabled, hidden markers will not have any visible interaction prompts at all. This will not prevent you from picking them up if you want to, it just won't show the prompt.
 		</text>
@@ -978,7 +978,7 @@
 		 \n
 		\nDefault: 3.5</text>
 	</string>	
-
+<!--
 	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale">
 		<text>Keybind character scale</text>
 	</string>
@@ -987,6 +987,7 @@
 		 \n
 		\nDefault: 5.825</text>
 	</string>
+-->
 
 	<string id="ui_mcm_dotmarks_dmarkmain_show_stash_weight">
 		<text>Show total weight in containers</text>
@@ -1207,5 +1208,51 @@
     <string id="st_skills_stats_dotmark_bonus_range">
         <text>\n%c[255,255,201,86]•%c[ui_6] Bonus interaction mark range: %c[d_green]+$stat m</text>
     </string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_font_scale_w">
+		<text>Scale font width allowance</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_font_scale_w_desc">
+		<text>This setting allows you to adjust the amount of horizontal space that DotMarks assumes is required by the current fonts.\n
+
+		\nFonts are just textures in Anomaly, and some fonts are taller or wider than others. You may need to adjust this if you are at a resolution other than 1920x1080, install a custom font addon, or change to a different font than the default.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_font_scale_h">
+		<text>Scale font height allowance</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_font_scale_h_desc">
+		<text>This setting allows you to adjust the amount of vertical space that DotMarks assumes is required by the current fonts.\n
+
+		\nFonts are just textures in Anomaly, and some fonts are taller or wider than others. You may need to adjust this if you are at a resolution other than 1920x1080, install a custom font addon, or change to a different font than the default.
+		</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_ui_scale">
+		<text>Scale GUI elements</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_ui_scale_desc">
+		<text>This slider adjusts the scale of the UI's graphical elements, such as the keybind icon. This has no effect on the font size, but it can be used to fine-tune the GUI to account for your resolution or fonts.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_orientation">
+		<text>Part dots orientation</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_orientation_desc">
+		<text>By default, the part dots are arranged radially in a tight circle. You can instead choose to draw them as a horizontal or vertical line, but you'll probably want to adjust their positioning afterwards.</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_pdot_style_h">
+		<text>Horizontal line</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_pdot_style_v">
+		<text>Vertical line</text>
+	</string>
+
+	<string id="ui_mcm_lst_dmarks_pdot_style_r">
+		<text>Circle</text>
+	</string>
 
 </string_table>
