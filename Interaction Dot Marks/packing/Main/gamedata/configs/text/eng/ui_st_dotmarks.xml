@@ -978,16 +978,6 @@
 		 \n
 		\nDefault: 3.5</text>
 	</string>	
-<!--
-	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale">
-		<text>Keybind character scale</text>
-	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale_desc">
-		<text>Sets the horizontal size adjustment of the keybind icon box, per character of string length in the keybind text.
-		 \n
-		\nDefault: 5.825</text>
-	</string>
--->
 
 	<string id="ui_mcm_dotmarks_dmarkmain_show_stash_weight">
 		<text>Show total weight in containers</text>
@@ -1253,6 +1243,61 @@
 
 	<string id="ui_mcm_lst_dmarks_pdot_style_r">
 		<text>Circle</text>
+	</string>
+
+	<string id="encyclopedia_addons">
+		<text>Addons</text>
+	</string>
+
+	<string id="encyclopedia_addons_dotmarks">
+		<text>DotMarks: Addon Overview</text>
+	</string>
+
+	<string id="encyclopedia_addons_dotmarks_text">
+		<text>
+			%c[ui_gray_1]
+			\nWelcome to %c[pda_yellow]Interaction Dot Marks%c[ui_gray_1]--a modernized replacement for the object interaction UI that brings some of Stalker 2's QoL features back to Anomaly, while adding powerful new options.\n
+
+			\nExcept not quite as cool as Stalker 2, because Anomaly is jank. Hopefully this makes it a little less jank, and helps drag Anomaly's interaction UI kicking and screaming to somewhere within a decade of the modern world.\n
+
+			\nEveryone enjoys different things of course, so DotMarks is designed to be %c[pda_blue]customized to your preferences%c[ui_gray_1]--virtually every feature can be disabled or changed to your liking in the MCM menus, which also contain a wealth of information in the tooltips for each feature.\n
+
+			\nIf you prefer to keep your HUD clean, you can even turn off all the visible markers, and still get the nicer interaction prompts and secondary actions.\n
+
+			\n%c[pda_yellow]It's your game. Play it your way.\n
+
+			\n%c[ui_gray_1]From %c[pda_yellow]MCM %c[pda_white]>  %c[pda_yellow]Interaction Dot Marks%c[ui_gray_1]:\n
+
+			%c[pda_white]• %c[pda_blue]General Settings%c[ui_gray_1]: Settings that control whether and how the core elements of the interaction UI are shown. If there's a particular detail you do or don't want to see, you'll probably find it here.\n
+
+			%c[pda_white]• %c[pda_blue]Secondary Interact%c[ui_gray_1]: Settings related the the Secondary Interact function and its associated keybind, as well as whether or not each of the new actions is enabled.\n
+
+			%c[pda_white]• %c[pda_blue]Icon Settings%c[ui_gray_1]: Settings that control whether various context-specific icons are shown, as well as their size, color and transparency.\n
+
+			%c[pda_white]• %c[pda_blue]Object Settings%c[ui_gray_1]: Settings that selectively control whether markers are shown at all for various individual classes of object in the game.\n
+
+			%c[pda_white]• %c[pda_blue]Other Addons%c[ui_gray_1]: Settings related to integration or compatibility with other addons, such as Sorting Plus or Utjan's Item UI.\n
+
+			%c[pda_white]• %c[pda_blue]Advanced Settings%c[ui_gray_1]: Extremely granular settings that let you fine-tune the fonts, sizes, and exact screen positions of various interaction UI elements. To be used with care, but essential if your monitor is unusually large or wide--or if you're as picky about your UI as I am.\n
+
+			\n%c[pda_white]Feel free to experiment, and don't worry about messing anything up--you can always click the %c[pda_yellow]Defaults %c[pda_white]button in MCM.\n
+
+			\n%c[pda_red]Still having difficulties? Visit the %c[pda_yellow]Advanced Settings%c[pda_red] tab in MCM.\n
+			%c[ui_gray_1]
+
+			--------------------------------------------------------------------------------\n \n
+
+			%c[pda_red]••• IMPORTANT: To report any bug, you must do the following: •••\n \n
+			%c[ui_gray_1]1. %c[pda_white]Go to %c[pda_yellow]MCM %c[pda_white]> %c[pda_yellow]Interaction Dot Marks %c[pda_white]> %c[pda_yellow]Advanced Settings\n
+			%c[ui_gray_1]2. %c[pda_white]Enable %c[pda_yellow]Debug logging%c[pda_white] and %c[pda_yellow]Verbose logging\n
+			%c[ui_gray_1]3. %c[pda_white]Exit and restart the game completely\n
+			%c[ui_gray_1]4. %c[pda_white]Reproduce the issue as quickly and simply as possible\n
+			%c[ui_gray_1]5. %c[pda_white]Get the game log from %c[pda_yellow](Your Anomaly Folder)\appdata\logs%c[pda_white] and post it somewhere online\n \n
+			
+			%c[ui_gray_1]If you do not follow these steps, it is unlikely your log will contain any useful information related to this addon.\n
+
+			\nI don't get notified about Moddb comments, so you will generally get the quickest response on the GAMMA Discord, in the Interaction Dot Marks discussion channel under #mods-posting. Unsolicited DMs will be ignored.\n
+		</text>
 	</string>
 
 </string_table>

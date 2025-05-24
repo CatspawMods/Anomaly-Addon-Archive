@@ -112,7 +112,10 @@
 		<texture id = "ui_catsy_messagebox_trans_frame_b" x="8" y="1112" width="496" height="8" />
 		<texture id = "ui_catsy_messagebox_trans_frame_rb" x="504" y="1112" width="8" height="8" />
 
-		<texture id = "ui_mcm_dmarks_preview_frame" x="512" y="1000" width="300" height="190" />		
+		<texture id = "ui_mcm_dmarks_preview_frame" x="512" y="1000" width="300" height="190" />
+
+		<texture id = "encyclopedia_addons_dotmarks_image" x="0" y="1641" width="512" height="50" />
 	</file>
+
 </w>
 

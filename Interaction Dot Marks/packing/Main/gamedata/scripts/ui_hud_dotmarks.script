@@ -624,14 +624,14 @@ function vis_ignore_mute(id)
 
 	local comm = character_community(npc)
 	if (comm == "zombied") then return false end
+	local st = id and db.storage[id]
 
-	if (IsWounded(npc)) then
-		local st = db.storage[id]
+	if IsWounded(npc) then
 		if (npc:relation(db.actor) >= game_object.enemy and st and st.victim_surrender ~= AC_ID) then
 			return false
 		else
-			local wounded = db.storage[id].wounded
-			if wounded.enable_talk then
+			local wounded = st and st.wounded
+			if wounded and wounded.enable_talk then
 				return true
 			else
 				return false
@@ -643,10 +643,10 @@ function vis_ignore_mute(id)
 	local section = npc:section()
 	if (section == "mar_smart_terrain_doc_doctor") then return true end
 
-	local meet = db.storage[id].meet
+	local meet = st and st.meet
 	if not meet then return end
 
-	local use = meet.meet_manager.use
+	local use = meet.meet_manager and meet.meet_manager.use
 	if (use == "true") then
 		if xr_corpse_detection.is_under_corpse_detection(npc) or xr_help_wounded.is_under_help_wounded(npc) then
 			return false
@@ -3099,7 +3099,7 @@ function get_args_for_valid_objects(id)
 		args.kind       = kind
 		args.section    = args.inv_section or sec
 		args.hidden     = not is_object_scannable(iclass)
-		args.has_power  = (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
+		args.has_power  = sec and (item_device.dev_consumption[sec] or (sec == "batteries_dead")) or nil
 	end
 
 	local method
