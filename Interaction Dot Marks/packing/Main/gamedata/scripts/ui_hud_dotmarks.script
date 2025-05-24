@@ -1479,7 +1479,7 @@ function InteractPrompt:SetupButtonHandlers()
 	end
 	self.physbtn_active = (
 		function()
-			local btn = self.args.id and self.args.scheme and db.storage[self.args.id][self.args.scheme]
+			local btn = self.args.id and self.args.scheme and db.storage[self.args.id] and db.storage[self.args.id][self.args.scheme]
 			return btn and method and not not btn[method]
 		end
 	)
