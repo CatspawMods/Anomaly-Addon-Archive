@@ -448,7 +448,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					if not (mark.is_pickup or mark.is_stalker or mark.container or mark.is_workshop) then return end
 					local pri_shown = (mark and mark.use_pri and mark.use_pri.wnd and mark.use_pri.wnd:IsShown())
 					if mark.is_pickup and not pri_shown then
-						pri_shown = not not pickup_index[mark.id]
+						pri_shown = mark.id and (not not pickup_index[mark.id])
 					end
 					return pri_shown and true or nil
 				end
@@ -1523,7 +1523,7 @@ end
 function InteractPrompt:SetupDoorHandlers()
 	vl("Setting up door handler object and methods")
 	local args = self.args
-	local ph_door = args.id and db.storage[args.id]["ph_door"]
+	local ph_door = args.id and db.storage[args.id] and db.storage[args.id]["ph_door"]
 
 	self.door = {
 		data = ph_door,
@@ -2270,6 +2270,7 @@ function InteractPrompt:SetAlpha(element_name, alpha, text_also)
 	alpha = clamp(tonumber(alpha), 0, 255)
 	if self[element_name] then
 		local ele = self[element_name]
+		if not ele then return end
 		local c = {}
 		if ele.GetTextureColor then
 			local i = ele:GetTextureColor()
@@ -2368,7 +2369,7 @@ function InteractPrompt:ManageFadeAnim(
 
 	CreateTimeEvent("animate_fade"..event_id..anim_id, time_global(), 0, 
 		function()
-			local abort = abort_func and abort_func(self)
+			local abort = (not active_anims[mark_id]) or (abort_func and abort_func(self))
 			if abort then
 				anim_state = 1
 			else
@@ -2390,7 +2391,9 @@ function InteractPrompt:ManageFadeAnim(
 			end
 
 			if (anim_state == 1) then
-				active_anims[mark_id][event_id] = nil
+				if active_anims[mark_id] then
+					active_anims[mark_id][event_id] = nil
+				end
 				--dump("[%s] anim complete", time_global())
 				if on_finish_func then on_finish_func(self) end
 				return true
@@ -2703,7 +2706,7 @@ function InteractPrompt:CheckWoundedStalkers()
 	--dump("Generating heal prompt text for aid item %s", self.avail_aid)
 	self.wounded_string = self.wounded_string or gts("st_alti_heal")
 	local use_aid_name = gts(inventory_name(nil, self.avail_aid, true))
-	self.args.text  = string.format(self.wounded_string, use_aid_name, mark.name)
+	self.args.text  = string.format(self.wounded_string, use_aid_name, mark and mark.name)
 	local suffix = self:GetWoundedSuffix(last_aid, qtyowned)
 	self:SetPrompt(nil, self.args.text, suffix)
 	self:UpdateAnimBusyState()
@@ -2900,7 +2903,7 @@ function state_monitor(tid)
 	local conds = state and cfg.state_conds and cfg.state_conds[tid] or nil
 	local cond  = true
 	if state and (conds ~= nil) then
-		cond = cfg.state_conds[tid](tid)
+		cond = conds(tid)
 	end
 	cfg.monitors[tid] = state and cond or false
 	return cfg.monitors[tid]
@@ -2933,8 +2936,8 @@ function take_glowstick(id)
 		if (pos2d.x < 350 or pos2d.x > 750 or pos2d.y < 250 or pos2d.y > 500) then return end
 		if (not obj:get_hanging_lamp():is_on()) then return end
 
-		local section = glowsticks[id][1] or "device_glowstick"
-		local con_d = glowsticks[id][2]
+		local section = glowsticks[id] and glowsticks[id][1] or "device_glowstick"
+		local con_d = glowsticks[id] and glowsticks[id][2]
 		local newid = alife_create_item(section, db.actor, {cond = con_d}).id
 		glowsticks[id] = nil
 		alife_release_id(id)
@@ -3729,7 +3732,7 @@ function deploy_backpack(id)
 	local actor = db.actor
 	local se_obj = actor and alife_create("inv_backpack", pos, actor:level_vertex_id(), actor:game_vertex_id())
 	local section = backpack:section()
-	if (se_obj and section) then
+	if (se_obj and se_obj.id and section) then
 		local txt = string.format(gts("st_itm_stash_of_character"), db.actor:character_name())
 		level.map_add_object_spot_ser(se_obj.id, "treasure", txt)
 		actor_menu.set_msg(1, gts("st_stash_created"),4)
@@ -4155,7 +4158,9 @@ function unload_and_take_ammo(id)
 		wpn:unload_magazine()
 	end
 
-	cfg.markers[id].ammo_count = 0
+	local mark = cfg.markers[id]
+	if not mark then return end
+	mark.ammo_count = 0
 end
 
 function unpack_batteries(id)
@@ -4627,11 +4632,13 @@ end
 function remove_obj_from_box_table(box, item)
 	if not (box and item) then return end
 	local b_id = box:id()
+	if not b_id then return end
 	if not cfg.invboxes[b_id] then return end
 	if not cfg.invboxes[b_id].items then
 		cfg.invboxes[b_id].items = {}
 	end
 	local i_id = item:id()
+	if not i_id then return end
 	cfg.invboxes[b_id].items[i_id] = nil
 
 	local mark      = cfg.markers[b_id] or {}
@@ -4644,6 +4651,7 @@ end
 function add_obj_to_box_table(box, item)
 	if not (box and item) then return end
 	local b_id = box:id()
+	if not b_id then return end
 	if not cfg.invboxes[b_id] then
 		cfg.invboxes[b_id] = {}
 	end
@@ -4652,6 +4660,7 @@ function add_obj_to_box_table(box, item)
 	end
 	local i_id      = item:id()
 	local sec       = item:section()
+	if not i_id then return end
 	cfg.invboxes[b_id].items[i_id] = sec
 
 	local mark      = cfg.markers[b_id] or {}

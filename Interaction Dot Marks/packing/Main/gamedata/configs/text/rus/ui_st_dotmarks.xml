@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250519
+    Updated: 20250524
     Translated using DeepL. Corrections or suggestions are welcome.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -1315,30 +1315,5 @@
 			\nЯ не получаю уведомлений о комментариях на Moddb, поэтому, как правило, вы получите самый быстрый ответ в GAMMA Discord, в канале обсуждения Interaction Dot Marks. Незапрашиваемые сообщения DM будут игнорироваться.\n
 		</text>
 	</string>
-
-
-	<string id="ui_mcm_menu_dmarkmain">
-		<text>Общие настройки</text>
-	</string>
-
-	<string id="ui_mcm_menu_dmarksec">
-		<text>Вторичное взаимодействие</text>
-	</string>
-	
-	<string id="ui_mcm_menu_dmarkadv">
-		<text>Расширенные настройки</text>
-	</string>	
-
-	<string id="ui_mcm_menu_dmarkobjs">
-		<text>Настройки объекта</text>
-	</string>
-
-	<string id="ui_mcm_menu_dmarkicons">
-		<text>Настройки иконок</text>
-	</string>
-	
-	<string id="ui_mcm_menu_dmarkmods">
-		<text>Другие аддоны</text>
-
 
 </string_table>
