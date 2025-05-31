@@ -17,7 +17,7 @@
 -- ==================================================================--]]
 script_name 			= "item_milpda"
 script_version        	= "1.14.3"
-release_date            = 20250422
+release_date            = 20250529
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 		1. Pick up any Milspec PDAs and save your game

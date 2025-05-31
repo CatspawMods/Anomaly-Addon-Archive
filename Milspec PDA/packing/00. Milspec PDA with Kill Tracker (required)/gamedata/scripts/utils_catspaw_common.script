@@ -3,7 +3,7 @@
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
 script_version 	= "1.14"
-release_date    = 20250419
+release_date    = 20250529
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -271,6 +271,10 @@ function get_next_avail_index(t, first, last, step)
 	end
 end
 
+function get_millicycle()
+    return (time_global() % 1000) * 0.001
+end
+
 function get_next_tg_interval(interval, variance, stamp)
 	-- For throttling looping functions to not act on every tick
 	-- Randomizes the next check by 5% of the interval to avoid stacking updates
@@ -360,8 +364,8 @@ function actor_loaded()
 	return (db.actor ~= nil)
 end
 
-function is_living_thing(obj)
-    return IsStalker(obj) or IsMonster(obj)
+function is_living_thing(obj, cls)
+    return IsStalker(obj, cls) or IsMonster(obj, cls)
 end
 
 function who_npc(a, b)

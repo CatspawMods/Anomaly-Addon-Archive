@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "0.11-b1" -- still technically in beta until DotMarks
-release_date    = 20250428
+script_version  = "1.0"
+release_date    = 20250530
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -1078,7 +1078,7 @@ function UIHUDMarker:InitMarker()
     get_hud():AddDialogToRender(self)
     self.init_time = time_global()
 
-    local _ = (DEV_DEBUG or debuglogs) and printf("[UIHUDMarker:InitMarker][%s] complete at %s | hint %s", self.mark_id, self.init_time, self.name)
+    dl("[UIHUDMarker:InitMarker][%s] complete at %s | hint %s", self.mark_id, self.init_time, self.name)
 end
 
 
@@ -1090,7 +1090,7 @@ function UIHUDMarker:Destroy(managed, reason)
         return
     end
     self.destroying = true
-    local _ = (DEV_DEBUG or debuglogs) and printf("[UIHUDMarker:Destroy][%s] HUD Marker %s", self.mark_id, reason and ("| " .. reason) or  "")
+    dl("[UIHUDMarker:Destroy][%s] HUD Marker %s", self.mark_id, reason and ("| " .. reason) or  "")
     if paw and self.id then paw.hide_hud_pin(self.id) end
     if self.func_on_destroy then
         vl("[UIHUDMarker:Destroy] Executing custom on_destroy functor %s", self.func_on_destroy)
@@ -1550,7 +1550,7 @@ function UIHUDMarker:Update()
         args.pos    = self.locked_world_pos or mark_pos
         local vec   = self.locked_screen_pos or get_screen_coords(args)
 
-        _ = debug_dump and printf("[UIHUDMarker:Update][%s][%s] Got as far as checking screen pos", time_global(), self.mark_id)
+        --printf("[UIHUDMarker:Update][%s][%s] Got as far as checking screen pos", time_global(), self.mark_id)
 
         if (vec) then
             if self.hide_when_oob then

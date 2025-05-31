@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.14"
-release_date    = 20250419
+script_version 	= "1.15"
+release_date    = 20250530
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -364,8 +364,8 @@ function actor_loaded()
 	return (db.actor ~= nil)
 end
 
-function is_living_thing(obj)
-    return IsStalker(obj) or IsMonster(obj)
+function is_living_thing(obj, cls)
+    return IsStalker(obj, cls) or IsMonster(obj, cls)
 end
 
 function who_npc(a, b)

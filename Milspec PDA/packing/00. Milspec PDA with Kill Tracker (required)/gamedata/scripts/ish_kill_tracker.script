@@ -5,7 +5,7 @@
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
 script_version          = "1.14.3"
-release_date            = 20250422
+release_date            = 20250529
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:
@@ -28,8 +28,8 @@ assert(utils_catspaw_common,
 assert(utils_catspaw_mapspots,
 "! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_mapspots, which could not be found!"
 )
-local dl                = function(logtext, ...) utils_catspaw_common.dlog(ish_kill_tracker, logtext, ...) end
-local vl                = function(logtext, ...) utils_catspaw_common.vlog(ish_kill_tracker, logtext, ...) end
+local dl                = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+local vl                = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
 local valid_id          = utils_catspaw_common.valid_id
 local safeid            = utils_catspaw_common.safeid
 local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
@@ -289,8 +289,7 @@ end
 
 
 function tracked_kill(id)
-    --vl("tracked_kill(%s) called", id)
-    if not (id and tracked_bodies[id]) then return end
+    if not (id and tracked_bodies[id]) then return false end
     local is_monster = tracked_bodies[id].typ == 2
     local track_mode = is_monster and monster_tracking_mode or tracking_mode or 0
     local killer_id = tracked_bodies[id].killer_id
@@ -358,10 +357,11 @@ end
 function clear_kill(victim)
     --vl("clear_kill called for %s (%s)",victim and victim:name(),victim and victim:id())
     if not victim then return end
+    if not is_living_thing(victim) then return end
+    if not victim:alive() then return end
     local id = victim:id()
-    if tracked_bodies[id] then
-        dl("Stopped tracking body %s (%s)",id,tracked_bodies[id].text)
-    end
+    if not tracked_bodies[id] then return end
+    dl("Stopped tracking body %s (%s)",id,tracked_bodies[id].text)
     if killspots_visible then remove_dot(id) end
     tracked_bodies[id] = nil
 end
@@ -452,12 +452,12 @@ local function tick()
 end
 
 function is_empty_mutant_corpse(obj)
-    if not obj and IsMonster(obj) then return end
+    if not (obj and IsMonster(obj)) then return end
     local id = safeid(obj)
     local looted = se_load_var(id,obj:name(),"looted")
     local st = db.storage[id]
     local decayed = (st and st.death_time and game.get_game_time():diffSec(st.death_time) > mutant_decay_time)
-    return looted or decayed
+    return not not (looted or decayed)
 end
 
 function invalid_body_record(id, kd)
