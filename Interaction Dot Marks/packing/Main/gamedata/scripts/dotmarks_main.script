@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC4"
-release_date    = 20250524
+script_version  = "1.0-RC5"
+release_date    = 20250608
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -14,12 +14,6 @@ release_date    = 20250524
     A blatant imitation of the "interaction dot" HUD markers in Stalker 2,
     and some of its other UI niceties such as floating prompts and 
     secondary interactions.
-
-    Except not quite as cool, because Anomaly is jank. Hopefully this 
-    makes it a little less jank.
-
-    Also implements an "Alternate Interact" keybind with contextual 
-    actions such as unloading a weapon without having to pick it up.
 -- =======================================================================
     DEPENDENCIES:
         * Modded exes 20250306 or newer
@@ -236,11 +230,12 @@ local base_config = {
             end
         ),
         Addon = (
-            function(obj)
+            function(obj, ...)
                 if (not cfg.other_addon_is_item) or is_empty(cfg.other_addon_is_item) then return end
                 for k,v in pairs(cfg.other_addon_is_item) do
-                    if k and v and v(obj) then
-                        return true
+                    local res = obj and k and v and v(obj, ...)
+                    if res then
+                        return res
                     end
                 end
             end
@@ -873,8 +868,8 @@ local base_config = {
                     -- placeable workshop tends to block LOS to itself
                     no_sec              = not hf_workshop or nil,
                     refresh_text        = true,
-                    interact_dist       = 1.5,
                     -- Forces the prompt text to check for changes on every update
+                    interact_dist       = 1.5,
                     hint_filters       = {
                         ["st_tiski_no_info"]= (not hf_workshop) and "st_tiski_no_info" or nil,
                         ["st_tiski"]        = (not hf_workshop) and "st_tiski" or nil,
@@ -913,6 +908,7 @@ local base_config = {
     -- =======================================================================
         Addon = (
             function(obj, addon, ...)
+                printf("cfg.args.Addon(%s, %s)", obj, addon)
                 local handler = obj and addon and cfg.other_addon_args and cfg.other_addon_args[addon]
                 if not handler then return end
                 return handler(obj, ...)
@@ -1080,15 +1076,6 @@ local base_config = {
     }
 }
 -- =======================================================================
-
-function register_addon_handler(addon_id, is_item_handler, args_handler)
-    if not addon_id then return end
-    cfg.other_addon_is_item = cfg.other_addon_is_item or {}
-    cfg.other_addon_args = cfg.other_addon_args or {}
-    cfg.other_addon_is_item[addon_id] = is_item_handler
-    cfg.other_addon_args[addon_id] = args_handler
-    dl("Addon %s registered with DotMarks: item handler %s | args handler %s", addon_id, is_item_handler, args_handler)
-end
 
 function is_recipe_known(sec)
     if not sec then return end

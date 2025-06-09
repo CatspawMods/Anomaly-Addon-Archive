@@ -12,24 +12,16 @@ script_name     = "ui_hud_dotmarks"
 	A blatant imitation of the "interaction dot" HUD markers in Stalker 2,
 	and some of its other UI niceties such as floating prompts and 
 	secondary interactions.
-
-	Except not quite as cool, because Anomaly is jank. Hopefully this 
-	makes it a little less jank.
-
-	Also implements a "Secondary Interact" keybind with contextual 
-	actions such as unloading a weapon without having to pick it up.
 -- =======================================================================
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
 	TODO (all non-critical):
 	- Update GH documentation with new Utjan and other settings
 	- Correct the MCM text and documentation for changed defaults
-	- WIP IED marker anims not working, but very low priority
-	- Add "welcome" message similar to PAW, controlled by MCM flag
+	- WIP IED marker anims not working, but currently disabled and low-pri
 
 	POST-RELEASE:
 	- MCM live preview for prompt elements - lots of work
-	- Encyclopedia entry/entries - relatively easy, just need writing
 	- NPE module(s) - not hard, but time-consuming and low priority
 	- Unload prompt changes to field strip usable parts for empty guns
 	- Review support for Placeable Explosives addon (PES)
@@ -97,6 +89,35 @@ end
 -- First two values will be overridden by MCM once the game loads
 -- debug_dump is EXTREMELY noisy and should only ever be manually enabled for a specific reason
 
+function tracelog(event, fname, val)
+	if not cfg.debug_trace then return end
+	local fn = fname or script_name
+	local tg = time_global()
+	local ev = event or "heartbeat"
+	cfg.metrics = cfg.metrics or {}
+	cfg.metrics[tg] = cfg.metrics[tg] or {}
+	local i = #cfg.metrics[tg] + 1
+	cfg.metrics[tg][i] = cfg.metrics[tg][i] or {}
+	cfg.metrics[tg][i][fn] = cfg.metrics[tg][i][fn] or {}
+	cfg.metrics[tg][i][fn][ev] = val or ""
+	printf("%s [%s][%s] Trace: [%s][%s] %s", logprefix, tg, i, fn, ev, val or "")
+end
+
+function dump_debug_trace()
+	if not cfg.debug_trace then return end
+	printf(logprefix.."Dumping runtime metrics for %s", script_name)
+	for t,m in pairs(cfg.metrics) do
+		for i = 1,#m do
+			local fns = m[i]
+			for f,evs in pairs(fns) do
+				for e,v in pairs(evs) do
+					dump("[%s][%s] [%s][%s] %s", t, i, f, e, v or "")
+				end
+			end
+		end
+	end
+end
+
 -- ======================================================================
 --      SHORTCUTS
 -- ======================================================================
@@ -127,6 +148,7 @@ local fddar_installed   = false
 local anims_enabled     = false
 local anim_playing      = false
 local actor_moved       = false
+local base_failed 		= nil
 local maingameui        = nil
 local hmm               = nil
 local popin_active      = nil
@@ -138,7 +160,32 @@ local fallback_font     = 2
 local next_near_scan    = 0
 local next_early_scan   = 0
 local next_tut_check    = 0
-
+local loop_num 			= 0
+--[[=====================================================================
+ 		HANDLERS FOR OTHER ADDONS
+	If an item added/changed by your addon isn't being handled correctly
+	by DotMarks, you can inject your own handler functors
+-- ====================================================================]]
+function register_addon_handler(addon_id, is_item_handler, args_handler)
+	-- 	addon_id: <string>
+	-- 		unique string ID for your addon's handler
+	-- 	is_item_handler: function(<game_obj>)
+	-- 		should return the ID of your addon's handler (addon_id) if object matches
+	-- 	args_handler: function(<game_obj>, <string>, <number>, <string>)
+	-- 		the object, its section, its clsid, and its kind
+	-- 		should return a table of args, see dotmarks_main for examples
+	if not cfg then
+		base_failed = not init_base_config(dotmarks_config_file, { logging = debug_dump, called_by = script_name })
+		-- Catch if an addon tries to register a handler before config is loaded
+	end
+    if not addon_id then return end
+    -- The addon_id is required, 
+    cfg.other_addon_is_item = cfg.other_addon_is_item or {}
+    cfg.other_addon_args = cfg.other_addon_args or {}
+    cfg.other_addon_is_item[addon_id] = is_item_handler
+    cfg.other_addon_args[addon_id] = args_handler
+    dl("Addon %s registered with DotMarks: item handler %s | args handler %s", addon_id, is_item_handler, args_handler)
+end
 -- ======================================================================
 --      HUD MARKER PRESET PATCH
 --  Set up "dotmark" preset and patch it into utils_catspaw_hudmarks
@@ -413,7 +460,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 						end
 					end
 					--_ = debug_dump and vl("[%s][%s] Done with both prompt checks:\n* show_pri %s | show_sec %s | hide %s | pri prompt %s", time_global(), mark.name, show_pri, show_sec, hide, (mark.use_pri ~= nil) and "exists")
-					--dump("[%s][%s] Done with both prompt checks:\n* show_pri %s | show_sec %s | hide %s | pri prompt %s", time_global(), mark.name, show_pri, show_sec, hide, (mark.use_pri ~= nil) and "exists")
+					dump("[%s][%s] Done with both prompt checks:\n* show_pri %s | show_sec %s | hide %s | pri prompt %s", time_global(), mark.name, show_pri, show_sec, hide, (mark.use_pri ~= nil) and "exists")
 					-- ================================================================================
 					local texture = mark.texture or ""
 
@@ -428,7 +475,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					end
 
 					if (hide or cfg.hide_interaction_dots) then
-						-- Clear texture for hidden marker
+						printf("Clear texture for hidden marker")
 						texture = ""
 					else
 						mark.marker_scale = cfg.dot_marker_size
@@ -970,7 +1017,7 @@ function fddar_update_current_anim_state()
 end
 
 function get_fdda_callback()
-	fdda_callback = fdda_pickup and fdda_pickup.get_fdda_oibp_callback() or nil
+	fdda_callback = fdda_pickup and fdda_pickup.get_fdda_oibp_callback and fdda_pickup.get_fdda_oibp_callback() or nil
 	return fdda_callback or (function() return false end)
 end
 
@@ -2753,7 +2800,7 @@ function InteractPrompt:Destroy(reason)
 	get_hud():RemoveDialogToRender(self)
 	
 	if reason then
-		dl("[InteractPrompt:Destroy][%s][%s]", self.args.id, reason)
+		vl("[InteractPrompt:Destroy][%s][%s]", self.args.id, reason)
 	end
 end
 
@@ -3050,8 +3097,23 @@ function actor_on_first_update()
 	xml = CScriptXmlInit()
 end
 
+function show_welcome_message()
+	if cfg.welcome_message_shown then return end
+	cfg.welcome_message_shown = true
+	ui_mcm.set("dotmarks/dmarkmain/welcome_message_shown", true)
+	local st_ver = cfg.upgrade_settings_defaulted and gts("st_dotmarks_upgrade_defaulted") or ""
+	CreateTimeEvent("dotmarks_welcome_message", 0, 5, (
+		function()
+			local welcome = parse_color_tokens(string.format(gts("st_dotmarks_welcome_message"), script_version, st_ver))
+			dotip(welcome, 8000, "Interaction Dot Marks", true, "ui_inGame2_V_zone_nedavno_proshel_vibros")
+			return true
+		end
+	))
+end
+
 function start_scanning()
 	if check_for_dependencies(false) then return true end
+	show_welcome_message()
 	scanning = true
 	if utils_catspaw_taskmonitor then
 		utils_catspaw_taskmonitor.set_monitor_active(true)
@@ -3072,10 +3134,11 @@ function actor_on_net_destroy()
 end
 
 function is_object_scannable(item_class)
-	return not not (item_class and cfg.scan[item_class])
+	return (item_class == "Addon") or (not not (item_class and cfg.scan[item_class]))
 end
 
 function get_args_for_valid_objects(id)
+	tracelog("start", "get_args_for_valid_objects", id)
 	local obj = get_game_object(id)
 	if not obj then return end
 	--local id = obj:id()
@@ -3129,7 +3192,19 @@ function get_args_for_valid_objects(id)
 			end
 		end
 	end
-	
+	if not method then
+		printf("Nothing found yet for %s, checking addons", obj:name())
+		if cfg.other_addon_is_item then
+			printf("addon handlers exist")
+			local addon = cfg.is_item.Addon(obj, sec, cls, kind)
+			if addon then
+				printf("Match found for addon handler: %s", addon)
+				setup_item_args("Addon", addon)
+				method = 3
+			end
+		end
+	end
+		
 	if not args.texture then
 		local pid = cfg.available_pickup
 		if (id == pid) then
@@ -3140,13 +3215,15 @@ function get_args_for_valid_objects(id)
 			setup_item_args("Misc")
 		else
 			dl("No args found for %s, no marker init | section %s | clsid %s | kind %s", nameid(nil, id), sec, cls, kind)
+			tracelog("end", "get_args_for_valid_objects", id)
 			return
 		end
 	end
 	if not args.texture then return end
 
-	local method_txt = (method > 1) and "iteration" or (method > 0) and "kind" or "section"
+	local method_txt = (method > 2) and "addon" or (method > 1) and "iteration" or (method > 0) and "kind" or "section"
 	local _ = (DEV_DEBUG or debuglogs) and printf("[DotMarks] get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
+	tracelog("end", "get_args_for_valid_objects", id)
 	return args
 end
 
@@ -3287,8 +3364,8 @@ function setup_sec_interact_prompt(mark)
 		if not cfg.sec_enable_use_act then return end
 		-- Consumable
 		local verb      = mark.use_verb or (
-			(mark.kind == "i_medical") and "st_alti_use_booster" or
 			(cfg.smokables[section] and "st_alti_smokeout") or
+			(mark.kind == "i_medical") and "st_alti_use_booster" or
 			"st_alti_consume_food"
 		)
 		int_text        = string.format(gts("st_alti_prompt_usable"),
@@ -3472,6 +3549,7 @@ function obj_has_available_sec_interact(obj, id, mark)
 end
 
 function scan_nearby_object(obj, id)
+	tracelog("start", "scan_nearby_object", id)
 	id  = id or (obj and obj:id())
 	if not valid_id(id) then return end
 	obj = obj or (id and get_game_object(id))
@@ -3481,8 +3559,10 @@ function scan_nearby_object(obj, id)
 	if scanned[id] then
 		-- Skip previously-scanned IDs if their name matches, otherwise clear the table entry assuming it's a reused ID
 		if scanned[id] == name then
+			tracelog("end", "scan_nearby_object", id)
 			--dump("%s has already been scanned, skipping", nameid(name, id))
-		return end
+			return
+		end
 		dl("%s has a new name, assuming the ID has been reused and clearing entry", id)
 		scanned[id] = nil
 	end
@@ -3500,7 +3580,10 @@ function scan_nearby_object(obj, id)
 		scanned[id] = name
 		dl("Scanning unmarked object %s | clsid %s | [%s]", nameid(name, id), cls, sec)
 		local args  = get_args_for_valid_objects(id)
-		if not args then return end
+		if not args then
+			tracelog("end", "scan_nearby_object", id)
+			return
+		end
 
 		args            = args or {}
 		args.id         = id
@@ -3540,6 +3623,7 @@ function scan_nearby_object(obj, id)
 			mark.condition = obj and obj:condition()
 		end
 	end
+	tracelog("end", "scan_nearby_object", id)
 end
 
 
@@ -3548,6 +3632,7 @@ function scan_nearby_entities(scan_radius)
 	local pos = db.actor and db.actor:center()
 	if not pos then return end
 	level.iterate_nearest(pos, scan_radius, scan_nearby_object)
+	tracelog("end", "scan_nearby_entities", "radius: "..tostring(scan_radius))
 end
 
 
@@ -3587,6 +3672,7 @@ function is_marker_object_container(obj, id)
 end
 
 function update_targeted_object()
+	tracelog("start", "update_targeted_object", targeted_id)
 	local last_id = targeted_id
 	local target, method
 
@@ -3628,6 +3714,7 @@ function update_targeted_object()
 		return
 	end
 	log_target_acquisition(method, last_id)
+	tracelog("end", "update_targeted_object", targeted_id)
 end
 
 
@@ -4349,14 +4436,19 @@ function update_actor_move_state()
 end
 
 function update_nearby_pickups()
+	tracelog("start", "update_nearby_pickups")
 	if update_actor_move_state() then
 		reset_nearby_item_tables()
 		return true
 	end
 
-	if is_empty(cfg.in_pickup_range) then return end
+	if is_empty(cfg.in_pickup_range) then
+		tracelog("end", "update_nearby_pickups")
+	return end
 	cfg.last_pickup = cfg.available_pickup
-	if not is_empty(nearby_pickups) then return end
+	if not is_empty(nearby_pickups) then
+		tracelog("end", "update_nearby_pickups")
+	return end
 	-- pickup tables haven't been updated since actor stopped moving
 
 	local i = 1
@@ -4368,6 +4460,7 @@ function update_nearby_pickups()
 		end
 	end
 	actor_moved = false
+	tracelog("end", "update_nearby_pickups")
 end
 
 function setup_tutorial_prompt(tutorial)
@@ -4388,6 +4481,7 @@ function dump_monitor_states()
 end
 
 function check_tutorial_states()
+	tracelog("start", "check_tutorial_states")
 	if cfg.tutorial_hints and is_not_empty(cfg.tutorial_hints) then
 		if game.has_active_tutorial() then
 			cfg.tutorials_cleared = false
@@ -4400,6 +4494,7 @@ function check_tutorial_states()
 			cfg.tutorials_cleared = true
 		end
 	end
+	tracelog("end", "check_tutorial_states")
 end
 
 function start_tutorial_prompt(tutorial, text, flags)
@@ -4434,6 +4529,7 @@ function update_skill_bonus_range()
 end
 
 function do_garbage_collection()
+	tracelog("start", "do_garbage_collection")
 	local now = time_global()
 	if cfg.pending_actions and not is_empty(cfg.pending_actions) then
 		for k,v in pairs(cfg.pending_actions) do
@@ -4448,15 +4544,18 @@ function do_garbage_collection()
 			set_loot_window_flag(nil, "timeout")
 		end
 	end
+	tracelog("end", "do_garbage_collection")
 end
 
 function update_hint_filters()
-	if not (cfg.hint_filter and cfg.hint_filter.enabled) then return end
+	tracelog("start", "update_hint_filters")
+	if (not (cfg.hint_filter and cfg.hint_filter.enabled)) then return end
 	local hint = cfg.hint_filter.last_raw_text
 	if is_empty(cfg.hint_filter.enabled) then return end
 	local text = cfg.hint_filter.update_text()
 	if not text then return end
 	--dump("[%s] Hint filter update%s", time_global(), text and (" - text is: "..text) or ", no text")
+	tracelog("end", "update_hint_filters")
 end
 
 function update_mark_vis_ignores()
@@ -4471,10 +4570,16 @@ local function perform_debugging_checks()
 	dump("last target: %s | crosshair %s", hmm.last_target, hmm.last_crosshair)
 end
 
+
 -- =======================================================================
 --      MAIN SCAN LOOP
 -- =======================================================================
 function actor_on_update()
+	if cfg.debug_trace then
+		printf("")
+		tracelog("start", "actor_on_update", "loop "..tostring(loop_num))
+		loop_num = (loop_num or 0) + 1
+	end
 	--perform_debugging_checks() -- only uncommented when needed
 	if not scanning then return end
 	do_garbage_collection()
@@ -4499,6 +4604,7 @@ function actor_on_update()
 	update_nearby_pickups()
 	if locked_id then
 		local _ = debug_dump and vl("locked_id is %s, skipping target updates and scans", locked_id)
+		tracelog("end", "actor_on_update", "loop "..tostring(loop_num))
 		return
 	end
 	update_targeted_object()
@@ -4509,6 +4615,7 @@ function actor_on_update()
 	-- ===================================================================
 	if cfg.near_scan_interval then
 		if (next_near_scan <= time_global()) then
+			tracelog("start", "scan_nearby_entities", "near")
 			next_near_scan   = get_next_tg_interval(cfg.near_scan_interval)
 			scan_nearby_entities(near_scan_radius())
 		end
@@ -4521,10 +4628,12 @@ function actor_on_update()
 	if cfg.early_scan_interval then
 		update_mark_vis_ignores()
 		if (next_early_scan <= time_global()) then
+			tracelog("start", "scan_nearby_entities", "early")
 			next_early_scan   = get_next_tg_interval(cfg.early_scan_interval)
 			scan_nearby_entities(early_scan_radius())
 		end
 	end
+	tracelog("end", "actor_on_update", "loop "..tostring(loop_num))
 end
 
 -- =======================================================================
@@ -4902,6 +5011,7 @@ function on_option_change()
 					for k,_ in pairs(opts) do
 						dump("Will reset opt %s", k)
 						reset[k] = true
+						cfg.upgrade_settings_defaulted = true
 					end
 				end
 			end
@@ -4992,7 +5102,9 @@ function on_game_start()
 	local bad_mcm_version = (not valid_mcm_version) or not valid_mcm_version()
 	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
 	-- This callback is always registered so that we can notify the player of init failure
-	local base_failed = not init_base_config(dotmarks_config_file, { logging = debug_dump, called_by = script_name })
+	if (base_failed == nil) then
+		base_failed = not init_base_config(dotmarks_config_file, { logging = debug_dump, called_by = script_name })
+	end
 	if cfg and (not bad_mcm_version) then
 		mags_installed = (magazines and magazine_binder)
 		parse_file_data()

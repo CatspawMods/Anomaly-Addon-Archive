@@ -111,6 +111,4 @@ if z_auto_looter and not z_auto_looter.ignore_dotmarks_fix then
             end
         end
     end
-
 end
-

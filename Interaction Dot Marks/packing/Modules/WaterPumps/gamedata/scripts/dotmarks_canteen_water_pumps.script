@@ -1,0 +1,55 @@
+-- =======================================================================
+--[[    FILLABLE CANTEENS PATCH FOR WATER PUMP OBJECTS
+-- =======================================================================
+    Author: Catspaw
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- =======================================================================    
+    This patch enables DotMarks to detect and properly handle the water
+    pump interactions from the Fillable Canteens addon. Without this, the
+    pumps will not be detected as interactable objects, and may not show
+    an interaction prompt at all.
+
+    Addon authors can also use this as an example of how to add their own
+    compatibility patches, using the register_addon_handler function.
+
+    register_addon_handler(addon_id, is_item_handler, args_handler)
+        addon_id: <string>
+            unique string ID for your addon's handler
+        is_item_handler: function(<game_obj>)
+            should return the ID of your addon's handler (addon_id) if object matches
+        args_handler: function(<game_obj>, <string>, <number>, <string>)
+            the object, its section, its clsid, and its kind
+            should return a table of args, see below or dotmarks_main for examples
+-- =====================================================================]]
+function on_game_start()
+    if bind_water_pump_furniture and ui_hud_dotmarks and ui_hud_dotmarks.register_addon_handler then
+        handler_id = "fillable_canteens_water_pump"
+        -- Unique addon ID for the handler
+        ui_hud_dotmarks.register_addon_handler(handler_id,
+            function(obj)
+                -- Returns handler_id if obj is a placeable water pump
+                if obj and (obj:clsid() == clsid.obj_physic) and string.match(obj:name(), "placeable_water_pump") then
+                    return handler_id
+                end
+            end,
+            -- ===========================================================
+            function(obj, section, cls_id, kind)
+                -- Returns table of settings that tell the marker how to behave
+                if not obj then return end
+                local marker_tex = dotmarks_main and dotmarks_main.cfg and dotmarks_main.cfg.marker_dotmark or "ui_catsy_marker_intdot"
+                return {
+                    logged_type         = "a water pump",
+                    -- Used only for debug logging
+                    texture             = marker_tex,
+                    -- Must be a valid texture in the game
+                    no_sec              = true,
+                    -- Object cannot have a secondary action
+                    refresh_text        = true,
+                    -- Always refresh the text on every update
+                    hint_filters       = { ["st_water_pump_fill"] = "st_water_pump_fill" },
+                    -- Table of interact prompt strings to trap, filter out, and replace
+                }
+            end
+        )
+    end
+end

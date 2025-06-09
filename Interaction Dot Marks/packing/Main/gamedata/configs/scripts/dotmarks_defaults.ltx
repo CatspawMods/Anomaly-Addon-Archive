@@ -86,6 +86,8 @@ marker_dotactive 			= ui_catsy_marker_dotactive
 ; Texture for the "active" object that currently has interact focus
 main_drop_texture 			= ui_dotmarks_main_drop
 ; Texture used for the main prompt drop shadow
+welcome_message_shown = false
+; This gets set true once the welcome message is shown, so that it won't be shown again
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 near_scan_interval          = 104
@@ -400,11 +402,11 @@ argb_service_leader
 ; A config key needs to be in this list in order to be loaded by MCM
 
 ; =================================================================================
-; 	KILLSWITCHES
-; These are debugging tools to isolate parts of the addon for troubleshooting.
-killswitch_all 				= false
-killswitch_pickup 			= false
-killswitch_markloop 		= false
+; 	DEBUGGING TOOLS
+debug_trace 				= false ; Extremely noisy step-by-step logging
+killswitch_all 				= false ; Disable the entire addon
+killswitch_pickup 			= false ; Disable any handling of item pickup
+killswitch_markloop 		= false ; Disable the marker update loop
 ; =================================================================================
 
 [tex]
@@ -720,8 +722,15 @@ af_misery_bread 	= Artefacts
 lead_box        	= Tools
 explosive_mobiltank	= Tools
 explosive_tank 		= Tools
+ied_new 			= Tools
+ied_new_blow 		= Tools
+mine_new 			= Tools
+mine_new_blow		= Tools
+ied_rpg_new 		= Tools
+rpg_new_blow 		= Tools
 device_glowstick 	= Tools
 lights_glowstick	= Tools
+kerosene 			= Tools
 hand_watch      	= Devices
 wpn_binoc_inv   	= Devices
 placeable_workshop 	= Workshops
@@ -932,7 +941,7 @@ show_stash_weight 		= dotmarks/dmarkmain/
 wheel_cycles_pickups 	= dotmarks/dmarkmain/
 interact_drop_alpha 	= dotmarks/dmarkmain/
 ; 	These last are hidden settings, only used internally
-;welcome_message_shown 	= dotmarks/dmarkmain/ ; not implemented yet
+welcome_message_shown 	= dotmarks/dmarkmain/
 last_version	 		= dotmarks/dmarkmain/
 last_release 			= dotmarks/dmarkmain/
 ; =================================================================================

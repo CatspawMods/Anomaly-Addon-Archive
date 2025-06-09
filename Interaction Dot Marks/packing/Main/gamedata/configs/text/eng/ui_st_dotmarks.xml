@@ -1300,4 +1300,15 @@
 		</text>
 	</string>
 
+	<string id="st_dotmarks_welcome_message">
+		<text>$clr_gldInteraction Dot Marks v%s$clr_def is now enhancing the object interaction UI with context-sensitive HUD markers and secondary actions. %sTo adjust any of IDM's settings, go to $clr_lblMain Menu $clr_def> $clr_lblMCM $clr_def> $clr_lblDotMarks$clr_def.\n
+
+		\nThis message won't be shown again unless you upgrade DotMarks or reset your MCM settings. Good hunting, stalker.
+		</text>
+	</string>
+
+	<string id="st_dotmarks_upgrade_defaulted">
+		<text>Some of its settings have been reset to default due to a version upgrade.</text>
+	</string>
+	
 </string_table>

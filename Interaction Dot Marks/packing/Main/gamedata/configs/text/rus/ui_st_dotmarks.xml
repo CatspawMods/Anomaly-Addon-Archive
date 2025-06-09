@@ -1316,4 +1316,15 @@
 		</text>
 	</string>
 
+	<string id="st_dotmarks_welcome_message">
+		<text>Interaction Dot Marks v%s$clr_def теперь улучшает пользовательский интерфейс взаимодействия с объектами с помощью контекстно-зависимых маркеров HUD и вторичных действий. %sЧтобы настроить любые параметры DotMarks, перейдите в главное меню $clr_lblГлавном меню $clr_def> $clr_lblMCM $clr_def> $clr_lblDotMarks$clr_def.\n
+
+		\nЭто сообщение больше не появится, если вы не обновите DotMarks или не сбросите настройки MCM. Удачной охоты, сталкер.
+		</text>
+	</string>
+
+	<string id="st_dotmarks_upgrade_defaulted">
+		<text>Некоторые из его настроек были сброшены по умолчанию в результате обновления версии.</text>
+	</string>
+
 </string_table>
