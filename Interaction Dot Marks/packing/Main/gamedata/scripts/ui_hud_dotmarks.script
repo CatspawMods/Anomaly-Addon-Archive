@@ -475,7 +475,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					end
 
 					if (hide or cfg.hide_interaction_dots) then
-						printf("Clear texture for hidden marker")
+						--printf("Clear texture for hidden marker")
 						texture = ""
 					else
 						mark.marker_scale = cfg.dot_marker_size
@@ -995,10 +995,11 @@ function killswitch(feature)
 	return ks
 end
 
-function shut_down()
-	scanning = false
-	cfg.killswitch_all = true
-	set_handler_callbacks(true)
+--[[
+function shut_down(tf)
+	scanning = not tf
+	cfg.killswitch_all = tf
+	set_handler_callbacks(tf)
 	for k,v in pairs(cfg.markers) do
 		if v.mark_id then
 			destroy_marker(v.mark_id)
@@ -1006,7 +1007,17 @@ function shut_down()
 			v:Destroy("shutting down")
 		end
 	end
+	if tf then
+		CreateTimeEvent("shutdown_check", time_global(), 2,
+			-- Catches false shutdowns like CS back exit
+			function()
+				shut_down(false)
+				return true
+			end
+		)
+	end
 end
+--]]
 
 function get_fddar_current_action()
 	return lam2 and lam2.get_current_action()
@@ -3193,12 +3204,9 @@ function get_args_for_valid_objects(id)
 		end
 	end
 	if not method then
-		printf("Nothing found yet for %s, checking addons", obj:name())
 		if cfg.other_addon_is_item then
-			printf("addon handlers exist")
 			local addon = cfg.is_item.Addon(obj, sec, cls, kind)
 			if addon then
-				printf("Match found for addon handler: %s", addon)
 				setup_item_args("Addon", addon)
 				method = 3
 			end
@@ -4817,10 +4825,12 @@ function on_mouse_wheel(scroll_dir, flags)
 	flags.ret_value         = false
 end
 
+--[[
 function on_before_level_changing()
 	dl("Shutting down for level change")
-	shut_down()
+	shut_down(true)
 end
+--]]
 
 function parse_color_data(color_key, csv_string)
 	if not (color_key and csv_string) then return end
@@ -5120,7 +5130,7 @@ function on_game_start()
 		RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)
 		RegisterScriptCallback("npc_on_death_callback", handle_npc_death)
 		RegisterScriptCallback("monster_on_death_callback", handle_npc_death)
-		RegisterScriptCallback("on_before_level_changing", on_before_level_changing)
+		--RegisterScriptCallback("on_before_level_changing", on_before_level_changing)
 		if stealth_kill_detection then
 			RegisterScriptCallback("npc_on_silent_kill_callback", handle_npc_death)
 		end

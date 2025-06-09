@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC5"
-release_date    = 20250608
+script_version  = "1.0-RC6"
+release_date    = 20250609
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -908,7 +908,6 @@ local base_config = {
     -- =======================================================================
         Addon = (
             function(obj, addon, ...)
-                printf("cfg.args.Addon(%s, %s)", obj, addon)
                 local handler = obj and addon and cfg.other_addon_args and cfg.other_addon_args[addon]
                 if not handler then return end
                 return handler(obj, ...)

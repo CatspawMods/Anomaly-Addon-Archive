@@ -11,15 +11,20 @@
 -- =====================================================================]]
 local base_ui_inventory_start = ui_inventory.start
 function ui_inventory.start(mode, obj)
-   local _ = (DEV_DEBUG or ui_hud_dotmarks.debuglogs) and printf("[%s] Trying to start inventory in %s mode for container %s (%s)", time_global(), mode, obj and obj:name(), obj and obj:id())
- 	if ui_hud_dotmarks and (mode == "loot") then
- 		if ui_hud_dotmarks.cfg.block_loot_window then
-         if not (IsStalker(obj) and obj:alive()) then
-            _ = (DEV_DEBUG or ui_hud_dotmarks.debuglogs) and printf("[%s][z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", time_global(), obj and obj:name(), obj and obj:id())
- 			  return
-         end
- 		end
- 	end
-   -- Allow loot window to open
+   local idm = ui_hud_dotmarks
+   local log = (DEV_DEBUG or (idm and idm.debuglogs))
+   local _ = log and printf("[%s] Trying to start inventory in %s mode for container %s (%s)", time_global(), mode, obj and obj:name(), obj and obj:id())
+   
+   if    idm and idm.is_system_active()            -- DotMarks is installed and running
+         and idm.cfg.block_loot_window             -- block_loot_window flag is enabled
+         and (mode == "loot")                      -- Inventory mode is "loot"
+         and (not (IsStalker(obj) and obj:alive()))-- Inventory owner isn't a living stalker 
+   then
+      _ = log and printf("[%s][z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", time_global(), obj and obj:name(), obj and obj:id())
+      -- Block the loot window
+      return
+   end
+
+   -- Allow inv window to open without interference
  	base_ui_inventory_start(mode, obj)
 end
