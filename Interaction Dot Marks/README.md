@@ -753,6 +753,10 @@ Interval between nearby-object scans, in milliseconds. Smaller values will updat
 * Default: `2457`
 
 Interval between the more-intensive faraway-object scans, in milliseconds. Smaller values will update more frequently, but may have a performance cost.
+> [!IMPORTANT]
+> The strange, random-seeming numbers are there for a reason. Many addons update exactly once per second, which can cause them to sync up and create stutters when they all try to "stack" their updates at the same time.
+>
+> Unusual numbers like 104 and 2457 (roughly 0.1 second and 2.5 seconds, respectively) make it almost impossible for updates to regularly stack in this way. If you change these intervals, try to pick numbers like these.
 ## Radius of near scan
 * Config setting: `near_scan_radius`
 * Default: `4`
@@ -770,8 +774,11 @@ Radius of the faraway-object scan in meters, which is used to detect and initial
 
 # Troubleshooting
 > [!WARNING]
-> Stalker's game engine is janky as fuck, and it sometimes does some weird shit. If you cannot make an issue happen again, **I don't want to know about it**. Apologies, but I simply cannot chase down every random glitch that Anomaly barfs out, even if it says it came from one of my scripts--so **please do not waste my time or yours with any issue that does not happen again a second time.**
-Here are the most common issues people have, and how to solve them:
+> Stalker's game engine is janky as fuck, and it sometimes does some weird shit. If you cannot make an issue happen again, **I don't want to know about it**.
+>
+> Apologies, but I simply cannot chase down every random glitch that comes from Anomaly or your mod soup, even one of my scripts shows up in the error--so **please do not waste my time or yours with any issue that does not happen again a second time.**
+
+DotMarks is a big addon with some very strict dependencies. Here are the most common issues people have, and how to solve them:
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
