@@ -846,15 +846,19 @@ Go to **MCM > DotMarks > Other Addons** and disable [hijack_autoloot_keybind](#o
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 ## Conflicts with other addons
-Interaction Dot Marks touches nearly every part of the game, and is involved with every single object interaction. I have designed it to be as conflict-free as possible, but I can't possibly account for every addon out there.
-
+Interaction Dot Marks touches nearly every part of the game, and is involved with every single object interaction. I have designed it to be as conflict-free as possible, but I can't possibly account for--or support--every addon out there.
 For this reason I can only officially support two install configurations at this time:
-* Vanilla Anomaly running on modded exes with supported addons
-* GAMMA with the DEFAULT MODLIST ONLY
+* Vanilla Anomaly running on current modded exes with supported addons
+* GAMMA with current modded exes and the [DEFAULT MODLIST ONLY](https://discord.com/channels/912320241713958912/977190498420801536)
+> [!IMPORTANT]
+> I consider an addon to be "supported" by DotMarks if it is mentioned by name in either this documentation or the addon itself.
+If and when my personal life and free time allow, I will do what I can to help sort out issues you might have with the current version of DotMarks, running on the above two configurations.
 
-That isn't to say DotMarks won't work on other installations--just that if something goes wrong, I'm not signing up to figure out what it is.
+That isn't to say DotMarks won't work on other installations--quite the contrary. Just that if something goes wrong, **I'm not signing up to figure out what it is**.
 
 Some conflicts are easy to fix--a new item from an addon not being detected correctly, or simple issues like that, might just require adding a few lines in a config file. But if your Stalker soup with hundreds of mods is encountering an issue no one else has ever seen before and that I can't reproduce, it's very likely something in your modlist, not an issue with DotMarks that needs fixing--and either you or the other addon's author will probably need to sort that out yourself.
+> [!TIP]
+> If you're an addon author with an object that isn't being handled correctly, I've implemented hooks in DotMarks that make it extremely simple to add support yourself. It may just be a matter of adding your item's information to [dotmarks_defaults.ltx](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/packing/Main/gamedata/configs/scripts/dotmarks_defaults.ltx) in the `[section_lookup]` or one of the blacklists via DLTX, or injecting custom handling using the `register_addon_handler()` function in [ui_hud_dotmarks.script](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/packing/Main/gamedata/scripts/ui_hud_dotmarks.script). See the [Fillable Canteens Water Pumps patch](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/packing/Modules/WaterPumps/gamedata/scripts/dotmarks_canteen_water_pumps.script) for an example of how to do the latter.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
