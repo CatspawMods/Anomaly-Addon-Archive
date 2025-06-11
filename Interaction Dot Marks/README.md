@@ -56,35 +56,23 @@ Just about any setting that would actually be useful to most users is available 
 In the list of MCM settings that follow, the "Config setting" lines refer to that setting's variable name under the `[default_settings]` section in the above file, and the "Default" is its default value defined there.
 
 # MCM Menu: General Settings
-## Show item quick info card
-* Config setting: `show_item_card`
-* Default: `true`
-
-If enabled, a small display will be shown beside a pickup item's primary interaction prompt, showing its weight and value and (optionally, with *Utjan's Item UI Improvements* addon) indicator dots for the condition of weapon/armor parts.
 ## Show device battery percentage
 * Config setting: `show_item_charge`
 * Default: `true`
 
 If enabled, the battery charge of devices that use power (or the batteries themselves) will be appended to the name of the item.
-## Show quantity for multi-use items
-* Config setting: `show_multi_uses`
+## Show gear condition percentage
+* Config setting: `show_gun_condition`
 * Default: `true`
-
-If enabled, the number of uses in a multi-use item will be displayed beside the prompt when more than one remains.
-## Show icon for favorites/junk on the item card
-* Config setting: `sp_flag_favejunk`
-* Default: `true`
-
-If enabled, items marked as Favorites or Junk with *Sorting Plus* will display the appropriate icon on the item card.
-> [!IMPORTANT]
-> Requires the *Sorting Plus* addon.
+ 
+If enbabled, the condition of weapons will be appended to the name of the item.
+> [!NOTE]
+> This option is disabled by default in GAMMA, which does not use condition for guns.
 ## Show gear condition percentage
 * Config setting: `show_item_condition`
 * Default: `true`
  
-If enbabled, the condition of weapons, outfits and headgear will be appended to the name of the item.
-> [!NOTE]
-> This option is disabled by default in GAMMA, which does not use item condition.
+If enbabled, the condition of outfits and headgear will be appended to the name of the item.
 ## Show condition/charge level in color
 * Config setting: `show_condition_color`
 * Default: `true`
@@ -99,6 +87,23 @@ If enabled, the color of the condition/battery text will change based on the val
 Totals up the weight of all items within marked containers, appending this information to the prompt. If a searched container is empty, it will say that instead.
 > [!WARNING]
 > This feature is disabled by default because it is known to have a performance cost on some machines. If you experience stutter or FPS loss when there are many stashes, dead stalkers, or other containers nearby, try disabling this setting.
+## Show item quick info card
+* Config setting: `show_item_card`
+* Default: `true`
+
+If enabled, a small display will be shown beside a pickup item's primary interaction prompt, showing its weight and value and (optionally, with *Utjan's Item UI Improvements* addon) indicator dots for the condition of weapon/armor parts.
+## Show quantity for multi-use items
+* Config setting: `show_multi_uses`
+* Default: `true`
+
+If enabled, the number of uses in a multi-use item will be displayed beside the prompt when more than one remains.
+## Show icon for favorites/junk on the item card
+* Config setting: `sp_flag_favejunk`
+* Default: `true`
+
+If enabled, items marked as Favorites or Junk with *Sorting Plus* will display the appropriate icon on the item card.
+> [!IMPORTANT]
+> Requires the *Sorting Plus* addon.
 ## Mouse wheel cycles focused pickup
 * Config setting: `wheel_cycles_pickups`
 * Default: `true`
@@ -164,12 +169,28 @@ If you have iTheon's Auto Looter addon installed, there is also an option in the
 Enables the secondary action that allows you to heal a wounded stalker on the ground.
 
 Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
+
+
+## Default IED placement mode
+* Config setting: `sec_mode_setupthebomb`
+* Default: `0`
+
+Sets the default placement mode for IEDs deployed using a secondary action, or disables that action to make it unavailable. Valid settings:
+* `0`  : as a proximity mine
+* `1`  : with a definable timer
+* `2`  : with a remote detonator
+* `-1` : disabled, action unavailable
+> [!NOTE]
+> The remote detonator option requires the _Remote Controlled Explosives_ addon.</
+> [!TIP]
+> When targeting an undeployed IED pickup item, you can use the **Fire Mode** keybinds to cycle placement mode, and the mouse wheel to set the duration of the timer (if applicable).
 ## Enable animation for healing action
 * Config setting: `sec_enable_heal_anim`
 * Default: `true`
-Enables an animation when healing wounded stalkers using the secondary action.
 
-The default animation just briefly causes the actor to crouch and look at the stalker while the usage sound plays. If you have the [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10) addon installed, its animation is MUCH better and DotMarks will use that instead.
+Enables an animation when healing wounded stalkers using the secondary action. If you have the [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10) addon installed, its animation is MUCH better and DotMarks will use that.
+
+Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
 # MCM Menu: Icon Settings
 The default "dot marker" is a small white dot with a thin black outline. When a marker has **focus**--that is, its Primary Interaction prompt is shown--the icon changes to an alternate *focus icon*. By default, this is a smaller white dot with a ring around it.
 
@@ -194,6 +215,12 @@ Scales the size of all markers between 0 and 2.0, which acts as a multiplier to 
 > Markers are scaled by distance, so in-game they usually will appear slightly smaller than they do here.
 ## Customize color for the normal dot marker
 * Config setting: `argb_dot_normal`
+> [!TIP]
+> Setting the Alpha for the normal dot marker to zero will hide only the unfocused dot markers, while leaving all others unaffected.
+## Customize color for the focus dot marker
+* Config setting: `argb_dot_focus`
+> [!NOTE]
+> The "focus" marker is the ringed dot shown when the actor's focus is placed on an object.
 ## Enable special icons for task objectives
 * Config setting: `enable_icon_tasks`
 * Default: `true`
@@ -205,7 +232,7 @@ If enabled, objects that are the target of the current active task will use a hi
 * Config setting: `enable_icon_services`
 * Default: `true`
 
-Certain NPCs provide services to the player: Traders, Technicians, Medics, Guides, and Faction Leaders. While the default focus icon for most stalkers is a speech bubble, these *Service NPCs* each get their own special icon. Disabling this setting will cause them to use the normal dot marker instead.
+Certain NPCs provide services to the player: Traders, Technicians, Medics, Guides, and Faction Leaders. While the default focus icon for most stalkers is a speech bubble, these *Service NPCs* each get their own special icon. Disabling this setting will cause them to use the normal speech bubble icon instead.
 ## Customize color for the Trader icon
 * Config setting: `argb_service_trader`
 ## Customize color for the Guide icon
@@ -242,7 +269,7 @@ The settings in this menu control whether or not markers are added to each diffe
 
 All of these are enabled by default with the exception of **Breakable Boxes** and **Explosive Objects**.
 > [!TIP]
-> As with the other two methods of hiding markers, objects with hidden markers will still show interaction prompts normally, which is what you will almost always want--but if you prefer otherwise, you can turn off the `hidden_show_prompts` setting.
+> As with the other methods of hiding markers, objects with hidden markers will still show interaction prompts normally, which is what you will almost always want--but if you prefer otherwise, you can turn off the `hidden_show_prompts` setting.
 
 There is a checkbox for each of the following object classes:
 ## Ammo 
@@ -348,13 +375,22 @@ Because DotMarks detects objects based on many of the same fundamental attribute
 ## Dead stalkers use PAW faction patches
 * Config setting: `bodies_use_paw_patches`
 * Default: `false`
+
 If my *Personal Adjustable Waypoint* addon is installed, enabling this option will cause dead stalkers to show their faction patch icon instead of the usual dot markers.
 ## Body markers obey Milspec PDA rules
 * Config setting: `bodies_use_mpda_rules`
 * Default: `false`
+
 If my *Milspec PDA* addon is installed, enabling this option will cause bodies to be marked--or not--depending on whether the actor's PDA has the ability to see them on the map.
 > [!TIP]
 > If corpse markers are disappearing, or not appearing when you expect them to, check whether this setting is on--as well as Milspec PDA's own MCM settings, which are setting the terms for visibility.
+## Treat all squad members as talkative
+* Config setting: `all_squad_members_talk`
+* Default: false
+
+In vanilla Anomaly, only the leader of a given squad can engage in conversation. Enable this setting if you have installed any addon which removes this leader-only restriction, such as the `Talk to Everyone` install option in _Modular Miscellaneous Tweaks_.
+> [!NOTE]
+> This setting is enabled by default in GAMMA, which includes that feature as part of its standard modlist.
 ## Show interaction prompt during FDDA animations
 * Config setting: `show_prompt_during_anim`
 * Default: `false`
@@ -376,6 +412,12 @@ If enabled, the interaction prompt will not accept input during FDDA animations.
 When using a secondary action on a pickup item, this is the delay in seconds between the pickup event and the queueing of the secondary action. This is necessary in order to allow FDDA's pickup animation time to begin.
 > [!NOTE]
 > This setting has no effect without FDDA or FDDA Redone installed.
+
+## Enable animation for healing action
+* Config setting: `sec_enable_heal_anim`
+* Default: `true`
+
+This option allows DotMarks to use the animation from the _Animated NPC Healing_ addon when healing wounded stalkers using the secondary action. It has no effect if that addon is not installed.
 ## Take-all secondary action triggers Autoloot
 * Config setting: `takeall_does_autoloot`
 * Default: `true`
@@ -400,11 +442,31 @@ If the *Sorting Plus* addon is installed, and an item has been marked as "junk",
 * Default: `10, 1`
 
 Fine-tunes the position of the Sorting Plus icon on the Item Card.
+## Part dots orientation
+* Config setting: `parts_dot_orientation`
+* Default: `2`
+
+By default, the part dots are arranged radially in a tight circle. You can instead choose to draw them as a horizontal or vertical line, but you'll probably want to adjust their positioning afterwards if you change this. Available settings:
+* `0`  : horizontal line
+* `1`  : vertical line
+* `2`  : radial (in a circle around a center point)
+> [!TIP]
+> On weapons, in the radial orientation, the barrel will always be the dot at the very top. You can use this to quickly identify which weapons are worth picking up.
 ## Part condition dots X and Y offsets
 * Config settings: `parts_dot_pos_x`, `parts_dot_pos_y`
 * Default: `-7, -4`
 
 Fine-tunes the position of the part condition dots on the Item Card.
+## Size of the part condition dots
+* Config settings: `parts_dot_scale`
+* Default: `1.0`
+
+Adjusts the size of the part condition dots. A value of 1 is their default intended size, while zero will hide these icons entirely.
+## Part dots drop shadow transparency
+* Config settings: `parts_dot_shadow_alpha`
+* Default: `0.75`
+
+Sets the alpha (transparency) channel for the drop shadows underneath the part condition dots. Set to zero to disable their drop shadows.
 ## Increase perception radius based on Skill System
 * Config setting: `use_skill_system`
 * Default: `true`
@@ -419,13 +481,6 @@ If *Skill System* integration is enabled, this setting controls the multiplier t
 At **Scavenging** level 15 with the default multiplier of 0.2 and radius of 4m, the final near scan radius would be 7 meters.
 > [!WARNING]
 > A very high near scan radius can have a performance impact, especially in dense areas with many objects.
-## Interval between Skill System updates
-* Config setting: `skill_upd_interval`
-* Default: `29711`
-
-Time in milliseconds between updates. You'll probably never have a need to change this.
-> [!NOTE]
-> Skill level-ups occur very rarely, so the skill system update does not need to happen often--you may go entire play sessions without a level-up, and even the default value of ~30s is arguably overkill.
 ## Name of the skill used for this check
 * Config setting: `haru_skill_name`
 * Default: `scavenging`
@@ -434,15 +489,261 @@ The internal name of the skill from *Skill System* that is used as the basis for
 > [!WARNING]
 > Bad things may happen if you typo this, and most of you have no need to tinker with it.
 # MCM Menu: Advanced Settings
-.
+## Enable debug logging
+* Config setting: `debuglogs`
+* Default: `false`
 
-.
+Enables or disables basic debug logging from the addon.
+> [!NOTE]
+> If this setting is not enabled, the game log will contain almost no information from DotMarks, and is probably useless for troubleshooting.
+## Debug logging is verbose
+* Config setting: `verbose`
+* Default: `false`
+
+If `debuglogs` is also enabled, this setting will enable additional logging that is more detailed, but also noisy.
 > [!WARNING]
-> The Advanced menu is very lengthy, and documenting it properly is going to take some time. So consider this your "work in progress" warning for this section.
+> Don't enable this unless you're trying to troubleshoot a problem, and avoid leaving it enabled for long periods during normal play. It will quickly fill up your game log.
 
-.
+## Hide interaction dot markers
+* Config setting: `hide_interaction_dots`
+* Default: `false`
 
-.
+If enabled, the interaction dots themselves will be hidden, but the interaction UI will still be available.
+> [!TIP]
+> This is for all of you out there who hate having stuff on your HUD, but still want to get the nice new prompts and secondary actions.
+## Hide marker for untalkative stalkers
+* Config setting: `hide_mute_stalkers`
+* Default: `true`
+
+If enabled, no marker will be shown at all for stalkers who can't be engaged in conversation. There is little point to disabling this setting, as untalkative stalkers have no other interactions.
+> [!TIP]
+> If you're using an addon that enables conversation with all stalkers, set `all_squad_members_talk` to true instead of changing this.
+## Hidden items still show interaction prompts
+* Config setting: `hidden_show_prompts`
+* Default: `true`
+
+If a marker is hidden for any reason, its interaction prompts will still be shown.
+> [!WARNING]
+> If this option is not enabled, hidden markers will not have any visible interaction prompts at all. This will not prevent you from picking them up if you want to, it just won't show the prompt.
+## Hide the connecting white line
+* Config setting: `hide_connecting_line`
+* Default: `true`
+
+If enabled, will hide the white line connecting the dot to the interact prompt.
+> [!NOTE]
+> This element used to be enabled by default, and looks very nice when it is positioned right--but its size and position has to be manually adjusted any time the prompt or their elements are moved around, and only looks correct in very specific positions. It will likely be replaced at some point by a better implementation.
+## Hide the custom primary interact UI
+* Config setting: `hide_pri_interact_ui`
+* Default: `false`
+
+If enabled, the custom primary interact UI added by DotMarks will not be shown. The primary vanilla "use" function and prompts will still work normally.
+## Hide the custom secondary interact UI
+* Config setting: `hide_sec_interact_ui`
+* Default: `false`
+
+If enabled, the custom secondary interact UI added by DotMarks will not be shown, and secondary interactions will not be available.
+## Hide vanilla interact UI
+* Config setting: `hide_van_interact_ui`
+* Default: `true`
+
+If enabled, any vanilla interact prompts (the text at the bottom of the screen) will be hidden if they have been replaced by a custom version.
+
+This setting has no effect if the custom primary interaction UI is also hidden.
+## Disable UI sound effects
+* Config setting: `disable_all_sounds`
+* Default: `false`
+
+Disables the subtle UI "blip" sound effect that plays when cycling the mouse wheel or during other similar events.
+## Scale GUI elements
+* Config setting: `ui_scale`
+* Default: `1.0`
+
+This slider adjusts the scale of the UI's graphical elements, such as the keybind icon. This has no effect on the font size, but it can be used to fine-tune the GUI to account for your resolution or fonts.
+## Scale font width allowance
+* Config setting: `font_scale_w`
+* Default: `1.0`
+
+This setting allows you to adjust the amount of horizontal space that DotMarks assumes is required by the current fonts.
+## Scale font height allowance
+* Config setting: `font_scale_h`
+* Default: `1.0`
+
+This setting allows you to adjust the amount of vertical space that DotMarks assumes is required by the current fonts.
+> [!NOTE]
+> Fonts are just textures in Anomaly, and some fonts are taller or wider than others. You may need to adjust one or both of these settings if you are at a resolution other than 1920x1080, install a custom font addon, or change to a different font than the default.
+## Keybind icon style
+* Config setting: `keybind_bg_style`
+* Default: `4`
+
+Sets the visual style for the graphical "key" icons used as backgrounds for the keybind text on interaction prompts, or disables the backgrounds entirely. Valid settings:
+* `4` : Flat worn (like Stalker 2)
+* `3` : 3D worn appearance
+* `2` : 3D black and white
+* `1` : White wireframe
+* `0` : Disabled, no background
+## FONT SETTINGS
+Some fonts will look better at different resolutions due to the inconsistent way Anomaly sizes the text. You can choose whichever one looks best to you.
+> [!NOTE]
+> The addon tries to adjust the UI based on the size of the text, but it may be necessary to manually fine-tune screen position values for the Item Card or other elements when using some fonts.
+## Font used for main prompt
+* Config setting: `font_main_prompt`
+* Default: `2` (Letterica 16)
+
+Valid settings:
+* `7` : Graffiti 32
+* `6` : Graffiti 22
+* `5` : Graffiti 19
+* `4` : Letterica 25
+* `3` : Letterica 18
+* `2` : Letterica 16
+* `1` : Medium Print
+## Font used for the Item Card
+* Config setting: `font_item_card`
+* Default: `0` (Small Print)
+
+Valid settings:
+* `6` : Graffiti 22
+* `5` : Graffiti 19
+* `4` : Letterica 25
+* `3` : Letterica 18
+* `2` : Letterica 16
+* `1` : Medium Print
+* `0` : Small Print
+## Prompt fade-in duration
+* Config setting: `prompt_fade_in_time`
+* Default: `250`
+
+The duration, in milliseconds, of the fade-in effect for interaction prompts.
+## Prompt fade-out duration
+* Config setting: `prompt_fade_out_time`
+* Default: `150`
+
+The duration, in milliseconds, of the fade-out effect for interaction prompts.
+## Marker pop-in duration
+* Config setting: `popin_anim_dur`
+* Default: `500`
+
+The duration of the elastic pop-in animation that plays when focus is transferred to a marker. Can be up to 2000ms. Setting to zero will disable the feature.
+## Action text X offset
+* Config setting: `action_text_pos_x`
+* Default: `20`
+
+Adjusts the horizontal offset of the action text.
+> [!NOTE]
+> This is the text that says what the interaction does, e.g. "pick up the thing".
+## Action text Y offset
+* Config setting: `action_text_pos_y`
+* Default: `3`
+
+Adjusts the vertical offset of the action text.
+## Keybind text X offset
+* Config setting: `bind_text_pos_x`
+* Default: `3`
+
+Adjusts the horizontal offset of the keybind text within its icon box.
+> [!NOTE]
+> This is the text that says what key or button you press to initiate the action, e.g. "T".
+## Keybind text Y offset
+* Config setting: `bind_text_pos_y`
+* Default: `3.5`
+
+Adjusts the vertical offset of the keybind text within its icon box.
+## Item Card X offset
+* Config setting: `item_card_pos_x`
+* Default: `-5`
+
+Adjusts the amount that the Item Card's position is horizontally offset.
+## Item Card Y offset
+* Config setting: `item_card_pos_y`
+* Default: `-2`
+
+Adjusts the amount that the Item Card's position is vertically offset.
+## Item Card element X offset
+* Config setting: `item_card_elem_x`
+* Default: `7.5`
+
+Adjusts the horizontal offset for the weight and value elements in the Item Card.
+## Item Card element Y offset
+* Config setting: `item_card_elem_y`
+* Default: `0`
+
+Adjusts the vertical offset for the weight and value elements in the Item Card.
+## Item Card element height
+* Config setting: `item_card_elem_h`
+* Default: `12`
+
+Adjusts the height of the weight and value elements in the Item Card. This value is used to set the spacing between the rows.
+## Item Card icon X offset
+* Config setting: `item_card_icon_x`
+* Default: `4`
+
+Adjusts the horizontal offset for the weight and value icons within their elements.
+## Item Card icon Y offset
+* Config setting: `item_card_icon_y`
+* Default: `2`
+
+Adjusts the vertical offset for the weight and value icons within their elements.
+## Item Card icon size
+* Config setting: `item_card_icon_sz`
+* Default: `7.5`
+
+Changes the size of the icons in the Item Card, used for attributes such as Weight and Value.
+## Item Card text Y offset
+* Config setting: `item_card_text_y`
+* Default: `1`
+
+Adjusts the vertical offset of the weight and value text numbers within their elements.
+## Horizontal offset for first interact
+* Config setting: `pri_use_x_offset`
+* Default: `-13`
+
+Adjust the primary prompt's position horizontally. Allowed values are -512 to 1024.
+## Vertical offset for first interact
+* Config setting: `pri_use_y_offset`
+* Default: `24`
+
+Adjust the primary prompt's position vertically. Allowed values are -384 to 768.
+## Horizontal offset for second interact
+* Config setting: `sec_use_x_offset`
+* Default: `-9`
+
+Adjust the secondary prompt's position horizontally. Allowed values are -512 to 1024.
+> [!TIP]
+> If you don't like the way the primary and secondary prompts are slightly staggered, and want them to be aligned, change `pri_use_x_offset` and `sec_use_x_offset` to the same number.
+## Vertical offset for second interact
+* Config setting: `sec_use_y_offset`
+* Default: `48`
+
+Adjust the secondary prompt's position vertically. Allowed values are -384 to 768.
+## Use fixed screen positions
+* Config setting: `fixed_screen_pos`
+* Default: `false`
+
+If this option is enabled, the custom interaction prompts will have a fixed screen position based on the offsets above, and the offsets are measured relative to the upper-left corner of the screen, instead of from the position of the attached marker.
+> [!NOTE]
+> You **must** restart/saveload your game for this setting to take effect.
+## Near scan interval
+* Config setting: `near_scan_interval`
+* Default: `104`
+
+Interval between nearby-object scans, in milliseconds. Smaller values will update more frequently.
+## Far scan interval
+* Config setting: `early_scan_interval`
+* Default: `2457`
+
+Interval between the more-intensive faraway-object scans, in milliseconds. Smaller values will update more frequently, but may have a performance cost.
+## Radius of near scan
+* Config setting: `near_scan_radius`
+* Default: `4`
+
+Radius of the nearby-object scan in meters. Many things are based on this value, such as the distances at which markers fade out and scale up/down. It is recommended that you don't adjust this value, or do so in very small increments.
+## Radius of far scan
+* Config setting: `early_scan_radius`
+* Default: `3`
+
+Radius of the faraway-object scan in meters, which is used to detect and initialize objects before their markers need to be shown. This also determines the distance at which the system cleans up markers that are no longer needed.
+
+This is measured from the end of the near scan radius, but higher values may have a performance cost, and there is no benefit to setting them more than about 5 meters higher than the near radius.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
