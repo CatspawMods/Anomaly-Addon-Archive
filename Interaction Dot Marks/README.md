@@ -843,6 +843,8 @@ Beyond that, while I am continually working to optimize it, understand that this
 ## Auto Looter keybind doesn't work
 Go to **MCM > DotMarks > Other Addons** and disable [hijack_autoloot_keybind](#override-auto-looter-keybind).
 
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 ## Conflicts with other addons
 Interaction Dot Marks touches nearly every part of the game, and is involved with every single object interaction. I have designed it to be as conflict-free as possible, but I can't possibly account for every addon out there.
 
@@ -850,7 +852,9 @@ For this reason I can only officially support two install configurations at this
 * Vanilla Anomaly running on modded exes with supported addons
 * GAMMA with the DEFAULT MODLIST ONLY
 
-If it's just an issue such as a new item from an addon that isn't being detected correctly, or that sort of simple thing, it might be easy enough to solve. But if your Stalker soup with hundreds of mods is encountering an issue no one else has ever seen before, it's very likely a conflict with something in your modlist, not an issue with DotMarks that needs fixing--and either you or the other addon's author will probably need to sort that out yourself.
+That isn't to say DotMarks won't work on other installations--just that if something goes wrong, I'm not signing up to figure out what it is.
+
+Some conflicts are easy to fix--a new item from an addon not being detected correctly, or simple issues like that, might just require adding a few lines in a config file. But if your Stalker soup with hundreds of mods is encountering an issue no one else has ever seen before and that I can't reproduce, it's very likely something in your modlist, not an issue with DotMarks that needs fixing--and either you or the other addon's author will probably need to sort that out yourself.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -872,4 +876,5 @@ Follow the instructions in the [Missing dependencies](#missing-dependencies) sec
 If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue. If the issue is visual, or concerns a specific object, include a screenshot of what looks wrong, in the spot where you made your debug savegame.
 > [!TIP]
 > You will find the game log in `<Anomaly Install Folder>\appdata\logs`. If you're a GAMMA user, this will be in the location where you installed the base game.
+
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
