@@ -786,7 +786,7 @@ Radius of the faraway-object scan in meters, which is used to detect and initial
 > [!WARNING]
 > Stalker's game engine is janky as fuck, and it sometimes does some weird shit. If you cannot make an issue happen again, **I don't want to know about it**.
 >
-> Apologies, but I simply cannot chase down every random glitch that comes from Anomaly or your mod soup, even one of my scripts shows up in the error--so **please do not waste my time or yours with any issue that does not happen again a second time.**
+> Apologies, but I simply cannot chase down every random glitch that comes from Anomaly or your mod soup, even if one of my scripts shows up in the error--so **please do not waste my time or yours with any issue that does not happen again a second time.**
 
 DotMarks is a big addon with some very strict dependencies. Here are the most common issues people have, and how to solve them:
 
