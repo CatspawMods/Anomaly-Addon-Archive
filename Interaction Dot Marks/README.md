@@ -6,9 +6,8 @@ A blatant imitation of the "interaction dot" HUD markers in Stalker 2, and some 
 Except not quite as cool, because Anomaly is jank. Hopefully this makes it a little less jank.
 
 Also implements a "Secondary Interact" keybind with contextual actions such as unloading a weapon without having to pick it up, or taking everything from a stash without opening the loot window.
-> [!NOTE]
-> Documentation of some features may be incomplete or display WIP defaults. These will be updated as time allows.
-
+> [!TIP]
+> Having difficulties? Check out the [Troubleshooting](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/README.md#troubleshooting) section.
 # **Requirements**
 Requires **MCM 1.7.0** and the **20250306 modded exes** by demonized, or (better yet) the latest of both:
 * [Demonized modded exes (Github)](https://github.com/themrdemonized/xray-monolith)
@@ -54,6 +53,8 @@ Just about any setting that would actually be useful to most users is available 
 > If a setting is in MCM, don't try editing it in the config file--those values are treated as defaults, and your changes will get overwritten when MCM loads its settings.
 
 In the list of MCM settings that follow, the "Config setting" lines refer to that setting's variable name under the `[default_settings]` section in the above file, and the "Default" is its default value defined there.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # MCM Menu: General Settings
 ## Show device battery percentage
@@ -118,6 +119,9 @@ If enabled, when there is more than one nearby item that can be picked up, scrol
 Sets the alpha (transparency) channel for the main drop shadows underneath the interaction prompts or other UI elements.
 > [!TIP]
 Set to zero if you want to disable the main drop shadows entirely.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM Menu: Secondary Interact
 The Secondary Interact provides context-sensitive actions on a second prompt just below the Primary. If you have FDDA or FDDA Redone installed, and there are animations associated with those actions, they will play out just as if you'd taken the item and then immediately used it.
 
@@ -146,31 +150,29 @@ By default it is set to a long-press equivalent of your Primary Interact--in oth
 When a long-press action is completed, inputs from that same key will be ignored for this many milliseconds. This is necessary to prevent the same key from incorrectly registering as a simple press just after completing the previous action--a person cannot lift their finger off the key instantaneously.
 > [!TIP]
 > If you find that your primary interact isn't registering when trying to quickly pick up multiple items, you can try lowering this value. It must be between 50 and 2000.
-
 ## Enable "use item" action
 * Config setting: `sec_enable_use_act`
 * Default: `true`
 
 Enables the secondary action that allows you to immediately use any consumable pickup item.
-
 ## Enable "unload weapon" action
 * Config setting: `sec_enable_unload_act`
 * Default: `true`
+
 Enables the secondary action that allows you to unload and take the ammunition from a weapon on the ground.
 ## Enable "take all" action
 * Config setting: `sec_enable_takeall_act`
 * Default: `true`
-Enables the secondary action that allows you to take everything from a container at once.
 
-If you have iTheon's Auto Looter addon installed, there is also an option in the Addons menu that allows you to autoloot the same way. It is enabled by default.
+Enables the secondary action that allows you to take everything from a container at once.
+> [!TIP]
+> If you have iTheon's Auto Looter addon installed, there is also an option in the Addons menu that allows you to autoloot the same way. It is enabled by default.
 ## Enable "heal NPC" action
 * Config setting: `sec_enable_heal_act`
 * Default: `true`
 Enables the secondary action that allows you to heal a wounded stalker on the ground.
 
 Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
-
-
 ## Default IED placement mode
 * Config setting: `sec_mode_setupthebomb`
 * Default: `0`
@@ -192,6 +194,9 @@ Sets the default placement mode for IEDs deployed using a secondary action, or d
 Enables an animation when healing wounded stalkers using the secondary action. If you have the [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10) addon installed, its animation is MUCH better and DotMarks will use that.
 
 Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM Menu: Icon Settings
 The default "dot marker" is a small white dot with a thin black outline. When a marker has **focus**--that is, its Primary Interaction prompt is shown--the icon changes to an alternate *focus icon*. By default, this is a smaller white dot with a ring around it.
 
@@ -264,6 +269,8 @@ The following special icons are available here:
 * Config settings: `enable_icon_boom`, `argb_icon_boom`
 > [!NOTE]
 > Breakable boxes and explosive objects do not have interaction prompts, and so do not receive focus--their special icon replaces the dot marker at all times.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # MCM Menu: Object Settings
 The settings in this menu control whether or not markers are added to each different type of object that DotMarks recognizes. If any are distracting or less useful to you, turning off their setting will hide their visible markers entirely.
@@ -367,6 +374,9 @@ Any equippable weapon, whether melee or ranged.
 Interactive workbenches, most of which are owned by a Technician.
 > [!NOTE]
 > This includes the Placeable Workbench from the *Hideout Furniture* addon, once it has been placed. The HF version will show a secondary interaction prompt for opening its control menu.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM Menu: Other Addons
 DotMarks is designed to work hand-in-hand with a variety of popular addons, and many of those integrations have options which you can adjust in this menu.
 
@@ -489,7 +499,16 @@ At **Scavenging** level 15 with the default multiplier of 0.2 and radius of 4m, 
 The internal name of the skill from *Skill System* that is used as the basis for the integration.
 > [!WARNING]
 > Bad things may happen if you typo this, and most of you will never have any need to tinker with it.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM Menu: Advanced Settings
+Settings for troubleshooting, adjusting screen positions, enabling or disable specific features, or any other customization that doesn't fall neatly into one of the other menus. If there is a detail you might want to customize, and it's not in one of the other tabs, you'll probably find it here. 
+> [!WARNING]
+> This is the "Advanced" menu for a reason--most of these settings are just granular UI customization, but a few can really mess up the way things work if you make careless changes. Be sure to read the tooltips carefully so that you understand how each setting works.
+
+> [!TIP]
+> Remember, you can always reset your settings to default in MCM if things get messed up. Doing so will only reset the settings for the menu page you're on. DotMarks does not write anything to your save file, so the worst that will happen after resetting to defaults is that you have to restart the game.
 ## Enable debug logging
 * Config setting: `debuglogs`
 * Default: `false`
@@ -504,7 +523,6 @@ Enables or disables basic debug logging from the addon.
 If `debuglogs` is also enabled, this setting will enable additional logging that is more detailed, but also noisy. You should enable this for short periods if you know how to reproduce a problem, and are about to create a debug log for troubleshooting.
 > [!WARNING]
 > Don't enable this unless you're trying to troubleshoot a problem, and avoid leaving it enabled for a long time during normal play. It will quickly fill up your game log.
-
 ## Hide interaction dot markers
 * Config setting: `hide_interaction_dots`
 * Default: `false`
@@ -518,7 +536,7 @@ If enabled, the interaction dots themselves will be hidden, but the interaction 
 
 If enabled, no marker will be shown at all for stalkers who can't be engaged in conversation.
 > [!TIP]
-> There is little point to disabling this setting, as untalkative stalkers have no other interactions. If you're using an addon that enables conversation with all stalkers, set `all_squad_members_talk` to true instead of changing this.
+> There is little point to disabling this setting, as untalkative stalkers have no other interactions aside from shooting them in the face. If you're using an addon that enables conversation with all stalkers, set `all_squad_members_talk` to true instead of changing this.
 ## Hidden items still show interaction prompts
 * Config setting: `hidden_show_prompts`
 * Default: `true`
@@ -744,19 +762,31 @@ Radius of the nearby-object scan in meters. Many things are based on this value,
 * Config setting: `early_scan_radius`
 * Default: `3`
 
-Radius of the faraway-object scan in meters, which is used to detect and initialize objects before their markers need to be shown. This also determines the distance at which the system cleans up markers that are no longer needed.
-
-This is measured from the end of the near scan radius, but higher values may have a performance cost, and there is no benefit to setting them more than about 5 meters higher than the near radius.
+Radius of the faraway-object scan in meters, which is used to detect and initialize objects before their markers need to be shown. This also determines the distance at which the system cleans up markers that are no longer needed. This is measured from the end of the near scan radius.
+> [!NOTE]
+> Higher values may have a performance cost due to markers remaining active when they aren't needed, and there is no benefit to setting it higher than a few meters.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # Troubleshooting
-I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update something.
-
+> [!WARNING]
+> Stalker's game engine is janky as fuck, and it sometimes does some weird shit. If you cannot make an issue happen again, **I don't want to know about it**. I simply do not have time to chase down every random glitch that Anomaly barfs out, even if it says it came from one of my scripts, so **please do not waste my time or yours with any issue that does not happen again.**
 Here are the most common issues people have, and how to solve them:
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
+## Missing dependencies
+I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the `debuglogs` setting is enabled, DotMarks will output a block of text on startup that looks like this:
+```
+[DotMarks] [V] config loaded: true
+[DotMarks] [V] using_modded_exes: true
+[DotMarks] [V] no_callback_old_exes: false
+[DotMarks] [V] no_callback_old_dbs: false | found in _G true | callback firing true
+[DotMarks] [V] no_lookat_method: false
+[DotMarks] [V] bad_mcm_version: false
+[DotMarks] [V] no_hud_mark_manager: false
+```
+At least, it *should* look like that. If any of those true/false values are different, something is wrong and you need to properly reinstall/update the offending component.
 ## Can't pick up anything that isn't centered in the crosshair, or `actor_on_update_pickup` error seen in log
 
 If your version of the modded exes is earlier than `20250306`, you will see this error in your log:
@@ -794,31 +824,34 @@ Beyond that, while I am continually working to optimize it, understand that this
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 ## Auto Looter keybind doesn't work
-Go to MCM > DotMarks > Other Addons and disable [hijack_autoloot_keybind](#override-auto-looter-keybind).
+Go to **MCM > DotMarks > Other Addons** and disable [hijack_autoloot_keybind](#override-auto-looter-keybind).
+
+## Conflicts with other addons
+Interaction Dot Marks touches nearly every part of the game, and is involved with every single object interaction. I have designed it to be as conflict-free as possible, but I can't possibly account for every addon out there.
+
+For this reason I can only officially support two install configurations at this time:
+* Vanilla Anomaly running on modded exes with supported addons
+* GAMMA with the DEFAULT MODLIST ONLY
+
+If it's just an issue such as a new item from an addon that isn't being detected correctly, or that sort of simple thing, it might be easy enough to solve. But if your Stalker soup with hundreds of mods is encountering an issue no one else has ever seen before, it's very likely a conflict with something in your modlist, not an issue with DotMarks that needs fixing--and either you or the other addon's author will probably need to sort that out yourself.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 ## Still having problems?
 ### 1. GENERATE A CLEAN DEBUG LOG
 If you need to report a problem, first do this:
-    1. Go to MCM > DotMarks > Advanced
-    2. Enable both Debug and Verbose logging
-    3. Exit the game completely and restart it
-    4. Load a save game where the issue occurs, and reproduce it as simply as possible
-    5. Exit the game immediately
-### 2. CHECK DEPENDENCIES
-Before you post the log anywhere, open it in a text editor and try searching for the string `Checking for dependencies`. You should find a block in the log just below it that looks like this:
-```
-[DotMarks] [V] config loaded: true
-[DotMarks] [V] using_modded_exes: true
-[DotMarks] [V] no_callback_old_exes: false
-[DotMarks] [V] no_callback_old_dbs: false | found in _G true | callback firing true
-[DotMarks] [V] no_lookat_method: false
-[DotMarks] [V] bad_mcm_version: false
-[DotMarks] [V] no_hud_mark_manager: false
-```
-At least, it *should* look like that. If any of those true/false values are different, something is wrong and you need to properly reinstall/update the offending component.
-### 3. REPORT THE ISSUE
-If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue. If the issue is visual, include a screenshot of what looks wrong.
 
+1. Go to **MCM > DotMarks > Advanced**
+2. Enable both Debug and Verbose logging
+3. Exit the game completely and restart it
+4. Load a save game where the issue occurs, and reproduce it as simply as possible
+5. Exit the game immediately
+> [!IMPORTANT]
+> If you're reporting an issue with a specific object, save your game while standing right in front of the object and targeting it. You only need to load the game for a few moments before exiting.
+### 2. CHECK DEPENDENCIES
+Follow the instructions in the Missing dependencies section.
+### 3. REPORT THE ISSUE
+If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue. If the issue is visual, or concerns a specific object, include a screenshot of what looks wrong, in the spot where you made your debug savegame.
+> [!TIP]
+> You will find the game log in `<Anomaly Install Folder>\appdata\logs`. If you're a GAMMA user, this will be in the location where you installed the base game.
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
