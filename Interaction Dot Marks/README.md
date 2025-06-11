@@ -180,8 +180,9 @@ Sets the default placement mode for IEDs deployed using a secondary action, or d
 * `1`  : with a definable timer
 * `2`  : with a remote detonator
 * `-1` : disabled, action unavailable
-> [!NOTE]
-> The remote detonator option requires the _Remote Controlled Explosives_ addon.</
+> [!IMPORTANT]
+> The remote detonator option requires the _Remote Controlled Explosives_ addon, or another which implements that functionality the same way.
+
 > [!TIP]
 > When targeting an undeployed IED pickup item, you can use the **Fire Mode** keybinds to cycle placement mode, and the mouse wheel to set the duration of the timer (if applicable).
 ## Enable animation for healing action
@@ -487,22 +488,22 @@ At **Scavenging** level 15 with the default multiplier of 0.2 and radius of 4m, 
 
 The internal name of the skill from *Skill System* that is used as the basis for the integration.
 > [!WARNING]
-> Bad things may happen if you typo this, and most of you have no need to tinker with it.
+> Bad things may happen if you typo this, and most of you will never have any need to tinker with it.
 # MCM Menu: Advanced Settings
 ## Enable debug logging
 * Config setting: `debuglogs`
 * Default: `false`
 
 Enables or disables basic debug logging from the addon.
-> [!NOTE]
-> If this setting is not enabled, the game log will contain almost no information from DotMarks, and is probably useless for troubleshooting.
+> [!IMPORTANT]
+> This is _absolutely required_ for reporting any bug or issue. If this setting is not enabled, the game log will contain almost no information from DotMarks, and is probably useless for troubleshooting.
 ## Debug logging is verbose
 * Config setting: `verbose`
 * Default: `false`
 
-If `debuglogs` is also enabled, this setting will enable additional logging that is more detailed, but also noisy.
+If `debuglogs` is also enabled, this setting will enable additional logging that is more detailed, but also noisy. You should enable this for short periods if you know how to reproduce a problem, and are about to create a debug log for troubleshooting.
 > [!WARNING]
-> Don't enable this unless you're trying to troubleshoot a problem, and avoid leaving it enabled for long periods during normal play. It will quickly fill up your game log.
+> Don't enable this unless you're trying to troubleshoot a problem, and avoid leaving it enabled for a long time during normal play. It will quickly fill up your game log.
 
 ## Hide interaction dot markers
 * Config setting: `hide_interaction_dots`
@@ -510,20 +511,20 @@ If `debuglogs` is also enabled, this setting will enable additional logging that
 
 If enabled, the interaction dots themselves will be hidden, but the interaction UI will still be available.
 > [!TIP]
-> This is for all of you out there who hate having stuff on your HUD, but still want to get the nice new prompts and secondary actions.
+> This is for all of you out there who are allergic to having stuff on your HUD, but still want to get the nice new prompts and secondary actions.
 ## Hide marker for untalkative stalkers
 * Config setting: `hide_mute_stalkers`
 * Default: `true`
 
-If enabled, no marker will be shown at all for stalkers who can't be engaged in conversation. There is little point to disabling this setting, as untalkative stalkers have no other interactions.
+If enabled, no marker will be shown at all for stalkers who can't be engaged in conversation.
 > [!TIP]
-> If you're using an addon that enables conversation with all stalkers, set `all_squad_members_talk` to true instead of changing this.
+> There is little point to disabling this setting, as untalkative stalkers have no other interactions. If you're using an addon that enables conversation with all stalkers, set `all_squad_members_talk` to true instead of changing this.
 ## Hidden items still show interaction prompts
 * Config setting: `hidden_show_prompts`
 * Default: `true`
 
 If a marker is hidden for any reason, its interaction prompts will still be shown.
-> [!WARNING]
+> [!IMPORTANT]
 > If this option is not enabled, hidden markers will not have any visible interaction prompts at all. This will not prevent you from picking them up if you want to, it just won't show the prompt.
 ## Hide the connecting white line
 * Config setting: `hide_connecting_line`
@@ -630,7 +631,7 @@ The duration of the elastic pop-in animation that plays when focus is transferre
 
 Adjusts the horizontal offset of the action text.
 > [!NOTE]
-> This is the text that says what the interaction does, e.g. "pick up the thing".
+> This is the text that says what the interaction does, e.g. "take/use/eat/drink the thing".
 ## Action text Y offset
 * Config setting: `action_text_pos_y`
 * Default: `3`
@@ -672,7 +673,9 @@ Adjusts the vertical offset for the weight and value elements in the Item Card.
 * Config setting: `item_card_elem_h`
 * Default: `12`
 
-Adjusts the height of the weight and value elements in the Item Card. This value is used to set the spacing between the rows.
+Adjusts the height of the weight and value elements in the Item Card.
+> [!NOTE]
+> This value is used to set the spacing between the rows.
 ## Item Card icon X offset
 * Config setting: `item_card_icon_x`
 * Default: `4`
@@ -720,7 +723,7 @@ Adjust the secondary prompt's position vertically. Allowed values are -384 to 76
 * Default: `false`
 
 If this option is enabled, the custom interaction prompts will have a fixed screen position based on the offsets above, and the offsets are measured relative to the upper-left corner of the screen, instead of from the position of the attached marker.
-> [!NOTE]
+> [!IMPORTANT]
 > You **must** restart/saveload your game for this setting to take effect.
 ## Near scan interval
 * Config setting: `near_scan_interval`
