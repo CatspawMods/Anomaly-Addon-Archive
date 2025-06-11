@@ -770,13 +770,13 @@ Radius of the faraway-object scan in meters, which is used to detect and initial
 
 # Troubleshooting
 > [!WARNING]
-> Stalker's game engine is janky as fuck, and it sometimes does some weird shit. If you cannot make an issue happen again, **I don't want to know about it**. I simply do not have time to chase down every random glitch that Anomaly barfs out, even if it says it came from one of my scripts, so **please do not waste my time or yours with any issue that does not happen again.**
+> Stalker's game engine is janky as fuck, and it sometimes does some weird shit. If you cannot make an issue happen again, **I don't want to know about it**. Apologies, but I simply cannot chase down every random glitch that Anomaly barfs out, even if it says it came from one of my scripts--so **please do not waste my time or yours with any issue that does not happen again a second time.**
 Here are the most common issues people have, and how to solve them:
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 ## Missing dependencies
-I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the `debuglogs` setting is enabled, DotMarks will output a block of text on startup that looks like this:
+I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the [debuglogs](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/README.md#enable-debug-logging) setting is enabled, DotMarks will output a block of text on startup that looks like this:
 ```
 [DotMarks] [V] config loaded: true
 [DotMarks] [V] using_modded_exes: true
