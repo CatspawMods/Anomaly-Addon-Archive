@@ -7,7 +7,7 @@ Except not quite as cool, because Anomaly is jank. Hopefully this makes it a lit
 
 Also implements a "Secondary Interact" keybind with contextual actions such as unloading a weapon without having to pick it up, or taking everything from a stash without opening the loot window.
 > [!TIP]
-> Having difficulties? Check out the [Troubleshooting](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/README.md#troubleshooting) section.
+> Having difficulties? Check out the [Troubleshooting](#troubleshooting) section.
 # **Requirements**
 Requires **MCM 1.7.0** and the **20250306 modded exes** by demonized, or (better yet) the latest of both:
 * [Demonized modded exes (Github)](https://github.com/themrdemonized/xray-monolith)
@@ -18,7 +18,7 @@ Requires **MCM 1.7.0** and the **20250306 modded exes** by demonized, or (better
 > This addon *will not work at all* on vanilla Anomaly, and may crash spectacularly if you try.
 
 # **Strongly Recommended**
-These other fantastic addons are not required, but DotMarks is designed to integrate with them and extend their functionality. Click the title of each to go to their Moddb pages.
+These other fantastic addons are not required, but DotMarks is designed to integrate with them and extend its functionality with theirs--and vice-versa. Click the title of each to go to their Moddb pages.
 > [!TIP]
 > All of these features either respect the relevant MCM settings of each addon, or have their own settings in the DotMarks MCM menu to configure or disable them.
 ## [FDDA or FDDA Redone](https://www.moddb.com/mods/stalker-anomaly/addons/fdda-redone)
@@ -116,7 +116,7 @@ If enabled, when there is more than one nearby item that can be picked up, scrol
 * Config setting: `interact_drop_alpha`
 * Default: `0.7`
 
-Sets the alpha (transparency) channel for the main drop shadows underneath the interaction prompts or other UI elements.
+Sets the Alpha (transparency) channel for the main drop shadows underneath the interaction prompts or other UI elements.
 > [!TIP]
 Set to zero if you want to disable the main drop shadows entirely.
 
@@ -130,6 +130,9 @@ Available actions include:
 * Take everything from a stash or body at once--and if that stash is a backpack, pick it up, too
 * Unload and take the ammunition from any weapon
 * Remove and take the battery from any device
+* Deploy or pick up an IED with any timer or detonation mode
+* Heal a wounded NPC with the cheapest medkit in your inventory
+* And more!
 ## Keybind, Modifier, and Input Mode for Secondary Interactions
 * Config settings: `bind_sec_interact`, `modk_sec_interact`, `imod_sec_interact`
 * Allowed Modifiers: Shift, Control, Alt
@@ -205,8 +208,13 @@ However, many different types of objects have their own contextual focus icons t
 The default color for all icons is ARGB 255,255,255,255--where the "A" stands for Alpha, or transparency, while the "RGB" values are the Red, Green, and Blue color channels, in that order.
 > [!TIP]
 > When the RGB values are all 255, the color is white--and a texture will have its default color. Setting all values to 0 will turn it completely black.
+>
+> Alpha 255 is completely opaque, and 128 is about half-transparent. Setting any element's Alpha to zero will effectively hide it.
 
 All of the ARGB settings function the same: clicking the **button with the gear icon** will open the ARGB control, and the fields will become editable. Changing any value will show a preview of the chosen color on the focus icon itself. Clicking the **checkmark button** will send your changes to MCM, which will take effect once you commit MCM's settings. Clicking the **X-shaped icon** will cancel all changes in progress.
+> [!NOTE]
+> You must press **Enter** after you finish typing the new value, just as with any other input box in Anomaly. If you simply click away from the input box, your changes will be lost.
+
 > [!TIP]
 > If you really make a mess of things, don't worry--look in the lower left of MCM for a button that lets you reset settings to default.
 ## Interaction Dot Marker size
@@ -477,7 +485,7 @@ Adjusts the size of the part condition dots. A value of 1 is their default inten
 * Config settings: `parts_dot_shadow_alpha`
 * Default: `0.75`
 
-Sets the alpha (transparency) channel for the drop shadows underneath the part condition dots. Set to zero to disable their drop shadows.
+Sets the Alpha (transparency) channel for the drop shadows underneath the part condition dots. Set to zero to disable their drop shadows.
 ## Increase perception radius based on Skill System
 * Config setting: `use_skill_system`
 * Default: `true`
@@ -508,6 +516,8 @@ Settings for troubleshooting, adjusting screen positions, enabling or disable sp
 > This is the "Advanced" menu for a reason--most of these settings are just granular UI customization, but a few can really mess up the way things work if you make careless changes. Be sure to read the tooltips carefully so that you understand how each setting works.
 
 > [!TIP]
+> That said, some of these options will be _essential_ if you run the game in a screen resolution that is anything other than 1920x1080--you may need to adjust fonts and element sizes or positions, among other things.
+>
 > Remember, you can always reset your settings to default in MCM if things get messed up. Doing so will only reset the settings for the menu page you're on. DotMarks does not write anything to your save file, so the worst that will happen after resetting to defaults is that you have to restart the game.
 ## Enable debug logging
 * Config setting: `debuglogs`
@@ -783,7 +793,7 @@ DotMarks is a big addon with some very strict dependencies. Here are the most co
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 ## Missing dependencies
-I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the [debuglogs](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/README.md#enable-debug-logging) setting is enabled, DotMarks will output a block of text on startup that looks like this:
+I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the [debuglogs](#enable-debug-logging) setting is enabled, DotMarks will output a block of text on startup that looks like this:
 ```
 [DotMarks] [V] config loaded: true
 [DotMarks] [V] using_modded_exes: true
@@ -849,14 +859,15 @@ If it's just an issue such as a new item from an addon that isn't being detected
 If you need to report a problem, first do this:
 
 1. Go to **MCM > DotMarks > Advanced**
-2. Enable both Debug and Verbose logging
+2. Enable both [Debug](#enable-debug-logging) and [Verbose](#debug-logging-is-verbose) logging
 3. Exit the game completely and restart it
 4. Load a save game where the issue occurs, and reproduce it as simply as possible
 5. Exit the game immediately
+ 
 > [!IMPORTANT]
-> If you're reporting an issue with a specific object, save your game while standing right in front of the object and targeting it. You only need to load the game for a few moments before exiting.
+> If you're reporting an issue with a specific object, make your savegame while standing right in front of the object and targeting it. You only need to load the game for a few moments before exiting.
 ### 2. CHECK DEPENDENCIES
-Follow the instructions in the Missing dependencies section.
+Follow the instructions in the [Missing dependencies](#missing-dependencies) section.
 ### 3. REPORT THE ISSUE
 If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue. If the issue is visual, or concerns a specific object, include a screenshot of what looks wrong, in the spot where you made your debug savegame.
 > [!TIP]
