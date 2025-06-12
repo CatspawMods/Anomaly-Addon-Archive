@@ -37,7 +37,6 @@ DotMarks will show Utjan's part condition dots on the Item Card if it detects th
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
-
 # Personalization
 Everyone likes different things. "Play your own way" is axiomatic to me.
 
@@ -54,9 +53,9 @@ Just about any setting that would actually be useful to most users is available 
 
 In the list of MCM settings that follow, the "Config setting" lines refer to that setting's variable name under the `[default_settings]` section in the above file, and the "Default" is its default value defined there.
 
-![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
-
 # MCM Menu: General Settings
+![General Settings banner](https://i.imgur.com/OXAK0xS.png)
+
 ## Show device battery percentage
 * Config setting: `show_item_charge`
 * Default: `true`
@@ -120,9 +119,10 @@ Sets the Alpha (transparency) channel for the main drop shadows underneath the i
 > [!TIP]
 Set to zero if you want to disable the main drop shadows entirely.
 
-![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # MCM Menu: Secondary Interact
+![Secondary Interact banner](https://i.imgur.com/GgEwrVR.png)
+
 The Secondary Interact provides context-sensitive actions on a second prompt just below the Primary. If you have FDDA or FDDA Redone installed, and there are animations associated with those actions, they will play out just as if you'd taken the item and then immediately used it.
 
 Available actions include:
@@ -198,9 +198,9 @@ Enables an animation when healing wounded stalkers using the secondary action. I
 
 Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
 
-![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
-
 # MCM Menu: Icon Settings
+![Icon Settings banner](https://i.imgur.com/ea0PiDo.png)
+
 The default "dot marker" is a small white dot with a thin black outline. When a marker has **focus**--that is, its Primary Interaction prompt is shown--the icon changes to an alternate *focus icon*. By default, this is a smaller white dot with a ring around it.
 
 However, many different types of objects have their own contextual focus icons to indicate their purpose or the nature of the interaction. In this menu you can individually enable or disable those icons to suit your preferences, or customize their size and color.
@@ -278,9 +278,9 @@ The following special icons are available here:
 > [!NOTE]
 > Breakable boxes and explosive objects do not have interaction prompts, and so do not receive focus--their special icon replaces the dot marker at all times.
 
-![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
-
 # MCM Menu: Object Settings
+![Object Settings banner](https://i.imgur.com/SmLjFL4.png)
+
 The settings in this menu control whether or not markers are added to each different type of object that DotMarks recognizes. If any are distracting or less useful to you, turning off their setting will hide their visible markers entirely.
 
 All of these are enabled by default with the exception of **Breakable Boxes** and **Explosive Objects**.
@@ -383,9 +383,9 @@ Interactive workbenches, most of which are owned by a Technician.
 > [!NOTE]
 > This includes the Placeable Workbench from the *Hideout Furniture* addon, once it has been placed. The HF version will show a secondary interaction prompt for opening its control menu.
 
-![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
-
 # MCM Menu: Other Addons
+![Other Addons banner](https://i.imgur.com/hdvQEwj.png)
+
 DotMarks is designed to work hand-in-hand with a variety of popular addons, and many of those integrations have options which you can adjust in this menu.
 
 Because DotMarks detects objects based on many of the same fundamental attributes the game itself uses to classify items, it will support many other addons right out of the box, as long as they define their own items in a way consistent with the vanilla definitions.
@@ -508,9 +508,9 @@ The internal name of the skill from *Skill System* that is used as the basis for
 > [!WARNING]
 > Bad things may happen if you typo this, and most of you will never have any need to tinker with it.
 
-![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
-
 # MCM Menu: Advanced Settings
+![Advanced Settings banner](https://i.imgur.com/5R5ZGIV.png)
+
 Settings for troubleshooting, adjusting screen positions, enabling or disable specific features, or any other customization that doesn't fall neatly into one of the other menus. If there is a detail you might want to customize, and it's not in one of the other tabs, you'll probably find it here. 
 > [!WARNING]
 > This is the "Advanced" menu for a reason--most of these settings are just granular UI customization, but a few can really mess up the way things work if you make careless changes. Be sure to read the tooltips carefully so that you understand how each setting works.
