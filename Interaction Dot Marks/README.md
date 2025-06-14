@@ -182,7 +182,11 @@ By default it is set to a long-press equivalent of your Primary Interact--in oth
 > The durations for Long Press and Double Tap actions are set for all addons in `MCM > MCM Keybinds`
 
 > [!WARNING]
-> While having the Secondary Interact as a long-press or double-tap of the same key used for the Primary is convenient, this requires the script to keep close track of--and sometimes block--the pressing of the "use" key. On very rare occasions this can interfere with normal object interactions. If you keep having issues like that, you might need to try binding the Secondary Interact to a different key entirely.
+> While having the Secondary Interact as a long-press of the same key used for the Primary is convenient, this requires the script to keep close track of--and sometimes block--the pressing of the "use" key. On very rare occasions it can interfere with normal object interactions. If you keep having issues like that, you might need to try binding the Secondary Interact to a different key entirely.
+
+> [!CAUTION]
+> Don't try setting it to a double-tap of your primary use key, though. For any other key that's fine, but for the "use" key it will not work well.
+
 ## Long Press Delay
 * Config setting: `long_press_delay`
 * Default: `1000`
