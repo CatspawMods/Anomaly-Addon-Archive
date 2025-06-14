@@ -1,4 +1,4 @@
-# **Interaction Dot Marks**
+# **Interaction Dot Marks ("DotMarks")**
 ![DotMarks Title](packing/fomod/images/dotmarks-fomod.png)
 ----
 A blatant imitation of the "interaction dot" HUD markers in Stalker 2, and some of its other UI niceties such as floating prompts and secondary interactions.
@@ -8,17 +8,25 @@ Except not quite as cool, because Anomaly is jank. Hopefully this makes it a lit
 Also implements a "Secondary Interact" keybind with contextual actions such as unloading a weapon without having to pick it up, or taking everything from a stash without opening the loot window.
 > [!TIP]
 > Having difficulties? Check out the [Troubleshooting](#troubleshooting) section.
-# **Requirements**
-Requires **MCM 1.7.0** and the **20250306 modded exes** by demonized, or (better yet) the latest of both:
-* [Demonized modded exes (Github)](https://github.com/themrdemonized/xray-monolith)
-* [Mod Configuration Menu (Moddb)](https://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu)
-> [!CAUTION]
-> If your exes are older than that, a lot of the addon probably won't work very well--if at all. You should update your modded exes **ASAP**.
->
-> This addon *will not work at all* on vanilla Anomaly, and may crash spectacularly if you try.
 
-# **Strongly Recommended**
-These other fantastic addons are not required, but DotMarks is designed to integrate with them and extend its functionality with theirs--and vice-versa. Click the title of each to go to their Moddb pages.
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
+# Requirements
+## [The demonized modded exes (Github)](https://github.com/themrdemonized/xray-monolith), release 20250306 or newer
+You can always get the latest version at the link above, as well as find instructions (which you should follow!) for performing a clean installation.
+> [!CAUTION]
+> If your exes are older than that, or have outdated components left over from an older version, a lot of the addon probably won't work very well--if at all. You should perform a clean install of your modded exes **ASAP**.
+>
+> DotMarks *will not work at all* on vanilla Anomaly, and may crash spectacularly if you try.
+## [Mod Configuration Menu (Moddb)](https://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu), version 1.7.0 or newer
+You can also download it from the [Github page for MCM](https://github.com/RAX-Anomaly/Anomaly-Mod-Configuration-Menu/tree/main).
+> [!CAUTION]
+> Some modpacks, such as Anomaly Custom, use a version of MCM that they have hacked with hardcoded changes. Making a modpack dependent on an altered version of a core component like MCM means that you cannot upgrade it to a newer version, and this kind of installation is not supported by DotMarks.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
+# Strongly Recommended
+These other fantastic addons are not required, but DotMarks is designed to integrate with them and extend its functionality with theirs--or vice-versa. Click the title of each to go to their Moddb pages.
 > [!TIP]
 > All of these features either respect the relevant MCM settings of each addon, or have their own settings in the DotMarks MCM menu to configure or disable them.
 ## [FDDA or FDDA Redone](https://www.moddb.com/mods/stalker-anomaly/addons/fdda-redone)
@@ -31,31 +39,60 @@ If this addon is installed, DotMarks will use its excellent animation for the he
 With Sorting Plus, any items on the ground that you've marked as Favorites or Junk will show an appropriate icon on the Item Card.
 ## [Utjan's Item UI Improvements](https://www.moddb.com/mods/stalker-anomaly/addons/utjans-item-ui-improvements)
 DotMarks will show Utjan's part condition dots on the Item Card if it detects the addon.
-
 > [!NOTE]
-> FDDA and Utjan's Item UI are already part of GAMMA.
+> All of the above addons except for FDDA Redone are already part of GAMMA, and FDDAR is due to be added--there is no need to download them if you are a GAMMA user.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
+# Installation / Uninstallation
+**Interaction Dot Marks does not write anything to your save file. It is safe to install or uninstall mid-playthrough at any time.**
+## Install Instructions
+Use Mod Organizer 2. It's the only one supported. Others may work, but I can't help if they don't.
+1. Click on File > Install Mod... (Ctrl-M)
+
+![MO2 File Menu > Install Mod... (Ctrl-M)](https://i.imgur.com/8J0KBFn.png)
+
+2. Navigate to where you downloaded the Interaction Dot Marks archive
+3. Proceed through the steps of the FOMOD installer
+> [!TIP]
+> It's safe to accept the installer's defaults--all default options have been designed for broadest compatibility. If an addon it's patching isn't present, then the patch will automatically disable itself, with no other effect. The options are there in case anyone needs to disable them for any reason.
+## Uninstall Instructions
+Either uncheck DotMarks in your MO2 modlist so that it is no longer active, or right-click on it and select `Remove mod...` to uninstall the whole thing.
+
+If you're not using MO2, you're _completely_ on your own.
+> [!TIP]
+> But if your issue is that you don't like the way something looks or works, check out the [Personalization section](#personalization) before uninstalling--the MCM menu that comes with DotMarks is packed with options that will let you fine-tune the experience to your liking. And you'll need the [Advanced menu](#mcm--dotmarks--advanced-settings) there if you're going to [report an issue](#still-having-problems).
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # Personalization
 Everyone likes different things. "Play your own way" is axiomatic to me.
 
-If your issue is that you don't like the way something looks or works, the MCM menu under **DotMarks** is packed with options that will let you selectively disable or personalize just about everything in the addon. And you'll need the **Advanced** menu there if you're going to report an issue.
+DotMarks is designed to let you selectively personalize just about everything in the addon. Every part of the object interaction UI can be enabled, disabled, or moved wherever you want it to be on the screen. Every animation, every icon, every sound, every feature, every color.
 
-Everything in DotMarks is designed to be customizable. Nearly every individual part of the interaction UI can be enabled, disabled, or moved around. Every animation, every icon, every sound, every feature, every color. It's your UI--make it suit your preferences.
+* Like the new prompts and secondary actions, but don't want your HUD cluttered by stuff like the dot markers? [Turn them off](#hide-interaction-dot-markers).
+* Want those prompts to stay at the bottom of the screen like vanilla, instead of following the object? Turn on [fixed screen position](#use-fixed-screen-positions), and adjust the [primary and secondary prompts](#horizontal-offset-for-first-interact) to where you want them.
+* Got an ultrawide or high-resolution monitor, and need the [font](#font-settings) or [UI elements](#scale-gui-elements) to be bigger? You can do that.
 
-Just about any setting that would actually be useful to most users is available to you in MCM. However, there are also a large number of "under the hood" settings in the `configs\scripts\dotmarks_defaults.ltx` file--most of which are not in MCM. 
+It's your UI--make it suit your preferences.
+
+Nearly any setting that would actually be useful to most people is available in the MCM menu, which you can reach from the game's main menu by going to **MCM > DotMarks**. It will always be named that, regardless of language.
+
+However, there are also a large number of "under the hood" settings in the `configs\scripts\dotmarks_defaults.ltx` file--most of which are not in MCM. 
 > [!CAUTION]
-> For many of them, there's a very good reason for that! Don't touch anything below the line where it says not to. Everything customizable is above that line and well-commented, and most of what is useful to anyone but me is already in MCM.
+> For many of them, there's a very good reason for that! Don't touch anything below the line where it says not to:
+> ```
+> ; 	DON'T TOUCH BELOW THIS LINE
+> ```
+> It means it. Everything customizable is above that line and well-commented, and most of what is useful to anyone but me or another addon author is already in MCM.
 
-> [!NOTE]
-> If a setting is in MCM, don't try editing it in the config file--those values are treated as defaults, and your changes will get overwritten when MCM loads its settings.
-
-In the list of MCM settings that follow, the "Config setting" lines refer to that setting's variable name under the `[default_settings]` section in the above file, and the "Default" is its default value defined there.
-
-# MCM Menu: General Settings
+In the list of settings that follow, the "Config setting" lines refer to that setting's variable name under the `[default_settings]` section in the above file, and the "Default" is its default value defined there. Many have helpful tips about their usage, or important things to keep in mind when changing them.
+> [!IMPORTANT]
+> There's also a good reason why the file is named `dotmarks_defaults`. The values there are only baseline defaults, and MCM will override them with any values saved in `configs\axr_options.ltx`--every time it loads. If a setting is in MCM, it's quicker and easier to test changes there anyway.
+# MCM > DotMarks > General Settings
 ![General Settings banner](https://i.imgur.com/OXAK0xS.png)
 
+Nothing but the basics. In this menu you can enable or disable most of the core UI elements in DotMarks, or set the transparency of the main drop shadow.
 ## Show device battery percentage
 * Config setting: `show_item_charge`
 * Default: `true`
@@ -79,7 +116,7 @@ If enbabled, the condition of outfits and headgear will be appended to the name 
 
 If enabled, the color of the condition/battery text will change based on the value, using the same colors as the base game.
 > [!NOTE]
-> This feature may have a very minor performance cost on low-end machines. You can try disabling it for a tiny gain, if any, when there are many nearby pickup items that use condition or battery.
+> This feature may have a very minor performance cost on the most potato of low-end machines. You can try disabling it for a tiny gain, if any, when there are many nearby pickup items that use condition or battery.
 ## Show total weight in containers
 * Config setting: `show_stash_weight`
 * Default: `false`
@@ -91,7 +128,9 @@ Totals up the weight of all items within marked containers, appending this infor
 * Config setting: `show_item_card`
 * Default: `true`
 
-If enabled, a small display will be shown beside a pickup item's primary interaction prompt, showing its weight and value and (optionally, with *Utjan's Item UI Improvements* addon) indicator dots for the condition of weapon/armor parts.
+If enabled, a small display will be shown beside a pickup item's primary interaction prompt, showing its weight and value and, optionally (with the respective addons installed), icons for favorites and junk, as well as indicator dots for the condition of weapon/armor parts.
+> [!TIP]
+> Disabling the item card will hide all of the elements it contains. The part condition dots and fave/junk icons have their own MCM options if you only want to selectively disable one or both of those elements.
 ## Show quantity for multi-use items
 * Config setting: `show_multi_uses`
 * Default: `true`
@@ -118,12 +157,10 @@ If enabled, when there is more than one nearby item that can be picked up, scrol
 Sets the Alpha (transparency) channel for the main drop shadows underneath the interaction prompts or other UI elements.
 > [!TIP]
 Set to zero if you want to disable the main drop shadows entirely.
-
-
-# MCM Menu: Secondary Interact
+# MCM > DotMarks > Secondary Interact
 ![Secondary Interact banner](https://i.imgur.com/GgEwrVR.png)
 
-The Secondary Interact provides context-sensitive actions on a second prompt just below the Primary. If you have FDDA or FDDA Redone installed, and there are animations associated with those actions, they will play out just as if you'd taken the item and then immediately used it.
+The Secondary Interact provides context-sensitive actions on a second prompt that is located (by default) just below the Primary. If you have FDDA or FDDA Redone installed, and there are animations associated with those actions, they will play out just as if you'd taken the item and then immediately used it.
 
 Available actions include:
 * Eat, drink, smoke, or otherwise use any consumable without having to pick it up as a separate action
@@ -145,7 +182,7 @@ By default it is set to a long-press equivalent of your Primary Interact--in oth
 > The durations for Long Press and Double Tap actions are set for all addons in `MCM > MCM Keybinds`
 
 > [!WARNING]
-> While having the Secondary Interact as a variant of the same key used for the Primary is convenient, this requires the script to keep close track of--and sometimes block--the pressing of the "use" key. On very rare occasions this can interfere with normal pickup item interactions. If you have issues like that, try setting the Secondary Interact to a different key.
+> While having the Secondary Interact as a long-press or double-tap of the same key used for the Primary is convenient, this requires the script to keep close track of--and sometimes block--the pressing of the "use" key. On very rare occasions this can interfere with normal object interactions. If you keep having issues like that, you might need to try binding the Secondary Interact to a different key entirely.
 ## Long Press Delay
 * Config setting: `long_press_delay`
 * Default: `1000`
@@ -169,16 +206,17 @@ Enables the secondary action that allows you to unload and take the ammunition f
 
 Enables the secondary action that allows you to take everything from a container at once.
 > [!TIP]
-> If you have iTheon's Auto Looter addon installed, there is also an option in the Addons menu that allows you to autoloot the same way. It is enabled by default.
+> If you have iTheon's Auto Looter addon installed, there is also an option in the Addons menu that allows you to autoloot the same way. It is enabled by default, but won't be shown if this setting is disabled.
 ## Enable "heal NPC" action
 * Config setting: `sec_enable_heal_act`
 * Default: `true`
+
 Enables the secondary action that allows you to heal a wounded stalker on the ground.
 
 Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
 ## Default IED placement mode
 * Config setting: `sec_mode_setupthebomb`
-* Default: `0`
+* Default: `0` (proximity)
 
 Sets the default placement mode for IEDs deployed using a secondary action, or disables that action to make it unavailable. Valid settings:
 * `0`  : as a proximity mine
@@ -190,20 +228,14 @@ Sets the default placement mode for IEDs deployed using a secondary action, or d
 
 > [!TIP]
 > When targeting an undeployed IED pickup item, you can use the **Fire Mode** keybinds to cycle placement mode, and the mouse wheel to set the duration of the timer (if applicable).
-## Enable animation for healing action
-* Config setting: `sec_enable_heal_anim`
-* Default: `true`
-
-Enables an animation when healing wounded stalkers using the secondary action. If you have the [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10) addon installed, its animation is MUCH better and DotMarks will use that.
-
-Unlike the vanilla function, this will allow you to use any kind of medkit or stimpack you have--but it will always try to use the cheapest one, and (if [show_multi_uses](#show-quantity-for-multi-use-items) is enabled) it will show you on the prompt which one it will use, as well as how many uses you have remaining.
-
-# MCM Menu: Icon Settings
+# MCM > DotMarks > Icon Settings
 ![Icon Settings banner](https://i.imgur.com/ea0PiDo.png)
 
-The default "dot marker" is a small white dot with a thin black outline. When a marker has **focus**--that is, its Primary Interaction prompt is shown--the icon changes to an alternate *focus icon*. By default, this is a smaller white dot with a ring around it.
+The default "dot marker" is a small white dot with a thin black outline. When a marker has **focus**--that is, its Primary Interaction prompt is currently being displayed--the icon changes to an alternate *focus icon*. By default, this is a smaller white dot with a ring around it.
 
-However, many different types of objects have their own contextual focus icons to indicate their purpose or the nature of the interaction. In this menu you can individually enable or disable those icons to suit your preferences, or customize their size and color.
+![Active Focus dot marker ](https://i.imgur.com/ZBVBqfN.png)
+
+However, many different types of objects have their own contextual focus icons to indicate their purpose or the nature of the interaction. In this menu you can individually enable or disable those icons to suit your preferences, or customize their size and color for visibility, accessibility, or personal taste.
 
 The default color for all icons is ARGB 255,255,255,255--where the "A" stands for Alpha, or transparency, while the "RGB" values are the Red, Green, and Blue color channels, in that order.
 > [!TIP]
@@ -211,7 +243,13 @@ The default color for all icons is ARGB 255,255,255,255--where the "A" stands fo
 >
 > Alpha 255 is completely opaque, and 128 is about half-transparent. Setting any element's Alpha to zero will effectively hide it.
 
-All of the ARGB settings function the same: clicking the **button with the gear icon** will open the ARGB control, and the fields will become editable. Changing any value will show a preview of the chosen color on the focus icon itself. Clicking the **checkmark button** will send your changes to MCM, which will take effect once you commit MCM's settings. Clicking the **X-shaped icon** will cancel all changes in progress.
+All of the ARGB settings function the same: 
+
+* Clicking the **gold button with the gear icon** will open the ARGB control, and the fields will become editable.
+* Changing any value will show a preview of the chosen color on the focus icon itself.
+* Clicking the **green checkmark button** will send your changes to MCM, which will take effect once you commit MCM's settings.
+* Clicking the **red X-shaped icon** will cancel all changes in progress.
+
 > [!NOTE]
 > You must press **Enter** after you finish typing the new value, just as with any other input box in Anomaly. If you simply click away from the input box, your changes will be lost.
 
@@ -223,7 +261,7 @@ All of the ARGB settings function the same: clicking the **button with the gear 
 
 Scales the size of all markers between 0 and 2.0, which acts as a multiplier to their default size.
 > [!TIP]
-> You can set this to zero in order to hide all markers. It will have essentially the same effect as enabling `hide_interaction_dots`.
+> You can set this to zero in order to hide all markers. It will achieve essentially the same end result as enabling `hide_interaction_dots`.
 
 > [!NOTE]
 > Markers are scaled by distance, so in-game they usually will appear slightly smaller than they do here.
@@ -264,7 +302,7 @@ The following special icons are available here:
 ## NPCs with dialogue
 * Config settings: `enable_icon_talk`, `argb_icon_talk`
 > [!TIP]
-> By default, you won't see markers at all for stalkers who can't engage in conversation. If you'd rather still see dot markers for them, turn off the `hide_mute_stalkers` setting in the Advanced menu.
+> By default, you won't see markers at all for stalkers who can't engage in conversation. If you'd rather still see dot markers for them, turn off the [hide_mute_stalkers](#hide-marker-for-untalkative-stalkers) setting in the Advanced menu.
 ## Stashes
 * Config settings: `enable_icon_stash`, `argb_icon_stash`
 ## Doors
@@ -278,14 +316,13 @@ The following special icons are available here:
 > [!NOTE]
 > Breakable boxes and explosive objects do not have interaction prompts, and so do not receive focus--their special icon replaces the dot marker at all times.
 
-# MCM Menu: Object Settings
+# MCM > DotMarks > Object Settings
 ![Object Settings banner](https://i.imgur.com/SmLjFL4.png)
 
-The settings in this menu control whether or not markers are added to each different type of object that DotMarks recognizes. If any are distracting or less useful to you, turning off their setting will hide their visible markers entirely.
-
+The settings in this menu control whether or not markers are added to each different type of object that DotMarks recognizes. If any are distracting or less useful to you, turning off their setting will hide their visible markers entirely. 
 All of these are enabled by default with the exception of **Breakable Boxes** and **Explosive Objects**.
 > [!TIP]
-> As with the other methods of hiding markers, objects with hidden markers will still show interaction prompts normally, which is what you will almost always want--but if you prefer otherwise, you can turn off the `hidden_show_prompts` setting.
+> As with the other methods of hiding markers, objects with hidden markers will still show interaction prompts normally, which is what you will almost always want--but if you prefer otherwise, you can turn off the [hidden_show_prompts](#hidden-items-still-show-interaction-prompts) setting.
 
 There is a checkbox for each of the following object classes:
 ## Ammo 
@@ -305,7 +342,7 @@ Weapon and Outfit attachments.
 
 Dead bodies that contain something--whether mutant or stalker. Mutant corpses that have decayed or been looted cannot be interacted with, and thus will not have a marker.
 > [!TIP]
-> If you use my *Milspec PDA* addon, the `bodies_use_mpda_rules` setting will cause body markers to use Milspec PDA's visibility rules--meaning that you'll only see a marker if your PDA allows you to see them on your map.
+> If you use my *Milspec PDA* addon, the [bodies_use_mpda_rules](#body-markers-obey-milspec-pda-rules) setting will cause body markers to use Milspec PDA's visibility rules--meaning that you'll only see a marker if you also see them on your PDA map.
 ## Breakable boxes
 * Config setting: `scan_boxes`
 
@@ -327,7 +364,9 @@ Interactable doors that could be opened, whether or not they are currently locke
 
 Any static physics object that will explode when damaged or triggered. This includes volatile canisters and barrels, but also IEDs and other placed explosives.
 > [!NOTE]
-> The detection of this item type is based on whether the object, by section, has a `blast` attribute with a value. Some pickup items (e.g. the jerrycan) with a `blast` value are special cases classified instead as **Tools**.
+> The detection of this item type is based on whether the object, by section, has a `blast` attribute with a value. Some pickup items (e.g. the jerrycan) that have a `blast` value are special cases classified instead as **Tools**.
+>
+> If an addon needs to tell DotMarks that one of its items should be treated the same way, the author can use DLTX to add its section name to the `section_lookup` section in `dotmarks_defaults.ltx`. Addon authors will find other sections there with similar purposes--most of which should be fairly self-explanatory to anyone who has any business changing them.
 ## Grenades
 * Config setting: `scan_grenades`
 
@@ -381,16 +420,16 @@ Any equippable weapon, whether melee or ranged.
 
 Interactive workbenches, most of which are owned by a Technician.
 > [!NOTE]
-> This includes the Placeable Workbench from the *Hideout Furniture* addon, once it has been placed. The HF version will show a secondary interaction prompt for opening its control menu.
+> This includes the Placeable Workbench from the *Hideout Furniture* addon, if one has been placed. The HF version will show a secondary interaction prompt for opening its control menu.
 
-# MCM Menu: Other Addons
+# MCM > DotMarks > Other Addons
 ![Other Addons banner](https://i.imgur.com/hdvQEwj.png)
 
 DotMarks is designed to work hand-in-hand with a variety of popular addons, and many of those integrations have options which you can adjust in this menu.
 
 Because DotMarks detects objects based on many of the same fundamental attributes the game itself uses to classify items, it will support many other addons right out of the box, as long as they define their own items in a way consistent with the vanilla definitions.
 > [!NOTE]
-> But there are always going to be exceptions and conflicts sooner or later. If that happens, see the Troubleshooting section.
+> But there are always going to be exceptions and conflicts sooner or later. If that happens, see the [Troubleshooting](#troubleshooting) section, or contact the author of the conflicting addon.
 ## Dead stalkers use PAW faction patches
 * Config setting: `bodies_use_paw_patches`
 * Default: `false`
@@ -402,7 +441,7 @@ If my *Personal Adjustable Waypoint* addon is installed, enabling this option wi
 
 If my *Milspec PDA* addon is installed, enabling this option will cause bodies to be marked--or not--depending on whether the actor's PDA has the ability to see them on the map.
 > [!TIP]
-> If corpse markers are disappearing, or not appearing when you expect them to, check whether this setting is on--as well as Milspec PDA's own MCM settings, which are setting the terms for visibility.
+> If corpse markers are disappearing, or not appearing when you expect them to, check whether this setting is on--as well as Milspec PDA's own MCM settings, which are setting the terms for visibility. Also keep in mind that when MPDA clears its own marker (such as when you loot a body) that also hides it from DotMarks.
 ## Treat all squad members as talkative
 * Config setting: `all_squad_members_talk`
 * Default: false
@@ -463,7 +502,7 @@ If the *Sorting Plus* addon is installed, and an item has been marked as "junk",
 Fine-tunes the position of the Sorting Plus icon on the Item Card.
 ## Part dots orientation
 * Config setting: `parts_dot_orientation`
-* Default: `2`
+* Default: `2` (radial)
 
 By default, the part dots are arranged radially in a tight circle. You can instead choose to draw them as a horizontal or vertical line, but you'll probably want to adjust their positioning afterwards if you change this. Available settings:
 * `0`  : horizontal line
@@ -508,17 +547,17 @@ The internal name of the skill from *Skill System* that is used as the basis for
 > [!WARNING]
 > Bad things may happen if you typo this, and most of you will never have any need to tinker with it.
 
-# MCM Menu: Advanced Settings
+# MCM > DotMarks > Advanced Settings
 ![Advanced Settings banner](https://i.imgur.com/5R5ZGIV.png)
 
 Settings for troubleshooting, adjusting screen positions, enabling or disable specific features, or any other customization that doesn't fall neatly into one of the other menus. If there is a detail you might want to customize, and it's not in one of the other tabs, you'll probably find it here. 
 > [!WARNING]
-> This is the "Advanced" menu for a reason--most of these settings are just granular UI customization, but a few can really mess up the way things work if you make careless changes. Be sure to read the tooltips carefully so that you understand how each setting works.
+> This is the "Advanced" menu for a reason--most of these settings are just granular UI customization, but a few can really break DotMarks or tank your performance if you make careless changes. Be sure to read the tooltips carefully so that you understand how each setting works.
 
 > [!TIP]
 > That said, some of these options will be _essential_ if you run the game in a screen resolution that is anything other than 1920x1080--you may need to adjust fonts and element sizes or positions, among other things.
 >
-> Remember, you can always reset your settings to default in MCM if things get messed up. Doing so will only reset the settings for the menu page you're on. DotMarks does not write anything to your save file, so the worst that will happen after resetting to defaults is that you have to restart the game.
+> Remember, you can always reset your settings to default in MCM if things get messed up. Doing so will only reset the settings for the menu page you're on. The worst that will happen is that you have to restart the game.
 ## Enable debug logging
 * Config setting: `debuglogs`
 * Default: `false`
@@ -781,14 +820,18 @@ Radius of the faraway-object scan in meters, which is used to detect and initial
 > Higher values may have a performance cost due to markers remaining active when they aren't needed, and there is no benefit to setting it higher than a few meters.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+m have simple solutions.
 
 # Troubleshooting
-> [!WARNING]
-> Stalker's game engine is janky as fuck, and it sometimes does some weird shit. If you cannot make an issue happen again, **I don't want to know about it**.
->
-> Apologies, but I simply cannot chase down every random glitch that comes from Anomaly or your mod soup, even if one of my scripts shows up in the error--so **please do not waste my time or yours with any issue that does not happen again a second time.**
+DotMarks is a big addon with some very strict dependencies. Stuff is gonna break for _someone_.
 
-DotMarks is a big addon with some very strict dependencies. Here are the most common issues people have, and how to solve them:
+Hopefully it's not you. But if it is, keep reading and maybe you'll find a solution.
+> [!WARNING]
+> Stalker's game engine is old, janky as fuck, and sometimes does some wacky shit. Almost any flavor of weird could happen once. If you cannot make it happen twice, **I don't want to know about it**.
+>
+> Apologies, but I simply cannot chase down every random glitch that comes from Anomaly or someone's mod soup, even if one of my scripts shows up in the error--so **please do not waste my time or yours with any issue that does not reoccur, or which you cannot reproduce.**
+
+Here are the most common issues that DotMarks users have, and how to solve them:
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -812,7 +855,7 @@ If your version of the modded exes is earlier than `20250306`, you will see this
 
 If you are seeing that, you **MUST** update your version of the modded exes in order for object targeting to work properly. Otherwise the addon has to fall back on a vanilla targeting method that requires the crosshair to be *exactly* centered on the object, and you may have trouble interacting with some things.
 
-The reason is that new callbacks are defined in a file that is contained in one of the DB files in the modded exes installation. Older versions may have loose versions of the files that are now contained in the DB, which override the new ones and cause things to break.
+The reason is that new callbacks are defined in a file that is contained in one of the DB files in the modded exes installation. Older versions may have loose versions of the files that are now contained in the DB, which override the new ones just like any other file in the gamedata folder--and cause things to break.
 
 If you just update the binaries but somehow still have old DB files (or something is overwriting them), then some functions may *appear* to work, but the newly-added callback won't exist--so DotMarks has to rely on finicky, much less accurate methods of detecting the target object. Anything dependent on that callback, such as proper targeting and cycling through nearby pickups with the mouse wheel, won't work well if at all.
 
@@ -821,7 +864,7 @@ I repeat, and let me be completely clear:
 ### :exclamation: **IF YOU ARE SEEING THAT ERROR IN YOUR LOG ABOUT THE MISSING CALLBACK, YOUR MODDED EXES INSTALLATION IS STILL NOT CURRENT.** :exclamation:
 ### :exclamation: **EVEN IF YOU HAVE TRIED TO UPDATE THEM, THAT ERROR MEANS YOU MUST REINSTALL THEM FROM SCRATCH ACCORDING TO THE INSTRUCTIONS.** :exclamation:
 
-I'm sorry to be so blunt and shouty, but I've been testing it with users for a few months now, and the vast majority of the bug reports I get come down to the above issue.
+I'm sorry to be so blunt and shouty, but I've been testing it with users for nearly half a year now, and the vast majority of the bug reports I get come down to the above issue. If you do the clean reinstall correctly, it _will_ fix this issue.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -836,7 +879,7 @@ Some modpacks have embedded older versions of MCM, and some have even edited the
 ## Poor performance / FPS loss / stutter
 The setting that shows the total weight within stashes and other containers can cause an FPS loss in bases with many containers, or when there are many lootable bodies nearby. You can turn this off (or customize many other things) in the DotMarks MCM menu.
 
-Beyond that, while I am continually working to optimize it, understand that this addon is *completely replacing most of Anomaly's interaction UI*. It needs to keep track of all nearby objects at all times so that it can know when to show interaction prompts. There is going to be a certain minimum amount of overhead involved in doing that much work, meaning that optimization can only go so far.
+Beyond that, while I am continually working to optimize it, understand that this addon is *completely replacing most of Anomaly's interaction UI*. It needs to keep track of all nearby objects at all times so that it can know when to show interaction prompts. There is going to be a certain minimum amount of overhead involved in doing that much work, meaning that I can only do so much to optimize it.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -848,15 +891,18 @@ Go to **MCM > DotMarks > Other Addons** and disable [hijack_autoloot_keybind](#o
 ## Conflicts with other addons
 Interaction Dot Marks touches nearly every part of the game, and is involved with every single object interaction. I have designed it to be as conflict-free as possible, but I can't possibly account for--or support--every addon out there.
 For this reason I can only officially support two install configurations at this time:
-* Vanilla Anomaly running on current modded exes with supported addons
+* Vanilla Anomaly running on current modded exes with _supported_ addons
 * GAMMA with current modded exes and the [DEFAULT MODLIST ONLY](https://discord.com/channels/912320241713958912/977190498420801536)
 > [!IMPORTANT]
 > I consider an addon to be "supported" by DotMarks if it is mentioned by name in either this documentation or the addon itself.
+
 If and when my personal life and free time allow, I will do what I can to help sort out issues you might have with the current version of DotMarks, running on the above two configurations.
 
-That isn't to say DotMarks won't work on other installations--quite the contrary. Just that if something goes wrong, **I'm not signing up to figure out what it is**.
+If your modlist is anything else, then you can still report an issue--but I can't promise anything.
+> [!IMPORTANT]
+> That isn't to say DotMarks won't work on other installations--quite the contrary! Most of you will have no issues. But if something goes wrong in someone's mod soup, **I'm not signing up to figure out what it is**.
 
-Some conflicts are easy to fix--a new item from an addon not being detected correctly, or simple issues like that, might just require adding a few lines in a config file. But if your Stalker soup with hundreds of mods is encountering an issue no one else has ever seen before and that I can't reproduce, it's very likely something in your modlist, not an issue with DotMarks that needs fixing--and either you or the other addon's author will probably need to sort that out yourself.
+Some conflicts are easy to fix. A new item from an addon not being detected correctly--or other object identification issues like that--might just require adding a few lines in a config file. But if your Stalker soup with hundreds of mods is encountering an issue no one else has ever seen before and that I can't reproduce, it's very likely something in your modlist, not an issue with DotMarks that needs fixing--and either you or the other addon's author will probably need to sort that out yourself.
 > [!TIP]
 > If you're an addon author with an object that isn't being handled correctly, I've implemented hooks in DotMarks that make it extremely simple to add support yourself. It may just be a matter of adding your item's information to [dotmarks_defaults.ltx](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/packing/Main/gamedata/configs/scripts/dotmarks_defaults.ltx) in the `[section_lookup]` or one of the blacklists via DLTX, or injecting custom handling using the `register_addon_handler()` function in [ui_hud_dotmarks.script](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/packing/Main/gamedata/scripts/ui_hud_dotmarks.script). See the [Fillable Canteens Water Pumps patch](https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/packing/Modules/WaterPumps/gamedata/scripts/dotmarks_canteen_water_pumps.script) for an example of how to do the latter.
 
@@ -877,7 +923,7 @@ If you need to report a problem, first do this:
 ### 2. CHECK DEPENDENCIES
 Follow the instructions in the [Missing dependencies](#missing-dependencies) section.
 ### 3. REPORT THE ISSUE
-If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue. If the issue is visual, or concerns a specific object, include a screenshot of what looks wrong, in the spot where you made your debug savegame.
+If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue--including your modlist, if you're not using the [stock default GAMMA modlist](https://discord.com/channels/912320241713958912/977190498420801536). If the issue is visual, or concerns a specific object, include a screenshot of what looks wrong, taken in the spot where you made your debug savegame.
 > [!TIP]
 > You will find the game log in `<Anomaly Install Folder>\appdata\logs`. If you're a GAMMA user, this will be in the location where you installed the base game.
 
