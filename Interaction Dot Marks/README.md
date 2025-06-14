@@ -585,7 +585,7 @@ If enabled, the interaction dots themselves will be hidden, but the interaction 
 
 If enabled, no marker will be shown at all for stalkers who can't be engaged in conversation.
 > [!TIP]
-> There is little point to disabling this setting, as untalkative stalkers have no other interactions aside from shooting them in the face. If you're using an addon that enables conversation with all stalkers, set `all_squad_members_talk` to true instead of changing this.
+> There is little point to disabling this setting, as untalkative stalkers have no other interactions aside from shooting them in the face. If you're using an addon that enables conversation with all stalkers, set [all_squad_members_talk](#treat-all-squad-members-as-talkative) to true instead of changing this.
 ## Hidden items still show interaction prompts
 * Config setting: `hidden_show_prompts`
 * Default: `true`
@@ -810,7 +810,7 @@ Interval between the more-intensive faraway-object scans, in milliseconds. Small
 * Config setting: `near_scan_radius`
 * Default: `4`
 
-Radius of the nearby-object scan in meters. Many things are based on this value, such as the distances at which markers fade out and scale up/down. It is recommended that you don't adjust this value, or do so in very small increments.
+Radius of the nearby-object scan in meters. Many things are based on this value, such as the distances at which markers fade out and scale up/down. It is recommended that you don't adjust this value, or do so in _very_ small increments.
 ## Radius of far scan
 * Config setting: `early_scan_radius`
 * Default: `3`
@@ -820,7 +820,6 @@ Radius of the faraway-object scan in meters, which is used to detect and initial
 > Higher values may have a performance cost due to markers remaining active when they aren't needed, and there is no benefit to setting it higher than a few meters.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
-m have simple solutions.
 
 # Troubleshooting
 DotMarks is a big addon with some very strict dependencies. Stuff is gonna break for _someone_.
