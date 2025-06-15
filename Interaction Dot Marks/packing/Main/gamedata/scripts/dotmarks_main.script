@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC6"
-release_date    = 20250609
+script_version  = "1.0-RC7"
+release_date    = 20250614
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -65,7 +65,16 @@ local gts               = game.translate_string
 local in_sleep_zone     = false
 cfg                     = nil
 --[[======================================================================
-      MAIN CONFIG TABLE
+        ADDON SUPPORT CALLBACKS
+    The following two new callbacks allow other addons to take action 
+    before or after a marker is initialized:                          --]]
+AddScriptCallback("dotmarks_on_before_marker_init")
+AddScriptCallback("dotmarks_on_marker_init")
+--[[======================================================================
+
+--]]
+--[[======================================================================
+        MAIN CONFIG TABLE
     For the most part this sets up a number of subordinate functions that
     are used for item classification, for generating marker attributes 
     once an object has been classified, and a few other pieces.
@@ -100,7 +109,7 @@ local base_config = {
                 )
             end
         ),
-        Bodies = (
+        Bodies = ( 
             function(obj) return obj and (is_living_thing(obj) and not obj:alive()) end
             -- Dead NPCs, whether stalker or monster
         ),
@@ -589,13 +598,15 @@ local base_config = {
             function(obj)
                 if not obj then return end
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
-                local name = obj:name()
+                local sec = obj:section()
                 return {
                     logged_type     = "an artefact",
                     is_pickup       = true,
                     no_sec          = true,
                     is_arty         = true,
-                    in_container    = not not name:find("_lead_box") or name:find("_aac") or name:find("_aam") or name:find("_iam") or nil,
+                    in_container    = is_artefact_in_container(sec) or nil,
+                    --inspect_anim    = get_artefact_anim_name(sec) or nil,
+                    -- Feature not ready
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
@@ -1095,6 +1106,31 @@ function is_recipe_known(sec)
     end
 end
 
+function is_artefact_in_container(sec)
+    return not not (
+        sec:find("af_aac") or
+        sec:find("af_aam") or
+        sec:find("af_iam") or
+        sec:find("_lead_box")
+    )
+end
+
+function get_artefact_true_section(sec)
+    if sec and is_artefact_in_container(sec) then
+        if system_ini():line_exist(sec, "1icon_layer") then
+            return system_ini():r_string_ex(sec, "1icon_layer", "")
+        end
+    end
+    return sec
+end
+
+function get_artefact_anim_name(sec)
+    if not af_inspect then return end
+    local anim = sec and ("tch_" .. get_artefact_true_section(sec) .. "_hud")
+    if not (anim and af_inspect.ini:section_exist(anim)) then return end
+    return anim
+end
+
 function is_squad_leader(npc)
     return npc and xr_conditions.is_squad_commander(nil, npc)
 end
@@ -1193,7 +1229,7 @@ end
 
 function get_bone_list(obj, hudmodel)
     if not (obj and obj.list_bones) then return end
-    return obj:list_bones(hudmodel)
+    return obj:list_bones(hudmodel and true)
 end
 
 function get_bone_table(obj, hudmodel)

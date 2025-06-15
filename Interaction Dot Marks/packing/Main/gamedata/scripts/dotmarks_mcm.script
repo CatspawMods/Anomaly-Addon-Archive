@@ -368,6 +368,139 @@ end
 
 -- ======================================================================
 
+function generate_icons_menu()
+	local task_icons =  {
+		pri = cfg.swap_task_pri and cfg.swap_task_pri.texture,
+		sec = cfg.swap_task_sec and cfg.swap_task_sec.texture
+	}
+	local gr = {
+	-- ======================================================================
+	-- 	Main header and marker settings
+		{ id = "menuslide_icons", 		type = "slide", link = "ui_mcm_dotmarks_banner_icons", size = {512,50}, spacing = 0 },
+
+		{ id = "iconheader", type = "desc", text = "ui_mcm_dotmarks_header_icons",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+			dmark_bpos 		= -10
+		},
+
+
+		{ id = "dot_marker_size", 		type = "track",		val = 2, min = 0, step = 0.1, max = 2, def = cfg.dot_marker_size,
+			on_selection_functor= {dotmarks_mcm.on_dotmark_size_select},
+			ui_hook_functor 	= {dotmarks_mcm.init_dotmark_preview},
+			icon 	= cfg.marker_dotmark or "",
+			icon_w 	= (cfg.dotmark_preset.width or 5),
+			icon_h 	= (cfg.dotmark_preset.height or 5),
+			icon_x 	= 370,
+			icon_y 	= 12,
+		},
+
+		get_argb_input_element("argb_dot_normal", cfg.colors.clr_dmark_norm),
+
+		get_argb_input_element("argb_dot_focus", cfg.colors.clr_dmark_focus),
+
+	-- ======================================================================
+	-- 	Iterate focus icons for service NPCs
+		{ id = "enable_icon_tasks", type = "check", val = 1, def = cfg.enable_icon_tasks,
+			ui_hook_functor = {dotmarks_mcm.init_icon_list},
+			icon_list 	= task_icons,
+			icon_w 		= 32, 	icon_h 		= 32,
+			icon_x 		= 450, 	icon_y 		= 8,
+		},
+
+		{ id = "divider", type= "line" },
+
+		{ id = "enable_icon_services", type = "check", val = 1, def = cfg.enable_icon_services,
+			ui_hook_functor = {dotmarks_mcm.init_icon_list},
+			icon_list 	= cfg.service_icons,
+			icon_w 		= 32, 	icon_h 		= 32,
+			icon_x 		= 450, 	icon_y 		= 8,
+		}
+	}
+	local used = {}
+	for k,v in spairs(cfg.service_icons) do
+		if not used[v] then
+			local service = v:sub(v:find("^ui_catsy_marker_") + 16)
+			local opt_id = "argb_service_" .. service
+			table.insert(gr, get_argb_input_element(opt_id))
+			used[v] =  true
+		end
+	end
+
+	table.insert(gr, { id = "divider", type= "line" })
+
+	-- ======================================================================
+	-- 	Iterate the rest of the focus icons
+	local tbl = {}
+	local icons = {}
+
+	for k,v in pairs(cfg.setting_icons) do
+		local iclass = cfg.setting_icons[k]
+		local icon 	= iclass and cfg.tex[iclass]
+		icons[k] = icon
+	end
+	icons["enable_icon_butcher"] = cfg.swap_butcher and cfg.swap_butcher.texture
+
+	for k,v in pairs(icons) do
+		tbl[#tbl + 1] = k
+	end
+
+	table.sort(tbl, function(a, b) return a > b end)
+	for _, opt_id in spairs(tbl) do
+		local argb_id = opt_id:gsub("enable", "argb")
+		local enabled = cfg[opt_id]
+		local icon 	= icons[opt_id]
+		
+		table.insert(gr, 
+			{ id = opt_id, type = "check", val = 1, def = cfg[opt_id],
+				ui_hook_functor = {dotmarks_mcm.init_simple_icon},
+				icon = icon or "",
+				icon_w = 24, 	icon_h = 24,
+				icon_x = 450, 	icon_y = 11
+			}
+		)
+		table.insert(gr, get_argb_input_element(argb_id))
+	end
+
+	table.insert(gr, { id = "divider", type= "line" })
+
+	return gr
+end
+
+-- ======================================================================
+
+function generate_objs_menu()
+	local gr = {
+	-- ======================================================================
+	-- 	Main header
+		{ id = "menuslide_objs", type = "slide", link = "ui_mcm_dotmarks_banner_objs", size = {512,50}, spacing = 0 },
+
+		{ id = "scanheader", type = "desc", text = "ui_mcm_dotmarks_scanmenu",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head140",
+			dmark_bpos 		= -10
+		},
+	}
+	
+	-- ======================================================================
+	-- 	Iterate scannable objects
+	tbl = {}
+	for k,v in pairs(cfg.scan) do
+		tbl[#tbl + 1] = k
+	end
+	table.sort(tbl)
+	for _, item_class in spairs(tbl) do
+		local enabled 	= cfg.scan[item_class]
+		local opt_id 	= "scan_" .. string.lower(item_class)
+		
+		table.insert(gr, { id = opt_id, type= "check", val = 1, def = enabled })
+	end
+	table.insert(gr, { id = "divider", type= "line" })
+
+	return gr
+end
+
+-- ======================================================================
 
 function get_mods_menu()
 	return {
@@ -548,139 +681,6 @@ function get_adv_menu()
 
 		{ id = "divider", type= "line" },
 	}
-end
-
--- ======================================================================
-
-
-function generate_icons_menu()
-	local task_icons =  {
-		pri = cfg.swap_task_pri and cfg.swap_task_pri.texture,
-		sec = cfg.swap_task_sec and cfg.swap_task_sec.texture
-	}
-	local gr = {
-	-- ======================================================================
-	-- 	Main header and marker settings
-		{ id = "menuslide_icons", 		type = "slide", link = "ui_mcm_dotmarks_banner_icons", size = {512,50}, spacing = 0 },
-
-		{ id = "iconheader", type = "desc", text = "ui_mcm_dotmarks_header_icons",
-			ui_hook_functor = {dotmarks_mcm.init_header_element},
-			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
-			dmark_bpos 		= -10
-		},
-
-
-		{ id = "dot_marker_size", 		type = "track",		val = 2, min = 0, step = 0.1, max = 2, def = cfg.dot_marker_size,
-			on_selection_functor= {dotmarks_mcm.on_dotmark_size_select},
-			ui_hook_functor 	= {dotmarks_mcm.init_dotmark_preview},
-			icon 	= cfg.marker_dotmark or "",
-			icon_w 	= (cfg.dotmark_preset.width or 5),
-			icon_h 	= (cfg.dotmark_preset.height or 5),
-			icon_x 	= 370,
-			icon_y 	= 12,
-		},
-
-		get_argb_input_element("argb_dot_normal", cfg.colors.clr_dmark_norm),
-
-		get_argb_input_element("argb_dot_focus", cfg.colors.clr_dmark_focus),
-
-	-- ======================================================================
-	-- 	Iterate focus icons for service NPCs
-		{ id = "enable_icon_tasks", type = "check", val = 1, def = cfg.enable_icon_tasks,
-			ui_hook_functor = {dotmarks_mcm.init_icon_list},
-			icon_list 	= task_icons,
-			icon_w 		= 32, 	icon_h 		= 32,
-			icon_x 		= 450, 	icon_y 		= 8,
-		},
-
-		{ id = "divider", type= "line" },
-
-		{ id = "enable_icon_services", type = "check", val = 1, def = cfg.enable_icon_services,
-			ui_hook_functor = {dotmarks_mcm.init_icon_list},
-			icon_list 	= cfg.service_icons,
-			icon_w 		= 32, 	icon_h 		= 32,
-			icon_x 		= 450, 	icon_y 		= 8,
-		}
-	}
-	local used = {}
-	for k,v in spairs(cfg.service_icons) do
-		if not used[v] then
-			local service = v:sub(v:find("^ui_catsy_marker_") + 16)
-			local opt_id = "argb_service_" .. service
-			table.insert(gr, get_argb_input_element(opt_id))
-			used[v] =  true
-		end
-	end
-
-	table.insert(gr, { id = "divider", type= "line" })
-
-	-- ======================================================================
-	-- 	Iterate the rest of the focus icons
-	local tbl = {}
-	local icons = {}
-
-	for k,v in pairs(cfg.setting_icons) do
-		local iclass = cfg.setting_icons[k]
-		local icon 	= iclass and cfg.tex[iclass]
-		icons[k] = icon
-	end
-	icons["enable_icon_butcher"] = cfg.swap_butcher and cfg.swap_butcher.texture
-
-	for k,v in pairs(icons) do
-		tbl[#tbl + 1] = k
-	end
-
-	table.sort(tbl, function(a, b) return a > b end)
-	for _, opt_id in spairs(tbl) do
-		local argb_id = opt_id:gsub("enable", "argb")
-		local enabled = cfg[opt_id]
-		local icon 	= icons[opt_id]
-		
-		table.insert(gr, 
-			{ id = opt_id, type = "check", val = 1, def = cfg[opt_id],
-				ui_hook_functor = {dotmarks_mcm.init_simple_icon},
-				icon = icon or "",
-				icon_w = 24, 	icon_h = 24,
-				icon_x = 450, 	icon_y = 11
-			}
-		)
-		table.insert(gr, get_argb_input_element(argb_id))
-	end
-
-	table.insert(gr, { id = "divider", type= "line" })
-
-	return gr
-end
-
-function generate_objs_menu()
-	local gr = {
-	-- ======================================================================
-	-- 	Main header
-		{ id = "menuslide_objs", type = "slide", link = "ui_mcm_dotmarks_banner_objs", size = {512,50}, spacing = 0 },
-
-		{ id = "scanheader", type = "desc", text = "ui_mcm_dotmarks_scanmenu",
-			ui_hook_functor = {dotmarks_mcm.init_header_element},
-			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head140",
-			dmark_bpos 		= -10
-		},
-	}
-	
-	-- ======================================================================
-	-- 	Iterate scannable objects
-	tbl = {}
-	for k,v in pairs(cfg.scan) do
-		tbl[#tbl + 1] = k
-	end
-	table.sort(tbl)
-	for _, item_class in spairs(tbl) do
-		local enabled 	= cfg.scan[item_class]
-		local opt_id 	= "scan_" .. string.lower(item_class)
-		
-		table.insert(gr, { id = opt_id, type= "check", val = 1, def = enabled })
-	end
-	table.insert(gr, { id = "divider", type= "line" })
-
-	return gr
 end
 
 -- ======================================================================
