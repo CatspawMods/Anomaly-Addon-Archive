@@ -50,6 +50,10 @@
 		<text>Take and read</text>
 	</string>
 
+	<string id="st_alti_inspect">
+		<text>Take and inspect</text>
+	</string>
+
 	<string id="st_alti_search">
 		<text>Search</text>
 	</string>
@@ -1156,6 +1160,13 @@
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_heal_anim_desc">
 		<text>If you have the Animated NPC Healing addon installed, this option enables an animation when healing wounded stalkers using the secondary action.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_arty_anim">
+		<text>Enable inspect animation for artefacts</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_arty_anim_desc">
+		<text>If you have the Artfacts Inspection addon installed, this option enables its inspect animation as a secondary action for any marked artefacts.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale">

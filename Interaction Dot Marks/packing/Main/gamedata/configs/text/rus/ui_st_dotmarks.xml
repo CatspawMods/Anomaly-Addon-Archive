@@ -49,7 +49,11 @@
 	<string id="st_alti_read">
 		<text>Поднять и прочитайте</text>
 	</string>
-	
+
+	<string id="st_alti_inspect">
+		<text>Поднять и осмотрите</text>
+	</string>
+		
 	<string id="st_alti_search">
 		<text>Обыскать</text>
 	</string>
@@ -1170,6 +1174,13 @@
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_heal_anim_desc">
 		<text>Если у вас установлен аддон «Анимированное исцеление NPC», эта опция включает анимацию при исцелении раненых сталкеров с помощью вторичного действия.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_arty_anim">
+		<text>Включить анимацию осмотра для артефактов</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_arty_anim_desc">
+		<text>Если у вас установлен аддон Осмотр артефактов, эта опция включает его анимацию осмотра в качестве вторичного действия для всех отмеченных артефактов.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_scale">

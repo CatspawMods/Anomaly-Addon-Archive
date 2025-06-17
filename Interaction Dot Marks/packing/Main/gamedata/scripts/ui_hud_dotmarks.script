@@ -282,7 +282,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					
 					cfg.in_pickup_range[id] = mark.is_pickup and in_range and dist or nil
 
-					if mark.is_arty and (not mark.in_container) and (not can_actor_see_artefact(obj)) then
+					if mark.is_arty and (not mark.arty_container) and (not can_actor_see_artefact(obj)) then
 						hide_marker_and_prompts(mark.mark_id, "artefact not visible")
 						return
 					end
@@ -3334,6 +3334,13 @@ function setup_sec_interact_prompt(mark)
 			mark.name
 		)
 		func = unload_and_take_ammo
+	elseif mark.inspect_anim then
+		if not cfg.sec_enable_arty_anim then return end
+		func = take_and_inspect
+		int_text = string.format("%s %s",
+			first_upper(gts("st_alti_inspect")),
+			mark.name
+		)
 	elseif mark.placeable_mine then
 		iedmode = get_ied_text()
 		if not iedmode then return end
@@ -3529,49 +3536,46 @@ function obj_has_available_sec_interact(obj, id, mark)
 	id = id or (obj and safeid(obj))
 	obj = obj or (id and get_game_object(id))
 	if not obj then return end
-	local sec = obj:section()
-	if cfg.useless_shit[sec] then return end
 
-	local cls           = obj and obj:clsid()
+	local object_class 	= "none"
+	local has_interact 	= false
+	local section 		= obj:section()
+	local cls       	= obj:clsid()
 	local is_melee      = IsMelee(nil, cls)
-	local has_ammo      = marked_obj_has_ammo(id) and not is_meele
-	local is_consumable = cfg.is_item.Consumables(obj)
-	local is_readable   = (mark and mark.is_readable)
-	local has_batteries = (mark and mark.has_battery)
-	local is_backpack   = (mark and mark.is_backpack)
-	local is_mine 		= (mark and mark.placeable_mine)
-	--local can_inspect 	= not not (mark and mark.inspect_anim)
-	local is_interact   = mark.is_container or mark.hf_workshop
 
-	local required      = (
-		is_consumable or
-		has_batteries or
-		is_readable or
-		--can_inspect or
-		has_ammo or
-		is_mine or
-		is_interact
-	)
+	if cfg.useless_shit[section] then
+		object_class = "useless_shit (Banned)"
+	elseif is_melee then
+		object_class = "melee_weapon (Banned)"
+	elseif (not not mark.money) then
+		object_class = "is_money (Banned)"
+	elseif marked_obj_has_ammo(id) and not is_melee then
+		object_class = "has_ammo (Allowed)"
+		has_interact = true
+	elseif cfg.is_item.Consumables(obj) then
+		object_class = "is_consumable (Allowed)"
+		has_interact = true
+	elseif (mark and mark.is_readable) then
+		object_class = "is_readable (Allowed)"
+		has_interact = true
+	elseif (mark and mark.has_battery) then
+		object_class = "has_battery (Allowed)"
+		has_interact = true
+	elseif (mark and mark.is_backpack) then
+		object_class = "is_backpack (Allowed)"
+		has_interact = true
+	elseif (mark and mark.placeable_mine) then
+		object_class = "placeable_mine (Allowed)"
+		has_interact = true
+	elseif not not (mark and mark.inspect_anim) then
+		object_class = "inspectable (Allowed)"
+		has_interact = true
+	elseif (mark.is_container or mark.hf_workshop) then
+		object_class = "furniture (Allowed)"
+		has_interact = true
+	end
 
-	local banned 		= (
-		is_melee or
-		mark.money
-	)
-
-	local has_interact = required and not banned
-
-	local _ = debug_dump and vl("[obj_has_available_sec_interact] %s: %s\n" ..
-		"^ Required: interaction %s | batt %s | ammo %s | eatable %s | readable %s\n" ..
-		"~ Banned: money %s",
-		nameid(obj, id),
-		has_interact,
-		is_interact,
-		has_batteries,
-		has_ammo,
-		is_consumable,
-		is_readable,
-		mark.money
-	)
+	vl("[obj_has_available_sec_interact] %s | classification: %s", has_interact, object_class)
 	return has_interact
 end
 
@@ -4058,37 +4062,18 @@ function update_mark_after_autoloot(id)
 end
 
 function inspect_artefact(id)
-	-- Adapted from the version in af_inspect.script
-	-- I'd just use theirs, but it automatically hooks into backpack animations
 	local obj = get_game_object(id)
-	local sec = obj and obj:section()
-	if not (db.actor and sec and af_inspect) then return end
-
-	af_inspect.af_anim_item = get_artefact_true_section(sec) .. "_hud"
-	
-	if not af_inspect.ini:section_exist("tch_"..af_inspect.af_anim_item) then
-		af_inspect.af_anim_item = nil
-		af_inspect.active_slot = nil
-		get_hud():HideActorMenu()
-		return
+	local mark = id and cfg.markers[id]
+	if (af_inspect and obj and mark) then
+		if cfg.play_arty_container_sfx then
+			local sfx = mark.arty_container and cfg.container_sfx[mark.arty_container]
+			if sfx then
+				utils_obj.play_sound(sfx)
+			end
+		end
+		af_inspect.inspect(obj)
 	end
-
-	get_hud():HideActorMenu()
-	level.disable_input()
-	fov = get_console():get_float("hud_fov")
-	
-	give_object_to_actor("tch_"..af_inspect.af_anim_item)	
-	level.add_call( function() return db.actor:object("tch_"..af_inspect.af_anim_item) end, function()
-		db.actor:activate_slot(14)
-	end)
-	
-	level.add_call( function() return db.actor:active_slot() == 14 end, function()
-		get_console():execute("hud_fov 0.55")
-		af_inspect.particle:play_at_pos(af_inspect.get_play_pos())
-		level.enable_input()
-		local r, g, b = af_inspect.get_light_rgb(af_inspect.af_anim_item)
-		af_inspect.light_on(r,g,b,1,50,0.2,0.3)
-	end)
+	return true
 end
 
 function try_init_disarm_anim(id, mark, skip_anim_check)
@@ -4438,11 +4423,20 @@ function delay_read_action(id)
 	return true
 end
 
+function take_and_inspect(id)
+	if id then
+		force_actor_to_take(id)
+		CreateTimeEvent("dm_delay_inspect", time_global(), cfg.item_use_delay, inspect_artefact, id)
+	end
+	return true
+end
+
 function take_and_read(id)
 	if id then
 		force_actor_to_take(id)
-		CreateTimeEvent("delayed_actor_use", time_global(), cfg.item_use_delay, delay_read_action, id)
+		CreateTimeEvent("dm_delay_read", time_global(), cfg.item_use_delay, delay_read_action, id)
 	end
+	return true
 end
 
 function handle_secondary_interact(id)
@@ -4637,7 +4631,7 @@ function update_hint_filters()
 	if is_empty(cfg.hint_filter.enabled) then return end
 	local text = cfg.hint_filter.update_text()
 	if not text then return end
-	--dump("[%s] Hint filter update%s", time_global(), text and (" - text is: "..text) or ", no text")
+	dump("[%s] Hint filter update%s", time_global(), text and (" - text is: "..text) or ", no text")
 	tracelog("end", "update_hint_filters")
 end
 
@@ -4650,7 +4644,8 @@ function update_mark_vis_ignores()
 end
 
 local function perform_debugging_checks()
-	dump("last target: %s | crosshair %s", hmm.last_target, hmm.last_crosshair)
+	if not hmm then return end
+	dump("[Targets] Lookat curr: %s last %s | Pickup curr: %s last %s | Xhair curr: %s last %s", hmm.curr_target, hmm.last_target, hmm.curr_pickup, hmm.last_pickup, hmm.curr_crosshair, hmm.last_crosshair)
 end
 
 

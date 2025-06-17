@@ -526,6 +526,8 @@ function get_mods_menu()
 
 		{ id = "sec_enable_heal_anim", 		type = "check", 	val = 1, def = cfg.sec_enable_heal_anim },
 
+		{ id = "sec_enable_arty_anim", 		type = "check", 	val = 1, def = cfg.sec_enable_arty_anim },
+
 		{ id = "divider", type= "line" },
 
 		{ id = "takeall_does_autoloot", 	type = "check", 	val = 1, min = -384, max = 768, def = cfg.takeall_does_autoloot },

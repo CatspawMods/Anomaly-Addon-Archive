@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC7"
-release_date    = 20250614
+script_version  = "1.0-RC8"
+release_date    = 20250617
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -598,15 +598,15 @@ local base_config = {
             function(obj)
                 if not obj then return end
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
-                local sec = obj:section()
+                local sec   = obj:section()
+                local anim  = get_artefact_anim_name(sec) or nil
                 return {
                     logged_type     = "an artefact",
                     is_pickup       = true,
-                    no_sec          = true,
+                    inspect_anim    = anim,
+                    no_sec          = (not anim),
                     is_arty         = true,
-                    in_container    = is_artefact_in_container(sec) or nil,
-                    --inspect_anim    = get_artefact_anim_name(sec) or nil,
-                    -- Feature not ready
+                    arty_container  = get_artefact_container_type(sec) or nil,
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
@@ -1106,17 +1106,17 @@ function is_recipe_known(sec)
     end
 end
 
-function is_artefact_in_container(sec)
-    return not not (
-        sec:find("af_aac") or
-        sec:find("af_aam") or
-        sec:find("af_iam") or
-        sec:find("_lead_box")
-    )
+function get_artefact_container_type(sec)
+    return (
+        sec:find("af_aac") and "aac" or
+        sec:find("af_aam") and "aam" or
+        sec:find("af_iam") and "iam" or
+        sec:find("_lead_box") and "lead"
+    ) or nil
 end
 
 function get_artefact_true_section(sec)
-    if sec and is_artefact_in_container(sec) then
+    if sec and get_artefact_container_type(sec) then
         if system_ini():line_exist(sec, "1icon_layer") then
             return system_ini():r_string_ex(sec, "1icon_layer", "")
         end
