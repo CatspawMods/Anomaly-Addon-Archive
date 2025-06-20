@@ -35,12 +35,14 @@ Secondary actions--for example, using consumables--will automatically hand the a
 > Even if you don't normally use either version of FDDA, I recommend giving this a try. It's hard to overstate how immersive it is to see your character pick up an item and immediately begin using it, all without entering your inventory or any other menu.
 ## [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10)
 If this addon is installed, DotMarks will use its excellent animation for the heal-an-NPC secondary action.
+## [Artifacts Inspection](https://www.moddb.com/mods/stalker-anomaly/addons/artifacts-inspectionv10)
+If this addon is installed, DotMarks will add a secondary action for artefacts to display their inspect animations.
 ## [Sorting Plus](https://www.moddb.com/mods/stalker-anomaly/addons/sorting-plus)
 With Sorting Plus, any items on the ground that you've marked as Favorites or Junk will show an appropriate icon on the Item Card.
 ## [Utjan's Item UI Improvements](https://www.moddb.com/mods/stalker-anomaly/addons/utjans-item-ui-improvements)
 DotMarks will show Utjan's part condition dots on the Item Card if it detects the addon.
 > [!NOTE]
-> All of the above addons except for FDDA Redone are already part of GAMMA, and FDDAR is due to be added--there is no need to download them if you are a GAMMA user.
+> _Sorting Plus_ and _Utjan's Item UI_ are already part of GAMMA--there is no need to download them if you are a GAMMA user.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -54,8 +56,22 @@ Use Mod Organizer 2. It's the only one supported. Others may work, but I can't h
 
 2. Navigate to where you downloaded the Interaction Dot Marks archive
 3. Proceed through the steps of the FOMOD installer
+## Install Options
+### Hide floating inventory icons
+In vanilla Anomaly, floating inventory icons appear on the HUD to identify the primary object that is targeted for pickup. DotMarks looks better without these icons, and this option hides them.
+## Addon Support Options
+### Animated NPC Healing
+If you use the Animated NPC Healing addon, this patch allows DotMarks to trigger that animation when using a secondary action to heal a wounded stalker.
+### Anomaly Popup Messages fix
+If you use the Anomaly Popup Messages addon, this patch prevents APM from displaying duplicate notifications for item pickup.
+### Auto Looter bugfix and compatibility
+If you use the Auto Looter addon, this patch allows autolooting as a secondary action in place of the take-all function. It also fixes a longstanding bug in Auto Looter where it does not send the actor_on_item_take_from_box callback when remote looting.
+### Fillable Canteen Water Pumps
+If you use the Water Pumps feature from the Fillable Canteens addon, this will allow DotMarks to detect those objects and handle them correctly.
+### Skill System compatibility
+If you use the Skill System addon, this patch allows DotMarks to know when the Scavenger skill has leveled up. Without it, DotMarks will only update this value when a map or savegame loads.
 > [!TIP]
-> It's safe to accept the installer's defaults--all default options have been designed for broadest compatibility. If an addon it's patching isn't present, then the patch will automatically disable itself, with no other effect. The options are there in case anyone needs to disable them for any reason.
+> It's safe to accept all of the installer's defaults if you don't have a preference. All default options have been designed for broadest compatibility--if an addon it's patching isn't present, then the patch will automatically disable itself, with no other effect. The options are only there in case anyone needs to disable them for any reason.
 ## Uninstall Instructions
 Either uncheck DotMarks in your MO2 modlist so that it is no longer active, or right-click on it and select `Remove mod...` to uninstall the whole thing.
 
@@ -66,13 +82,13 @@ If you're not using MO2, you're _completely_ on your own.
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # Personalization
-Everyone likes different things. "Play your own way" is axiomatic to me.
+**Everyone likes different things. "Play your own way" is axiomatic to me.**
 
 DotMarks is designed to let you selectively personalize just about everything in the addon. Every part of the object interaction UI can be enabled, disabled, or moved wherever you want it to be on the screen. Every animation, every icon, every sound, every feature, every color.
 
-* Like the new prompts and secondary actions, but don't want your HUD cluttered by stuff like the dot markers? [Turn them off](#hide-interaction-dot-markers).
+* Want the new prompts and secondary actions, but don't want your HUD cluttered by stuff like the dot markers? [Turn them off](#hide-interaction-dot-markers).
 * Want those prompts to stay at the bottom of the screen like vanilla, instead of following the object? Turn on [fixed screen position](#use-fixed-screen-positions), and adjust the [primary and secondary prompts](#horizontal-offset-for-first-interact) to where you want them.
-* Got an ultrawide or high-resolution monitor, and need the [font](#font-settings) or [UI elements](#scale-gui-elements) to be bigger? You can do that.
+* Have an ultrawide or high-resolution monitor, and need the [font](#font-settings) or [UI elements](#scale-gui-elements) to be bigger? You can do that.
 
 It's your UI--make it suit your preferences.
 
@@ -89,6 +105,9 @@ However, there are also a large number of "under the hood" settings in the `conf
 In the list of settings that follow, the "Config setting" lines refer to that setting's variable name under the `[default_settings]` section in the above file, and the "Default" is its default value defined there. Many have helpful tips about their usage, or important things to keep in mind when changing them.
 > [!IMPORTANT]
 > There's also a good reason why the file is named `dotmarks_defaults`. The values there are only baseline defaults, and MCM will override them with any values saved in `configs\axr_options.ltx`--every time it loads. If a setting is in MCM, it's quicker and easier to test changes there anyway.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM > DotMarks > General Settings
 ![General Settings banner](https://i.imgur.com/OXAK0xS.png)
 
@@ -157,6 +176,9 @@ If enabled, when there is more than one nearby item that can be picked up, scrol
 Sets the Alpha (transparency) channel for the main drop shadows underneath the interaction prompts or other UI elements.
 > [!TIP]
 Set to zero if you want to disable the main drop shadows entirely.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM > DotMarks > Secondary Interact
 ![Secondary Interact banner](https://i.imgur.com/GgEwrVR.png)
 
@@ -179,7 +201,7 @@ These three separate settings define the key combination used to activate the Se
 
 By default it is set to a long-press equivalent of your Primary Interact--in other words, your "use" key. But if you're like me and you absolutely *hate* long-press or double-tap actions, don't worry--you can set it to whatever you like.
 > [!NOTE]
-> The durations for Long Press and Double Tap actions are set for all addons in `MCM > MCM Keybinds`
+> The durations for Long Press and Double Tap actions are set for all addons in `MCM > MCM Keybinds`.
 
 > [!WARNING]
 > While having the Secondary Interact as a long-press of the same key used for the Primary is convenient, this requires the script to keep close track of--and sometimes block--the pressing of the "use" key. On very rare occasions it can interfere with normal object interactions. If you keep having issues like that, you might need to try binding the Secondary Interact to a different key entirely.
@@ -204,6 +226,8 @@ Enables the secondary action that allows you to immediately use any consumable p
 * Default: `true`
 
 Enables the secondary action that allows you to unload and take the ammunition from a weapon on the ground.
+> [!NOTE]
+> If you have enabled an addon that forces stalkers to keep weapons in their inventory when they die, you will rarely ever see this action--weapons won't end up on the ground unless you're the one who dropped them.
 ## Enable "take all" action
 * Config setting: `sec_enable_takeall_act`
 * Default: `true`
@@ -232,6 +256,9 @@ Sets the default placement mode for IEDs deployed using a secondary action, or d
 
 > [!TIP]
 > When targeting an undeployed IED pickup item, you can use the **Fire Mode** keybinds to cycle placement mode, and the mouse wheel to set the duration of the timer (if applicable).
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM > DotMarks > Icon Settings
 ![Icon Settings banner](https://i.imgur.com/ea0PiDo.png)
 
@@ -258,17 +285,17 @@ All of the ARGB settings function the same:
 > You must press **Enter** after you finish typing the new value, just as with any other input box in Anomaly. If you simply click away from the input box, your changes will be lost.
 
 > [!TIP]
-> If you really make a mess of things, don't worry--look in the lower left of MCM for a button that lets you reset settings to default.
+> If you really make a mess of things, don't worry--look in the lower left of MCM for a button that lets you reset to default all of the settings on the current page.
 ## Interaction Dot Marker size
 * Config setting: `dot_marker_size`
 * Default: `1.0`
 
 Scales the size of all markers between 0 and 2.0, which acts as a multiplier to their default size.
-> [!TIP]
-> You can set this to zero in order to hide all markers. It will achieve essentially the same end result as enabling `hide_interaction_dots`.
-
 > [!NOTE]
 > Markers are scaled by distance, so in-game they usually will appear slightly smaller than they do here.
+
+> [!TIP]
+> You can set this to zero in order to hide all markers. It will achieve essentially the same end result as enabling `hide_interaction_dots`.
 ## Customize color for the normal dot marker
 * Config setting: `argb_dot_normal`
 > [!TIP]
@@ -281,6 +308,8 @@ Scales the size of all markers between 0 and 2.0, which acts as a multiplier to 
 * Config setting: `enable_icon_tasks`
 * Default: `true`
 
+![Primary Task icon](https://i.imgur.com/ScPq6Ki.png) ![Secondary Task icon](https://i.imgur.com/0WJXZMI.png)
+
 If enabled, objects that are the target of the current active task will use a high-resolution task marker icon instead of the standard dot markers. The marker will be gold or white depending on whether or not it is a story task, just as in vanilla.
 > [!NOTE]
 > Like every other focus icon on this page, you won't see these special icons if you've hidden the dot markers entirely--these are just alternate textures that get swapped in based on the marker's focus state.
@@ -288,7 +317,9 @@ If enabled, objects that are the target of the current active task will use a hi
 * Config setting: `enable_icon_services`
 * Default: `true`
 
-Certain NPCs provide services to the player: Traders, Technicians, Medics, Guides, and Faction Leaders. While the default focus icon for most stalkers is a speech bubble, these *Service NPCs* each get their own special icon. Disabling this setting will cause them to use the normal speech bubble icon instead.
+![Trader icon](https://i.imgur.com/kLLtO3P.png) ![Guide icon](https://i.imgur.com/NFYoIyr.png) ![Leader icon](https://i.imgur.com/soGD4Zb.png) ![Technician icon](https://i.imgur.com/r3te3QI.png) ![Medic icon](https://i.imgur.com/t59Kvis.png)
+
+Certain NPCs provide services to the player: Traders, Guides, Faction Leaders, Technicians, and Medics. While the default focus icon for most stalkers is a speech bubble, these *Service NPCs* each get their own special icon. Disabling this setting will cause them to use the normal speech bubble icon instead.
 ## Customize color for the Trader icon
 * Config setting: `argb_service_trader`
 ## Customize color for the Guide icon
@@ -303,22 +334,32 @@ Certain NPCs provide services to the player: Traders, Technicians, Medics, Guide
 The rest of the **Icon Settings** menu consists of pairs of settings for each icon: a checkbox for whether it is enabled, and an ARGB control for customizing its color. All of them default to enabled.
 
 The following special icons are available here:
+
+![Talk icon](https://i.imgur.com/obsubKs.png) ![Stash icon](https://i.imgur.com/GaNWZcm.png) ![Door icon](https://i.imgur.com/bAHyDzu.png) ![Butcher icon](https://i.imgur.com/pZ0lduL.png) ![Box icon](https://i.imgur.com/OYzyb98.png) ![Boom icon](https://i.imgur.com/bo7D5xC.png)
 ## NPCs with dialogue
 * Config settings: `enable_icon_talk`, `argb_icon_talk`
+* Default: `true`
 > [!TIP]
-> By default, you won't see markers at all for stalkers who can't engage in conversation. If you'd rather still see dot markers for them, turn off the [hide_mute_stalkers](#hide-marker-for-untalkative-stalkers) setting in the Advanced menu.
+> By default, you won't see any markers at all for stalkers who can't engage in conversation. If you'd rather still see dot markers for them, turn off the [hide_mute_stalkers](#hide-marker-for-untalkative-stalkers) setting in the Advanced menu.
 ## Stashes
 * Config settings: `enable_icon_stash`, `argb_icon_stash`
+* Default: `true`
 ## Doors
 * Config settings: `enable_icon_door`, `argb_icon_door`
+* Default: `true`
 ## Prompt to skin mutant
 * Config settings: `enable_icon_butcher`, `argb_icon_butcher`
+* Default: `true`
 ## Breakable boxes
 * Config settings: `enable_icon_box`, `argb_icon_box`
+* Default: `false`
 ## Explosive objects
 * Config settings: `enable_icon_boom`, `argb_icon_boom`
+* Default: `false`
 > [!NOTE]
-> Breakable boxes and explosive objects do not have interaction prompts, and so do not receive focus--their special icon replaces the dot marker at all times.
+> Breakable boxes and explosive objects do not have interaction prompts, and so do not receive focus--their special icon replaces the dot marker at all times. These two icons are disabled by default, but you can enable them here if you wish to see them.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # MCM > DotMarks > Object Settings
 ![Object Settings banner](https://i.imgur.com/SmLjFL4.png)
@@ -426,6 +467,8 @@ Interactive workbenches, most of which are owned by a Technician.
 > [!NOTE]
 > This includes the Placeable Workbench from the *Hideout Furniture* addon, if one has been placed. The HF version will show a secondary interaction prompt for opening its control menu.
 
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 # MCM > DotMarks > Other Addons
 ![Other Addons banner](https://i.imgur.com/hdvQEwj.png)
 
@@ -474,12 +517,16 @@ If enabled, the interaction prompt will not accept input during FDDA animations.
 When using a secondary action on a pickup item, this is the delay in seconds between the pickup event and the queueing of the secondary action. This is necessary in order to allow FDDA's pickup animation time to begin.
 > [!NOTE]
 > This setting has no effect without FDDA or FDDA Redone installed.
-
 ## Enable animation for healing action
 * Config setting: `sec_enable_heal_anim`
 * Default: `true`
 
 This option allows DotMarks to use the animation from the _Animated NPC Healing_ addon when healing wounded stalkers using the secondary action. It has no effect if that addon is not installed.
+## Enable inspect animation for artefacts
+* Config setting: `sec_enable_arty_anim`
+* Default: `true`
+
+If you have the _Artifacts Inspection_ addon, this option enables a secondary action for most artefacts which displays that addon's inspect animations upon picking up the artefact.
 ## Take-all secondary action triggers Autoloot
 * Config setting: `takeall_does_autoloot`
 * Default: `true`
@@ -550,6 +597,8 @@ At **Scavenging** level 15 with the default multiplier of 0.2 and radius of 4m, 
 The internal name of the skill from *Skill System* that is used as the basis for the integration.
 > [!WARNING]
 > Bad things may happen if you typo this, and most of you will never have any need to tinker with it.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # MCM > DotMarks > Advanced Settings
 ![Advanced Settings banner](https://i.imgur.com/5R5ZGIV.png)
