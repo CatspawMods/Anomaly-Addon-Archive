@@ -308,6 +308,8 @@ Scales the size of all markers between 0 and 2.0, which acts as a multiplier to 
 * Config setting: `enable_icon_tasks`
 * Default: `true`
 
+![Primary Task icon](https://i.imgur.com/ScPq6Ki.png) ![Secondary Task icon](https://i.imgur.com/0WJXZMI.png)
+
 If enabled, objects that are the target of the current active task will use a high-resolution task marker icon instead of the standard dot markers. The marker will be gold or white depending on whether or not it is a story task, just as in vanilla.
 > [!NOTE]
 > Like every other focus icon on this page, you won't see these special icons if you've hidden the dot markers entirely--these are just alternate textures that get swapped in based on the marker's focus state.
@@ -317,20 +319,17 @@ If enabled, objects that are the target of the current active task will use a hi
 
 ![Trader icon](https://i.imgur.com/kLLtO3P.png) ![Guide icon](https://i.imgur.com/NFYoIyr.png) ![Leader icon](https://i.imgur.com/soGD4Zb.png) ![Technician icon](https://i.imgur.com/r3te3QI.png) ![Medic icon](https://i.imgur.com/t59Kvis.png)
 
-Certain NPCs provide services to the player: Traders, Technicians, Medics, Guides, and Faction Leaders. While the default focus icon for most stalkers is a speech bubble, these *Service NPCs* each get their own special icon. Disabling this setting will cause them to use the normal speech bubble icon instead.
+Certain NPCs provide services to the player: Traders, Guides, Faction Leaders, Technicians, and Medics. While the default focus icon for most stalkers is a speech bubble, these *Service NPCs* each get their own special icon. Disabling this setting will cause them to use the normal speech bubble icon instead.
 ## Customize color for the Trader icon
 * Config setting: `argb_service_trader`
 ## Customize color for the Guide icon
 * Config setting: `argb_service_guide`
 ## Customize color for the Leader icon
 * Config setting: `argb_service_leader`
-
 ## Customize color for the Technician icon
 * Config setting: `argb_service_mech`
-
 ## Customize color for the Medic icon
 * Config setting: `argb_service_medic`
-
 ## Object focus icons
 The rest of the **Icon Settings** menu consists of pairs of settings for each icon: a checkbox for whether it is enabled, and an ARGB control for customizing its color. All of them default to enabled.
 
