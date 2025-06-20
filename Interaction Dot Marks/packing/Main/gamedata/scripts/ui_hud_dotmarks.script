@@ -255,7 +255,6 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 						--dump("%s is %s NPC | enemy %s | wounded %s was %s | mute %s", mark.name, mark.comm, mark.is_enemy, mark.is_wounded, mark.was_wounded, mark.is_mute)
 						if mark.is_wounded then
 							if not (mark.was_wounded or cfg.heal_cooldown_active) then
-								--mark.vis_ignore_mute 	= vis_ignore_mute(id, obj)
 								mark.vis_ignore_mute 	= vis_ignore_mute(id)
 								mark.was_wounded 		= true
 								if mark.is_enemy then
@@ -644,12 +643,6 @@ function update_mark_radii()
 			mark.scale_dist_max      = (near_scan_radius() or 4)
 			mark.los_check_range     = early_scan_radius() + 1
 		end
-	end
-end
-
-function testscav(lvls)
-	for i = 1,(lvls or 1) do
-		haru_skills.level_up_skill("scavenging")
 	end
 end
 
@@ -3319,15 +3312,17 @@ function setup_sec_interact_prompt(mark)
 	local int_text  = ""
 	local iedmode 	= nil
 	local func      = mark.handler_func or handle_secondary_interact
+	local verb 		= mark.use_verb
 
 	if obj and IsWeapon(obj) then
 		if not cfg.sec_enable_unload_act then return end
+		-- Weapon containing ammunition/parts
 		local atype     = obj:get_ammo_type() + 1
 		local ammos     = parse_list(ini_sys, obj:section(), "ammo_class")
 		local sec       = ammos and atype and ammos[atype]
 		local ammo      = find_best_localization(nil, nil, sec)
 		int_text        = string.format(gts("st_alti_prompt_ammo"),
-			mag_installed and gts("st_alti_eject_mag") or gts("st_alti_unload_weapon"),
+			verb or mags_installed and gts("st_alti_eject_mag") or gts("st_alti_unload_weapon"),
 			ammo,
 			mark.ammo_count,
 			gts("st_alti_from"),
@@ -3336,22 +3331,29 @@ function setup_sec_interact_prompt(mark)
 		func = unload_and_take_ammo
 	elseif mark.inspect_anim then
 		if not cfg.sec_enable_arty_anim then return end
+		-- Artefact with an inspect animation
 		func = take_and_inspect
 		int_text = string.format("%s %s",
-			first_upper(gts("st_alti_inspect")),
+			first_upper(gts(verb or "st_alti_inspect")),
 			mark.name
 		)
 	elseif mark.placeable_mine then
 		iedmode = get_ied_text()
 		if not iedmode then return end
-		int_text = string.format(gts("st_alti_ied"), trimmed_prompt(mark.name))
+		-- Placeable mine/IED
+		int_text = string.format(
+			gts(verb or "st_alti_ied"),
+			trimmed_prompt(mark.name)
+		)
 		func = plant_bomb
 	elseif mark.is_wounded then
 		if not cfg.sec_enable_heal_act then return end
+		-- Wounded stalker
 		func = help_wounded_stalker
 		func_valid = is_still_wounded
 	elseif mark.hf_workshop then
-		int_text = gts("st_hf_workshop_menu")
+		-- Hideout Furniture workshop
+		int_text = gts(verb or "st_hf_workshop_menu")
 	elseif mark.is_container then
 		if not cfg.sec_enable_takeall_act then return end
 		-- Inventory box or stash
@@ -3362,19 +3364,19 @@ function setup_sec_interact_prompt(mark)
 		end
 		if (section == "inv_backpack") then
 			-- Pick up backpack and everything in it
-			int_text = first_upper(gts("st_alti_pickup_bp"))
+			int_text = first_upper(gts(verb or "st_alti_pickup_bp"))
 			func = pick_up_backpack
 		elseif z_auto_looter and cfg.takeall_does_autoloot and not mark.autolooted then
 			-- Trigger iTheon's autoloot
 			int_text = string.format("%s %s",
-				first_upper(gts("st_alti_autoloot")),
+				first_upper(gts(verb or "st_alti_autoloot")),
 				mark.name
 			)
 			func = trigger_autoloot
 		else
 			-- Take everything from box
 			int_text = string.format("%s %s",
-				first_upper(gts("st_alti_takeall")),
+				first_upper(gts(verb or "st_alti_takeall")),
 				mark.name
 			)
 			func = take_all_from_box
@@ -3382,9 +3384,8 @@ function setup_sec_interact_prompt(mark)
 	elseif cfg.is_item.Tools(obj) then
 		if not cfg.sec_enable_use_act then return end
 		-- Usable tool
-		local verb      = mark.use_verb or "st_alti_takeuse"
-		int_text        = string.format(gts("st_alti_prompt_usable"),
-			gts(verb),
+		int_text = string.format(gts("st_alti_prompt_usable"),
+			gts(verb or "st_alti_takeuse"),
 			mark.name,
 			gts("st_alti_now")
 		)
@@ -3392,7 +3393,7 @@ function setup_sec_interact_prompt(mark)
 	elseif cfg.is_item.Consumables(obj) then
 		if not cfg.sec_enable_use_act then return end
 		-- Consumable
-		local verb      = mark.use_verb or (
+		verb = verb or (
 			(cfg.smokables[section] and "st_alti_smokeout") or
 			(mark.kind == "i_medical") and "st_alti_use_booster" or
 			"st_alti_consume_food"
@@ -3406,7 +3407,7 @@ function setup_sec_interact_prompt(mark)
 		if not cfg.sec_enable_use_act then return end
 		-- Readable
 		int_text        = string.format(gts("st_alti_prompt_usable"),
-			gts("st_alti_read"),
+			gts(verb or "st_alti_read"),
 			mark.name,
 			gts("st_alti_now")
 		)
@@ -3415,7 +3416,7 @@ function setup_sec_interact_prompt(mark)
 		if not cfg.sec_enable_unload_act then return end
 		-- Device with battery power
 		int_text        = string.format(gts("st_alti_prompt_usable"),
-			first_upper(gts("st_item_unpack_battery")),
+			first_upper(gts(verb or "st_item_unpack_battery")),
 			gts("st_alti_from"),
 			mark.name
 		) 
@@ -3423,7 +3424,7 @@ function setup_sec_interact_prompt(mark)
 	elseif (mark.clsid == clsid.equ_backpack) then
 		-- Backpack inventory item
 		int_text        = string.format("%s %s",
-			first_upper(gts("st_alti_deploy_bp")),
+			first_upper(gts(verb or "st_alti_deploy_bp")),
 			mark.name
 		)
 		func = deploy_backpack
@@ -3431,7 +3432,7 @@ function setup_sec_interact_prompt(mark)
 		if not cfg.sec_enable_use_act then return end
 		-- Fallback to generic "use" prompt
 		int_text        = string.format(gts("st_alti_prompt_booster"),
-			gts("st_alti_takeuse"),
+			gts(verb or "st_alti_takeuse"),
 			mark.name,
 			gts("st_alti_now")
 		)
@@ -4071,6 +4072,7 @@ function inspect_artefact(id)
 				utils_obj.play_sound(sfx)
 			end
 		end
+		db.actor:hide_detector(true)
 		af_inspect.inspect(obj)
 	end
 	return true

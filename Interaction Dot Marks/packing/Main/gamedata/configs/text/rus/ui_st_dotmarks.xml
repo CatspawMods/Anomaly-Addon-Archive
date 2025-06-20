@@ -332,6 +332,12 @@
 		<text>Привязка клавиш для альтернативного использования</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarksec_bind_sec_interact_desc">
+		<text>Если у вас возникли проблемы с тем, что взаимодействие объектов не регистрируется, попробуйте установить привязку к клавише не на вариант основной клавиши interact.\n
+
+		\nИспользование основной клавиши interact в качестве действия двойного нажатия ненадежно и не рекомендуется.</text>
+	</string>
+	
 	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs">
 		<text>Включить ведение журнала отладки</text>
 	</string>
@@ -728,7 +734,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_x_desc">
 		<text>Регулирует величину горизонтального смещения позиции карточки предмета.
 		 \n
-		\По умолчанию: -9.5</text>
+		\По умолчанию: -5</text>
 	</string>	
 
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_y">
@@ -737,7 +743,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_y_desc">
 		<text>Регулирует величину вертикального смещения позиции карточки предмета.
 		 \n
-		\nПо умолчанию: 2</text>
+		\nПо умолчанию: -2</text>
 	</string>	
 
 
@@ -747,7 +753,7 @@
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_x_desc">
 		<text>Настраивает горизонтальное смещение для точек состояния компонента, добавленных аддоном «Utjan's Item UI Improvements». Это положение измеряется относительно конца основной текстовой подсказки. Включение или отключение самих точек - это настройка, управляемая в меню MCM Utjan.
 		 \n
-		\nПо умолчанию: -7</text>
+		\nПо умолчанию: -2</text>
 	</string>	
 
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_y">
@@ -756,7 +762,7 @@
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_y_desc">
 		<text>Настраивает вертикальное смещение для точек состояния компонента, добавленных аддоном «Utjan's Item UI Improvements». Это положение измеряется относительно конца основной текстовой подсказки. Включение или отключение самих точек - это настройка, управляемая в меню MCM Utjan.
 		 \n
-		\nПо умолчанию: -4</text>
+		\nПо умолчанию: 9</text>
 	</string>	
 
 	<string id="ui_mcm_dotmarks_dmarkmods_sp_icon_pos_x">
@@ -1073,7 +1079,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_text_y_desc">
 		<text>Регулирует вертикальное смещение чисел значения и веса внутри их элементов.
 		 \n
-		\nПо умолчанию: 1.5</text>
+		\nПо умолчанию: 1</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_x">
@@ -1091,7 +1097,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_y_desc">
 		<text>Настраивает вертикальное смещение для значков веса и значения внутри их элементов.
 		 \n
-		\nПо умолчанию: 0</text>
+		\nПо умолчанию: 2</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x">
@@ -1118,7 +1124,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_h_desc">
 		<text>Регулирует высоту элементов веса и значения в карточке предмета. Это значение используется для установки расстояния между строками.
 		 \n
-		\nПо умолчанию: 10</text>
+		\nПо умолчанию: 12</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot">

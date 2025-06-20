@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC8"
-release_date    = 20250617
+script_version  = "1.0-RC9"
+release_date    = 20250619
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -66,15 +66,28 @@ local in_sleep_zone     = false
 cfg                     = nil
 --[[======================================================================
         ADDON SUPPORT CALLBACKS
+-- =======================================================================
     The following two new callbacks allow other addons to take action 
-    before or after a marker is initialized:                          --]]
+    before or after a marker is initialized:
+
+    dotmarks_on_before_marker_init(args <table>)
+
+        args: pre-init table of args generated for the detected object
+
+    dotmarks_on_before_marker_init(args <table>, mark <CUIScriptWnd>)
+
+        args: final table of args that were used to generate the marker
+        mark: the marker object itself
+
+    See utils_catspaw_hudmarks or the cfg.args functions for attributes
+    and args used by the marker system.
+-- =====================================================================]]
 AddScriptCallback("dotmarks_on_before_marker_init")
 AddScriptCallback("dotmarks_on_marker_init")
---[[======================================================================
 
---]]
---[[======================================================================
+--[[====================================================================
         MAIN CONFIG TABLE
+-- =======================================================================
     For the most part this sets up a number of subordinate functions that
     are used for item classification, for generating marker attributes 
     once an object has been classified, and a few other pieces.
@@ -92,7 +105,7 @@ AddScriptCallback("dotmarks_on_marker_init")
 
     The ui_hud_dotmarks script imports the metatable of this one, so that
     the cfg table and all other public keys here are effectively included 
-    in the local namespace of ui_hud_dotmarks.
+    in the public namespace of ui_hud_dotmarks.
 -- =====================================================================]]
 local base_config = {
 -- =======================================================================
@@ -105,7 +118,7 @@ local base_config = {
                     (IsStalker(nil, obj:clsid()) and obj:alive())
                     -- Living stalker
                     or is_special_case_npc(obj)
-                    -- Certain special-case characters
+                    -- Certain special-case NPCs that fail normal classification
                 )
             end
         ),
@@ -251,16 +264,17 @@ local base_config = {
         )
 
     },
--- =======================================================================
---  [cfg.args]: required, returns a table of parameters for a mark type
---  At a minimum, this must include args.texture, which must be the name 
---  of a valid texture (even a blank one)
--- =======================================================================    
+--[[======================================================================
+    [cfg.args]: required, returns a table of parameters for a mark type
+    At a minimum, this must include args.texture, which must be the name 
+    of a valid texture (even a blank string to hide it, just can't be nil)
+-- =====================================================================]]
     args = {
-    -- Whenever an object matches one of the is_item functions above, the next
-    -- step is to get its base args (flags and metadata) for passing along to
-    -- the HUD Marker Manager in utils_catspaw_hudmarks
-    -- =======================================================================    
+    --[[======================================================================
+        Whenever an object matches one of the is_item functions above, the 
+        next step is to get its base args (flags and metadata) for passing 
+        along to the HUD Marker Manager in utils_catspaw_hudmarks
+    -- =====================================================================]]
         Stalkers = (
             function(obj)
                 if not obj then return end
@@ -417,12 +431,18 @@ local base_config = {
                     logged_type     = "a stash",
                     is_container    = not hfws_stash or nil,
                     no_update_loop  = hfws_stash or nil,
+                    -- Excludes this object from the main marker update loop
                     hidden          = hfws_stash or nil,
                     no_sec          = hfws_stash or nil,
+                    -- Skips the check for whether marker has a secondary prompt
                     workshop_stash  = hfws_stash or nil,
                     is_backpack     = (sec == "inv_backpack") or nil,
                     is_display      = cfg.display_cases[sec] or nil,
+                    -- HF display cases are handled differently than other containers
                     has_items       = not obj:is_inv_box_empty(),
+                    -- Note: marked stashes that haven't been searched yet will
+                    -- always be detected as empty, because the items aren't added 
+                    -- to the container until the player searches it the first time.
                     texture         = hfws_stash and "" or cfg.marker_dotmark,
                     hint_filters   = {
                         ["inventory_box_use"]       = "inventory_box_use",
@@ -451,7 +471,7 @@ local base_config = {
                     -- bone pos if possible.
                     -- Uses the obj:list_bones() method added in 20250315 modded exes.
                     is_pickup       = true,     -- object is a gettable inventory item
-                    no_sec          = true,     -- don't bother checking for secondary action
+                    no_sec          = true,
                     pos_adjust      = vector():set(0, 0.05, 0),
                     texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
@@ -530,7 +550,6 @@ local base_config = {
                 local visual        = obj:get_visual_name()
                 local section       = obj:section()
                 local disarm_sec    = cfg.disarmables[section]
-
 
                 return {
                     logged_type     = "an explosive object",
@@ -753,10 +772,7 @@ local base_config = {
                     pos_adjust      = vector():set(0, 0, 0),
                     no_pri          = true, -- Do not display a primary interaction prompt
                     -- This is because campfire interactions are shown via the
-                    -- tutorial system, and are handled as a fixed-position
-                    -- screen prompt
-                    -- Now that I have a hook between campfire and prompt via
-                    -- the active swap, investigate fully hooking them in
+                    -- tutorial system
                 }
             end
         ),
@@ -925,11 +941,11 @@ local base_config = {
             end
         )
     },
--- =======================================================================    
---  [cfg.state_conds]: a set of extra checks for tutorial-based prompts 
---  that must also be true (in addition to the tutorial state) in order 
---  for this script to trigger the tutorial prompt.
--- =======================================================================    
+--[[======================================================================   
+    [cfg.state_conds]: a set of extra checks for tutorial-based prompts 
+    that must also be true (in addition to the tutorial state) in order 
+    for this script to trigger the tutorial prompt.
+-- =====================================================================]]
     state_conds = {
         ["sleep_zone_tip"]              = ( function() return in_sleep_zone end ),
         -- Check whether actor is actually in the sleep zone - the tutorial fires sooner
@@ -945,12 +961,14 @@ local base_config = {
             end 
         ),
     },
--- =======================================================================    
---  [cfg.hint_filter]: a set of subordinate functions that centralize the
---  checking and clearing of the UIStaticQuickHelp prompt text
--- =======================================================================       
+--[[======================================================================    
+    [cfg.hint_filter]: a set of subordinate functions that centralize the
+    checking and clearing of the UIStaticQuickHelp prompt text
+-- =====================================================================]]
     hint_filter = {
         add = (
+            -- Adds a new hint filter
+            -- Watches for match_str, replaces it with replace_str
             function(match_str, replace_str)
                 local hf = cfg.hint_filter
                 if not match_str then return end
@@ -963,6 +981,7 @@ local base_config = {
             end
         ),
         rem = (
+            -- Removes an existing hint filter
             function(m)
                 local hf = cfg.hint_filter
                 if not (m and hfil.filters[m]) then return end
@@ -974,7 +993,8 @@ local base_config = {
                 return true
             end
         ),  
-        inc_sub     = ( 
+        inc_sub     = (
+            -- Increment the number of current subscriptions to a filter
             function(m)
                 local hfil = cfg.hint_filter.filters
                 hfil[m].subs = (hfil[m].subs or 0) + 1
@@ -982,6 +1002,7 @@ local base_config = {
             end
         ),
         dec_sub     = (
+            -- Decrement the number of current subscriptions to a filter
             function(m)
                 local hfil = cfg.hint_filter.filters
                 hfil[m].subs = (hfil[m].subs or 0) - 1
@@ -989,11 +1010,13 @@ local base_config = {
             end
         ),
         get_state   = (
+            -- Returns bool for hint filter's active state
             function(m)
                 return m and cfg.hint_filter.filters and cfg.hint_filter.filters[m] and cfg.hint_filter.filters[m].state
             end
         ),
         set_state = (
+            -- Sets the active state for hint filter with match text 'm'
             function(m, state)
                 if not (m and cfg.hint_filter.filters and cfg.hint_filter.filters[m]) then return end
                 local last_state = cfg.hint_filter.filters[m].state
@@ -1010,6 +1033,9 @@ local base_config = {
             end
         ),
         init = (
+            -- Initializes a new hint filter
+            -- called by cfg.hint_filter.add, don't call directly
+            -- otherwise it will skip subcriber count update and initial state detection
             function(m, r)
                 vl("Initializing hint filter %s with replacement string %s", m, r)
                 local hf = cfg.hint_filter
@@ -1045,6 +1071,8 @@ local base_config = {
             end
         ),
         update_text = (
+            -- Updates the current hint filter text
+            -- Runs on every actor update
             function()
                 local hf = cfg.hint_filter
                 hf.last_raw_text = get_quickhelp_text()
@@ -1079,6 +1107,7 @@ local base_config = {
             end
         ),
         get_text = (
+            -- Returns the current hint filter text
             function(m)
                 return cfg.hint_filter.filters[m] and cfg.hint_filter.filters[m].text
             end

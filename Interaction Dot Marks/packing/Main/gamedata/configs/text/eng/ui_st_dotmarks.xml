@@ -332,6 +332,12 @@
 		<text>Keybind for secondary interact</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarksec_bind_sec_interact_desc">
+		<text>If you experience issues with object interaction not registering, try setting this keybind to something other than a variant of your primary interact key.\n
+
+		\nA double-tap of the primary interact key is unreliable, and not recommended.</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs">
 		<text>Enable debug logging</text>
 	</string>
@@ -727,7 +733,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_x_desc">
 		<text>Adjusts the amount that the Item Card's position is horizontally offset.
 		 \n
-		\nDefault: -9.5</text>
+		\nDefault: -5</text>
 	</string>	
 
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_y">
@@ -736,7 +742,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_pos_y_desc">
 		<text>Adjusts the amount that the Item Card's position is vertically offset.
 		 \n
-		\nDefault: 2</text>
+		\nDefault: -2</text>
 	</string>	
 
 
@@ -746,7 +752,7 @@
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_x_desc">
 		<text>Adjusts the horizontal offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
 		 \n
-		\nDefault: -7</text>
+		\nDefault: -2</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_y">
@@ -755,7 +761,7 @@
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_y_desc">
 		<text>Adjusts the vertical offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
 		 \n
-		\nDefault: -4</text>
+		\nDefault: 9</text>
 	</string>	
 
 	<string id="ui_mcm_dotmarks_dmarkmods_sp_icon_pos_x">
@@ -1059,7 +1065,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_text_y_desc">
 		<text>Adjusts the vertical offset of the weight and value text numbers within their elements.
 		 \n
-		\nDefault: 1.5</text>
+		\nDefault: 1</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_x">
@@ -1077,7 +1083,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_icon_y_desc">
 		<text>Adjusts the vertical offset for the weight and value icons within their elements.
 		 \n
-		\nDefault: 0</text>
+		\nDefault: 2</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_x">
@@ -1104,7 +1110,7 @@
 	<string id="ui_mcm_dotmarks_dmarkadv_item_card_elem_h_desc">
 		<text>Adjusts the height of the weight and value elements in the Item Card. This value is used to set the spacing between the rows.
 		 \n
-		\nDefault: 10</text>
+		\nDefault: 12</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot">
