@@ -16,8 +16,8 @@
 		* demonized for help with the NPC PDA weapon hide fix
 -- ==================================================================--]]
 script_name 			= "item_milpda"
-script_version        	= "1.14.3"
-release_date            = 20250529
+script_version        	= "1.14.4"
+release_date            = 20250627
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 		1. Pick up any Milspec PDAs and save your game
@@ -82,15 +82,10 @@ pda_inv_item	 			= "device_pda_milspec" -- Don't change this
 -- ======================================================================
 found_npc_pda               = {}
 
-
-
 -- Idea: network infiltration levels, so unlock isn't all or nothing
 -- higher infiltration level lets you see higher-ranked squads
 -- gives a reason to not hoard PDAs once their faction is unlocked -- use to gain for better access
 -- does network access revoke one infiltration level, or reset all? probably leave as an option
-
-
-
 
 pda_defs = {
 	["device_pda_1"] = { -- Defaults:
@@ -148,8 +143,8 @@ ranks_by_name = {
 
 
 -- ======================================================================
--- Any faction set to true in faction_blacklist will be ignored by any 
--- PDA, but only if
+-- Any faction with blacklist=true in the table below will be ignored by
+-- any PDA, but only if
 local use_faction_blacklist = false
 -- is also set to true. These defaults will be overridden by MCM, if 
 -- it is installed.
@@ -194,7 +189,6 @@ local faction_data = {
 		security_coef 		= 1,
 		progress 			= 0,
 		reset 				= nil,
-		unlocked 			= nil,
 		unlocked 			= nil,
 	},
 	["freedom"] = {
