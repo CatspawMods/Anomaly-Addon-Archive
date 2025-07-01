@@ -1,0 +1,28 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Hideout Furniture module
+    Author: Catspaw
+    Updated: 20250701
+    Permission granted to freely translate this file into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+    <string id="st_hf_workshop_menu">
+        <text>Open Workbench Menu</text>
+    </string>
+
+    <string id="st_hf_control_menu">
+        <text>Open Control Menu</text>
+    </string>
+
+    <string id="st_prop_chair">
+        <!-- Fixes a typo in HFE that causes this text to be broken -->
+        <text>Wooden chair</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkobjs_scan_furniture">
+        <text>Mark Hideout Furniture</text>
+    </string>
+
+</string_table>

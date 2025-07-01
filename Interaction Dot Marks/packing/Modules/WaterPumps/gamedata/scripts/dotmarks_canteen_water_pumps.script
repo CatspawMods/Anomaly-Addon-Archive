@@ -10,45 +10,35 @@
     an interaction prompt at all.
 
     Addon authors can also use this as an example of how to add their own
-    compatibility patches, using the register_addon_handler function.
-
-    register_addon_handler(addon_id, is_item_handler, args_handler)
-        addon_id: <string>
-            unique string ID for your addon's handler
-        is_item_handler: function(<game_obj>)
-            should return the ID of your addon's handler (addon_id) if object matches
-        args_handler: function(<game_obj>, <string>, <number>, <string>)
-            the object, its section, its clsid, and its kind
-            should return a table of args, see below or dotmarks_main for examples
+    compatibility patches using one or more of the callbacks added by
+    IDM. See dotmarks_callbacks.script or Github for more documentation.
 -- =====================================================================]]
+
 function on_game_start()
-    if bind_water_pump_furniture and ui_hud_dotmarks and ui_hud_dotmarks.register_addon_handler then
-        handler_id = "fillable_canteens_water_pump"
-        -- Unique addon ID for the handler
-        ui_hud_dotmarks.register_addon_handler(handler_id,
-            function(obj)
-                -- Returns handler_id if obj is a placeable water pump
-                if obj and (obj:clsid() == clsid.obj_physic) and string.match(obj:name(), "placeable_water_pump") then
-                    return handler_id
+    if bind_water_pump_furniture and dotmarks_main and dotmarks_callbacks then
+        RegisterScriptCallback("dotmarks_on_new_object_scan", 
+            function(id, args)
+                if not (id and args) then return end
+                if args.texture or not args.ret_value then return end
+                -- Abort if another script has already taken action on this callback
+                local obj = id and get_object_by_id(id)
+                if obj and (args.clsid == clsid.obj_physic) and string.match(obj:name(), "placeable_water_pump") then
+                    args.logged_type    = "a water pump"
+                        -- Used only for debug logging
+                    args.texture        = dotmarks_main.cfg.marker_dotmark or "ui_catsy_marker_intdot"
+                        -- Must be a valid texture in the game
+                    args.no_sec         = true
+                        -- Object cannot have a secondary action
+                    args.text           = game.translate_string("st_water_pump_no_canteen")
+                        -- Default text
+                    args.refresh_text   = true
+                        -- Always refresh the text on every update
+                    args.hint_filters   = { 
+                        ["st_water_pump_fill"] = "st_water_pump_fill",
+                        ["st_water_pump_no_canteen"] = "st_water_pump_no_canteen",
+                    }
+                        -- Table of interact prompt strings to trap, filter out, and replace
                 end
-            end,
-            -- ===========================================================
-            function(obj, section, cls_id, kind)
-                -- Returns table of settings that tell the marker how to behave
-                if not obj then return end
-                local marker_tex = dotmarks_main and dotmarks_main.cfg and dotmarks_main.cfg.marker_dotmark or "ui_catsy_marker_intdot"
-                return {
-                    logged_type         = "a water pump",
-                    -- Used only for debug logging
-                    texture             = marker_tex,
-                    -- Must be a valid texture in the game
-                    no_sec              = true,
-                    -- Object cannot have a secondary action
-                    refresh_text        = true,
-                    -- Always refresh the text on every update
-                    hint_filters       = { ["st_water_pump_fill"] = "st_water_pump_fill" },
-                    -- Table of interact prompt strings to trap, filter out, and replace
-                }
             end
         )
     end

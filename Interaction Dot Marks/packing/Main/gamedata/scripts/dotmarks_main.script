@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC9"
-release_date    = 20250619
+script_version  = "1.0-RC10"
+release_date    = 20250701
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -30,15 +30,18 @@ release_date    = 20250619
         any script that begins with "utils_catspaw_" in the name.
 -- =====================================================================]]
 assert(utils_catspaw_common and utils_catspaw_common.import_metatable, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_common, which is outdated or missing!\n\n"
+    "! Interaction Dot Marks requires script utils_catspaw_common, which is outdated or missing!\n\n"
 )
 assert(utils_catspaw_mapspots, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist or failed to load!\n\n"
+    "! Interaction Dot Marks requires script utils_catspaw_mapspots, which does not exist or failed to load!\n\n"
 )
 assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
-    "! ui_hud_dotmarks requires script utils_catspaw_text, which is outdated or missing!\n" ..
+    "! Interaction Dot Marks requires script utils_catspaw_text, which is outdated or missing!\n" ..
     "Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
     "If the version is outdated, try moving this addon to the bottom of your load order."
+)
+assert(dotmarks_callbacks, "\n\n"..
+    "! Interaction Dot Marks requires script dotmarks_callbacks, which does not exist or failed to load!\n\n"
 )
 utils_catspaw_common.import_metatable(this, utils_catspaw_common)
 utils_catspaw_common.import_metatable(this, utils_catspaw_text)
@@ -64,26 +67,6 @@ local paw               = tasks_placeable_waypoints
 local gts               = game.translate_string
 local in_sleep_zone     = false
 cfg                     = nil
---[[======================================================================
-        ADDON SUPPORT CALLBACKS
--- =======================================================================
-    The following two new callbacks allow other addons to take action 
-    before or after a marker is initialized:
-
-    dotmarks_on_before_marker_init(args <table>)
-
-        args: pre-init table of args generated for the detected object
-
-    dotmarks_on_before_marker_init(args <table>, mark <CUIScriptWnd>)
-
-        args: final table of args that were used to generate the marker
-        mark: the marker object itself
-
-    See utils_catspaw_hudmarks or the cfg.args functions for attributes
-    and args used by the marker system.
--- =====================================================================]]
-AddScriptCallback("dotmarks_on_before_marker_init")
-AddScriptCallback("dotmarks_on_marker_init")
 
 --[[====================================================================
         MAIN CONFIG TABLE
@@ -188,9 +171,17 @@ local base_config = {
         ),
         Tools = (
             function(obj)
+                local section   = obj and obj:section()
+                local hftype    = section and ini_sys:r_string_ex(section, "placeable_type")
                 return obj and (
-                    (obj:name():find("glowstick") or IsItem("tool", obj:section()))
-                    -- Glowsticks exist as both inventory and world objects, require special handling
+                    (
+                        (hftype == "prop") or
+                        -- Hideout furniture prop items
+                        obj:name():find("glowstick") or
+                        -- Glowsticks exist as both inventory and world objects, require special handling
+                        IsItem("tool", sec)
+                    )
+                    
                     and not cfg.is_item.Quest(obj)
                 )
             end
@@ -200,7 +191,7 @@ local base_config = {
             -- Anything that would normally go in the device slot, most with batteries
         ),
         Quest = (
-            function(obj, sec, cls)
+            function(obj, sec)
                 if not obj then return end
                 if IsItem("quest", sec or obj:section()) then return true end
                 -- Stop there, that's good enough to match
@@ -302,7 +293,8 @@ local base_config = {
                     -- Other object classes use similar flags to speed up looping checks.
                     bone            = "bip01_spine1",
                     -- Causes marker position to be based on this bone
-                    pos_adjust      = vector():set(0, 0.15, 0),
+
+                    pos_adjust      = pos_adjust_by_section(sec, 0.15),
                     -- Adjust final marker world pos additively by this value
                     texture         = cfg.marker_dotmark,
                     hint_filters    = {["character_use"] = "character_use"},
@@ -351,9 +343,7 @@ local base_config = {
                     args.active_swap.custom_argb = argb_key and csv_argb_to_tbl(cfg[argb_key])
                     args.active_swap.texture = service_icon
                 elseif cfg.enable_icon_talk then
-                    local texture = get_cfg_for_type("tex", "Stalkers")
-                    -- The get_cfg_for_type call for the "tex" type returns the contents of
-                    -- the cfg.tex table for the specified object class.
+                    local texture = get_class_marker_texture("Stalkers")
                     vl("Stalker talk icon %s enabled for active swap", texture)
                     args.active_swap = cfg.swap_talk
                 end
@@ -372,7 +362,7 @@ local base_config = {
                 local args = {
                     is_npc          = true,
                     comm            = get_object_community(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
                     bone            = "bip01_spine1",
                     hint_filters = {
                         ["dead_character_use"]          = "dead_character_use",
@@ -406,10 +396,10 @@ local base_config = {
                         args.line_adj_y = 10
                     end
                 else
-                    args.texture    = get_cfg_for_type("tex", "Bodies", obj) or cfg.marker_dotmark
+                    args.texture    = get_class_marker_texture("Bodies", obj) or cfg.marker_dotmark
                 end
                 if is_body_claimed(id) then
-                    args.name       = bestname(id) .. " (" .. gts("st_body_is_claimed") .. ")"
+                    args.name       = (best_localized_object_name(obj) or "") .. " (" .. gts("st_body_is_claimed") .. ")"
                 end
                 if args.is_stalker then
                     args.has_items  = not obj:is_inv_box_empty()
@@ -424,26 +414,17 @@ local base_config = {
                 if not obj then return end
                 local id            = obj:id()
                 local sec           = obj:section()
-                local name          = obj:name()
-                local hfws_stash    = (sec == "workshop_stash") or nil
-                set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
+                set_target_data(id, cfg.metadata_types.is_container, true)
                 local args = {
                     logged_type     = "a stash",
-                    is_container    = not hfws_stash or nil,
-                    no_update_loop  = hfws_stash or nil,
-                    -- Excludes this object from the main marker update loop
-                    hidden          = hfws_stash or nil,
-                    no_sec          = hfws_stash or nil,
-                    -- Skips the check for whether marker has a secondary prompt
-                    workshop_stash  = hfws_stash or nil,
-                    is_backpack     = (sec == "inv_backpack") or nil,
-                    is_display      = cfg.display_cases[sec] or nil,
-                    -- HF display cases are handled differently than other containers
+                    is_container    = true,
+                    is_backpack     = (sec == "inv_backpack") or (sec == "inv_trashcan") or nil,
+                    name            = best_localized_object_name(obj),
                     has_items       = not obj:is_inv_box_empty(),
                     -- Note: marked stashes that haven't been searched yet will
                     -- always be detected as empty, because the items aren't added 
                     -- to the container until the player searches it the first time.
-                    texture         = hfws_stash and "" or cfg.marker_dotmark,
+                    texture         = cfg.marker_dotmark,
                     hint_filters   = {
                         ["inventory_box_use"]       = "inventory_box_use",
                         ["actor_inventory_box_use"] = "actor_inventory_box_use",
@@ -472,8 +453,8 @@ local base_config = {
                     -- Uses the obj:list_bones() method added in 20250315 modded exes.
                     is_pickup       = true,     -- object is a gettable inventory item
                     no_sec          = true,
-                    pos_adjust      = vector():set(0, 0.05, 0),
-                    texture         = get_cfg_for_type("tex", "Ammo") or cfg.marker_dotmark,
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
+                    texture         = get_class_marker_texture("Ammo") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -481,9 +462,10 @@ local base_config = {
     -- =======================================================================    
         Weapons = (
             function(obj)
+                if not obj then return end
                 if weapon_showcase and not is_empty(weapon_showcase.weapon_displays) then
                     -- Ignore weapons in Hideout Furniture display cases, they're fake
-                    local id = obj and obj:id()
+                    local id = obj:id()
                     for case_id, case_guns in pairs(weapon_showcase.weapon_displays) do
                         for item_id, world_id in pairs(case_guns) do
                             if (id == item_id) or (id == world_id) then
@@ -494,15 +476,15 @@ local base_config = {
                     end
                 end
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
-                local count = obj and obj:get_ammo_in_magazine()
-                return obj and {
+                local count = obj:get_ammo_in_magazine()
+                return {
                     logged_type     = "a weapon",
                     has_parts       = true,
                     is_pickup       = true,
                     is_weapon       = true,
-                    texture         = get_cfg_for_type("tex", "Weapons") or cfg.marker_dotmark,
+                    texture         = get_class_marker_texture("Weapons") or cfg.marker_dotmark,
                     bone            = "wpn_body",
-                    pos_adjust      = vector():set(0, 0.05, 0),
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
                     ammo_count      = count,
                     -- if ammo_count > 0, unload-ammo secondary action will be shown
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
@@ -521,8 +503,8 @@ local base_config = {
                     is_attach       = true,
                     skip_seobj_check= (section == "bolt") or (section == "bolt_bullet") or nil,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
-                    texture         = get_cfg_for_type("tex", "Attachments") or cfg.marker_dotmark,
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
+                    texture         = get_class_marker_texture("Attachments") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -537,8 +519,8 @@ local base_config = {
                     is_pickup       = true,
                     no_sec          = true,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
-                    texture         = get_cfg_for_type("tex", "Grenades") or cfg.marker_dotmark,
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
+                    texture         = get_class_marker_texture("Grenades") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -553,7 +535,7 @@ local base_config = {
 
                 return {
                     logged_type     = "an explosive object",
-                    texture         = cfg.enable_icon_boom and get_cfg_for_type("tex", "Explosive") or cfg.marker_dotmark,
+                    texture         = cfg.enable_icon_boom and get_class_marker_texture("Explosive") or cfg.marker_dotmark,
                     custom_argb     = cfg.enable_icon_boom and csv_argb_to_tbl(cfg.argb_icon_boom) or nil,
                     visual          = visual,
                     physics_obj     = true,
@@ -562,7 +544,8 @@ local base_config = {
                     inv_section     = disarm_sec or nil,
                     name            = disarm_sec and gts(inventory_name(nil, disarm_sec, true)) or nil,
                     is_disarmable   = not not disarm_sec or nil,
-                    handler_func    = disarm_sec and func_disarm_ied or nil,
+                    func_exec_sec   = disarm_sec and func_disarm_ied or nil,
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
                     line_adj_x      = 2,
                     line_adj_h      = -8,
                     line_adj_y      = 8,
@@ -588,8 +571,8 @@ local base_config = {
                     has_parts       = true, -- Item has component parts with condition
                     no_sec          = true,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.1, 0),
-                    texture         = get_cfg_for_type("tex", "Outfits") or cfg.marker_dotmark,
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.1),
+                    texture         = get_class_marker_texture("Outfits") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -605,9 +588,9 @@ local base_config = {
                     has_parts       = true,
                     no_sec          = true,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
                     bone            = get_best_pos_bone(obj) or nil,
-                    texture         = get_cfg_for_type("tex", "Headgear") or cfg.marker_dotmark,
+                    texture         = get_class_marker_texture("Headgear") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -627,8 +610,8 @@ local base_config = {
                     is_arty         = true,
                     arty_container  = get_artefact_container_type(sec) or nil,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
-                    texture         = get_cfg_for_type("tex", "Artefacts") or cfg.marker_dotmark,
+                    pos_adjust      = pos_adjust_by_section(sec, 0.05),
+                    texture         = get_class_marker_texture("Artefacts") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -653,10 +636,10 @@ local base_config = {
                     no_sec          = money and true or nil,
                     name            = name or nil,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
+                    pos_adjust      = pos_adjust_by_section(section, 0.05),
                     multi_uses      = multi_uses or nil,
                     -- if multi_uses and multi_uses > 1, the number of uses will be suffixed to the prompt
-                    texture         = get_cfg_for_type("tex", "Consumables") or cfg.marker_dotmark,
+                    texture         = get_class_marker_texture("Consumables") or cfg.marker_dotmark,
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -667,11 +650,15 @@ local base_config = {
                 local section       = obj and obj:section()
                 if not section then return end
                 local id            = obj:id()
+                local cls           = obj:clsid()
+                set_target_data(id, cfg.metadata_types.is_pickup, true)
+
+                local inv_section   = ini_sys:r_string_ex(section, "item_section")
                 local blast         = ini_sys:r_float_ex(section, "blast")
                 local multi_uses    = nil
                 local is_glowstick  = (section == "lights_glowstick")
                 local glowstick_sec = is_glowstick and get_glowstick_section(id)
-                local name          = glowstick_sec and gts(inventory_name(nil, glowstick_sec))
+                local name          = inv_section and gts(inventory_name(nil, inv_section))
                 local explodes      = blast and (blast > 0)
                 if explodes and not cfg.explosive_tools[section] then
                     -- Catch anything with a blast value that isn't actually a Tool
@@ -682,25 +669,23 @@ local base_config = {
                     multi_uses = obj:get_remaining_uses()
                 end
 
-                set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
-
-                return obj and {
+                return {
                     logged_type     = "a tool",
                     is_pickup       = true,
-                    placeable_mine  = txr_mines.EXPLOSIVE_SECTION_LOOKUP[section] and true or nil,
+                    placeable_mine  = is_placeable_mine(section) or nil,
                     multi_uses      = multi_uses or nil,
                     no_sec          = is_glowstick or nil,
                     money           = get_cash_quantity_string(section) or nil,
                     manual_use      = true,
-                    inv_section     = glowstick_sec or nil,
+                    inv_section     = inv_section or nil,
                     is_glowstick    = is_glowstick or nil,
-                    physics_obj     = not not glowstick_sec or nil,
+                    physics_obj     = (cls == clsid.obj_physic) or nil,
                     name            = name or nil,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
+                    pos_adjust      = pos_adjust_by_section(section, 0.05),
                     use_verb        = "st_alti_takeuse",
-                    texture         = get_cfg_for_type("tex", "Tools") or cfg.marker_dotmark,
-                    hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
+                    texture         = get_class_marker_texture("Tools") or cfg.marker_dotmark,
+                    hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
         ),
@@ -714,8 +699,9 @@ local base_config = {
                     is_pickup       = true,
                     has_battery     = true,
                     has_power       = true,
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0),
                     bone            = "wpn_body",
-                    texture         = get_cfg_for_type("tex", "Devices") or cfg.marker_dotmark,
+                    texture         = get_class_marker_texture("Devices") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -735,7 +721,7 @@ local base_config = {
                 if is_pickup then
                     set_target_data(id, cfg.metadata_types.is_pickup, not is_button)
                 end
-                local vadjust   = visual and cfg.button_visuals[visual] or 0
+                local vadjust   = (visual and cfg.button_visuals[visual] or 0)
                 return {
                     logged_type     = is_button and "a quest interaction" or "a quest item",
                     is_button       = is_button or nil,
@@ -744,9 +730,9 @@ local base_config = {
                     is_pickup       = is_pickup or nil,
                     refresh_text    = is_button or nil,
                     no_sec          = true,
-                    pos_adjust      = vector():set(0, vadjust, 0),
+                    pos_adjust      = pos_adjust_by_section(obj:section(), vadjust),
                     bone            = get_best_pos_bone(obj) or nil,
-                    texture         = get_cfg_for_type("tex", "Quest") or cfg.marker_dotmark,
+                    texture         = get_class_marker_texture("Quest") or cfg.marker_dotmark,
                     hint_filters   = is_pickup and {["inventory_item_use"] = "inventory_item_use"} or
                     {
                         ["st_codelock"] = "st_codelock",
@@ -769,7 +755,7 @@ local base_config = {
                     is_campfire     = true,
                     no_sec          = true,
                     name            = gts("st_itm_campfire"),
-                    pos_adjust      = vector():set(0, 0, 0),
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0),
                     no_pri          = true, -- Do not display a primary interaction prompt
                     -- This is because campfire interactions are shown via the
                     -- tutorial system
@@ -814,7 +800,7 @@ local base_config = {
                     is_door             = true,
                     no_sec              = true,
                     bone                = bone,
-                    pos_adjust          = vector():set(0, vadjust, 0),
+                    pos_adjust          = pos_adjust_by_section(obj:section(), vadjust),
                     scheme              = "ph_door",
                     -- The scheme is used for getting direct access to the door handlers and data
                     visual              = visual,
@@ -835,9 +821,10 @@ local base_config = {
                 local visual = obj:get_visual_name()
                 return {
                     logged_type     = "a breakable box",
-                    texture         = cfg.enable_icon_box and get_cfg_for_type("tex", "Boxes") or cfg.marker_dotmark,
+                    texture         = cfg.enable_icon_box and get_class_marker_texture("Boxes") or cfg.marker_dotmark,
                     physics_obj     = true,
                     visual          = visual,
+                    pos_adjust      = pos_adjust_by_section(obj:section(), 0),
                     no_pri          = true,
                     line_adj_x      = 2,
                     line_adj_h      = -8,
@@ -881,27 +868,20 @@ local base_config = {
         Workshops = (
             function(obj)
                 if not obj then return end
-                local visual = obj:get_visual_name()
                 local sec = obj:section()
-                local hf_workshop       = (sec == "placeable_workshop") or nil
                 return {
                     logged_type         = "a workshop bench",
-                    texture             = get_cfg_for_type("tex", "Workshops") or cfg.marker_dotmark,
-                    visual              = visual,
+                    texture             = get_class_marker_texture("Workshops") or cfg.marker_dotmark,
                     section             = sec,
-                    hf_workshop         = hf_workshop or nil,
                     is_workshop         = true,
-                    los_dist_min        = hf_workshop and 0.5 or nil,
-                    -- placeable workshop tends to block LOS to itself
-                    no_sec              = not hf_workshop or nil,
+                    no_sec              = true,
                     refresh_text        = true,
                     -- Forces the prompt text to check for changes on every update
                     interact_dist       = 1.5,
                     hint_filters       = {
-                        ["st_tiski_no_info"]= (not hf_workshop) and "st_tiski_no_info" or nil,
-                        ["st_tiski"]        = (not hf_workshop) and "st_tiski" or nil,
-                        ["st_awr_tiski"]    = (not hf_workshop) and "st_awr_tiski" or nil,
-                        ["st_interact"]     = hf_workshop and "st_use_workshop" or nil,
+                        ["st_tiski_no_info"]= "st_tiski_no_info",
+                        ["st_tiski"]        = "st_tiski",
+                        ["st_awr_tiski"]    = "st_awr_tiski",
                     },
                 }
             end
@@ -919,15 +899,16 @@ local base_config = {
                 return {
                     is_pickup       = true,
                     bone            = get_best_pos_bone(obj) or nil,
-                    pos_adjust      = vector():set(0, 0.05, 0),
                     no_sec          = cfg.useless_shit[section] and true or nil,
                     is_part_cnd     = not not (name:match("^prt_w_") or name:match("^prt_o_")) or nil,
                     is_readable     = readable or nil,
+                    pos_adjust      = pos_adjust_by_section(section, 0),
                     -- Book or letter that can be picked up and read as a secondary action
                     --is_unread       = readable and not is_recipe_known(section),
                     is_backpack     = (obj:clsid() == clsid.equ_backpack) or nil,
+                    name            = best_localized_object_name(obj),
                     logged_type     = "miscellaneous loot",
-                    texture         = get_cfg_for_type("tex", "Misc") or cfg.marker_dotmark,
+                    texture         = get_class_marker_texture("Misc") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -1116,6 +1097,31 @@ local base_config = {
 }
 -- =======================================================================
 
+function best_localized_object_name(obj)
+    local id = obj and obj:id()
+    local section = obj and obj:section()
+    local secname = section and cfg.names_by_section[section]
+    return secname and gts(secname) or id and bestname(id)
+end
+
+function pos_adjust_by_section(section, base_y)
+    local adj_by_sec = section and cfg.pos_adj_by_section and cfg.pos_adj_by_section[section]
+    local adj = adj_by_sec and tonumber(adj_by_sec) or 0
+    return vector():set(0, adj + (base_y or 0), 0)
+end
+
+function is_container_whitelisted(section)
+    return not not (section and cfg.container_whitelist and cfg.container_whitelist[section])
+end
+
+function is_object_physpickup(section)
+    return not not (section and cfg.physobj_pickups and cfg.physobj_pickups[section])
+end
+
+function is_placeable_mine(section)
+    return txr_mines and txr_mines.EXPLOSIVE_SECTION_LOOKUP and (not not txr_mines.EXPLOSIVE_SECTION_LOOKUP[section])
+end
+
 function is_recipe_known(sec)
     if not sec then return end
     -- Largely lifted from Utjan's Item UI Improvements
@@ -1207,6 +1213,11 @@ function get_target_data(...)
     ui_hud_dotmarks.get_target_data(...)
 end
 
+function flag_as_pickup_item(id)
+    if not id then return end
+    set_target_data(id, cfg.metadata_types.is_pickup, true)
+end
+
 function play_sfx(snd)
     -- Play sound effect unless cfg.disable_all_sounds is true
     if cfg.disable_all_sounds or not snd then return end
@@ -1272,6 +1283,10 @@ function get_bone_table(obj, hudmodel)
 end
 
 function get_best_pos_bone(obj)
+    local section = obj and obj:section()
+    if section and cfg.bones_by_section[section] then
+        return cfg.bones_by_section[section]
+    end
     local bones = get_bone_list(obj)
     if not bones then return end
     for k,v in pairs(bones) do
@@ -1288,6 +1303,10 @@ end
 
 function early_scan_radius()
     return near_scan_radius() + (cfg.early_scan_radius or 5)
+end
+
+function end_radius()
+    return early_scan_radius() + 5
 end
 
 function unsquish(width)
@@ -1357,6 +1376,14 @@ end
 
 function get_cfg_for_type(cfg_type, obj_type, ...)
     return cfg and cfg_type and obj_type and cfg[cfg_type] and get_val_or_funcval(cfg[cfg_type][obj_type], ...)
+end
+
+function get_class_marker_texture(obj_type, ...)
+    return obj_type and get_cfg_for_type("tex", obj_type, ...)
+end
+
+function get_class_marker_args(obj_type, ...)
+    return obj_type and get_cfg_for_type("args", obj_type, ...)
 end
 
 function get_fixed_screen_pos()

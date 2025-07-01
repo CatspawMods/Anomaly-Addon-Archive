@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250524
+    Updated: 20250701
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -112,10 +112,6 @@
 
 	<string id="st_use_workshop">
 		<text>Use Workbench</text>
-	</string>
-
-	<string id="st_hf_workshop_menu">
-		<text>Open Workbench Menu</text>
 	</string>
 
 	<string id="st_alti_empty">

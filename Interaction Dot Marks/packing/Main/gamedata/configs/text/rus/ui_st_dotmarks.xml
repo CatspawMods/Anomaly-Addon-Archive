@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250524
+    Updated: 20250701
     Translated using DeepL. Corrections or suggestions are welcome.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -112,10 +112,6 @@
 
 	<string id="st_use_workshop">
 		<text>Используйте верстак</text>
-	</string>
-
-	<string id="st_hf_workshop_menu">
-		<text>Откройте меню верстака</text>
 	</string>
 
 	<string id="st_alti_empty">

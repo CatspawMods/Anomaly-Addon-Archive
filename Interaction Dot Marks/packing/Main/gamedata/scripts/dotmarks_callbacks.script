@@ -1,0 +1,405 @@
+-- =======================================================================
+--[[    Interaction Dot Marks ("DotMarks")
+-- =======================================================================
+		CALLBACK DEFINITIONS
+-- =======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+	Interaction Dot Marks includes a collection of new callbacks that are 
+	intended to allow other addons to hook into it or add compatibility.
+
+		* QuickHelp Static Management
+			Callback for detecting and making changes to the text 
+			container "UIStaticQuickHelp", used by the vanilla game to 
+			display most text interaction propmts.
+
+		* Addon Support Callbacks
+			Callbacks that are sent by DotMarks at different points during
+			marker detection and initialization, allowing other addons to
+			intercept and/or alter logic related to object classification
+			or marker creation.
+
+		* Tutorial Stop/Start Callbacks
+			Callbacks sent by modxml_tutorial_hooks.script when it detects
+			that the state of a game "tutorial" has started or stopped.
+
+-- =======================================================================
+		REFERENCES	
+-- =======================================================================
+		dotmarks_main.base_config
+			The core table of functions that gets imported into the 
+			dotmarks_main.cfg table. The various "args" functions it
+			contains for each item class demonstrate how to assign
+			attrbibutes ("args") to marker objects in order to define
+			their appearance and behavior.
+
+		configs\scripts\dotmarks_defaults.ltx
+			Main config file containing all the default runtime settings
+			for the addon. Several of the sections in it (especially the
+			Service NPC swap definitions) have good examples of other
+			marker features like focus icons.
+
+		utils_catspaw_hudmarks.UIHUDMarker
+			CUIScriptWnd class used to display and manage markers on the
+			HUD, and automate routine tasks such as self-detecting LOS
+			and fading in/out by distance.
+
+		ui_hud_dotmarks.InteractPrompt
+			CUIScriptWnd class used to display interactive prompts which
+			are attached to an arbitrary point in world or screen space.
+			Usually anchored on a UIHUDMarker.
+
+-- =======================================================================
+
+    For usage and examples of the attributes and args used by the marker 
+    system, see utils_catspaw_hudmarks or dotmarks_main, or addon patches 
+    such as dotmarks_hideout_furniture.
+
+-- =======================================================================
+	dotmarks_on_init_complete(script_version, release_date)
+-- =======================================================================
+		Get notified once DotMarks has completed its initialization, at
+		which point its config file is populated and ready to hook into.
+-- =======================================================================
+
+		script_version <string>
+			String containing the running version of DotMarks
+		
+		release_date <number>
+			Date in the form YYYYMMDD, stored as a number e.g. 20250701
+
+-- =======================================================================
+		QUICKHELP STATIC MANAGEMENT
+-- =======================================================================
+	on_quickhelp_text_update(raw_text, loc_string, trimmed_text, flags)
+-- =======================================================================
+		Check and manage the contents of UIStaticQuickHelp.
+-- =======================================================================
+
+		raw_text <string>
+			The raw text content of the UIStaticQuickHelp textwnd
+		
+		loc_string <string>
+			The localization string of the text
+		
+		trimmed_text <string>
+			The text with the "use key" prompt trimmed off
+		
+	flags is an empty table, set flags.text to any string to replace text
+
+-- =======================================================================
+        ADDON SUPPORT CALLBACKS
+-- =======================================================================
+	dotmarks_on_new_object_scan(id, flags)
+-- =======================================================================
+    	Take action when an object is first scanned, and abort/override 
+    	its classification.
+-- =======================================================================
+
+		id <number>
+			ID of the game object being scanned
+
+		flags <table>
+			A table of controls as follows:
+
+			flags.ret_value	<bool>
+				If set to false, will skip all further work to scan or 
+				manage this object.
+
+			flags.section <string>
+				The object's section, for quick processing
+
+			flags.kind <string>
+				The object's kind, for quick processing
+
+			flags.clsid <number>
+				The object's clsid, for quick processing
+
+-- =======================================================================
+    dotmarks_on_before_marker_init(args)
+-- =======================================================================
+	Take action before a marker is initialized, and either cancel its
+	creation or adjust the table of attributes found for the object.
+-- =======================================================================
+    
+        args <table>
+        	pre-init table of args generated for the detected object
+
+-- =======================================================================
+    dotmarks_on_marker_init(args, mark)
+-- =======================================================================
+	Take action just after marker initialization, but before the prompts
+	are initialized.
+-- =======================================================================
+    
+        args <table>
+        	Final table of args that were used to generate the marker
+        	This can be quite sizable and contain many different values,
+        	most of which are used internally by the marker system
+
+        mark <CUIScriptWnd>
+        	The marker object itself
+-- =======================================================================
+    dotmarks_on_setup_pri_interact(args, mark)
+-- =======================================================================
+	Take action during setup of a marker's primary interact prompt,
+	allowing you to alter its attributes or cancel its creation.
+-- =======================================================================
+
+        args <table>
+        	Initial table of default args for the marker's interact prompt:
+
+				args.id <number>
+					Game object's ID (if any)
+					Keep in mind that this callback also fires for prompts
+					that aren't connected to a game object
+
+				args.name <string>
+					The localized name of the object as it should be seen in the prompt
+
+				args.text <string>
+					Localized text describing the action that will be taken upon activation
+
+				args.bind <string>
+					The localized text name of what key must be pressed
+
+				args.func <function>
+					Functor that will be executed upon triggering of the secondary action
+
+				args.event <string>
+					Text name describing the event, for logging purposes
+
+        mark <CUIScriptWnd>
+        	The parent marker object
+        	Set mark.checked_for_sec to true to skip any further handling
+
+-- =======================================================================
+    dotmarks_on_setup_sec_interact(args, mark)
+-- =======================================================================
+	Take action during setup of a marker's secondary interact prompt,
+	allowing you to alter its attributes or cancel its creation.
+-- =======================================================================
+    
+        args <table>
+        	Initial table of default args for the marker's interact prompt:
+
+				args.id <number>
+					Game object's ID
+
+				args.name <string>
+					The localized name of the object as it should be seen in the prompt
+
+				args.text <string>
+					Localized text describing the action that will be taken upon activation
+
+				args.act <string>
+					Localized text describing what kind of input method the player should use
+
+				args.bind <string>
+					The localized text name of what key must be pressed
+
+				args.long <boolean>
+					Whether the action is a long press
+
+				args.func <function>
+					Functor that will be executed upon triggering of the secondary action
+
+				args.event <string>
+					Text name describing the event, for logging purposes
+
+        mark <CUIScriptWnd>
+        	The parent marker object
+        	Set mark.checked_for_sec to true to skip any further handling
+
+-- =======================================================================
+	dotmarks_on_before_prompt_visibility_change(mark, prompt, state, flags)
+-- =======================================================================
+	Take action just before any interaction prompt changes its visibility
+	state, and optionally cancel that change.
+-- =======================================================================
+	
+		mark <CUIScriptWnd>
+			The marker object that is the parent of this prompt
+				You can get the marked object's ID from mark.id
+
+		prompt <CUIScriptWnd>
+			The prompt object being changed
+				This is the same as mark.use_pri for primary interacts, or
+				mark.alt_interact for secondary interacts
+
+		state <boolean>
+			The new visibility state that the prompt wants to use
+
+		flags <table>
+			A table of controls as follows:
+
+			flags.ret_value <boolean>
+				If set to false, the state change will not occur
+
+-- =======================================================================
+	dotmarks_on_prompt_visibility_change(mark, prompt, state)
+-- =======================================================================
+	Take action just after any interaction prompt changes its visibility
+	state, but after the prompt has finished updating itself.
+-- =======================================================================
+
+		mark <CUIScriptWnd>
+			The marker object that is the parent of this prompt
+				You can get the marked object's ID from mark.id
+
+		prompt <CUIScriptWnd>
+			The prompt object being changed
+				This is the same as mark.use_pri for primary interacts, or
+				mark.alt_interact for secondary interacts
+
+		state <boolean>
+			The new visibility state that the prompt is now using
+
+-- =======================================================================
+	dotmarks_on_before_secondary_action(id, mark, prompt, functor, flags)
+-- =======================================================================
+	Take action when the player triggers a prompt's secondary action, and
+	make changes or choose whether to allow it to continue.
+-- =======================================================================
+
+		id <number>
+			ID of the object the action is being executed against
+				NOTE: this may not necessarily be the same as mark.id
+
+		mark <CUIScriptWnd>
+			The marker object that is the parent of this prompt
+
+		prompt <CUIScriptWnd>
+			The prompt object being changed
+				This is the same as mark.use_pri for primary interacts, or
+				mark.alt_interact for secondary interacts
+
+		functor <function>
+			The functor that the secondary action is trying to execute
+
+		flags <table>
+			A table of controls as follows:
+
+			flags.ret_value <boolean>
+				If set to false, the action will not occur
+
+-- =======================================================================
+	dotmarks_on_manual_interact_release(id, mark, flags)
+-- =======================================================================
+	Take action when the player releases the interact key after it has
+	been suppressed--usually when the secondary interact is a long-press
+	of the primary interact keybind.
+
+	This is mostly necessary for special handling of interactions with 
+	non-pickup objects that have their own scripted interact logic.
+-- =======================================================================
+
+		id <number>
+			ID of the object the action is being executed against
+				NOTE: this may not necessarily be the same as mark.id
+
+		mark <CUIScriptWnd>
+			The marker object that is the parent of this prompt
+
+		flags <table>
+			A table of controls as follows:
+
+			flags.ret_value <boolean>
+				If set to false, no action will be triggered manually
+
+-- =======================================================================
+		TUTORIAL START/STOP CALLBACKS
+-- =======================================================================
+	Get notified when one of the tutorials defined in game_tutorials.xml 
+	has started or stopped:
+
+	on_tutorial_prompt_start(tutorial, hint, flags)
+	on_tutorial_prompt_stop(tutorial, hint, flags)
+-- =======================================================================
+
+		tutorial <string>
+			the string name of the game tutorial
+
+		hint <string>
+			the localization string of its hint text
+
+		flags <table>
+			a table of controls as follows:
+
+			flags.ret_value	<boolean>
+				If set false in the start callback, will skip setting the 
+				vanilla tutorial text. In the stop callback, will abort 
+				clearing of the text.
+		
+			flags.hint <string>
+				Overrides tutorial text with this localization string.
+		
+			flags.text <string>
+				If set to anything in either callback, will override any 
+				existing content and set the tutorial text directly to 
+				this. Not localized.
+
+	You can also directly get the boolean state of any tutorial like so:
+
+	modxml_tutorial_hooks.monitors[tutorial_name]
+
+	Where tutorial_name is the name of the node in game_tutorials.xml,
+	e.g. "tutorial_campfire_ignite" for the prompt to light a campfire.
+
+-- =======================================================================
+		CALLBACK INITIALIZATION
+-- ===================================================================--]]
+
+AddScriptCallback("dotmarks_on_init_complete")
+
+--- @param raw_text string
+--- @param loc_string string
+--- @param trimmed_text string
+--- @param flags table
+AddScriptCallback("on_quickhelp_text_update")
+
+--- @param id number
+--- @param flags table
+AddScriptCallback("dotmarks_on_new_object_scan")
+
+--- @param args table
+AddScriptCallback("dotmarks_on_before_marker_init")
+
+--- @param args table
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+AddScriptCallback("dotmarks_on_marker_init")
+
+--- @param args table
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+AddScriptCallback("dotmarks_on_setup_pri_interact")
+
+--- @param args table
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+AddScriptCallback("dotmarks_on_setup_sec_interact")
+
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+--- @param prompt ui_hud_dotmarks.InteractPrompt
+--- @param state boolean
+--- @param flags table
+AddScriptCallback("dotmarks_on_before_prompt_visibility_change")
+
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+--- @param prompt ui_hud_dotmarks.InteractPrompt
+--- @param state boolean
+AddScriptCallback("dotmarks_on_prompt_visibility_change")
+
+--- @param id number
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+--- @param prompt ui_hud_dotmarks.InteractPrompt
+--- @param functor function
+--- @param flags table
+AddScriptCallback("dotmarks_on_before_secondary_action")
+
+--- @param id number
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+--- @param flags table
+AddScriptCallback("dotmarks_on_manual_interact_release")
+
+-- The tutorial callbacks are initialized in modxml_tutorial_hooks.script
+-- =======================================================================

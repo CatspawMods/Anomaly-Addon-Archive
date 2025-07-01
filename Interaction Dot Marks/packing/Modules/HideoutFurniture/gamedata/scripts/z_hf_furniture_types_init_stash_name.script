@@ -1,0 +1,63 @@
+-- =======================================================================
+--[[ 		HIDEOUT FURNITURE STASH NAME MONKEYPATCH
+-- =======================================================================
+    Author: Catspaw
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+-- =======================================================================
+	PURPOSE:
+	This lightweight monkeypatch causes HF to use the inventory name from
+	the placeable item's inventory equivalent instead. It should have zero
+	effect on anything else at all.
+
+	REASON:
+	When Hideout Furniture inits a stash, it sets the stash's map hint 
+	text to the item's section name. This isn't useful, but normally that 
+	is fine--HF doesn't actually use that field for anything, and these
+	"stashes" are never seen on the map, the field just has to not be nil.
+
+	However, if you are an addon author who needs to get the proper name 
+	of a HF world item, it's a pain in the ass without a lookup table--
+	which would have to be updated manually for every HF expansion ever.
+
+	Gross. No one wants to do that, and honestly no one needs to. Not even
+	all three of you who might ever use this script.
+-- =======================================================================
+    REQUIRES:
+    	* Hideout furniture
+    	* unlocalization of hf_furniture_types.TYPE2FUNC
+    	* modded exes in order to be able to unlocalize
+-- =======================================================================
+	Feel free to crib code from this or include a copy of it in your own 
+	addon, but in the interest of avoiding any possibility of conflicts:
+
+			PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+	Seriously. Just copy the code into yours if you want to mess with it.
+-- =====================================================================]]
+function inventory_name(obj, section, no_nil)
+	-- From utils_catspaw_text, but not particularly unique
+	section = section or (obj and obj:section())
+	return section and ini_sys:r_string_ex(section, "inv_name") or (no_nil and "" or nil)
+end
+
+if hf_furniture_types and not hf_furniture_types.ignore_dotmarks_fix then
+	local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("z_hf_furniture_types_init_stash_name is monkeypatching hf_furniture types to give stashes more useful names")
+	function hf_furniture_types.init_stash(obj_id)
+	    local item_section = ini_sys:r_string_ex(alife_object(obj_id):section_name(), "item_section")
+	    if not item_section then return end
+
+	    local m_data = alife_storage_manager.get_state()
+	    if not (m_data.player_created_stashes) then
+	        m_data.player_created_stashes = {}
+	    end
+	    m_data.player_created_stashes[obj_id] = item_section
+
+	    local data = {
+	        stash_id = obj_id,
+	        stash_name = game.translate_string(inventory_name(nil, item_section, true)),
+	        stash_section = item_section
+	    }
+	    SendScriptCallback("actor_on_stash_create", data)
+	end
+	hf_furniture_types.TYPE2FUNC["stash"] = hf_furniture_types.init_stash
+end

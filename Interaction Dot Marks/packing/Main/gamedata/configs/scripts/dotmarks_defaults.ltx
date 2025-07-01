@@ -24,10 +24,12 @@ blacklisted_ids
 blacklisted_kinds
 blacklisted_sections
 bones
+bones_by_section
 breakable_box_visuals
 button_visuals
 colors
 container_sfx
+container_whitelist
 disarmables
 display_cases
 door_visuals
@@ -35,6 +37,7 @@ dotmark_preset
 explosive_tools
 grenade_ammo_clsids
 in_pickup_range
+interactable_physmarks
 invboxes
 kind_lookup
 manual_use
@@ -44,8 +47,11 @@ metadata_types
 metrics
 mine_modes
 monitors
+names_by_section
 notable_npcs
 pending_actions
+pos_adj_by_section
+physobj_pickups
 tutorial_hints
 racked_items
 readable_functors
@@ -93,7 +99,7 @@ marker_dotactive 			= ui_catsy_marker_dotactive
 ; Texture for the "active" object that currently has interact focus
 main_drop_texture 			= ui_dotmarks_main_drop
 ; Texture used for the main prompt drop shadow
-welcome_message_shown = false
+welcome_message_shown 		= false
 ; This gets set true once the welcome message is shown, so that it won't be shown again
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
@@ -109,12 +115,16 @@ near_scan_radius            = 4
 early_scan_radius           = 3
 ; Radius in meters beyond the near scan for the early scan
 use_skill_system            = true
-; Enable Skill System integration
-use_fallback_targeting 		= true
+; Enable Skill System integration, extending near_scan_radius based on scavenging skill
+use_get_target_obj 			= true
 ; If no valid target is found using modded exes features, tries to use vanilla method
 ; Has some value catching edge cases, otherwise I'd disable this
+use_hover_targeting 		= true
+; If no other target exists, tries to manually detect whether anything is within the
+; right cone of interaction, using HUDMarkManager's managed hover function
+; Review whether this is performant at scale
 fallback_distance_check 	= true
-; If fallback targeting is enabled, checks distance of object against obj_interact_dist
+; If use_get_target_obj is enabled, checks distance of object against obj_interact_dist
 sec_enable_use_act			= true
 ; Enables the default "use/consume" secondary action for pickup items
 sec_enable_takeall_act		= true
@@ -204,13 +214,14 @@ item_use_delay 				= 0.5
 ; Required to give the FDDA pickup animation time to begin
 ; The item's use will not actually be triggered until FDDA's animation has completed
 defuse_obj_delay 			= 0.4
-; Like item_use_delay, but for disarming IEDs, which require a little more time since they
-; have to be despawned manually
+; Like item_use_delay, but for disarming IEDs, which require time to be despawned manually
 item_use_timeout 			= 1200
 ; The maximum amount of time a delayed action will wait for an animation to complete
 ; before it times out and executes the action to avoid stuck timeevents
 long_press_delay 			= 1000
 ; Inputs on the primary interact will be ignored for this many ms after a completed long press of the same
+interact_pause_delay 		= 250
+; If another addon pauses handling of the primary interact key, it will last this long in ms
 popin_anim_dur 				= 500
 ; Duration of the elastic "pop-in" animation effect when switching item focus, zero disables
 show_prompt_during_anim 	= false
@@ -571,6 +582,9 @@ placeable_arti_display 		= true
 placeable_weapon_rack 		= true
 placeable_pistol_shelf 		= true
 
+[physobj_pickups]
+
+
 [useless_shit]
 ; Section names of things like matches or money that shouldn't have a secondary interact
 ; This probably needs more entries than it currently has, but most cases are autodetected
@@ -725,6 +739,13 @@ aam 	= interface\inv_aam_close
 iam 	= interface\inv_iam_close
 lead 	= interface\inv_lead_close
 
+[container_whitelist]
+; Section names in this list will be exempted from the cfg.block_loot_window flag.
+; Never use for any normal container for which DotMarks needs to manage secondary
+; actions. This is only for containers that need to be opened manually by another
+; script outside of IDM's logic, like the homestead workshop stash.
+workshop_stash
+
 [door_visuals]
 ; Defines vertical marker pos offsets based on the door's visual model
 ; This is necessary in order to place the marker in a position that looks like it's
@@ -775,7 +796,6 @@ lights_glowstick	= Tools
 kerosene 			= Tools
 hand_watch      	= Devices
 wpn_binoc_inv   	= Devices
-placeable_workshop 	= Workshops
 csky_patch      	= Misc
 dolg_patch      	= Misc
 ecolog_patch    	= Misc
@@ -896,25 +916,30 @@ bone01
 joint
 joint1
 
+[bones_by_section]
+; Lookup table to match section names with their ideal bones
+; Mostly for use in adding compatibility for other addons
+
+[pos_adj_by_section]
+; Lookup table to adjust vertical marker position by section name
+; Mostly for use in adding compatibility for other addons
+
+[names_by_section]
+; Lookup table to get localization strings for section names
+; Mostly for use in adding compatibility for other addons
+inv_trashcan = st_itm_placeable_trashcan_name
+; Zone Recycling Bin
+
 [reset_table]
 ; At points certain defaults get changed for functional reasons and should override
 ; existing user settings. If a user's last run version is older than one in this table,
 ; that table's settings will be reset to the current-version defaults.
-20250423
-20250425
-20250427
-20250428
-20250503
 20250505
 
 [reset_20250505]
+action_text_pos_x 		= true
+action_text_pos_y 		= true
 item_card_pos_x 		= true
-parts_dot_pos_x 		= true
-item_card_text_y 		= true
-
-[reset_20250503]
-item_card_pos_x 		= true
-item_card_pos_y 		= true
 item_card_text_y 		= true
 item_card_elem_x 		= true
 item_card_elem_y 		= true
@@ -925,31 +950,17 @@ parts_dot_pos_x 		= true
 parts_dot_pos_y 		= true
 sp_icon_pos_x 			= true
 sp_icon_pos_y 			= true
-
-[reset_20250428]
 pri_use_x_offset 		= true
 pri_use_y_offset 		= true
 sec_use_x_offset 		= true
 sec_use_y_offset 		= true
 bind_text_pos_x 		= true
 bind_text_pos_y 		= true
-action_text_pos_x 		= true
-action_text_pos_y 		= true
-
-[reset_20250427]
 show_item_condition 	= true
-
-[reset_20250425]
 prompt_fade_in_time 	= true
 prompt_fade_out_time 	= true
 near_scan_radius 		= true
 early_scan_radius 	 	= true
-
-[reset_20250423]
-pri_use_x_offset 		= true
-pri_use_y_offset 		= true
-sec_use_x_offset 		= true
-sec_use_y_offset 		= true
 hide_connecting_line 	= true
 
 ; =================================================================================
