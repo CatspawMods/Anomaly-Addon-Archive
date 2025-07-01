@@ -4,8 +4,8 @@
     Author: Catspaw
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
-script_version          = "1.14.4"
-release_date            = 20250627
+script_version          = "1.14.5"
+release_date            = 20250701
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:
@@ -280,7 +280,7 @@ end
 
 
 function is_actor_or_squadmate(id)
-    if not valid_id(id) then return end
+    if not (id and (type(id) == "number") and id < 65535) then return end
     local is_actor = (id == AC_ID)
     local is_companion = false
     if not is_actor then
