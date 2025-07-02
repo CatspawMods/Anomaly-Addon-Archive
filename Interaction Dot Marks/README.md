@@ -8,6 +8,8 @@ Except not quite as cool, because Anomaly is jank. Hopefully this makes it a lit
 Also implements a "Secondary Interact" keybind with contextual actions such as unloading a weapon without having to pick it up, or taking everything from a stash without opening the loot window.
 > [!TIP]
 > Having difficulties? Check out the [Troubleshooting](troubleshooting.md) section.
+>
+> Are you a mod author who wants to integrate with DotMarks or add a compatibility patch? The [addon support documentation](addon_support.md) may have what you're looking for.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
