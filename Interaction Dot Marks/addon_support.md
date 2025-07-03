@@ -21,7 +21,7 @@ But even some vanilla items require special handling, and some addons will as we
 But perhaps that's getting ahead of ourselves. In order to make effective use of these tools, you should probably understand how DotMarks works--and how to make it do exactly what you want. So let's take a step-by-step look at what it does during its main update loop.
 
 > [!NOTE]
-> This is the main update loop for DotMarks itself. The marker objects instantiated from `utils_catspaw_hudmarks` each have their own separate update loops, which are driven by the attributes that get set during marker creation.
+> This is the main update loop for DotMarks itself. The marker objects instantiated from `utils_catspaw_hudmarks` each have their own separate update loops, which are driven by the attributes that get set during marker creation and the object's current state.
 
 ## The main Actor Update loop
 
