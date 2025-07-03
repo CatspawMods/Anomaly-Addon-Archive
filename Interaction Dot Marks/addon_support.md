@@ -1,4 +1,4 @@
-![DotMarks top banner](https://i.imgur.com/OXAK0xS.png)
+![Other Addons banner](https://i.imgur.com/hdvQEwj.png)
 
 # Addon Support
 
