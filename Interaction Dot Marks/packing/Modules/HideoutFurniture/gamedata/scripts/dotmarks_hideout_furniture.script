@@ -312,7 +312,10 @@ if dotmarks_callbacks then
                 function(id, mark, flags)
                     if not (id and mark and flags and mark.hf_placeable) then return end
                     log("[%s][dotmarks_on_manual_interact_release] Hideout Furniture patch is checking whether to handle interaction with %s", time_global(), mark.name)
-                    if mark.func_exec_pri then
+                    if (mark.hf_placeable == "stash") then 
+                        log("No special handling for HF stashes")
+                        return
+                    elseif mark.func_exec_pri then
                         log("%s has a custom primary interaction functor, executing it now", mark.name)   
                         mark.func_exec_pri(id)
                     elseif not mark.func_interact1 then

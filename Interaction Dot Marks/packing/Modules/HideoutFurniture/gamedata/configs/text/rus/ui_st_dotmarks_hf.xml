@@ -1,8 +1,8 @@
 <!-- ====================================================================
-	Interaction Dot Marks
+    Interaction Dot Marks
     Hideout Furniture module
     Author: Catspaw
-    Updated: 20250701
+    Updated: 20250703
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -22,7 +22,7 @@
     </string>
 
     <string id="ui_mcm_dotmarks_dmarkobjs_scan_furniture">
-        <text>Отметить Мебельный [HF]</text>
+        <text>Отметить мебель [Hideout Furniture]</text>
     </string>
 
 </string_table>

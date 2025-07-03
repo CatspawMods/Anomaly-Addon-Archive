@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC12"
-release_date    = 20250703
+script_version  = "1.0-RC13"
+release_date    = 20250703.1
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
