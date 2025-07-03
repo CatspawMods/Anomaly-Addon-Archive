@@ -48,7 +48,7 @@ On every actor update, `ui_hud_dotmarks.actor_on_update` does the following:
 > as long as `ui_hud_dotmarks.locked_id` is set, this part of the loop *will never happen*, and thus the actor's target will never be updated. If you set `locked_id` to anything for any reason, you must clear it when you are done.
 
 > [!NOTE] 
-> This step is also one of the main pieces that is critically dependent on having current modded exes. Without the `db.actor:get_actor_object_looking_at()` method and the `actor_on_update_pickup` callback, DotMarks can only detect targeting of object when it is precisely centered under the crosshair.
+> This step is also one of the main pieces that is critically dependent on having current modded exes. Without the `db.actor:get_actor_object_looking_at()` method and the `actor_on_update_pickup` callback, DotMarks can only detect targeting of an object when it is precisely centered under the crosshair.
 ### 6. Call `scan_nearby_entities()` with the `near_scan_radius` every `near_scan_interval`
 > [!NOTE]
 > The `near_scan_radius` is the player's immediate vicinity, within which they can detect markers and marker visibility begins to fade in. This value can be expanded by the Scavenger skill if *Skill System* and its integration are enabled.
