@@ -70,6 +70,10 @@
 		<text>Возьмите свой тайник и все, что в нем находится</text>
 	</string>
 
+	<string id="st_alti_pickup_zrb">
+		<text>Поднимите мусорное ведро и все, что в нем находится</text>
+	</string>
+	
 	<string id="st_alti_deploy_bp">
 		<text>Разместите тайник, используя</text>
 	</string>

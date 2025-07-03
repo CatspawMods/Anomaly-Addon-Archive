@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC10"
-release_date    = 20250701
+script_version  = "1.0-RC11"
+release_date    = 20250702
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -241,19 +241,7 @@ local base_config = {
                 ) and not (cfg.is_item and cfg.is_item.Quest(obj))
                 -- Should catch anything else that isn't a quest item
             end
-        ),
-        Addon = (
-            function(obj, ...)
-                if (not cfg.other_addon_is_item) or is_empty(cfg.other_addon_is_item) then return end
-                for k,v in pairs(cfg.other_addon_is_item) do
-                    local res = obj and k and v and v(obj, ...)
-                    if res then
-                        return res
-                    end
-                end
-            end
         )
-
     },
 --[[======================================================================
     [cfg.args]: required, returns a table of parameters for a mark type
@@ -414,11 +402,15 @@ local base_config = {
                 if not obj then return end
                 local id            = obj:id()
                 local sec           = obj:section()
+                local is_zrb        = (sec == "inv_trashcan")
+                local is_bp         = is_zrb or (sec == "inv_backpack")
                 set_target_data(id, cfg.metadata_types.is_container, true)
                 local args = {
                     logged_type     = "a stash",
                     is_container    = true,
-                    is_backpack     = (sec == "inv_backpack") or (sec == "inv_trashcan") or nil,
+                    use_verb        = is_zrb and "st_alti_pickup_zrb" or is_bp and "st_alti_pickup_bp" or nil,
+                    always_show_sec = is_zrb or nil,
+                    is_backpack     = is_bp or nil,
                     name            = best_localized_object_name(obj),
                     has_items       = not obj:is_inv_box_empty(),
                     -- Note: marked stashes that haven't been searched yet will
@@ -431,8 +423,10 @@ local base_config = {
                         ["st_search_treasure"]      = "st_search_treasure",
                     },
                 }
-                if cfg.enable_icon_stash then
-                    args.active_swap = cfg.swap_stash
+                if is_zrb and cfg.enable_icon_zrb then
+                    args.active_swap = dup_table(cfg.swap_zrb)
+                elseif cfg.enable_icon_stash then
+                    args.active_swap = dup_table(cfg.swap_stash)
                 end
                 return args
             end
@@ -911,14 +905,6 @@ local base_config = {
                     texture         = get_class_marker_texture("Misc") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
-            end
-        ),
-    -- =======================================================================
-        Addon = (
-            function(obj, addon, ...)
-                local handler = obj and addon and cfg.other_addon_args and cfg.other_addon_args[addon]
-                if not handler then return end
-                return handler(obj, ...)
             end
         )
     },

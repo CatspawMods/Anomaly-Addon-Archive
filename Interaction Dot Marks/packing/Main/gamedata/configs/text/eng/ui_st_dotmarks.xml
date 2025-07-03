@@ -70,6 +70,10 @@
 		<text>Pick up your stash and everything in it</text>
 	</string>
 
+	<string id="st_alti_pickup_zrb">
+		<text>Pick up the Recycle Bin and everything in it</text>
+	</string>
+
 	<string id="st_alti_deploy_bp">
 		<text>Place stash using</text>
 	</string>

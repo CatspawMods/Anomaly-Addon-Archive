@@ -7,8 +7,8 @@
     This patch enables DotMarks to detect and properly handle placeable
     props added by the Hideout Furniture addon or one of its expansions.
     
-    Without this patch, DotMarks will not display a prompt for any props
-    that are not stashes or workshops, and other features may not work.
+    Without this patch, DotMarks will not display the correct prompts for
+    any of its items, and many will not be recognized at all.
 
     Addon authors can also use this as an example of how to add their own
     compatibility patches, using the custom callbacks added by DotMarks.
@@ -21,6 +21,7 @@
 -- =====================================================================]]
 
 local gts                   = game.translate_string
+local nameid                = utils_catspaw_text.obj_name_and_id
 local get_texture           = dotmarks_main and dotmarks_main.get_class_marker_texture
 local best_localized_name   = dotmarks_main and dotmarks_main.best_localized_object_name
 local logprefix             = ui_hud_dotmarks and ui_hud_dotmarks.logprefix
@@ -32,11 +33,12 @@ resume_delay = 0.25
 delaying = false
 -- Delay runtime state flag
 
+--- @param logtext string
 local function log(logtext, ...)
     if logtext and (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs) then printf(logprefix .. logtext, ...) end
 end
 
-
+--- @param id number
 function dotmarks_take_hf_item(id)
     if not ui_hud_dotmarks then return end
     local mark = ui_hud_dotmarks.get_mark(id)
@@ -110,7 +112,7 @@ if dotmarks_callbacks then
                     -- Abort if no game object for id
                     if args.texture or not args.ret_value then return end
                     -- Abort if another script has already taken action on this callback
-                    log("[%s][dotmarks_on_new_object_scan] Hideout Furniture patch is checking %s (%s)", time_global(), ui_hud_dotmarks.get_mark_name(id), id)
+                    log("[%s][dotmarks_on_new_object_scan] Hideout Furniture patch is checking %s", time_global(), nameid(obj))
                     local dotcfg        = dotmarks_main.cfg
                     local section       = args.section
                     if (section == "placeable_water_pump") then return end
@@ -139,6 +141,7 @@ if dotmarks_callbacks then
                         args.func_exec_pri = bind_table_fan.toggle_fan
                     end
 
+                    local is_zrb        = (sec == "inv_trashcan")
                     local hfws_stash    = (section == "workshop_stash")
                     args.no_sec         = hfws_stash or nil
                     local hf_wrapper    = bind_hf_base.get_wrapper(id)
@@ -194,12 +197,9 @@ if dotmarks_callbacks then
                             args.workshop_stash = true
                         else
                             args.name           = best_localized_name(obj)
-                            if (section == "placeable_fridge") then
-                                args.func_interact2 = ui_hud_dotmarks.pick_up_backpack
-                                --args.func_pickup    = dotmarks_hideout_furniture.dotmarks_take_hf_item
-                                args.use_verb       = "st_alti_pickup_bp"
-                                args.is_backpack    = true
-                            end
+                            args.func_interact2 = ui_hud_dotmarks.pick_up_backpack
+                            args.use_verb       = is_zrb and "st_alti_pickup_zrb" or "st_alti_pickup_bp"
+                            args.is_backpack    = true
                             args.always_show_sec= true
                             args.is_container   = true
                             args.is_display     = dotcfg.display_cases[section] or nil
@@ -309,13 +309,13 @@ if dotmarks_callbacks then
                 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
                 --- @param flags table
                 function(id, mark, flags)
-                    --if ui_hud_dotmarks.recent_long_press() then return end
                     if not (id and mark and flags and mark.hf_placeable) then return end
                     log("[%s][dotmarks_on_manual_interact_release] Hideout Furniture patch is checking whether to handle interaction with %s", time_global(), mark.name)
-                    if (mark.hf_placeable == "stash") then
-                        log("HF stashes are not subject to special interact handling, returning to DotMarks")
-                        return
-                    elseif mark.func_exec_pri then
+                    --if (mark.hf_placeable == "stash") then
+                    --    log("HF stashes are not subject to special interact handling, returning to DotMarks")
+                        --return
+                    --else
+                    if mark.func_exec_pri then
                         log("%s has a custom primary interaction functor, executing it now", mark.name)   
                         mark.func_exec_pri(id)
                     elseif not mark.func_interact1 then

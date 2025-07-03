@@ -50,6 +50,11 @@
 			are attached to an arbitrary point in world or screen space.
 			Usually anchored on a UIHUDMarker.
 
+		https://github.com/CatspawMods/Anomaly-Addon-Archive/blob/main/Interaction%20Dot%20Marks/addon_support.md
+			The addon support documentation for DotMarks is extensive, and
+			includes example code and suggestions for solving likely
+			issues with other addons.
+					
 -- =======================================================================
 
     For usage and examples of the attributes and args used by the marker 
@@ -94,7 +99,7 @@
 	dotmarks_on_new_object_scan(id, flags)
 -- =======================================================================
     	Take action when an object is first scanned, and abort/override 
-    	its classification.
+    	its classification or other attributes.
 -- =======================================================================
 
 		id <number>
@@ -351,6 +356,8 @@
 		CALLBACK INITIALIZATION
 -- ===================================================================--]]
 
+--- @param script_version string
+--- @param release_date number
 AddScriptCallback("dotmarks_on_init_complete")
 
 --- @param raw_text string

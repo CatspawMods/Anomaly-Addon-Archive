@@ -412,28 +412,27 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 							-- ================================================================================
 							-- Check availability of secondary interact prompt
 							if mark.alt_interact then
-								show_sec = show_pri and not mark.body_claimed
-								if show_sec and not mark.always_show_sec then
-									if cfg.hide_sec_interact_ui then
-										show_sec        = false
-										dump("Secondary interactions disabled via config, hiding UI for %s", mark.name)
-									else
-										if mark.ammo_count and (mark.ammo_count == 0) then
-											dump("No ammo in weapon, hiding secondary interact")
-											show_sec    = false
-										elseif mark.has_battery and mark.condition and (mark.condition < 0.01) then
-											dump("No battery or charge in device, hiding secondary interact")
-											show_sec    = false
-										elseif mark.is_container then
-											show_sec    = show_pri and mark.has_items
-											dump("No items in container, no need to show secondary interact")
-										elseif mark.was_wounded then
-											show_sec 	= show_pri and validate_wounded_prompt(mark)
-										end
-										dump("Checking whether to show alt interact prompt for %s | show_pri %s | targeted %s", mark.name, show_pri, targeted)
+								local forced_on = (show_pri and mark.always_show_sec)
+								show_sec = (show_pri and not mark.body_claimed)
+								if cfg.hide_sec_interact_ui then
+									show_sec        = false
+									dump("Secondary interactions disabled via config, hiding UI for %s", mark.name)
+								elseif show_sec and not forced_on then
+									if mark.ammo_count and (mark.ammo_count == 0) then
+										dump("No ammo in weapon, hiding secondary interact")
+										show_sec    = false
+									elseif mark.has_battery and mark.condition and (mark.condition < 0.01) then
+										dump("No battery or charge in device, hiding secondary interact")
+										show_sec    = false
+									elseif mark.is_container then
+										show_sec    = show_pri and mark.has_items
+										dump("No items in container, no need to show secondary interact")
+									elseif mark.was_wounded then
+										show_sec 	= show_pri and validate_wounded_prompt(mark)
 									end
+									dump("Checking whether to show alt interact prompt for %s | show_pri %s | targeted %s", mark.name, show_pri, targeted)
 								end
-								mark.alt_interact:ShowPrompt(show_sec or mark.always_show_sec)
+								mark.alt_interact:ShowPrompt(show_sec or forced_on)
 							end
 						end
 					end
@@ -3431,19 +3430,19 @@ function get_args_for_valid_objects(id)
 	SendScriptCallback("dotmarks_on_new_object_scan", id, args)
 	if not (args and args.ret_value) then return end
 	args.ret_value = nil
-	if args.texture then
-		vl("Texture returned for object by callback: %s", args.texture)
+	if args.texture or args.item_class then
+		vl("Returned for object by callback: texture %s | item_class %s", args.texture, args.item_class)
 		method = 4
 		if args.item_class then
 			setup_item_args(args.item_class)
 		end
-	elseif cfg.other_addon_is_item then
-		local addon = cfg.is_item.Addon(obj, sec, cls, kind)
-		if addon then
-			vl("Addon found: %s", addon)
-			setup_item_args("Addon", addon, sec, cls, kind)
-			method = 3
-		end
+	--elseif cfg.other_addon_is_item then
+		--local addon = cfg.is_item.Addon(obj, sec, cls, kind)
+		--if addon then
+			--vl("Addon found: %s", addon)
+			--setup_item_args("Addon", addon, sec, cls, kind)
+			--method = 3
+		--end
 	elseif stype then
 		vl("Section %s found in lookup: %s", sec, stype)
 		method = 0
@@ -3620,23 +3619,11 @@ function setup_sec_interact_prompt(mark)
 			-- Wounded stalker
 			args.func = help_wounded_stalker
 			args.func_valid = is_still_wounded
-		--elseif mark.hf_workshop then
-			-- Hideout Furniture workshop
-			--args.text = gts(mark.use_verb or "st_hf_workshop_menu")
-		--elseif mark.hf_secondary then
-			-- Hideout Furniture with other secondary interact
-			--args.text = gts(mark.use_verb or "st_hf_control_menu")
 		elseif mark.is_container then
-			if not cfg.sec_enable_takeall_act then return end
-			-- Inventory box or stash
-			--local weight = nil
-			--if not obj:is_inv_box_empty() then
-				--local tbl = get_inventory_table(obj, id)
-				--weight = axr_companions.get_inventory_weight(tbl)
-			--end
-			if (section == "inv_backpack") then
+			if (not cfg.sec_enable_takeall_act) and not mark.always_show_sec then return end
+			if mark.is_backpack then
 				-- Pick up backpack and everything in it
-				args.text = first_upper(gts(mark.use_verb or "st_alti_pickup_bp"))
+				args.text = first_upper(gts(mark.use_verb))
 				args.func = pick_up_backpack
 			elseif z_auto_looter and cfg.takeall_does_autoloot and not mark.autolooted then
 				-- Trigger iTheon's autoloot
@@ -4105,13 +4092,23 @@ function update_targeted_object()
 	tracelog("end", "update_targeted_object", targeted_id)
 end
 
+function can_play_pickup_anim()
+
+
+end
+
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 --- @param func_on_take function
 function fake_take_anim(mark, func_on_take)
 	if not (mark and mark.id) then return end
 	hide_hud_inventory()
-	if not (lam2 and liz_fdda_redone_item_pickup) then
-		pick_up_marked_item(mark)
+	local pickup_functor = func_on_take or (
+		function(self)
+			pick_up_marked_item(mark)
+		end
+	)
+	if not (anims_enabled and lam2 and liz_fdda_redone_item_pickup) then
+		pickup_functor(mark.id)
 		return
 	end
 	vl("Faking take animation for %s", mark.name)
@@ -4172,9 +4169,11 @@ function fake_take_anim(mark, func_on_take)
 		end
 	end
 	if id then
-		action.on_take = func_on_take or function(self)
-			pick_up_marked_item(mark)
-		end
+		action.on_take = (
+			function(self)
+				pickup_functor(mark.id)
+			end
+		)
 	end
 	local current_pickup_action = lam2.get_action_with_tag("item_pickup")
 	if current_pickup_action then current_pickup_action.is_short = true end
@@ -4228,9 +4227,9 @@ function deploy_backpack(id)
 end
 
 --- @param id number
-function remove_placed_backpack(id)
+function remove_placed_backpack(id, mapspot)
 	if not id then return end
-	level.map_remove_object_spot(id, "treasure")
+	level.map_remove_object_spot(id, mapspot or "treasure")
 	local se_obj = alife_object(id)
 
 	if se_obj then
@@ -4619,10 +4618,10 @@ function pick_up_backpack(id)
 	if not obj then return end
 
 	local data = {
-		stash_id = id,
-		cancel = false,
+		stash_id 	= id,
+		cancel 		= false,
 	}
-	SendScriptCallback("actor_on_stash_remove",data)
+	SendScriptCallback("actor_on_stash_remove", data)
 	if data.cancel then
 		return
 	end
@@ -4632,16 +4631,23 @@ function pick_up_backpack(id)
 	end
 	
 	local mark 	= cfg.markers[id]
-	local func 	= remove_placed_backpack
-	if mark and mark.func_pickup then
-		func = function(...)
+	local func 	= (mark and mark.func_pickup) and (
+		-- Adding func_pickup to a mark will cause that functor to be used to
+		-- perform the actual item pickup process
+		function(...)
 			-- Wrapper to ensure that custom functors for timeevent return true
 			if mark and mark.func_pickup then
 				mark.func_pickup(...)
 			end
 			return true
 		end
-	end
+	) or (
+		function(...)
+			fake_take_anim(mark, remove_placed_backpack)
+			return true
+		end
+	)
+
 	CreateTimeEvent("bp_take_all", 0, 0.05, func, id)
 end
 

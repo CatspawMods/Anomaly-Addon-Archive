@@ -85,6 +85,7 @@ swap_stash
 swap_talk
 swap_task_pri
 swap_task_sec
+swap_zrb
 
 ; =================================================================================
 [default_settings]
@@ -312,6 +313,9 @@ enable_icon_door 			= true
 ; Enables the special icon used for doors
 enable_icon_stash 			= true
 ; Enables the special icon used for stashes
+enable_icon_zrb 			= true
+; Enables the special icon used for the Zone Recycle Bin
+; There is no entry for this in MCM
 sp_hide_junk_items 			= true
 ; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
 sp_flag_favejunk 			= true
@@ -662,6 +666,12 @@ texture 	= ui_catsy_marker_task_sec
 width       = 18
 height      = 18
 line_adj_h  = -13
+
+[swap_zrb]
+texture 	= ui_catsy_marker_recycle_bin
+width       = 18
+height      = 18
+line_adj_h  = -12
 
 ; ================================================================================
 ; 	DON'T TOUCH BELOW THIS LINE
