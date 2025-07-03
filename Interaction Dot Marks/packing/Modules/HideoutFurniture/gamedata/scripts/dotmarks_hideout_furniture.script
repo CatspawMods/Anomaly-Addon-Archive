@@ -197,6 +197,7 @@ if dotmarks_callbacks then
                             args.workshop_stash = true
                         else
                             args.name           = best_localized_name(obj)
+                            args.func_interact1 = ( function() end )
                             args.func_interact2 = ui_hud_dotmarks.pick_up_backpack
                             args.use_verb       = is_zrb and "st_alti_pickup_zrb" or "st_alti_pickup_bp"
                             args.is_backpack    = true
@@ -311,10 +312,6 @@ if dotmarks_callbacks then
                 function(id, mark, flags)
                     if not (id and mark and flags and mark.hf_placeable) then return end
                     log("[%s][dotmarks_on_manual_interact_release] Hideout Furniture patch is checking whether to handle interaction with %s", time_global(), mark.name)
-                    --if (mark.hf_placeable == "stash") then
-                    --    log("HF stashes are not subject to special interact handling, returning to DotMarks")
-                        --return
-                    --else
                     if mark.func_exec_pri then
                         log("%s has a custom primary interaction functor, executing it now", mark.name)   
                         mark.func_exec_pri(id)

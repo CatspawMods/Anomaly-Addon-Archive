@@ -5166,8 +5166,13 @@ function pressing_any_mod_key()
     return ui_mcm and not ui_mcm.MOD_NONE
 end
 
-function recent_long_press()
-	return (time_global() - (cfg.use_released or 0)) < (cfg.long_press_delay or 50) 
+--- @param key number
+function recent_long_press(key)
+	key = key or use_dik
+	--local key_match = cfg.last_hold and (cfg.last_hold.key == key)
+	--local timeout = key_match and not timeout
+	--dump("key %s | tg %s | cfg.last_hold %s | delay %s | timed out %s | res %s", use_dik, time_global(), cfg.last_hold, cfg.long_press_delay, timeout)
+	return cfg.last_hold and (cfg.last_hold.key == key) and not timed_out(cfg.last_hold.time, cfg.long_press_delay or 50)
 end
 
 function recent_double_tap()
@@ -5206,7 +5211,10 @@ function do_use_release_action_manually(id)
 	local flags = {ret_value = true}
 	dump("Sending callback dotmarks_on_manual_interact_release | %s | %s | %s", id, nameid(mark and mark.name, id), flags and flags.ret_value)
 	SendScriptCallback("dotmarks_on_manual_interact_release", id, mark, flags)
-	if not (flags and flags.ret_value) then return end
+	if not (flags and flags.ret_value) then
+		dump("Further handling aborted by callback")
+		return
+	end
 
 	if is_target_pickup(id) and ((id == locked_id) or not locked_id) then
 		cfg.use_released = nil
