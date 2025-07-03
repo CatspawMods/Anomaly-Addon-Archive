@@ -1,0 +1,20 @@
+--[[ 	Zone Recycle Bin
+** 	MCM initialization script
+** 	Author: Catspaw (CatspawMods @ ModDB)
+** 	Source: https://www.moddb.com/members/catspawmods/addons
+--]]
+
+function on_mcm_load()
+	op = { id = "zrb", sh=true, gr={
+				{id = "slide_ft", type= "slide", link= "ui_options_slider_trash", size= {512,50}, spacing= 20},
+				{id = "mod_enabled", type = "check", val = 1, def = true},
+				{id = "warn_enabled", type = "check", val = 1, def = true},
+				{id = "use_mapspots", type = "check", val = 1, def = false},
+				{id = "deletion_timeout", type = "track", val = 2, min = 1, max = 300, step = 1, def = 30},
+				{id = "spawn_bin", type = "check", val = 1, def = false},
+				{id = "uninstall", type = "check", val = 1, def = false},
+				{id = "debuglogs", type = "check", val = 1, def = false},
+			},
+		}
+	return op
+end

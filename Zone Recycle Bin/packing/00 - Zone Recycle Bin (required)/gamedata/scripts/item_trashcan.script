@@ -1,0 +1,543 @@
+-- ======================================================================
+--[[	Zone Recycle Bin
+-- ======================================================================
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/zone-recycle-bin-10-for-anomaly-151-and-152
+	https://www.youtube.com/@CatspawAdventures
+-- ======================================================================
+	You may alter any part of this mod and do whatever you like with it, 
+	just give credit where due. 
+	
+	ANY AND ALL ITEMS PLACED INSIDE THE CONTAINER WILL BE PERMANENTLY 
+	DESTROYED AFTER A SHORT DELAY.
+
+	Credits: 
+		* TB's New Stash Locations for the bin's in-game model (from GSC)
+		* PYP for the smoothing fix to GSC's vanilla model
+		* Asametar for RUS and UKR localization
+		* artifax for the workshop autoinject script
+		* Blackgrowl for further texture and smoothing work
+		* demonized for the time events and modded binaries
+		* Utjan for actormenu_on_item_before_move usage
+-- ==================================================================--]]
+script_version 	= "2.0"
+release_date    = 20240425
+-- ======================================================================
+--[[	To uninstall without MCM, first:
+
+		1. Pick up any placed Zone Recycle Bins and save your game
+		2. Quit out and set the following line to true:				 --]]
+local uninstall 				= false
+--		3. Then re-launch the game, load, and make a new separate save
+-- 		4. It is then safe to uninstall this addon--the new save is clean
+-- ======================================================================
+local trashcan_deletion_timeout = 30
+-- After this many seconds in the trashcan, an item is gone forever!
+-- Removing an item from the container before the timeout will prevent 
+-- its destruction, but I don't recommend playing chicken with this fact.
+-- Configurable through MCM, if you have it.
+-- ======================================================================
+local gts 					= game.translate_string
+local game_version      	= gts("ui_st_game_version")
+local gamma_modpack     	= game_version:find("G.A.M.M.A.")
+local modded_exes 		    = (MODDED_EXES_VERSION or gamma_modpack) and true or false
+local started 				= false
+local debuglogs 			= false		-- Debug logging enabled
+local verbose 				= true		-- Verbose logging, only if debug enabled (noisy!)
+local killswitch 			= false 	-- Disables all callbacks (for debugging/testing)
+local deletion_enabled 		= true  	-- If false, nothing is actually deleted but everything else works (for debugging)
+local show_mapspots 		= false		-- If true, show a special map icon for the Recycle Bin
+local mollyguard 			= true 		-- If true, the player will get warned with shouty all-caps messages about how deleting stuff works
+local add_new_recipe 		= true 		-- If true and DLTX is unavailable, the mod will add a crafting recipe for the Recycle Bin
+local recipe_added			= false 	-- Flag to prevent dupe recipes from being added
+local gimme_one 			= false
+-- If true, the script will spawn a copy of the bin in the player's 
+-- inventory. It will do this every single time the game loads if you 
+-- hardcode it here, so I recommend using MCM instead.
+-- ======================================================================
+-- Messing with these string constants will only bring you sadness
+local mapspot_string 		= "trash"	
+local bin_placeable 		= "itm_placeable_trashcan"
+local bin_worlditem 		= "inv_trashcan"
+local bin_virtual 			= "inv_virtual_stash"
+local bins = {
+	bin_placeable,
+	bin_worlditem,
+	bin_virtual
+}
+local queue_name 			= "delete_trash_"
+local CreateTimeEvent 		= demonized_time_events.CreateTimeEvent
+local RemoveTimeEvent 		= demonized_time_events.RemoveTimeEvent
+local paw 					= tasks_placeable_waypoints
+-- ======================================================================
+-- Definitions for the NON-DLTX crafting recipe.
+-- DLTX recipe defined in configs\items\settings\mod_craft_parts_zrb.ltx
+local bin_craft_string = {
+	["itm_placeable_trashcan"] = {
+			index 	= 2, -- Workshop tab
+			tier 	= "1", -- basic tools
+			recipe 	= "recipe_basic_0", -- no recipe requirement
+			mats	= {
+				[1] = {mat="prt_i_scrap",ct="10"},		-- def: 10 metal scrap
+				[2] = {mat="prt_i_fasteners",ct="4"},	-- def: 4 fasteners
+			-- Up to four ingredients allowed
+			}
+		}
+	}
+-- ======================================================================
+local last_interaction 	= time_global()
+local garbage_interval 	= 360
+trash_by_trash_id 		= {}
+trash_by_story_id 		= {}
+virtual_stash 			= nil
+vstash_obj 				= nil
+local bin_place_snd 	= "material\\metal_box\\collide\\big_metal_2"
+local bin_open_snd 		= "interface\\inv_ruck_on"
+-- ======================================================================
+
+local logprefix = "<ZRB> "
+function dl(logtext,...)
+	-- Debug logging
+	--local prefix = scriptname..": "
+	if logtext and debuglogs then 
+		--if verbose then
+			-- local cf = debug.getinfo(2, 'n').name or ""
+			--prefix = scriptname.."."..cf.."[V]: "
+		--end
+		printf(logprefix..logtext,...)
+	end
+end
+
+function vl(logtext,...)
+	-- Verbose logging
+	if verbose and debuglogs then
+		dl(logtext,...)
+	end
+end
+
+function play_sound_for_actor(effect)
+    local snd = xr_sound.get_safe_sound_object(effect)
+    snd:play(db.actor, 0, sound_object.s2d)
+end
+
+function check_new_recipe(enabled,item,customstring)
+	if enabled and item and workshop_autoinject and not modded_exes then
+		if not recipe_added then
+			local recipe_string = customstring or "1,recipe_basic_0,prt_i_scrap,1"
+			local bcs = bin_craft_string[item] or nil
+			if bcs and not customstring then
+				local rs = ""
+				for k,v in pairs(bcs.mats) do
+					if k then
+						local bm = bcs.mats[k]
+						local mat = bm.mat or ""
+						local ct = bm.ct or ""
+						rs = rs..","..mat..","..ct
+					end
+				end
+				recipe_string = bcs.tier..","..bcs.recipe..rs
+				dl("Trying to inject new recipe for %s in workshop tab %s: %s",item,index,recipe_string)
+				workshop_autoinject.add_new_recipe(bcs.index,item,recipe_string)
+			end
+			recipe_added = true
+		end
+	end
+end
+
+function clear_trash_record(id_or_tid)
+	vl("clear_trash_record(%s) called",id_or_tid)
+	if not id_or_tid then return end
+	local trash,trash_id,id
+	if type(id_or_tid) == "number" then
+		trash = trash_by_story_id
+		id = id_or_tid
+		trash_id = trash and trash[id] and trash[id].trash_id
+	elseif type(id_or_tid) == "string" then
+		trash = trash_by_trash_id
+		trash_id = id_or_tid
+		id = trash and trash[trash_id] and trash[trash_id].id
+	else return	end
+	if id and trash_by_story_id[id] then
+		vl("clearing record for trash_by_story_id[%s]",id)
+		trash_by_story_id[id] = nil
+	end
+	if trash_id and trash_by_trash_id[trash_id] then
+		vl("clearing record for trash_by_trash_id[%s]",trash_id)
+		trash_by_trash_id[trash_id] = nil
+	end
+	if virtual_stash and is_empty(trash_by_story_id) then
+		alife_release_id(virtual_stash)
+		virtual_stash = nil
+	end
+	local obj = get_object_by_id(id)
+	local name = obj and obj:name() or "unknown"
+	dl("%s (%s) removed from trash, removing %s from deletion queue",name,id,trash_id)
+	return true
+end
+
+
+function remove_from_trash(id)
+	local trash = id and trash_by_story_id[id]
+	if trash then
+		RemoveTimeEvent("trashcan_item_deletion",queue_name..trash.trash_id)
+	end
+	clear_trash_record(id)
+end
+
+
+function delete_item(obj,trash_id,uninstall)
+	local id
+	if not obj then
+		id = trash_by_trash_id[trash_id] and trash_by_trash_id[trash_id].id
+		if id then
+			obj = get_object_by_id(id)
+			if not obj then
+				dl("WARNING: no valid object or trash_id passed to delete_item!")
+				return
+			end
+		end
+	else
+		id = obj:id()
+	end
+	if deletion_enabled or uninstall then 
+		if uninstall then
+			dl("Uninstall: deleting copy of %s",bin_placeable)
+		else
+			dl("%s timed out, deleting id %s from recycle bin",obj:name(),id)
+		end
+		local se_obj 	= alife_object(id)
+		local success 	= alife_release_id(id)
+		if success then
+			dl("trash_id %s | obj id %s released successfully",id,trash_id)
+			clear_trash_record(id)
+		else
+			dl("WARNING: object id %s could not be released for some reason!",id)
+		end
+	else
+		dl("deletion_enabled was set to %s, nothing done with id %s",deletion_enabled,id)
+		clear_trash_record(id)
+	end
+	if virtual_stash and is_empty(trash_by_trash_id) then
+		alife_release_id(virtual_stash)
+		virtual_stash = nil
+	end
+	return true
+end
+
+function process_queued_item(obj,trash_id)
+	if trash_id and trash_by_trash_id and trash_by_trash_id[trash_id] then
+		vl("queued item %s still has trash record %s, passing to delete_item",obj and obj:id(),trash_id)
+		delete_item(obj,trash_id)
+	end
+	return true
+end
+
+function queue_item_deletion(obj)
+	if obj and deletion_enabled then
+		local tg = time_global()
+		local id = obj:id()
+		local trash_id = tostring(tg).."_"..tostring(id).."_"..tostring(math.random(1,1000))
+		trash_by_trash_id[trash_id] = {id = id,added = tg}
+		trash_by_story_id[id] = {}
+		trash_by_story_id[id].trash_id = trash_id
+		dl("Actor put item %s in trash can, queueing for deletion at %s with trash_id %s",obj:section(),tg,trash_id)
+		CreateTimeEvent("trashcan_item_deletion",queue_name..trash_id,trashcan_deletion_timeout,process_queued_item,obj,trash_id)
+	else
+		dl("deletion_enabled is %s, %s not queued for deletion",deletion_enabled,obj:section())
+	end
+end
+
+function get_trash_record(id_or_tid,tbl)
+	if not id_or_tid then return end
+	local trash = tbl or nil
+	if type(id_or_tid) == "number" then
+		trash = trash or trash_by_story_id
+	elseif type(id_or_tid) == "string" then
+		trash = trash or trash_by_trash_id
+	else return	end
+
+	return id_or_tid and trash and trash[id_or_tid]
+end
+
+function garbage_collection()
+	if trash_by_trash_id and not is_empty(trash_by_trash_id) then
+		for trash_id,td in pairs(trash_by_trash_id) do
+			local id = td and td.id
+			local obj
+			if id then obj = get_object_by_id(id) end
+			if obj then
+				queue_item_deletion(obj,trash_id)
+				dl("TID %s: unprocessed trash for id %s, queueing for deletion")
+			else
+				trash_by_trash_id[trash_id] = nil
+				dl("TID %s: no object for id %s, clearing trash record")				
+			end
+		end
+		CreateTimeEvent("zrb_garbage_collection",0,garbage_interval,garbage_collection)
+	end
+	return true
+end
+
+function uninstall_cleanup()
+	local function search(temp , item)
+		if item:section() == bin_placeable then
+			delete_item(item,nil,true)
+		end
+	end
+	if started then
+		db.actor:iterate_inventory(search,nil)
+	end
+	uninstall = false
+	return true
+end
+
+function menu_placebin(obj) -- return context menu "place" text
+	local p = obj:parent()
+	if not (p and p:id() == AC_ID) then return end
+	if obj and (obj:section() == bin_placeable) then
+		return gts("st_place_trashcan")
+	end
+end
+
+function func_placebin(obj)
+	local sec = obj and obj:section()
+	local id = obj and obj:id()
+	local se_obj = alife_create(bin_worlditem,db.actor:position(),db.actor:level_vertex_id(),db.actor:game_vertex_id())
+	if (se_obj) then
+		
+		printf("Search tip: %s",txt)
+		local sid = se_obj.id
+		function set_tip()
+			local tiptxt = gts("st_trashcan_searchtip")
+			local obj = db.storage[sid] and db.storage[sid].object or level.object_by_id(sid)
+			if obj then
+				obj:set_tip_text(tiptxt)
+			end
+			return true
+		end
+		CreateTimeEvent("zrb_set_tiptext",0,0.5,set_tip)
+
+		txt = gts("st_itm_placeable_trashcan_name")
+		if show_mapspots then
+			level.map_add_object_spot(sid, mapspot_string, txt)
+		end
+		local showtxt
+		if mollyguard then 
+			showtxt = gts("st_trashcan_mollyguard")..
+			" "..tostring(trashcan_deletion_timeout).." "..
+			gts("st_trashcan_seconds").."!"
+		else
+			showtxt = gts("st_trashcan_shutupwesley")
+		end
+		actor_menu.set_msg(1,showtxt,4)
+		local m_data = alife_storage_manager.get_state()
+		if not (m_data.player_created_stashes) then 
+			m_data.player_created_stashes = {}
+		end
+		m_data.player_created_stashes[sid] = sec
+		alife_release_id(id)
+		local data = {
+			stash_id = sid,
+			stash_name = txt,
+			stash_section = sec,
+		}
+
+		SendScriptCallback("actor_on_stash_create",data)
+	end
+	hide_hud_inventory()
+	play_sound_for_actor(bin_place_snd)
+end
+
+function menu_openbin(obj) -- return context menu "open" text
+	local p = obj:parent()
+	if not (p and p:id() == AC_ID) then return end
+	if obj and (obj:section() == bin_placeable) then
+		return gts("st_open_trashcan")
+	end
+end
+
+function func_openbin(obj)
+	local vstash_obj = virtual_stash and get_object_by_id(virtual_stash)
+	if not vstash_obj then
+		-- spawn virtual stash if it doesn't exist yet
+		local pos 		= db.actor:position()
+		pos 			= vector():set(pos.x - 25, pos.y + 25, pos.z)
+		vl("No virtual stash exists, spawning %s at %s,%s,%s",bin_virtual,pos.x,pos.y,pos.z)
+		local se_obj 	= alife_create(bin_virtual,pos,db.actor:level_vertex_id(),db.actor:game_vertex_id())
+		if not se_obj then return end
+
+		vl("spawned %s (%s) at tg %s",se_obj:name(),se_obj.id,time_global())
+		virtual_stash 	= se_obj.id
+	end
+	function delayed_open(try)
+		local tg = time_global()
+		try = try or 0
+		-- delay of one frame to give the game object time to exist
+		--local vstash_obj = get_object_by_id(virtual_stash)
+		local id = virtual_stash
+		vstash_obj = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+		local se_obj = alife_object(id)
+		if not vstash_obj then
+			tg = time_global()
+			if try > 20 then
+				printf(logprefix.."ERROR: virtual stash %s was spawned (se_obj: %s) but refuses to exist as a game object (vstash_obj: %s) even after 0.5s (tg %s)",id,se_obj,vstash_obj,tg)
+			else
+				--vl("No game object found yet for %s at tg %s",id,tg)
+				CreateTimeEvent("zrb_delay_open_"..tg,0,0.025,delayed_open,try + 1)
+			end
+			return true
+		end
+		vstash_obj:use(db.actor)
+		play_sound_for_actor(bin_open_snd)
+		return true
+	end
+	if virtual_stash then
+		CreateTimeEvent("zrb_delay_open",0,0.05,delayed_open)
+	else
+		dl("ERROR: Could not spawn %s!",bin_virtual)
+	end
+	hide_hud_inventory()
+end
+
+
+function on_option_change()
+	if ui_mcm then
+		-- If you have MCM, if will override the hardcoded settings
+		deletion_enabled 			= ui_mcm.get("zrb/mod_enabled")
+		trashcan_deletion_timeout 	= ui_mcm.get("zrb/deletion_timeout")
+		show_mapspots 	 			= ui_mcm.get("zrb/use_mapspots") and modded_exes and true or false
+		mollyguard					= ui_mcm.get("zrb/warn_enabled")
+		add_new_recipe				= ui_mcm.get("zrb/add_recipe")
+		gimme_one 					= ui_mcm.get("zrb/spawn_bin")
+		uninstall 					= ui_mcm.get("zrb/uninstall")
+		debuglogs 					= ui_mcm.get("zrb/debuglogs")
+		dl("MCM options synced, enabled=%s. | timeout %s | mapspots: %s | warn: %s | gimme: %s",deletion_enabled,trashcan_deletion_timeout,show_mapspots,mollyguard,gimme_one)
+	end
+	if gimme_one then
+		dl("Giving a free Recycle Bin to the player")
+		alife_create_item(bin_placeable, db.actor)
+		gimme_one = false
+		ui_mcm.set("zrb/spawn_bin",gimme_one)
+	end
+	if uninstall then
+		dl("Removing all copies of the Recycle Bin from player's inventory")
+		uninstall_cleanup()
+		ui_mcm.set("zrb/uninstall",false)
+	end
+	if not modded_exes then check_new_recipe(add_new_recipe,bin_placeable) end
+	Unregister_UI("UICreateTrash")
+end
+
+local actor_invs = {
+	[EDDListType.iActorSlot] = true,
+	[EDDListType.iActorBag]  = true,
+	[EDDListType.iActorBelt] = true
+}
+function ActorMenu_on_item_before_move(flags, stash_id, item, mode, bag_from) 
+	if not actor_invs[bag_from] then return end
+	local stash_obj = level.object_by_id(stash_id)
+	if not (item and stash_obj) then return end
+	if ((stash_obj:section() == bin_virtual) or
+		(stash_obj:section() == bin_worlditem)) and
+		(item:section() == bin_placeable) then
+			flags.ret_value = false
+			return
+	end
+end
+
+
+function actor_on_item_put_in_box(box,obj)
+	if not (box and obj) then return end
+	if (box:section() == bin_worlditem) or (box:section() == bin_virtual) then
+		last_interaction = time_global()
+		queue_item_deletion(obj)
+	end
+end
+
+function actor_on_item_take_from_box(box,obj)
+	if not (box and obj) then return end
+	local sec = box:section()
+	if not ((sec == bin_worlditem) or (sec == bin_virtual)) then return end
+
+	local id = obj:id()
+	local name = obj:name()
+	dl("Player took %s (%s) from trash, processing",name,id)
+	last_interaction = time_global()
+
+	if (box:is_inv_box_empty()) then
+		hide_hud_inventory()
+		local box_id = box:id()
+		if (sec == bin_worlditem) or (sec == bin_virtual) then
+			local data = {
+				stash_id = box_id,
+				cancel = false,
+			}
+			SendScriptCallback("actor_on_stash_remove",data)
+			if data.cancel then
+				dl("stash removal for %s canceled by another script",box_id)
+				remove_from_trash(id)
+				return
+			else
+				if show_mapspots then
+					level.map_remove_object_spot(box_id, mapspot_string)
+				end
+				
+				local m_data = alife_storage_manager.get_state()
+				if (m_data.player_created_stashes and m_data.player_created_stashes[box_id]) then 
+					local section = m_data.player_created_stashes[box_id]
+					alife_create_item(section, db.actor)
+					m_data.player_created_stashes[box_id] = nil
+				end
+			end
+		end
+		remove_from_trash(id)
+		local se_obj = alife_object(box_id)
+		if se_obj then
+			alife_release(se_obj)
+		end
+		if box_id == virtual_stash then
+			virtual_stash = nil
+		end
+	end
+
+
+end
+
+function actor_on_item_use(obj)
+	if not (obj and bins[obj:section()]) then return end
+	func_placebin(obj)
+end
+
+function actor_on_first_update()
+	on_option_change()
+	started = true
+	garbage_collection()
+end
+
+
+function load_state(data)
+	if not data and data.zrb_data then return end
+	local zrb_data = data and data.zrb_data
+	trash_by_trash_id = (zrb_data and zrb_data.trash_by_trash_id) or {}
+end
+
+
+function save_state(data)
+	if trash_by_trash_id and not is_empty(trash_by_trash_id) then
+		local zrb_data = {trash_by_trash_id = trash_by_trash_id}
+		data.zrb_data = zrb_data
+	end
+end
+
+function on_game_start()
+	if not killswitch then
+		RegisterScriptCallback("ActorMenu_on_item_before_move",ActorMenu_on_item_before_move)
+		RegisterScriptCallback("actor_on_item_take_from_box",actor_on_item_take_from_box)
+		RegisterScriptCallback("actor_on_item_put_in_box",actor_on_item_put_in_box)
+		RegisterScriptCallback("actor_on_item_use",actor_on_item_use)
+		RegisterScriptCallback("actor_on_first_update",actor_on_first_update)
+		RegisterScriptCallback("on_option_change",on_option_change)
+		RegisterScriptCallback("save_state",save_state)
+		RegisterScriptCallback("load_state",load_state)
+	end
+end

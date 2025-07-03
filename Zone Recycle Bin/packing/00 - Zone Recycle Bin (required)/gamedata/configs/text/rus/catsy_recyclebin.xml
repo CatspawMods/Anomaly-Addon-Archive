@@ -1,0 +1,88 @@
+<!--
+    Zone Recycle Bin
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/zone-recycle-bin-10-for-anomaly-151-and-152
+    Contents: Russian string localization
+    Translation by Asametar
+-->
+
+<string_table>
+    <string id="st_itm_placeable_trashcan_name">
+        <text>Мусорный бак</text>
+    </string>
+    <string id="ui_mcm_menu_zrb">
+        <text>Мусорный бак</text>
+    </string>
+    <string id="st_place_trashcan">
+    	<text>Разместить урну</text>
+    </string>
+    <string id="st_trashcan_mollyguard">
+    	<text>ВНИМАНИЕ: Любой предмет, помещённый в этот контейнер, будет БЕЗВОЗВРАТНО уничтожен через</text>
+    </string>
+    <string id="st_trashcan_shutupwesley">
+        <text>Мусорный бак размещён</text>
+    </string>
+	<string id="st_trashcan_seconds">
+    	<text>секунд</text>
+    </string>
+	<string id="st_trashcan_searchtip">
+    	<text>Поместить предмет в урну ($$ACTION_USE$$)</text>
+    </string>
+	<string id="st_placeable_trashcan_descr">
+		<text>Вместительный металлический контейнер, предназначеный для утилизации нежелательных предметов. Можно разместить как тайник и работает по такому же принципу, но любые предметы, помещенные в контейнер, будут безвозвратно уничтожены после определенного периода времени.\n \n
+		%c[ui_gray_3]ХАРАКТЕРИСТИКИ:\n
+		%c[d_blue] • %c[ui_gray_2] размещаемый предмет\n
+		%c[d_blue] • %c[ui_gray_2] уничтожает всё помещённое внутрь\n</text>
+	</string>
+    <string id="ui_mcm_zrb_mod_enabled">
+        <text>Вкл.\Выкл. удаление пердметов в мусорном баке</text>
+    </string>
+    <string id="ui_mcm_zrb_mod_enabled_desc">
+        <text>Вкл.\Выкл. функцию удаления всех помещённых предметов в мусорный бак. На случай, если по какой-то причине, вам понадобится отключать данную функцию.</text>
+    </string>
+    <string id="ui_mcm_zrb_deletion_timeout">
+        <text>Задержка по времени перед удалением предмета</text>
+    </string>
+    <string id="ui_mcm_zrb_deletion_timeout_desc">
+        <text>Количество секунд, которые должны пройти перед тем как из урны будут удалены все предметы.\n \n
+
+        После того как произойдёт очистка все предметы будут утеряны НАВСЕГДА.</text>
+    </string>
+    <string id="ui_mcm_zrb_use_mapspots">
+        <text>Добавить специальную иконку для мусорной урны</text>
+    </string>
+    <string id="ui_mcm_zrb_use_mapspots_desc">
+        <text>Если включено, то специальная иконка будет добавлена на место размещения урны.</text>
+    </string>
+    <string id="ui_mcm_zrb_spawn_bin">
+        <text>Спавн бесплатного образца мусорной урны</text>
+    </string>
+    <string id="ui_mcm_zrb_spawn_bin_desc">
+        <text>Если активировано, в инвентаре у игрока появится одна мусорная урна. После процедуры необходимо отключить опцию. Если понадобится ещё одна урна процедуру можно повторить.</text>
+    </string>
+    <string id="ui_mcm_zrb_warn_enabled">
+        <text>Предупреждать игрока о безвозвратном удалении вещей</text>
+    </string>
+    <string id="ui_mcm_zrb_warn_enabled_desc">
+        <text>Каждый раз, при размещении мусорной урны, игрок будет получать предупреждающее сообщение о том, что все предметы помещённые в урну будут удалены безвозвратно.</text>
+    </string>
+    <string id="ui_mcm_zrb_uninstall">
+        <text>Удалить аддон</text>
+    </string>
+    <string id="ui_mcm_zrb_uninstall_desc">
+        <text>Если включено, все копии Мусорный бак будут удалены из инвентаря игрока.</text>
+    </string>
+
+<!-- Added in 1.5 -->
+    <string id="st_open_trashcan">
+        <text>вставить мусор</text>
+    </string>
+
+    <string id="ui_mcm_zrb_debuglogs">
+        <text>Включить ведение журнала отладки</text>
+    </string>
+    <string id="ui_mcm_zrb_debuglogs_desc">
+        <text>Если этот параметр включен, скрипт отправит в консоль спам с данными того, что он делает. Обычно это должно быть выключено. Но если вы сообщаете мне о проблеме, мне, вероятно, потребуется, чтобы вы воспроизвели проблему с включенной подробной отладочной регистрацией.</text>
+    </string>
+
+</string_table>

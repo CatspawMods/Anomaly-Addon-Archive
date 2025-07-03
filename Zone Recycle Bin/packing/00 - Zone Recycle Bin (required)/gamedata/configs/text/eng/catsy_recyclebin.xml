@@ -1,0 +1,90 @@
+<!--
+    Zone Recycle Bin
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/zone-recycle-bin-10-for-anomaly-151-and-152
+    Contents: Official English string definitions
+
+    Permission granted to freely translate into any language.
+-->
+
+<string_table>
+    <string id="st_itm_placeable_trashcan_name">
+        <text>Zone Recycle Bin</text>
+    </string>
+    <string id="ui_mcm_menu_zrb">
+        <text>Zone Recycle Bin</text>
+    </string>
+    <string id="st_place_trashcan">
+    	<text>place bin</text>
+    </string>
+    <string id="st_trashcan_mollyguard">
+    	<text>WARNING: Any and all items placed in this container will be DESTROYED after</text>
+    </string>
+    <string id="st_trashcan_shutupwesley">
+        <text>Recycle Bin placed</text>
+    </string>
+	<string id="st_trashcan_seconds">
+    	<text>seconds</text>
+    </string>
+	<string id="st_trashcan_searchtip">
+    	<text>Place items in Recycle Bin ($$ACTION_USE$$)</text>
+    </string>
+	<string id="st_placeable_trashcan_descr">
+		<text>A sizeable metal container suitable for disposing of unwanted 
+		items. Can be placed like a stash and works almost identically, but 
+		any items placed in the container will be permanently destroyed after 
+		a certain period of time.\n \n
+		%c[ui_gray_3]PROPERTIES:\n
+		%c[d_blue] • %c[ui_gray_2] placeable container\n
+		%c[d_blue] • %c[ui_gray_2] destroys anything placed inside\n</text>
+	</string>
+    <string id="ui_mcm_zrb_mod_enabled">
+        <text>Enable item deletion</text>
+    </string>
+    <string id="ui_mcm_zrb_mod_enabled_desc">
+        <text>Toggles whether item deletion will occur, in case you need to disable it for any reason.</text>
+    </string>
+    <string id="ui_mcm_zrb_deletion_timeout">
+        <text>Delay before item deletion</text>
+    </string>
+    <string id="ui_mcm_zrb_deletion_timeout_desc">
+        <text>The number of seconds the Recycle Bin will wait before emptying.\n \nOnce this happens, all items in the container will be lost FOREVER.</text>
+    </string>
+    <string id="ui_mcm_zrb_use_mapspots">
+        <text>Add mapspots for placed Recycle Bin</text>
+    </string>
+    <string id="ui_mcm_zrb_use_mapspots_desc">
+        <text>If enabled, a unique map icon will be added whenever a Recycle Bin is placed.</text>
+    </string>
+    <string id="ui_mcm_zrb_spawn_bin">
+        <text>Spawn free Recycle Bin for player</text>
+    </string>
+    <string id="ui_mcm_zrb_spawn_bin_desc">
+        <text>If enabled, ZRB will spawn a free copy of the placeable container in their inventory, then toggle this option back off. Flip it back on again if you ever need another.</text>
+    </string>
+    <string id="ui_mcm_zrb_warn_enabled">
+        <text>Warn player about irrecoverable item deletion</text>
+    </string>
+    <string id="ui_mcm_zrb_warn_enabled_desc">
+        <text>Each time the player places a Recycle Bin, ZRB will annoy them with a dire warning about how item deletion is, believe it or not, permanent. Uncheck this if you want a normal confirmation message instead.</text>
+    </string>
+    <string id="ui_mcm_zrb_uninstall">
+        <text>Uninstall ZRB</text>
+    </string>
+    <string id="ui_mcm_zrb_uninstall_desc">
+        <text>Checking this will delete all copies of the Recycle Bin in the player's inventory.</text>
+    </string>
+
+<!-- Added in 1.5 -->
+    <string id="st_open_trashcan">
+        <text>open bin</text>
+    </string>
+    
+    <string id="ui_mcm_zrb_debuglogs">
+        <text>Enable debug logging</text>
+    </string>
+    <string id="ui_mcm_zrb_debuglogs_desc">
+        <text>If enabled, the script will spam the console with noisy evidence of what it is doing. This should normally be off. But if you are reporting a problem to me, I will probably need you to reproduce the issue with debug logging enabled.</text>
+    </string>
+
+</string_table>

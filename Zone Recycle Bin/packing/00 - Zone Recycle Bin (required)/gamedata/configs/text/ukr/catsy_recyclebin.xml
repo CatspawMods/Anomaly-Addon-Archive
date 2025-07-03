@@ -1,0 +1,88 @@
+<!--
+    Zone Recycle Bin
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/zone-recycle-bin-10-for-anomaly-151-and-152
+    Contents: Ukrainian string localization
+    Translation by Asametar
+-->
+
+<string_table>
+    <string id="st_itm_placeable_trashcan_name">
+        <text>Сміттєвий бак</text>
+    </string>
+    <string id="ui_mcm_menu_zrb">
+        <text>Сміттєвий бак</text>
+    </string>
+    <string id="st_place_trashcan">
+    	<text>Розмістити</text>
+    </string>
+    <string id="st_trashcan_mollyguard">
+    	<text>УВАГА: Будь-який предмет, поміщений у цей контейнер, буде безповоротно знищений через</text>
+    </string>
+    <string id="st_trashcan_shutupwesley">
+        <text>Сміттєвий бак розмiщен</text>
+    </string>
+	<string id="st_trashcan_seconds">
+    	<text>секунд</text>
+    </string>
+	<string id="st_trashcan_searchtip">
+    	<text>Помістити предмет у бак ($$ACTION_USE$$)</text>
+    </string>
+	<string id="st_placeable_trashcan_descr">
+		<text>Місткий металевий контейнер призначений для утилізації небажаних предметів. Можна розмістити як схованку і працює за таким же принципом, але будь-які предмети, поміщені в контейнер, будуть безповоротно знищені після певного періоду часу.\n \n
+		%c[ui_gray_3]ХАРАКТЕРИСТИКИ:\n
+		%c[d_blue] • %c[ui_gray_2] розміщуваний предмет\n
+		%c[d_blue] • %c[ui_gray_2] знищує все поміщене всередину\n</text>
+	</string>
+    <string id="ui_mcm_zrb_mod_enabled">
+        <text>Ввімк.\Вимк. видалення предметів у сміттєвому баку</text>
+    </string>
+    <string id="ui_mcm_zrb_mod_enabled_desc">
+        <text>Ввімк.\Вимк. функцію видалення всіх поміщених предметів у сміттєвий бак. На випадок, якщо з якоїсь причини вам знадобиться відключати цю функцію.</text>
+    </string>
+    <string id="ui_mcm_zrb_deletion_timeout">
+        <text>Затримка часу перед видаленням предмета</text>
+    </string>
+    <string id="ui_mcm_zrb_deletion_timeout_desc">
+        <text>Кількість секунд, які повинні пройти перед тим, як з урни будуть видалені всі предмети.\n \n
+
+        Після того як відбудеться очищення всі предмети будуть втрачені НАЗАВЖДИ.</text>
+    </string>
+    <string id="ui_mcm_zrb_use_mapspots">
+        <text>Додати спеціальну іконку для сміттєвого баку</text>
+    </string>
+    <string id="ui_mcm_zrb_use_mapspots_desc">
+        <text>Якщо увімкнено, то спеціальну іконку буде додано на місце розміщення сміттєвого баку.</text>
+    </string>
+    <string id="ui_mcm_zrb_spawn_bin">
+        <text>Спавн безкоштовного зразка сміттєвої урни</text>
+    </string>
+    <string id="ui_mcm_zrb_spawn_bin_desc">
+        <text>Якщо активовано, в інвентарі у гравця з'явиться одна урна для сміття. Після процедури потрібно вимкнути опцію. Якщо потрібно ще одна урна процедуру можна повторити.</text>
+    </string>
+    <string id="ui_mcm_zrb_warn_enabled">
+        <text>Попереджати гравця про безповоротне видалення речей</text>
+    </string>
+    <string id="ui_mcm_zrb_warn_enabled_desc">
+        <text>Щоразу, при розміщенні урни для сміття, гравець отримуватиме попереджувальне повідомлення про те, що всі предмети поміщені в урну будуть видалені безповоротно.</text>
+    </string>
+    <string id="ui_mcm_zrb_uninstall">
+        <text>Видаліть аддон</text>
+    </string>
+    <string id="ui_mcm_zrb_uninstall_desc">
+        <text>Якщо ввімкнено, усі сміттєві баки в інвентарі гравця буде видалено.</text>
+    </string>
+
+<!-- Added in 1.5 -->
+    <string id="st_open_trashcan">
+        <text>вставити сміття</text>
+    </string>
+
+    <string id="ui_mcm_zrb_debuglogs">
+        <text>Увімкнути ведення журналу налагодження</text>
+    </string>
+    <string id="ui_mcm_zrb_debuglogs_desc">
+        <text>Якщо цей параметр увімкнено, скрипт надішле в консоль спам із даними того, що він робить. Зазвичай це має бути вимкнено. Але якщо ви повідомляєте мені про проблему, мені, ймовірно, знадобиться, щоб ви відтворили проблему з увімкненим детальним налагоджувальним реєстром.</text>
+    </string>
+
+</string_table>

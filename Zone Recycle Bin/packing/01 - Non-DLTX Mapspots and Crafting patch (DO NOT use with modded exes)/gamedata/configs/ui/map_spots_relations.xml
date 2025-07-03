@@ -1,0 +1,58 @@
+<!-- ======================================================================
+	Zone Recycle Bin
+	Author: Catspaw (CatspawMods @ ModDB)
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+
+	DO NOT install this file if:
+	1. 	You don't want to use the mapspot icon feature, OR
+	2. 	You are using demoninzed modded exes (or a modpack that
+		uses them such as GAMMA)
+
+	But seriously: if are not using	modded exes, you really should be. If you aren't running a modpack like GAMMA or EFP, you can get the
+	basic modded exes from here:
+
+	https://github.com/themrdemonized/STALKER-Anomaly-modded-exes
+
+	Or you can install Screen Space Shaders, which includes all the same
+	improvements:
+
+	https://www.moddb.com/mods/stalker-anomaly/addons/screen-space-shaders
+
+	Just do yourself and every modder a favor, and stop using the basic
+	vanilla binaries that don't support DLTX and other improvements.
+===================================================================-->	
+
+#include "ui\map_spots_zrb.xml"
+
+	<enemy_location hint="enemy" no_offline="1">
+		<mini_map  spot="enemy_mini_spot"/>
+	</enemy_location>
+
+	<neutral_location hint="neutral">
+		<mini_map  spot="neutral_mini_spot"/>
+	</neutral_location>
+
+	<friend_location hint="friend">
+		<mini_map  spot="friend_mini_spot"/>
+	</friend_location>
+
+	<deadbody_location hint="deadbody">
+		<mini_map  spot="deadbody_mini_spot"/>
+	</deadbody_location>
+
+	<enemy_mini_spot width="0" height="0" stretch="1" alignment="c" >
+		<texture r="255" g="0" b="0">ui_mmap_common_actor</texture>
+	</enemy_mini_spot>
+
+	<neutral_mini_spot width="7" height="7" stretch="1" alignment="c">
+		<texture r="255" g="200" b="0">ui_mmap_common_actor</texture>
+	</neutral_mini_spot>
+
+	<friend_mini_spot width="7" height="7" stretch="1" alignment="c">
+		<texture r="50" g="255" b="0">ui_mmap_common_actor</texture>
+	</friend_mini_spot>
+
+	<deadbody_mini_spot width="0" height="0" stretch="1" alignment="c">
+		<texture r="168" g="168" b="168">ui_mmap_common_actor</texture>
+	</deadbody_mini_spot>
+

@@ -1,0 +1,14 @@
+<!--
+**  Zone Recycle Bin
+**  Author: Catspaw (CatspawMods @ ModDB)
+**  Source: https://www.moddb.com/members/catspawmods/addons
+	Contents: Texture definitions. You probably shouldn't 
+	mess with this unless you know what you're doing.
+-->
+<w>
+	<file name ="ui\ui_icons_trashcan">
+		<texture id = "ui_icons_item_trashcan" x="0" y="0" width="100" height="150" />
+		<texture id="ui_inGame2_PDA_icon_trash" x="228" y="228" width="27" height="27" />
+		<texture id="ui_options_slider_trash" x="0" y="462" width="512" height="50" />
+	</file>
+</w>
