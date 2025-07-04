@@ -44,6 +44,7 @@ I repeat, and let me be completely clear:
 
 > [!CAUTION]
 > :exclamation::exclamation::exclamation: **IF YOU ARE SEEING THAT ERROR IN YOUR LOG ABOUT THE MISSING CALLBACK, YOUR MODDED EXES INSTALLATION IS STILL NOT CURRENT.** :exclamation::exclamation::exclamation:
+>
 > :exclamation::exclamation::exclamation: **EVEN IF YOU HAVE TRIED TO UPDATE THEM, THAT ERROR MEANS YOU MUST REINSTALL THEM FROM SCRATCH ACCORDING TO THE INSTRUCTIONS.** :exclamation::exclamation::exclamation:
 
 I'm sorry to be so blunt and shouty, but I've been testing it with users for a long time now, and the vast majority of the bug reports I get come down to the above issue. If you do the clean reinstall correctly, it _will_ fix this issue.
@@ -110,5 +111,7 @@ Follow the instructions in the [Missing dependencies](#missing-dependencies) sec
 If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue--including your modlist, if you're not using the [stock default GAMMA modlist](https://discord.com/channels/912320241713958912/977190498420801536). If the issue is visual, or concerns a specific object, include a screenshot of what looks wrong, taken in the spot where you made your debug savegame.
 > [!TIP]
 > You will find the game log in `<Anomaly Install Folder>\appdata\logs`. If you're a GAMMA user, this will be in the location where you installed the base game.
+>
+> This log gets *deleted and overwritten* every time the game launches, so don't delay after creating the log--zip it up or make a copy of it right away, before launching the game again.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
