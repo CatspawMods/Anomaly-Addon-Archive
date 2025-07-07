@@ -47,7 +47,6 @@ function dotmarks_take_hf_item(id)
             local obj = id and get_object_by_id(id)
             if not obj then return end
             placeable_furniture.pickup_obj(obj)
-            ui_hud_dotmarks.unregister_scanned_entity(id)
         end
     )
     return true
@@ -55,6 +54,19 @@ function dotmarks_take_hf_item(id)
     -- Make sure that they return true!
 end
 
+function hf_is_pickupable(id)
+-- like hf_binder_wrapper:is_pickupable(), but with a proper nil check for items that aren't HF
+    local data = hf_obj_manager.get_data(id)
+    if (not data) or data.is_world_obj then
+        return false
+    end
+    return true
+end
+
+function unregister_hf_object(id)
+    ui_hud_dotmarks.suspend_marker(ui_hud_dotmarks.get_mark(id))
+    CreateTimeEvent("hf_despawn_delay", id, 0.1, ui_hud_dotmarks.unregister_scanned_entity, id)
+end
 
 function update_placement_mode_state()
     local pmode = placement_mode
@@ -92,6 +104,28 @@ function inject_placeholder_functors()
     -- big and unique enough to need it; most aren't.
 end
 
+mcm_menu_additions = {
+    { id = "header_hideout_furniture", 
+        type            = "desc",
+        text            = "ui_mcm_dotmarks_addons_hideout_furniture",
+        dmark_tex       = "ui_mcm_dmarks_messagebox_transbg_head90",
+        ui_hook_functor = { dotmarks_mcm.init_header_element },
+    },
+    { id = "hf_add_primary_pickup", type = "check", val = 1, def = true },
+    { id = "hf_show_default_secmenu", type = "check", val = 1, def = true },
+    { id = "divider", type= "line" },
+}
+
+if dotmarks_mcm then
+    local dotmarks_addons_menu = dotmarks_mcm.get_mods_menu
+    function dotmarks_mcm.get_mods_menu()
+        local generated_menu = dotmarks_addons_menu()
+        for k,v in spairs(mcm_menu_additions) do
+            table.insert(generated_menu, v)
+        end
+        return generated_menu
+    end
+end
 
 if dotmarks_callbacks then
     RegisterScriptCallback("dotmarks_on_init_complete", inject_placeholder_functors)
@@ -113,7 +147,7 @@ if dotmarks_callbacks then
                     if args.texture or not args.ret_value then return end
                     -- Abort if another script has already taken action on this callback
                     log("[%s][dotmarks_on_new_object_scan] Hideout Furniture patch is checking %s", time_global(), nameid(obj))
-                    local dotcfg        = dotmarks_main.cfg
+                    local cfg           = dotmarks_main.cfg
                     local section       = args.section
                     if (section == "placeable_water_pump") then return end
                     -- The water pump from Fillable Canteens is handled in its own module
@@ -125,7 +159,7 @@ if dotmarks_callbacks then
                     if not args.hf_placeable then return end
                     -- The type of placeable item, also acts as a HF object existence flag
                     -- Abort if this attribute doesn't exist and the section isn't placeable_workshop
-                    if dotcfg.scan.Furniture and not ui_hud_dotmarks.is_object_scannable("Furniture") then
+                    if cfg.scan.Furniture and not ui_hud_dotmarks.is_object_scannable("Furniture") then
                         args.hidden     = true
                     end
                     args.text_interact1 = ini_sys:r_string_ex(obj:section(), "ui_on_simple_interaction")
@@ -145,14 +179,14 @@ if dotmarks_callbacks then
                     local hfws_stash    = (section == "workshop_stash")
                     args.no_sec         = hfws_stash or nil
                     local hf_wrapper    = bind_hf_base.get_wrapper(id)
-                    args.hf_pickup      = hf_wrapper and hf_wrapper:is_pickupable()
+                    args.hf_pickup      = hf_wrapper and hf_is_pickupable(id)
                     args.physics_obj    = (args.clsid == clsid.obj_physic)
                     -- Props are physics objects, and require special handling for picking up
                     args.hf_secondary   = true
                    -- All HF objects at least have their default radial menu, if nothing else
                     args.logged_type    = args.hf_workshop and "a placeable workshop bench" or "a placeable prop"
                     -- Used only for debug logging
-                    args.texture        = (args.hf_workshop and get_texture("Workshops") or get_texture("Tools")) or dotcfg.marker_dotmark or "ui_catsy_marker_intdot"
+                    args.texture        = (args.hf_workshop and get_texture("Workshops") or get_texture("Tools")) or cfg.marker_dotmark or "ui_catsy_marker_intdot"
                     args.inv_section    = ini_sys:r_string_ex(section, "item_section")
                     -- Section name of the physobj's inventory item counterpart
                     args.name           = args.inv_section and gts(utils_catspaw_text.inventory_name(nil, args.inv_section)) or args.name
@@ -185,9 +219,9 @@ if dotmarks_callbacks then
 
                     if args.hf_placeable == "stash" then
                         -- The stash in the homestead workshop is hidden, and not treated like others
-                        dotmarks_main.set_target_data(id, dotcfg.metadata_types.is_container, not hfws_stash)
+                        dotmarks_main.set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
                         args.logged_type    = hfws_stash and "a workshop stash" or "a placeable stash"
-                        args.texture        = hfws_stash and "" or get_texture("Stashes") or dotcfg.marker_dotmark or "ui_catsy_marker_intdot"
+                        args.texture        = hfws_stash and "" or get_texture("Stashes") or cfg.marker_dotmark or "ui_catsy_marker_intdot"
                         args.text           = (not hfws_stash) and (gts("st_alti_search") .. " " .. args.name) or ""
                         if hfws_stash then
                             args.no_update_loop = true
@@ -199,11 +233,11 @@ if dotmarks_callbacks then
                             args.name           = best_localized_name(obj)
                             args.func_interact1 = ( function() end )
                             args.func_interact2 = ui_hud_dotmarks.pick_up_backpack
-                            args.use_verb       = is_zrb and "st_alti_pickup_zrb" or "st_alti_pickup_bp"
+                            args.verb_secondary = is_zrb and "st_alti_pickup_zrb" or "st_alti_pickup_bp"
                             args.is_backpack    = true
                             args.always_show_sec= true
                             args.is_container   = true
-                            args.is_display     = dotcfg.display_cases[section] or nil
+                            args.is_display     = cfg.display_cases[section] or nil
                             -- HF display cases are handled differently than other containers
                             args.has_items      = not obj:is_inv_box_empty()
                             args.hint_filters   = {
@@ -211,7 +245,7 @@ if dotmarks_callbacks then
                                 ["actor_inventory_box_use"] = "actor_inventory_box_use",
                                 ["st_search_treasure"]      = "st_search_treasure",
                             }
-                            args.active_swap = dotcfg.enable_icon_stash and dotcfg.swap_stash or nil
+                            args.active_swap = cfg.enable_icon_stash and cfg.swap_stash and dup_table(cfg.swap_stash) or nil
                         end
                     end
                 end
@@ -254,6 +288,7 @@ if dotmarks_callbacks then
                 function(args, mark)
                     if (not mark) or (not mark.hf_placeable) then return end
                     log("[%s][dotmarks_on_setup_pri_interact] Hideout Furniture patch is checking for a custom primary action on %s", time_global(), mark.name)
+                    local cfg = dotmarks_main.cfg
                     if (mark.hf_placeable == "radio") then
                         log("Setting up primary primary interaction as a placeable radio")
                         mark.func_interact1 = placeable_radio.start_radio_dialog
@@ -279,6 +314,12 @@ if dotmarks_callbacks then
                         log("Setting up primary interaction text for placeable piano")
                         args.text = string.format("%s %s", gts("st_alti_use_booster"), mark.name)
                     elseif (mark.hf_placeable == "prop") then
+                        if not cfg.hf_add_primary_pickup then
+                            log("Primary pickup prompt is disabled for HF props")
+                            args.ret_value = false
+                            return
+                            --args.never_show = (not cfg.hf_add_primary_pickup) or nil
+                        end
                         log("Setting up default interaction text for a static prop")
                         args.text = string.format("%s %s", gts("st_alti_take"), mark.name)
                     else
@@ -295,10 +336,12 @@ if dotmarks_callbacks then
                 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
                 function(args, mark)
                     if (not mark) or (not mark.hf_placeable) then return end
+                    local default_do_nothing = ( function() end )
                     log("[%s][dotmarks_on_setup_sec_interact] Hideout Furniture patch is setting up the secondary action for %s", time_global(), mark.name)
                     mark.checked_for_sec = true
-                    args.text = mark.use_verb and gts(mark.use_verb) or mark.hf_workshop and gts("st_hf_workshop_menu") or gts("st_hf_control_menu")
-                    args.func = mark.func_interact2 or ( function() end )
+                    args.text = mark.verb_secondary and gts(mark.verb_secondary) or mark.hf_workshop and gts("st_hf_workshop_menu") or gts("st_hf_control_menu")
+                    args.func = mark.func_interact2 or default_do_nothing
+                    args.never_show = (not mark.func_interact2) and (not dotmarks_main.cfg.hf_show_default_secmenu) or nil
                 end
             )
 
@@ -311,14 +354,15 @@ if dotmarks_callbacks then
                 --- @param flags table
                 function(id, mark, flags)
                     if not (id and mark and flags and mark.hf_placeable) then return end
-                    log("[%s][dotmarks_on_manual_interact_release] Hideout Furniture patch is checking whether to handle interaction with %s", time_global(), mark.name)
+                    local cfg = dotmarks_main.cfg
+                    log("[%s][dotmarks_on_manual_interact_release] Hideout Furniture patch is checking whether to handle interaction with %s | primary take enabled: %s", time_global(), mark.name, cfg.hf_add_primary_pickup)
                     if (mark.hf_placeable == "stash") then 
                         log("No special handling for HF stashes")
                         return
                     elseif mark.func_exec_pri then
                         log("%s has a custom primary interaction functor, executing it now", mark.name)   
                         mark.func_exec_pri(id)
-                    elseif not mark.func_interact1 then
+                    elseif cfg.hf_add_primary_pickup and not mark.func_interact1 then
                         log("Triggering take animation and notifying HF to pick up %s when complete", mark.name)
                         ui_hud_dotmarks.fake_take_anim(mark,
                             function() 
@@ -332,11 +376,7 @@ if dotmarks_callbacks then
                 end
             )
 
-            RegisterScriptCallback("hf_on_before_furniture_release",
-                --- @param id number
-                function(id) ui_hud_dotmarks.unregister_scanned_entity(id) end
-            )
-
+            RegisterScriptCallback("hf_on_before_furniture_release", unregister_hf_object)
         end
     end
 end

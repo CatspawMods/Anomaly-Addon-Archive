@@ -386,6 +386,13 @@
 			\nThis setting has no effect if the custom primary interaction UI is also hidden.</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_pickup_item_names">
+		<text>Hide vanilla floating pickup names</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_pickup_item_names_desc">
+		<text>If enabled, the floating item names that appear when holding down the interact key will be hidden. This sets the g_draw_pickup_item_names cvar from the modded exes.</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_connecting_line">
 		<text>Hide the connecting white line</text>
 	</string>
@@ -1113,6 +1120,34 @@
 		\nDefault: 12</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_addons_catspawmods">
+		<text>$clr_gldAddons by Catspaw</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_anims">
+		<text>$clr_gldFDDA and Other Animations</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_autoloot">
+		<text>$clr_gldAuto Looter</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_sortplus">
+		<text>$clr_gldSorting Plus</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_utjanui">
+		<text>$clr_gldItem UI Improvements</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_skillsys">
+		<text>$clr_gldSkill System</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_othermods">
+		<text>$clr_gldMiscellaneous Addons</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot">
 		<text>Take-all secondary action triggers Autoloot</text>
 	</string>
@@ -1213,7 +1248,7 @@
 	</string>
 
     <string id="st_skills_stats_dotmark_bonus_range">
-        <text>\n%c[255,255,201,86]•%c[ui_6] Bonus interaction mark range: %c[d_green]+$stat m</text>
+        <text>\n%c[255,255,201,86]â€¢%c[ui_6] Bonus interaction mark range: %c[d_green]+$stat m</text>
     </string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_font_scale_w">
@@ -1285,17 +1320,17 @@
 
 			\n%c[ui_gray_1]From %c[pda_yellow]MCM %c[pda_white]>  %c[pda_yellow]Interaction Dot Marks%c[ui_gray_1]:\n
 
-			%c[pda_white]• %c[pda_blue]General Settings%c[ui_gray_1]: Settings that control whether and how the core elements of the interaction UI are shown. If there's a particular detail you do or don't want to see, you'll probably find it here.\n
+			%c[pda_white]â€¢ %c[pda_blue]General Settings%c[ui_gray_1]: Settings that control whether and how the core elements of the interaction UI are shown. If there's a particular detail you do or don't want to see, you'll probably find it here.\n
 
-			%c[pda_white]• %c[pda_blue]Secondary Interact%c[ui_gray_1]: Settings related the the Secondary Interact function and its associated keybind, as well as whether or not each of the new actions is enabled.\n
+			%c[pda_white]â€¢ %c[pda_blue]Secondary Interact%c[ui_gray_1]: Settings related the the Secondary Interact function and its associated keybind, as well as whether or not each of the new actions is enabled.\n
 
-			%c[pda_white]• %c[pda_blue]Icon Settings%c[ui_gray_1]: Settings that control whether various context-specific icons are shown, as well as their size, color and transparency.\n
+			%c[pda_white]â€¢ %c[pda_blue]Icon Settings%c[ui_gray_1]: Settings that control whether various context-specific icons are shown, as well as their size, color and transparency.\n
 
-			%c[pda_white]• %c[pda_blue]Object Settings%c[ui_gray_1]: Settings that selectively control whether markers are shown at all for various individual classes of object in the game.\n
+			%c[pda_white]â€¢ %c[pda_blue]Object Settings%c[ui_gray_1]: Settings that selectively control whether markers are shown at all for various individual classes of object in the game.\n
 
-			%c[pda_white]• %c[pda_blue]Other Addons%c[ui_gray_1]: Settings related to integration or compatibility with other addons, such as Sorting Plus or Utjan's Item UI.\n
+			%c[pda_white]â€¢ %c[pda_blue]Other Addons%c[ui_gray_1]: Settings related to integration or compatibility with other addons, such as Sorting Plus or Utjan's Item UI.\n
 
-			%c[pda_white]• %c[pda_blue]Advanced Settings%c[ui_gray_1]: Extremely granular settings that let you fine-tune the fonts, sizes, and exact screen positions of various interaction UI elements. To be used with care, but essential if your monitor is unusually large or wide--or if you're as picky about your UI as I am.\n
+			%c[pda_white]â€¢ %c[pda_blue]Advanced Settings%c[ui_gray_1]: Extremely granular settings that let you fine-tune the fonts, sizes, and exact screen positions of various interaction UI elements. To be used with care, but essential if your monitor is unusually large or wide--or if you're as picky about your UI as I am.\n
 
 			\n%c[pda_white]Feel free to experiment, and don't worry about messing anything up--you can always click the %c[pda_yellow]Defaults %c[pda_white]button in MCM.\n
 
@@ -1304,7 +1339,7 @@
 
 			--------------------------------------------------------------------------------\n \n
 
-			%c[pda_red]••• IMPORTANT: To report any bug, you must do the following: •••\n \n
+			%c[pda_red]â€¢â€¢â€¢ IMPORTANT: To report any bug, you must do the following: â€¢â€¢â€¢\n \n
 			%c[ui_gray_1]1. %c[pda_white]Go to %c[pda_yellow]MCM %c[pda_white]> %c[pda_yellow]Interaction Dot Marks %c[pda_white]> %c[pda_yellow]Advanced Settings\n
 			%c[ui_gray_1]2. %c[pda_white]Enable %c[pda_yellow]Debug logging%c[pda_white] and %c[pda_yellow]Verbose logging\n
 			%c[ui_gray_1]3. %c[pda_white]Exit and restart the game completely\n
@@ -1327,5 +1362,5 @@
 	<string id="st_dotmarks_upgrade_defaulted">
 		<text>Some of its settings have been reset to default due to a version upgrade.</text>
 	</string>
-	
+
 </string_table>

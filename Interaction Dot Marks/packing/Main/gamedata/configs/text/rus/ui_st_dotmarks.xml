@@ -387,6 +387,13 @@
 			\nЭта настройка не имеет эффекта, если пользовательский основной пользовательский интерфейс взаимодействия также скрыт.</text>
 	</string>
 
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_pickup_item_names">
+		<text>Скрыть плавающее ванильное отображение названий элементов</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_pickup_item_names_desc">
+		<text>Если эта опция включена, плавающие названия предметов, появляющиеся при нажатии клавиши interact, будут скрыты. Это устанавливает cvar g_draw_pickup_item_names из моддированных экзешников.</text>
+	</string>
+
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_connecting_line">
 		<text>Спрячьте соединительную белую линию</text>
 	</string>
@@ -1125,6 +1132,34 @@
 		<text>Регулирует высоту элементов веса и значения в карточке предмета. Это значение используется для установки расстояния между строками.
 		 \n
 		\nПо умолчанию: 12</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_catspawmods">
+		<text>$clr_gldАддоны от Catspaw</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_anims">
+		<text>$clr_gldFDDA и другие анимации</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_autoloot">
+		<text>$clr_gldАвтолут</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_sortplus">
+		<text>$clr_gldSorting Plus</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_utjanui">
+		<text>$clr_gldItem UI Improvements</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_skillsys">
+		<text>$clr_gldSkill System</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_othermods">
+		<text>$clr_gldРазные аддоны</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkmods_takeall_does_autoloot">

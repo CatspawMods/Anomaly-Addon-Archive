@@ -506,19 +506,25 @@ function get_mods_menu()
 	return {
 		{ id = "menuslide_sec", type = "slide", link = "ui_mcm_dotmarks_banner_mods", size = {512,50}, spacing = 0},
 
-		{ id = "header_addons", 	type = "desc", text = "ui_mcm_dotmarks_addons_desc",
+		{ id = "header_addons", 			type = "desc", text = "ui_mcm_dotmarks_addons_desc",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 			dmark_apos 		= -10,
 		},
+
+		{ id = "divider", type= "line" },
+
+		{ id = "header_mymods", 			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_catspawmods",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
 		{ id = "bodies_use_paw_patches",  	type = "check", 	val = 1, def = cfg.bodies_use_paw_patches },
 		{ id = "bodies_use_mpda_rules",	  	type = "check", 	val = 1, def = cfg.bodies_use_mpda_rules },
 
-		{ id = "divider", type= "line" },
-
-		{ id = "all_squad_members_talk",	type = "check",		val = 1, def = cfg.all_squad_members_talk or utils_catspaw_common.using_gamma_modpack },
-
-		{ id = "divider", type= "line" },
+		{ id = "header_fddaanims", 			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_anims",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
 
 		{ id = "show_prompt_during_anim", 	type = "check", 	val = 1, def = cfg.show_prompt_during_anim },
 		{ id = "prompt_busy_during_anim",	type = "check", 	val = 1, def = cfg.prompt_busy_during_anim },
@@ -528,18 +534,27 @@ function get_mods_menu()
 
 		{ id = "sec_enable_arty_anim", 		type = "check", 	val = 1, def = cfg.sec_enable_arty_anim },
 
-		{ id = "divider", type= "line" },
+		{ id = "header_autoloot",			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_autoloot",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
 
 		{ id = "takeall_does_autoloot", 	type = "check", 	val = 1, min = -384, max = 768, def = cfg.takeall_does_autoloot },
 		{ id = "hijack_autoloot_keybind", 	type = "check", 	val = 1, min = -384, max = 768, def = cfg.hijack_autoloot_keybind },
 
-		{ id = "divider", type= "line" },
+		{ id = "header_sortplus",			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_sortplus",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
 
 		{ id = "sp_hide_junk_items", 		type = "check", 	val = 1, def = cfg.sp_hide_junk_items },
 		{ id = "sp_icon_pos_x", 			type = "input", 	val = 2, min = -512, max = 1024, def = cfg.sp_icon_pos_x},
 		{ id = "sp_icon_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.sp_icon_pos_y },
 
-		{ id = "divider", type= "line" },
+		{ id = "header_utjanui",			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_utjanui",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
 
 		{ id = "parts_dot_orientation", 	type= "list", 		val = 2, def = cfg.parts_dot_orientation, 
 			content = {
@@ -554,13 +569,21 @@ function get_mods_menu()
 		{ id = "parts_dot_scale", 			type = "track", 	val = 2, min = 0, step = 0.1, max = 2, def = cfg.parts_dot_scale },
 		{ id = "parts_dot_shadow_alpha", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 1, def = cfg.parts_dot_shadow_alpha },
 
-		{ id = "divider", type= "line" },
+		{ id = "header_skillsys",			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_skillsys",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
 
 		{ id = "use_skill_system", 			type = "check", 	val = 1, def = cfg.use_skill_system },
 		{ id = "haru_skill_coef", 			type = "input", 	val = 2, min = 0, max = 5, step = 0.01, def = cfg.haru_skill_coef },
 		{ id = "haru_skill_name", 			type = "input", 	val = 0, def = cfg.haru_skill_name },
 
-		{ id = "divider", type= "line" },
+		{ id = "header_othermods",			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_othermods",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
+
+		{ id = "all_squad_members_talk",	type = "check",		val = 1, def = cfg.all_squad_members_talk or utils_catspaw_common.using_gamma_modpack },
 	}
 end
 
@@ -569,7 +592,7 @@ end
 function get_adv_menu()
 	return {
 		{ id = "menuslide_adv", type = "slide", link = "ui_mcm_dotmarks_banner_adv", size = {512,50}, spacing = 0 },
-		{ id = "header_debug", 		type = "desc", text = "ui_mcm_dotmarks_header_debug_nocolor",
+		{ id = "header_debug", 	type = "desc", text = "ui_mcm_dotmarks_header_debug_nocolor",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_text 		= "ui_mcm_dotmarks_header_debug",
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head140",
@@ -592,6 +615,7 @@ function get_adv_menu()
 		{ id = "hide_pri_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_pri_interact_ui },
 		{ id = "hide_sec_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_sec_interact_ui },
 		{ id = "hide_van_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_van_interact_ui },
+		{ id = "hide_pickup_item_names",type = "check", 	val = 1, def = cfg.hide_pickup_item_names },
 
 		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
 

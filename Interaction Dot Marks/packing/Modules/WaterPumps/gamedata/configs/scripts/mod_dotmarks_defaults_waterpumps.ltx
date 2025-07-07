@@ -1,12 +1,22 @@
 ; Interaction Dot Markers (DotMarks)
 ; DLTX changes for Fillable Canteens water pump support
+
+; This also serves as a decent example for how to add your own focus icons to 
+; your custom markers.
 ; =================================================================================
 
 ![template_tables]
+; First you need to add a section name (make it unique) to the template_tables
+; section in dotmarks_defaults
 swap_water_pump
 
 @[swap_water_pump]
+; Then add your new section name itself to dotmarks_defaults
 texture     = ui_catsy_marker_water_pump
+; Marker texture to use when your custom item has focus
 width       = 16
 height      = 16
+; Texture dimensions to use for the marker
 line_adj_h  = -13
+; For the connecting white line, based on the marker size - optional
+; Only really needed if someone enables the white line feature

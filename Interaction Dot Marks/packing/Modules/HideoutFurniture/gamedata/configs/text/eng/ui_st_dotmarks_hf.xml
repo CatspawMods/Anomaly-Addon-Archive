@@ -25,4 +25,22 @@
         <text>Mark Hideout Furniture</text>
     </string>
 
+    <string id="ui_mcm_dotmarks_addons_hideout_furniture">
+        <text>$clr_gldHideout Furniture</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkmods_hf_add_primary_pickup">
+        <text>Add primary interaction to pick up prop items</text>
+    </string>
+    <string id="ui_mcm_dotmarks_dmarkmods_hf_add_primary_pickup_desc">
+        <text>Many Hideout Furniture items already have primary interactions, such as the beds and interactive lights. If a prop item does not already have one, and this setting is enabled, DotMarks will add a custom primary interaction that allows you to pick up the prop immediately, without having to long-press the Hideout Furniture menu.</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkmods_hf_show_default_secmenu">
+        <text>Show prompt for Hideout Furniture's default menu</text>
+    </string>
+    <string id="ui_mcm_dotmarks_dmarkmods_hf_show_default_secmenu_desc">
+        <text>If DotMarks has not already added a custom secondary action to an item, and this setting is enabled, DotMarks will show a secondary prompt for the default Hideout Furniture menu--which is normally accessed via long-press of the primary use key.</text>
+    </string>
+
 </string_table>
