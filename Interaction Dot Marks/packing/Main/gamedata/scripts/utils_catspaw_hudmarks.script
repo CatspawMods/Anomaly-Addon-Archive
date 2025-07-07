@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "1.0"
-release_date    = 20250530
+script_version  = "1.2"
+release_date    = 20250707
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -46,6 +46,7 @@ assert(utils_catspaw_text, "\n\n"..
 assert(utils_catspaw_mapspots, "\n\n"..
     "! utils_catspaw_hudmarks requires utils_catspaw_mapspots, which does not exist!\n\n"
 )
+-- Required: configs\ui\ui_hud_marker.xml, if you don't pass args.xmlfile
 -- ======================================================================
 
 local dl, vl, xml
@@ -659,14 +660,18 @@ function get_hover_tolerance(mark_id)
     return hmm:HoverTolerance(mark)
 end
 
+function is_obj_crosshair_target(id) return hmm and hmm.current_crosshair and (id == hmm.current_crosshair) end
+function is_obj_pickup_target(id) return hmm and hmm.current_pickup and (id == hmm.current_pickup) end
+function is_obj_current_target(id) return hmm and hmm.current_target and (id == hmm.current_target) end
+
 function is_object_already_targeted(id)
     if not id then return end
-    local hmm = get_hud_mark_manager()
-    local is_xhair  = hmm and hmm.current_crosshair and (id == hmm.current_crosshair)
-    local is_pickup = hmm and hmm.current_pickup and (id == hmm.current_pickup)
-    local is_target = hmm and hmm.current_target and (id == hmm.current_target)
-    local result = is_pickup or is_target or is_xhair
-    local _ = debug_dump and vl("is_object_already_targeted(%s): %s | pickup: %s | look_target: %s | crosshair: %s", id, result, is_pickup, is_target, is_xhair)
+    local hmm       = get_hud_mark_manager()
+    local is_xhair  = is_obj_crosshair_target(id)
+    local is_pickup = is_obj_pickup_target(id)
+    local is_target = is_obj_current_target(id)
+    local result    = is_pickup or is_target or is_xhair
+    local _         = debug_dump and vl("is_object_already_targeted(%s): %s | pickup: %s | look_target: %s | crosshair: %s", id, result, is_pickup, is_target, is_xhair)
 end
 
 function init_hud_mark(xml, texture, args)
@@ -961,6 +966,7 @@ function UIHUDMarker:InitSettings(args)
         return end
     end
 
+    self.xmlfile        = self.xmlfile or "ui_hud_marker.xml"
     self.start          = get_time_elapsed()
     self.name           = self.name or (id and bestname and bestname(id)) or (se_obj and (se_obj.character_name and se_obj:character_name() or se_obj:name())) or ""
     local pin           = paw and (paw.pins and paw.pins[id])
@@ -970,7 +976,8 @@ function UIHUDMarker:InitSettings(args)
     self.max_y          = self.max_y or 768
     self.hint_y_adj     = self.hint_y_adj or 0
     self.dist_y_adj     = self.dist_y_adj or 0
-
+    self.width          = self.width or 24
+    self.height         = self.height or self.width or 24
     if self.los_check_int then
         -- los_smoothing enables the following settings that smooth out LOS jitter -- don't disable
         self.los_smoothing  = true
@@ -1407,7 +1414,6 @@ function UIHUDMarker:OnscreenCheck()
 end
 
 function UIHUDMarker:Update()
-    
     if self.destroying or (not db.actor) then
         return
     end
@@ -1422,6 +1428,13 @@ function UIHUDMarker:Update()
 
     self.current_use_target = false
     vl("[UIHUDMarker:Update][%s]", self.mark_id)
+
+    if self.expire_time and (time_global() > self.expire_time) then
+        vl("[%s][%s] Marker set to expire at %s, destroying", self.mark_id, time_global(), self.expire_time)
+        self:Destroy(nil, "marker ttl expired")
+        return
+    end
+
     if self.func_on_update then
         vl("[UIHUDMarker:Update] Executing custom func_on_update %s", self.func_on_update)
         local args = {ret_value = true}

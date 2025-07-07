@@ -83,7 +83,7 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
 	if (dump_en ~= nil) then debug_dump = dump_en end
 end
 
-set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
 -- First two values will be overridden by MCM once the game loads
 -- debug_dump is EXTREMELY noisy and should only ever be manually enabled for a specific, targeted reason
 
@@ -218,7 +218,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					local dist          = mark.last_dist or 999
 					local in_range      = is_in_range(id, dist, mark)
 					local vis_range 	= is_in_visible_range(id, dist, mark)
-					local abort 		= false					
+					local abort 		= false
 					show_pri, abort 	= update_mark_stalker_health(mark, show_pri, vis_range, in_range)
 					if abort then return end
 
