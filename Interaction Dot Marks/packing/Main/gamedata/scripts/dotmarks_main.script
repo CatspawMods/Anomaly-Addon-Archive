@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC15"
-release_date    = 20250707
+script_version  = "1.0-RC16"
+release_date    = 20250708
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -14,6 +14,19 @@ release_date    = 20250707
     A blatant imitation of the "interaction dot" HUD markers in Stalker 2,
     and some of its other UI niceties such as floating prompts and 
     secondary interactions.
+-- =======================================================================
+    This script is the primary center of logic and supporting functions 
+    for the entire addon. It requires and imports into its metatable the
+    following scripts:
+
+        utils_catspaw_common
+        utils_catspaw_mapspots
+        utils_catspaw_text
+
+    The script ui_hud_dotmarks then imports dotmarks_main into its own 
+    public namespace the same way. If you see a function getting called 
+    from ui_hud_dotmarks, and it's not in that script--check here. If it's 
+    not here, then check my utility scripts.
 -- =======================================================================
     DEPENDENCIES:
         * Modded exes 20250306 or newer

@@ -46,6 +46,7 @@ assert(utils_catspaw_mapspots, "\n\n"..
 	"! ui_hud_dotmarks requires script utils_catspaw_mapspots, which does not exist or failed to load!\n\n"
 )
 utils_catspaw_common.import_metatable(this, dotmarks_main)
+-- This script imports dotmarks_main into its metatable, effectively including its public namespace here. 
 -- If a public key does not exist in ui_hud_dotmarks, search dotmarks_main (and its imports)
 printf("Interaction Dot Marks %s (rel %s) began initialization at %s", script_version or "(version not found)", release_date or "missing", time_global())
 -- =======================================================================

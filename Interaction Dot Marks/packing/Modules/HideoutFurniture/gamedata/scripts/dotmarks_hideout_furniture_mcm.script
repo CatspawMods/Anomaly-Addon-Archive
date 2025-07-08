@@ -211,7 +211,7 @@ if dotmarks_callbacks then
                             args.hidden     = true
                         end
                     elseif not hfws_stash then
-                        args.text           = gts("st_alti_take") .. " " .. (args.name or "")
+                        args.text           = string.format("%s %s", gts("st_alti_take"), (args.name or ""))
                         -- The text describing the action to be taken on the primary interaction prompt
                         args.bone           = dotmarks_main.get_best_pos_bone(obj) or nil
                         -- Bone name to use for determining marker position
@@ -222,7 +222,7 @@ if dotmarks_callbacks then
                         dotmarks_main.set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
                         args.logged_type    = hfws_stash and "a workshop stash" or "a placeable stash"
                         args.texture        = hfws_stash and "" or get_texture("Stashes") or cfg.marker_dotmark or "ui_catsy_marker_intdot"
-                        args.text           = (not hfws_stash) and (gts("st_alti_search") .. " " .. args.name) or ""
+                        args.text           = (not hfws_stash) and string.format("%s %s", gts("st_alti_search"), args.name) or ""
                         if hfws_stash then
                             args.no_update_loop = true
                             -- Excludes this object from the main marker update loop
