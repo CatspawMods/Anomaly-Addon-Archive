@@ -80,6 +80,7 @@ workshop_stashes
 swap_butcher
 swap_door
 swap_dotactive
+swap_pawbadge
 swap_service
 swap_stash
 swap_talk
@@ -201,6 +202,10 @@ target_lenience 			= 0.8
 ; How far from center the crosshair can be for old targeting method
 ; Required for properly handling focus detection for glowsticks and other physobjs 
 ; that aren't actually true pickups
+fddar_fix_scav_bug 			= true
+; FDDAR 1.2.15 monkeypatches the Scavenger skill in Skill System, but it's bugged so that
+; it only triggers it when body search is enabled. When this option is enabled, DotMarks
+; will work around that by manually triggering the function.
 fddar_multipickup 			= false
 fddar_pickup_anim 			= false
 fdda_pickup_anim 			= false
@@ -638,6 +643,10 @@ width       = 20
 height      = 20
 line_adj_h  = -12
 
+[swap_pawbadge]
+width       = 16
+height      = 16
+
 [swap_stash]
 texture     = ui_catsy_marker_stash
 load_argb 	= argb_icon_stash
@@ -927,6 +936,8 @@ patch
 bone01
 joint
 joint1
+bip01_spine1
+spine_1
 
 [bones_by_section]
 ; Lookup table to match section names with their ideal bones

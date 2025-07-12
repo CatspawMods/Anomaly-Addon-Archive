@@ -2,14 +2,14 @@
     Interaction Dot Marks
     Hideout Furniture module
     Author: Catspaw
-    Updated: 20250703
+    Updated: 20250709
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
 <string_table>
 
     <string id="st_hf_workshop_menu">
-        <text>Откройте меню верстака</text>
+        <text>Открыть меню верстака</text>
     </string>
 
     <string id="st_hf_control_menu">
@@ -30,14 +30,14 @@
     </string>
 
     <string id="ui_mcm_dotmarks_dmarkmods_hf_add_primary_pickup">
-        <text>Добавьте основное взаимодействие для подбора предметов реквизита</text>
+        <text>Добавить основное взаимодействие для подбора предметов реквизита</text>
     </string>
     <string id="ui_mcm_dotmarks_dmarkmods_hf_add_primary_pickup_desc">
-        <text>Многие предметы мебели Hideout Furniture уже имеют первичные взаимодействия, например кровати и интерактивные светильники. Если у предмета реквизита еще нет такого взаимодействия, и эта настройка включена, DotMarks добавит пользовательское первичное взаимодействие, которое позволит вам сразу же взять реквизит, без необходимости долго нажимать на меню Hideout Furniture.</text>
+        <text>Многие предметы мебели из Hideout Furniture уже имеют первичные взаимодействия, например кровати и интерактивные светильники. Если у предмета реквизита еще нет такого взаимодействия, и эта настройка включена, DotMarks добавит пользовательское первичное взаимодействие, которое позволит вам сразу же взять реквизит, без необходимости долго нажимать на меню из Hideout Furniture.</text>
     </string>
 
     <string id="ui_mcm_dotmarks_dmarkmods_hf_show_default_secmenu">
-        <text>Показать подсказку для меню по умолчанию Hideout Furniture</text>
+        <text>Показать подсказку для меню по умолчанию [Hideout Furniture]</text>
     </string>
     <string id="ui_mcm_dotmarks_dmarkmods_hf_show_default_secmenu_desc">
         <text>Если в DotMarks еще не добавлено пользовательское вторичное действие для элемента, и эта настройка включена, DotMarks покажет вторичный запрос для стандартного меню Hideout Furniture - которое обычно вызывается долгим нажатием основной клавиши использования.</text>

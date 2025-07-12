@@ -15,6 +15,8 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
+	* PAW faction badges don't play pop-in anim?
+
 	POST-RELEASE:
 	- MCM live preview for prompt elements - lots of work
 		Look into possibly using imgui
@@ -301,7 +303,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 							elseif mark.is_container and not mark.is_display then
 								-- Update contents of inventory containers
 								mark.body_claimed = is_body_claimed(id)
-								local is_managed_stash = not not (mark.body_claimed or treasure_manager.caches[mark.id])
+								local is_managed_stash = not not (mark.body_claimed or is_container_unsearched_stash(id))
 								local text = ""
 								local num_items = 0
 								if (not cfg.invboxes[id]) then
@@ -416,6 +418,8 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					-- ================================================================================
 					local texture = mark.texture or ""
 					local no_marker = (hide or cfg.hide_interaction_dots)
+					update_marker_active_state(mark, prompts_shown)
+
 					if (not no_marker) and mark.active_swap then
 						mark:ActiveSwap(prompts_shown)
 						texture = mark.texture
@@ -519,6 +523,15 @@ function update_mark_stalker_health(mark, show_pri, vis_range, in_range)
 	return show_pri, false
 end
 
+function update_marker_active_state(mark, state)
+	if mark and (mark.is_active ~= state) then
+		vl("[%s][%s] Mark active status changed to %s (was %s)", time_global(), mark.name, state, mark.is_active)
+		mark.last_active_state = mark.is_active
+		mark.is_active = state
+		mark.next_update = 0
+	end
+end
+
 -- ======================================================================
 --      ACTIVE SWAP OF MARKER ATTRIBUTES
 --  Monkeypatches utils_catspaw_hudmarks to add support for hotswapping
@@ -527,11 +540,12 @@ end
 --- @param state boolean
 function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
 	dump("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
-	if self.destroyed or not (self.active_swap or self.task_swap) then return end
+	if self.destroyed then return end
+	if not (self.active_swap or self.task_swap) then return end
 	local is_task_target= match_squad_or_leader(self.args.id, cfg.active_task_target_id) and cfg.enable_icon_tasks
-	local is_storyline  = utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.is_task_storyline()
+	local is_storyline  = to_bool(utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.is_task_storyline())
 	local last_swap     = self.task_swap or self.active_swap
-	self.task_swap      = is_task_target and (is_storyline and cfg.swap_task_pri or cfg.swap_task_sec) or nil
+	self.task_swap      = is_task_target and dup_table(is_storyline and cfg.swap_task_pri or cfg.swap_task_sec) or nil
 	if state == nil then state = is_current_target(self.id) end
 	local _
 	if state then
@@ -557,13 +571,7 @@ function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
 	end
 	self.base_w = self.width
 	self.base_h = self.height
-	
-	if self.is_active ~= state then
-		vl("[%s][%s] Mark active status changed to %s (was %s)", time_global(), self.name, state, self.is_active)
-		self.last_active_state = self.is_active
-		self.is_active = state
-		self.next_update = 0
-	end
+
 end
 
 -- ======================================================================
@@ -2015,7 +2023,6 @@ function InteractPrompt:SetConditionText(sec, cond)
 	end
 end
 
-
 function InteractPrompt:UpdatePromptLength()
 	local len           = self.prompt_length
 	self.prompt_length  = self.lref:GetWidth() + 25
@@ -2736,6 +2743,7 @@ function InteractPrompt:UpdateMark(state)
 	if not (self.linked_mark and self.linked_mark.mark_id) then return end
 	if (state == nil) then state = not self.disabled end
 	--dump("Propagating state %s to linked mark %s", state, self.linked_mark.name)
+	update_marker_active_state(self.linked_mark, state)
 	self.linked_mark:ActiveSwap(state)
 	self:SyncWndPos(self.linked_mark)
 	if state and can_start_popin_anim(self.linked_mark) then
@@ -3030,6 +3038,7 @@ function InteractPrompt:Destroy(reason)
 	self.hint_filters   = nil
 	self.destroyed      = true
 	if self.linked_mark and self.linked_mark.use_pri then
+		update_marker_active_state(self.linked_mark, false)
 		self.linked_mark:ActiveSwap(false)
 		self.linked_mark.use_pri:ShowPrompt(false)
 	end
@@ -4403,15 +4412,6 @@ function try_init_search_anim(id, mark, exec_func)
 						self.is_input_enabled = true
 						if cfg.fddar_disable_walk then level.enable_input() end
 					end
-					if haru_skills then
-						vl("Triggering scavenger effect on %s", nameid(box))
-						local rank 	= box and ranks.get_obj_rank_name(box)
-						local val 	= rank and haru_skills.rank_table[rank] or 25
-						haru_skills.increase_skill("scavenging", val)
-						-- Skill System doesn't increase the skill if it doesn't find the loot window open,
-						-- so we have to do it manually
-						haru_skills.scavanger_effect(box)
-					end
 					self.force_close = true
 					local action_stop = fddar_bodysearch.get_template_action_looting_end()
 					lam2.add_action_first(action_stop)
@@ -4430,7 +4430,7 @@ function try_init_search_anim(id, mark, exec_func)
 				end
 			end
 		))
-		return true
+		return trueb
 	end
 end
 
@@ -4861,6 +4861,13 @@ function take_and_use(id)
 	CreateTimeEvent("delayed_actor_use", time_global(), cfg.item_use_delay, delay_action_for_anim, args)
 end
 
+
+function is_container_unsearched_stash(id)
+	local mark = get_mark(id)
+	if not mark then return end
+	return is_container_a_tm_stash(id) and not mark.container_searched
+end
+
 --- @param obj game_object
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 function is_item_manual_use(obj, mark)
@@ -5235,6 +5242,21 @@ function on_before_key_press(key, bind, dis, flags)
 	end
 end
 
+function trigger_fddar_scavenger_effect(id)
+	if not (haru_skills and cfg.fddar_body_search) then return end
+	vl("FDDAR body search is disabled, triggering Scavenger skill gain manually to fix FDDAR bug")
+	CreateTimeEvent("fddar_manual_scav", 0, 0.15, (
+		function()
+			local npc = get_game_object(id)
+			if not npc then return true end
+			fddar_bodysearch.is_haruka_scav_skill_add = true
+			fddar_bodysearch.haruka_scav_skill_npc = npc
+			fddar_bodysearch.haruka_scavanger_effect()
+			return true
+		end			
+	))
+end
+
 --- @param id number
 function do_use_release_action_manually(id)
 	if pressing_any_mod_key() or recent_double_tap() then return end
@@ -5259,21 +5281,26 @@ function do_use_release_action_manually(id)
 		end
 	elseif is_target_container(id, obj:clsid()) then
 		dl("[%s] No completed hold action, target is a container", time_global())
-		if is_body_claimed(id) then
-			if cfg.grok_claim then
-				vl("Calling Grok loot claim")
-				local dik = bind_to_dik(key_bindings.kUSE)
-				local flags = {ret_value = true}
-				grok_loot_claim.on_before_key_press(dik, key_bindings.kUSE, nil, flags)
-				if not flags.ret_value then return end
-			else
-				vl("Calling NPC loot claim")
-				npc_loot_claim.actor_looting(obj)
-				if npc_loot_claim.actor_looting_claimed then return end
-				vl("Loot claim passed, looting")
+
+		if mark and mark.is_stalker then		
+			if is_body_claimed(id) then
+				if cfg.grok_claim then
+					vl("Calling Grok loot claim")
+					local dik = bind_to_dik(key_bindings.kUSE)
+					local flags = {ret_value = true}
+					grok_loot_claim.on_before_key_press(dik, key_bindings.kUSE, nil, flags)
+					if not flags.ret_value then return end
+				else
+					vl("Calling NPC loot claim")
+					npc_loot_claim.actor_looting(obj)
+					if npc_loot_claim.actor_looting_claimed then return end
+					vl("Loot claim passed, looting")
+				end
+			end
+			if cfg.fddar_fix_scav_bug then
+				trigger_fddar_scavenger_effect(id)
 			end
 		end
-
 		if z_ui_inventory_dotmarks then
 			dl("[%s] No completed hold action, allow inventory interaction with %s", time_global(), obj:name())
 			cfg.use_released = nil
@@ -5689,6 +5716,7 @@ function on_option_change()
 		fddar_installed = (not not z_fdda_pickup_intercept_dotmarks.fddar_oibp)
 		fdda_installed  = (not not z_fdda_pickup_intercept_dotmarks.fdda_oibp)
 		anims_enabled   = (fddar_installed and cfg.fddar_pickup_anim) or (fdda_installed and cfg.fdda_pickup_anim and cfg.fdda_anims_enabled)
+		cfg.fddar_fix_scav_bug = fddar_installed and cfg.fddar_fix_scav_bug
 	end
 
 	cfg.pending_actions = {}

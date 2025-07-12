@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.0-RC16"
-release_date    = 20250708
+script_version  = "1.0-RC17"
+release_date    = 20250711
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -359,12 +359,14 @@ local base_config = {
                 local id            = obj:id()
                 if ui_hud_dotmarks.is_empty_mutant_corpse(id) then return end
                 local cls           = obj:clsid()
+                local section       = obj:section()
                 if not (id and cls) then return end
                 local args = {
                     is_npc          = true,
                     comm            = get_object_community(obj) or nil,
-                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
-                    bone            = "bip01_spine1",
+                    pos_adjust      = pos_adjust_by_section(section, 0.05),
+                    bone            = get_best_pos_bone(obj),
+                    texture         = get_class_marker_texture("Bodies", obj) or cfg.marker_dotmark,
                     hint_filters = {
                         ["dead_character_use"]          = "dead_character_use",
                         ["dead_character_use_or_drag"]  = "dead_character_use_or_drag",
@@ -386,24 +388,21 @@ local base_config = {
                 end
 
                 args.logged_type    = "dead " .. (args.is_stalker and "stalker" or "mutant")
-                if paw and cfg.bodies_use_paw_patches then
-                    args.is_stalker = args.is_stalker and (args.comm ~= "zombied")
-                    args.texture    = (args.is_stalker and ("ui_icons_paw_badge_uhr_" .. args.comm)) or cfg.marker_dotmark
-                    if args.is_stalker then
-                        args.width      = 16
-                        args.height     = 16
+                if args.is_stalker then
+                    args.has_items  = not obj:is_inv_box_empty()
+                    if paw and cfg.bodies_use_paw_patches and (args.comm ~= "zombied") then
+                        args.texture    = ("ui_icons_paw_badge_uhr_" .. args.comm)
+                        args.width      = 12
+                        args.height     = 12
                         args.line_adj_x = 4
                         args.line_adj_h = -10
                         args.line_adj_y = 10
+                        args.active_swap = dup_table(cfg.swap_pawbadge)
                     end
-                else
-                    args.texture    = get_class_marker_texture("Bodies", obj) or cfg.marker_dotmark
                 end
+                
                 if is_body_claimed(id) then
                     args.name       = (best_localized_object_name(obj) or "") .. " (" .. gts("st_body_is_claimed") .. ")"
-                end
-                if args.is_stalker then
-                    args.has_items  = not obj:is_inv_box_empty()
                 end
 
                 return args
@@ -482,6 +481,7 @@ local base_config = {
                         end
                     end
                 end
+                local section       = obj:section()
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
                 local count = obj:get_ammo_in_magazine()
                 return {
@@ -490,8 +490,8 @@ local base_config = {
                     is_pickup       = true,
                     is_weapon       = true,
                     texture         = get_class_marker_texture("Weapons") or cfg.marker_dotmark,
-                    bone            = "wpn_body",
-                    pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
+                    bone            = forced_bone_by_section(section) or "wpn_body",
+                    pos_adjust      = pos_adjust_by_section(section, 0.05),
                     ammo_count      = count,
                     -- if ammo_count > 0, unload-ammo secondary action will be shown
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
@@ -701,14 +701,15 @@ local base_config = {
             function(obj)
                 if not obj then return end
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                local section       = obj:section()
                 return {
                     logged_type     = "a device",
                     is_pickup       = true,
                     has_battery     = true,
                     has_power       = true,
                     verb_secondary  = "st_item_unpack_battery",
-                    pos_adjust      = pos_adjust_by_section(obj:section(), 0),
-                    bone            = "wpn_body",
+                    pos_adjust      = pos_adjust_by_section(section, 0),
+                    bone            = forced_bone_by_section(section) or "wpn_body",
                     texture         = get_class_marker_texture("Devices") or cfg.marker_dotmark,
                     hint_filters   = {["inventory_item_use"] = "inventory_item_use"},
                 }
@@ -1111,6 +1112,10 @@ function pos_adjust_by_section(section, base_y)
     return vector():set(0, adj + (base_y or 0), 0)
 end
 
+function is_container_a_tm_stash(id)
+    return id and treasure_manager.caches and treasure_manager.caches[id]
+end
+
 function is_container_whitelisted(section)
     return not not (section and cfg.container_whitelist and cfg.container_whitelist[section])
 end
@@ -1283,10 +1288,14 @@ function get_bone_table(obj, hudmodel)
     return t
 end
 
+function forced_bone_by_section(section)
+    return section and cfg.bones_by_section[section]
+end
+
 function get_best_pos_bone(obj)
     local section = obj and obj:section()
-    if section and cfg.bones_by_section[section] then
-        return cfg.bones_by_section[section]
+    if forced_bone_by_section(section) then
+        return forced_bone_by_section(section)
     end
     local bones = get_bone_list(obj)
     if not bones then return end
