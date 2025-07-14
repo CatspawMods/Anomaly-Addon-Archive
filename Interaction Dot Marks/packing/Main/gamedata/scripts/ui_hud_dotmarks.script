@@ -15,7 +15,11 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
-	* PAW faction badges don't play pop-in anim?
+	* PAW faction badges don't play pop-in anim
+	* Task target focus marker doesn't go away when task ends
+	* Stray marker on floor in one of Skinflint's cabinets
+	* HF display cases showing tiny stash icon instead of dotmark
+	* HF stashes no longer getting correct name?
 
 	POST-RELEASE:
 	- MCM live preview for prompt elements - lots of work
@@ -3490,7 +3494,8 @@ function get_args_for_valid_objects(id)
 	end
 
 	local method_txt = (method > 3) and "callback" or (method > 2) and "addon" or (method > 1) and "iteration" or (method > 0) and "kind" or "section"
-	local _ = (DEV_DEBUG or debuglogs) and printf("[DotMarks] get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
+	--local _ = (DEV_DEBUG or debuglogs) and printf("[DotMarks] get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
+	dl("[DotMarks] get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
 	tracelog("end", "get_args_for_valid_objects", id)
 	return args
 end
@@ -4561,14 +4566,14 @@ function replace_invitem_with_bomb(used_id, mode, delay)
 		level.map_add_object_spot_ser(
 			bomb_id,
 			"alife_presentation_squad_monster_1",
-			gts("st_plant_explosive_proximity_map_marker") .. " ".. EXPLOSIVE_TYPE[obj:section()]
+			gts("st_plant_explosive_proximity_map_marker") .. " ".. txr_mines.EXPLOSIVE_TYPE[obj:section()]
 		)
 	end
 	if mode == cfg.mine_modes.MODE_TIMER then
 		level.map_add_object_spot_ser(
 			bomb_id,
 			"alife_presentation_squad_monster_1",
-			gts("st_plant_explosive_timed_map_marker") .. " ".. EXPLOSIVE_TYPE[obj:section()]
+			gts("st_plant_explosive_timed_map_marker") .. " ".. txr_mines.EXPLOSIVE_TYPE[obj:section()]
 		)
 	end
 end
@@ -4783,12 +4788,13 @@ function do_consume_action(id, manual_use)
 	local obj = id and get_game_object(id)
 	if not obj then return true end
 	if (anims_enabled and not manual_use) then
-		local _ = debug_dump and vl("[%s] passing consume action of %s to FDDA", time_global(), nameid(obj, id))
+		local _ = debug_dump and vl("[%s] handing consume action off %s to FDDA for animation, it will handle the object from here", time_global(), nameid(obj, id))
 		SendScriptCallback("actor_on_item_before_use", obj, {ret_value = true})
 	else
 		local _ = debug_dump and vl("[%s] causing actor to consume/use %s", time_global(), nameid(obj, id))
 		db.actor:eat(obj)
 	end
+	return true
 end
 
 --- @param args table
@@ -5331,7 +5337,7 @@ function on_key_release(key)
 			local dur = cfg.holding and cfg.holding.peak_hold
 			local time = cfg.holding and cfg.holding.hold_time
 			local can_trigger_action = not (dur and time and (dur >= time))
-			local action_text = (DEV_DEBUG or debuglogs or debug_dump) and can_trigger_action and ", checking for action" or ", no action to trigger"
+			local action_text = (debuglogs or debug_dump) and can_trigger_action and ", checking for action" or ", no action to trigger"
 			dump("[%s] use key released%s | set at %s | dur held %s | hold time %s", time_global(), action_text, cfg.use_released, dur, time)
 			if can_trigger_action then
 				do_use_release_action_manually(id)
