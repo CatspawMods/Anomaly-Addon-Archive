@@ -110,7 +110,7 @@ When `get_args_for_valid_objects` is called with the object's ID, it first initi
 {
  	logged_type	= "something else",
  		-- <string> Used for debug logging -- unimportant, but don't set it to nil
- 	name 		= cfg.names_by_section[obj:section()] or utils_catspaw_text.bestname(id) --[[
+ 	name 		= game.translate_string(cfg.names_by_section[obj:section()]) or utils_catspaw_text.bestname(id) --[[
  		<string> The text name of the object, as it will be shown on prompts
  		cfg.names_by_section is a direct lookup table that matches section names with 
  		localization strings
@@ -154,7 +154,7 @@ Section names are one of the most specific criteria possible, short of identifyi
 Just like the first step, except this check's the object's `kind` attribute, which can be gotten with `SYS_GetParam(0, obj:section(), "kind")`.
 
 > [!NOTE]
-> An object's "kind" is arbitrary and non-unique, and can be somewhat inconsistently set--it's meant as a heuristic data point for identifying new, unknown items. Don't use it here. If you know the item's section--and if you're the author, you ought to!--it's better to use that.
+> An object's "kind" is arbitrary and non-unique, and can be somewhat inconsistently set--it's meant as a heuristic data point for identifying new, unknown items. Don't use it here. If you know the item's section--and if you're its author, you ought to!--it's better to use that.
 
 ----
 ### 3. Iterate through manual tests
