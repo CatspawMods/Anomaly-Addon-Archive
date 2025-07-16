@@ -13,6 +13,25 @@ Here are the most common issues that DotMarks users have, and how to solve them:
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
+## Nothing works at all, not even the "DotMarks" MCM menu - it's like the addon isn't even installed
+Well that sucks.
+
+DotMarks is pretty robust. If it isn't working at all, and you don't even see its MCM menu, then something has caused the main script to completely fail to load. And that probably means that a critical file is either missing or outdated. When it first starts to load, DotMarks checks to make sure it has all its core files--particularly my utility scripts.
+
+Those scripts are also used by my other addons. If you load a much older one after DotMarks, and it replaces one of those core scripts with one that doesn't have the right functions, DotMarks will fail to load. And if the main script fails to load, the MCM script won't load either.
+
+And there won't be any question at all that this is what's happened--just open your game log, and search for the text "Interaction Dot Marks". What you _should_ be seeing is a line like this, with the version number and release date:
+```
+Interaction Dot Marks 1.0 (rel 20250714) began initialization at 4186
+```
+If the main script failed to load, you'll instead see a stack trace followed by an error similar to this one:
+```
+! Interaction Dot Marks requires script utils_catspaw_common, which is outdated or missing!
+```
+If you are seeing any error like that mentioning one of my utility scripts, then moving DotMarks to the bottom of your load order to resolve it. This is a good general troubleshooting step anyway. It'd also be a good idea to update my other addons to their most recent versions as well, because one or more is outdated.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 ## Missing dependencies
 I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the [debuglogs](#enable-debug-logging) setting is enabled, DotMarks will output a block of text on startup that looks like this:
 ```
@@ -28,8 +47,9 @@ At least, it *should* look like that. If any of those true/false values are diff
 ## Can't pick up anything that isn't centered in the crosshair, or `actor_on_update_pickup` error seen in log
 
 If your version of the modded exes is earlier than `20250306`, you will see this error in your log:
-
-`![axr_main callback_set] callback actor_on_update_pickup doesn't exist!`
+```
+![axr_main callback_set] callback actor_on_update_pickup doesn't exist!
+```
 
 If you are seeing that, you **MUST** update your version of the modded exes in order for object targeting to work properly. Otherwise the addon has to fall back on a vanilla targeting method that requires the crosshair to be *exactly* centered on the object, and you may have trouble interacting with some things.
 
