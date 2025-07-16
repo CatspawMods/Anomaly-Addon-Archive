@@ -1,0 +1,44 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Vehicle module
+    Author: Catspaw
+    Updated: 20250715
+    Permission granted to freely translate this file into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+    
+    <string id="st_enter_vehicle">
+        <text>$clr_gldВведите автомобиль</text>
+    </string>
+
+    <string id="st_exit_vehicle">
+        <text>Выйти из автомобиля</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkobjs_scan_vehicles">
+        <text>Отметить автомобилей</text>
+    </string>
+
+
+    <string id="ui_mcm_dotmarks_dmarkicons_argb_icon_vehicles">
+        <text>Настройте цвет для значка автомобиля</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkicons_enable_icon_vehicles">
+        <text>Включить специальный иконку для автомобилей</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkicons_enable_icon_vehicles_desc">
+        <text>Если эта опция включена, транспортные средства будут использовать свои специальные значки вместо стандартных точечных маркеров.</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkmods_hide_marker_in_vehicle">
+        <text>Прячьте маркер за рулем автомобиля</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkmods_hide_marker_in_vehicle_desc">
+        <text>Если эта опция включена, маркер автомобиля и подсказки взаимодействия не будут отображаться, пока игрок управляет им.</text>
+    </string>
+
+</string_table>

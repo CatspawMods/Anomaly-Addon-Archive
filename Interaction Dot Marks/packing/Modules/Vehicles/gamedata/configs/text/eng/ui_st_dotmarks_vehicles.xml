@@ -1,0 +1,48 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Vehicle module
+    Author: Catspaw
+    Updated: 20250715
+    Permission granted to freely translate this file into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+    <string id="ui_mcm_dotmarks_addons_vehicles">
+        <text>$clr_gldVehicle settings</text>
+    </string>
+
+    <string id="st_enter_vehicle">
+        <text>Enter vehicle</text>
+    </string>
+
+    <string id="st_exit_vehicle">
+        <text>Exit vehicle</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkobjs_scan_vehicles">
+        <text>Mark Vehicles</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkicons_argb_icon_vehicles">
+        <text>Customize color for the vehicle icon</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkicons_enable_icon_vehicles">
+        <text>Enable special icon for vehicles</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkicons_enable_icon_vehicles_desc">
+        <text>If this option is enabled, vehicles will use their special icon instead of the standard dot markers.
+        </text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkmods_hide_marker_in_vehicle">
+        <text>Hide marker while driving vehicle</text>
+    </string>
+
+    <string id="ui_mcm_dotmarks_dmarkmods_hide_marker_in_vehicle_desc">
+        <text>If this option is enabled, a vehicle's marker and interaction prompt will not be shown while the player is driving it.</text>
+    </string>
+
+</string_table>

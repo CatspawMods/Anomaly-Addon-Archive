@@ -51,11 +51,9 @@ if hf_furniture_types and not hf_furniture_types.ignore_dotmarks_fix then
 	        m_data.player_created_stashes = {}
 	    end
 	    m_data.player_created_stashes[obj_id] = item_section
-	    local invname = inventory_name(nil, item_section, true)
-
 	    local data = {
 	        stash_id = obj_id,
-	        stash_name = invname and game.translate_string(invname) or "",
+	        stash_name = invname and game.translate_string(inventory_name(nil, item_section, true)) or "",
 	        stash_section = item_section
 	    }
 	    SendScriptCallback("actor_on_stash_create", data)

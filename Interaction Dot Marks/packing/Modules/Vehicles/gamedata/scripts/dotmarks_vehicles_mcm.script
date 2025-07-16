@@ -1,0 +1,141 @@
+-- =======================================================================
+--[[    DOTMARKS VEHICLE SUPPORT PATCH
+-- =======================================================================
+    Author: Catspaw
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
+-- =======================================================================    
+	Support for markers, prompts, and focus icons on driveable vehicles.
+
+	Known issue: you can't enter a vehicle while holding Shift. This is a
+	vanilla limitation.
+
+	Also, the marker focus and prompt appearance doesn't match up directly
+	with the vanilla prompts. This is more or less due to the car's size,
+	and I'm investigating what a good solution would be. It doesn't affect
+	the ability to interact, just the cosmetic display of the prompt.
+-- =====================================================================]]
+local logprefix = ui_hud_dotmarks and ui_hud_dotmarks.logprefix
+local function log(logtext, ...)
+    if logtext and (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs) then printf(logprefix .. logtext, ...) end
+end
+
+mcm_menu_additions = {
+    { id = "header_vehicles", 
+        type            = "desc",
+        text            = "ui_mcm_dotmarks_addons_vehicles",
+        dmark_tex       = "ui_mcm_dmarks_messagebox_transbg_head90",
+        ui_hook_functor = { dotmarks_mcm.init_header_element },
+    },
+    { id = "hide_marker_in_vehicle", type = "check", val = 1, def = true },
+    { id = "divider", type= "line" },
+}
+
+if dotmarks_mcm then
+    local dotmarks_addons_menu = dotmarks_mcm.get_mods_menu
+    log("dotmarks_vehicles.script is adding its options to the DotMarks MCM menu")
+    function dotmarks_mcm.get_mods_menu()
+        local generated_menu = dotmarks_addons_menu()
+        for k,v in spairs(mcm_menu_additions) do
+            table.insert(generated_menu, v)
+        end
+        return generated_menu
+    end
+end
+
+--- @param obj game_object
+--- @param state boolean
+function set_vehicle_marker_state(obj, state)
+	local id = obj and obj:id()
+	local mark = id and ui_hud_dotmarks.get_mark(id)
+	if (not mark) then return end
+	local cfg = dotmarks_main.cfg
+	local locst = state and cfg.vehicle_enter_hint or cfg.vehicle_exit_hint or "st_enter_vehicle"
+	if mark.use_pri then
+		mark.use_pri:SetPrompt(nil, game.translate_string(locst))
+	end
+	if (not state) and (not cfg.hide_marker_in_vehicle) then return end
+	log("Actor %sed vehicle %s, trying to %sable marker", state and "exit" or "enter", mark.name, state and "en" or "dis")
+	mark.suspended = not state
+	if mark.suspended then
+		ui_hud_dotmarks.suspend_marker(mark)
+	end
+end
+
+function on_game_start()
+    if dotmarks_main and dotmarks_callbacks then
+	    -- ================================================================================
+	    -- 	Check for vehicle clsid, and set up marker attributes on valid matches
+	    -- ================================================================================
+        RegisterScriptCallback("dotmarks_on_new_object_scan", 
+        	--- @param id number
+        	--- @param args table
+            function(id, args)
+                if not (id and args) then return end
+                if args.texture or not args.ret_value then return end
+                -- Abort if another script has already taken action on this callback
+                local obj = id and get_object_by_id(id)
+                if obj and (obj:clsid() == clsid.car_s) then
+                	local cfg 			= dotmarks_main.cfg
+					log("[%s][dotmarks_on_setup_pri_interact] Setting up vehicle marker for %s", time_global(), obj:name())
+                    args.logged_type    = "a vehicle"
+                        -- Used only for debug logging
+                    args.is_vehicle 	= true
+                    	-- Flag for quick marker ID
+                    args.texture        = cfg.marker_dotmark or "ui_catsy_marker_intdot"
+                        -- Must be a valid texture in the game
+                    if cfg.enable_icon_vehicles and cfg.swap_vehicle then
+	                    args.active_swap    = dup_table(cfg.swap_vehicle)
+                        -- The "active swap" is a set of args that get swapped in whenever
+                        -- the marker gains focus, and back out to the original settings when 
+                        -- the actor's focus leaves the marker. This is primarily used to swap 
+                        -- in an alternate texture, but can alter literally any attribute of 
+                        -- the marker.
+					end
+                    args.no_sec         = true
+                        -- Object cannot have a secondary action
+                    args.bone 			= cfg.vehicle_marker_bone
+                    	-- Forces the marker to be anchored on a particular bone
+                    	-- Don't blame me, I didn't name this one
+                    args.los_check_int     = -1
+                    	-- Disable marker LOS checks, so vehicle doesn't block itself
+                    args.hint_filters   = { ["tip_door_open"] = "tip_door_open" }
+						-- Vanilla interact text to trap and filter out
+                end
+            end
+        )
+
+	    -- ================================================================================
+	    -- 	After marker init, set the item class for controlling per-class visibility
+	    -- ================================================================================
+        RegisterScriptCallback("dotmarks_on_marker_init", 
+	        --- @param args table
+	        --- @param mark utils_catspaw_hudmarks.UIHUDMarker
+            function(args, mark)
+                if not (mark and mark.is_vehicle and args) then return end
+                mark.item_class 	= "Vehicles"
+            end
+        )
+
+	    -- ================================================================================
+	    -- 	Set up the primary interaction prompt, and handle enter/exit events
+	    -- ================================================================================
+	    RegisterScriptCallback("dotmarks_on_setup_pri_interact",
+	        --- @param args table
+	        --- @param mark utils_catspaw_hudmarks.UIHUDMarker
+	        function(args, mark)
+	            if not (mark and mark.is_vehicle) then return end
+	        	local x, y           	= dotmarks_main.get_fixed_screen_pos()
+	            args.fixed         		= true
+	            args.locked_screen_pos  = vector2():set(x, y)
+	            args.text 				= game.translate_string(dotmarks_main.cfg.vehicle_enter_hint or "st_enter_vehicle")
+	        end
+	    )
+
+	    RegisterScriptCallback("actor_on_attach_vehicle", 
+	    	function(obj) set_vehicle_marker_state(obj, false) end
+	    )
+    	RegisterScriptCallback("actor_on_detach_vehicle", 
+	    	function(obj) set_vehicle_marker_state(obj, true) end
+    	)
+    end
+end

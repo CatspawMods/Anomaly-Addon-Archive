@@ -4,7 +4,7 @@
 script_name     = "ui_hud_dotmarks"
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
-	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
 
 	I post gameplay video on my Youtube channel, Catspaw Adventures: 
 	https://www.youtube.com/@CatspawAdventures
@@ -15,11 +15,11 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	See dotmarks_main.script for dependencies.
 -- =======================================================================
-	* PAW faction badges don't play pop-in anim
+	* HF stashes (others?) no longer getting correct name
 	* Task target focus marker doesn't go away when task ends
-	* Stray marker on floor in one of Skinflint's cabinets
 	* HF display cases showing tiny stash icon instead of dotmark
-	* HF stashes no longer getting correct name?
+	* PAW faction badges don't play pop-in anim
+	* Vehicle prompt focus doesn't match 1:1 with vanilla prompt
 
 	POST-RELEASE:
 	- MCM live preview for prompt elements - lots of work
@@ -27,6 +27,9 @@ script_name     = "ui_hud_dotmarks"
 	- NPE module(s) - not hard, but time-consuming and low priority
 	- Unload prompt changes to field strip usable parts for empty guns
 	- Review adding support for Placeable Explosives addon (PES)
+		From what I understand they're implemented using the Hideout
+		Furniture framework, which means they'll either be trivially 
+		easy or a titanic pain in the ass
 	- IED marker anims - WIP not working, disabled, reconsidering
 -- ===================================================================--]]
 --      DEPENDENCIES
@@ -1617,7 +1620,7 @@ end
 --- @param flags table
 function InteractPrompt:on_before_key_press(key, bind, dis, flags)
 	if input_killswitch() then return end
-	--dump("InteractPrompt:on_before_key_press | key %s | bind %s", key, bind)
+	dump("InteractPrompt:on_before_key_press | key %s | bind %s", key, bind)
 	if self.args.iedmode then
 		if cfg.sec_use_firemode_mines and ((bind == cfg.bind_fmprev) or (bind == cfg.bind_fmnext)) then
 			local id = targeted_deployable_bomb()
@@ -2412,6 +2415,7 @@ function InteractPrompt:on_key_hold(key)
 end
 
 function InteractPrompt:ModKeyHeld()
+	if not is_modkey_ignored(self:ModKey()) then return false end
    	return ui_mcm and ui_mcm.get_mod_key(self:ModKey())
 end
 
@@ -2442,7 +2446,6 @@ function InteractPrompt:on_key_press(key, flags)
 			self:ExecuteAction()
 			return
 		end
-		local obj = get_game_object(self.args.id)
 
 		if (self.args.mode == 0) and self:ModKeyHeld() then
 			ui_mcm.simple_press(self.uid, key, self.args.func, self.args.id, mark)
@@ -5209,7 +5212,9 @@ function is_obj_pickup_target(id) return hmm and hmm.current_pickup and (id == h
 function is_obj_current_target(id) return hmm and hmm.current_target and (id == hmm.current_target) end
 
 function pressing_any_mod_key()
-    return ui_mcm and not ui_mcm.MOD_NONE
+	return (ui_mcm.MOD_SHIFT and not cfg.ignored_modkeys[1])
+		or (ui_mcm.MOD_CTRL and not cfg.ignored_modkeys[2])
+		or (ui_mcm.MOD_ALT and not cfg.ignored_modkeys[3])
 end
 
 --- @param key number
@@ -5228,10 +5233,23 @@ function recent_double_tap()
 end
 
 --- @param key number
+function is_modkey_ignored(key)
+	key = (key and tonumber(key))
+	if not key then 
+		return cfg.ignored_modkeys[1]
+			or cfg.ignored_modkeys[2]
+			or cfg.ignored_modkeys[3]
+	end
+	return cfg.ignored_modkeys[key]
+end
+
+
+--- @param key number
 --- @param bind number
 --- @param dis boolean
 --- @param flags table
 function on_before_key_press(key, bind, dis, flags)
+	--dump("on_before_key_press(%s, %s, %s, ret: %s)", key, bind, dis, flags and flags.ret_value)
 	if input_killswitch() then return end
 	if (key == use_dik) and cfg.watch_use then
 		cfg.use_released = nil
@@ -5239,6 +5257,7 @@ function on_before_key_press(key, bind, dis, flags)
 		set_loot_window_flag(time_global(), "key press")
 		local id = get_current_target()
 		local mark = get_mark(id) or {}
+		local mkey = 
 		vl("[%s][on_before_key_press] Beginning press of interact key %s | Current targets:\n" ..
 			"[ mark: %s (%s) | crosshair: %s | pickup: %s | engine: %s ]",
 			time_global(), key,
@@ -5737,13 +5756,17 @@ function on_option_change()
 			v:Destroy(nil, "reset after on_option_change")
 		end
 	end
+	cfg.ignored_modkeys[1] = not not cfg.simple_press_ignore_shift
+	cfg.ignored_modkeys[2] = not not cfg.simple_press_ignore_ctrl
+	cfg.ignored_modkeys[3] = not not cfg.simple_press_ignore_alt
+
 	cfg.bind_fmprev = key_bindings.kWPN_FIREMODE_PREV
 	cfg.bind_fmnext = key_bindings.kWPN_FIREMODE_NEXT
 	reset_nearby_item_tables()
 	set_handler_callbacks()
 	st_kg           = gts("st_kg")
-	cfg.show_parts_weapons 		= cfg.show_parts_weapons and cfg.show_parts_dots
-	cfg.show_parts_armor 		= cfg.show_parts_armor and cfg.show_parts_dots
+	--cfg.show_parts_weapons 	= cfg.show_parts_weapons and cfg.show_parts_dots
+	--cfg.show_parts_armor 		= cfg.show_parts_armor and cfg.show_parts_dots
 	cfg.show_part_condition     = cfg.show_parts_weapons or cfg.show_parts_armor
 	cfg.double_tap_time 		= get_mcm("mcm/mcm_kb/mcm_kb_main/dtaptime2", 200)
 	cfg.sec_enable_arty_anim 	= af_inspect and cfg.sec_enable_arty_anim

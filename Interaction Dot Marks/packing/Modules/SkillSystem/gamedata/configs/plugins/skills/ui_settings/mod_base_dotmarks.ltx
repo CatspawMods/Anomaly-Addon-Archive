@@ -1,0 +1,16 @@
+![scavenging]
+scavenging_skill = 1_scavenging_scavenging_skill
+dotmark_bonus_range = 2_scavenging_dotmark_bonus_range
+
+!![scavenging_scavenging_skill]
+!abs
+!positive_str
+!negative_str
+
+[1_scavenging_scavenging_skill]
+abs = true
+positive_str = st_skills_stats_scavenging_skill_positive, >=, 0 ; string, condition, value
+negative_str = st_skills_stats_scavenging_skill_negative, <, 0
+
+@[2_scavenging_dotmark_bonus_range]
+functor = ui_hud_dotmarks, get_scavenging_display_string

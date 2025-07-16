@@ -1,0 +1,65 @@
+; Interaction Dot Markers (DotMarks)
+; DLTX changes for vehicle support
+; =================================================================================
+
+![template_tables]
+; First you need to add a section name (make it unique) to the template_tables
+; section in dotmarks_defaults
+swap_vehicle
+
+![default_settings]
+vehicle_enter_hint		= st_enter_vehicle
+; Normal vehicle interaction prompt
+vehicle_exit_hint		= st_exit_vehicle
+; Interaction text shown while in a vehicle
+vehicle_marker_bone 	= stearing_wheel
+; Don't look at me, I didn't name it
+;
+; Valid vehicle bones:
+;
+;	bone 0 = root
+;	bone 1 = back_axle
+;	bone 2 = back_left_wheel
+;	bone 3 = back_right_wheel
+;	bone 4 = back_door
+;	bone 5 = exhausts
+;	bone 6 = front_axle
+;	bone 7 = front_left_wheel
+;	bone 8 = front_right_wheel
+;	bone 9 = front_bamper
+;	bone 10 = left_light
+;	bone 11 = front_light
+;	bone 12 = right_light
+;	bone 13 = kabina
+;	bone 14 = left_door
+;	bone 15 = right_door
+;	bone 16 = seat_left
+;	bone 17 = seat_right
+
+hide_marker_in_vehicle 	= true
+; Hides vehicle marker and prompt while inside the vehicle, default value
+
+@[swap_vehicle]
+texture     = ui_catsy_marker_vehicle
+width       = 16
+height      = 16
+
+![tex]
+Vehicles = ui_catsy_marker_vehicle
+; Adds the vehicle marker to the list of item class textures shown in MCM
+
+![scan]
+; Adds "Vehicles" as a scannable category that can be toggled in MCM
+Vehicles = true
+
+![setting_icons]
+enable_icon_vehicles = Vehicles
+; Adds "Vehicles" as a type of focus icon that can be customized in MCM
+
+![mcm_paths]
+; Without these lines, IDM won't load the MCM settings into the cfg table
+argb_icon_vehicles 		= dotmarks/dmarkicons/
+enable_icon_vehicles 	= dotmarks/dmarkicons/
+; These first two are generated automatically by dotmarks_mcm for each entry
+; in the setting_icons section
+hide_marker_in_vehicle 	= dotmarks/dmarkmods/

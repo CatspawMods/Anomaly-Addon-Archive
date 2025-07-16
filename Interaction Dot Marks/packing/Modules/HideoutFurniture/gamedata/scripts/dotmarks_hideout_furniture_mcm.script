@@ -221,7 +221,7 @@ if dotmarks_callbacks then
                         -- The stash in the homestead workshop is hidden, and not treated like others
                         dotmarks_main.set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
                         args.logged_type    = hfws_stash and "a workshop stash" or "a placeable stash"
-                        args.texture        = hfws_stash and "" or get_texture("Stashes") or cfg.marker_dotmark or "ui_catsy_marker_intdot"
+                        args.texture        = hfws_stash and "" or cfg.marker_dotmark or "ui_catsy_marker_intdot"
                         args.text           = (not hfws_stash) and string.format("%s %s", gts("st_alti_search"), args.name) or ""
                         if hfws_stash then
                             args.no_update_loop = true
@@ -341,7 +341,7 @@ if dotmarks_callbacks then
                     mark.checked_for_sec = true
                     args.text = mark.verb_secondary and gts(mark.verb_secondary) or mark.hf_workshop and gts("st_hf_workshop_menu") or gts("st_hf_control_menu")
                     args.func = mark.func_interact2 or default_do_nothing
-                    args.never_show = (not mark.func_interact2) and (not dotmarks_main.cfg.hf_show_default_secmenu) or nil
+                    args.never_show = (not dotmarks_main.cfg.hf_show_default_secmenu) or nil
                 end
             )
 

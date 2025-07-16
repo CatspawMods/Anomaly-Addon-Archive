@@ -6,10 +6,15 @@
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
 <string_table>
+	
 	<string id="st_paw_unknown">
 		<text>Unknown</text>
 	</string>
 
+	<string id="st_paw_stash">
+		<text>stash</text>
+	</string>
+	
 	<string id="st_unknown_contents">
 		<text>contents unknown</text>
 	</string>
@@ -757,8 +762,8 @@
 		<text>Part condition dots X offset</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_x_desc">
-		<text>Adjusts the horizontal offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
-		 \n
+		<text>Adjusts the horizontal offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt.\n
+
 		\nDefault: -2</text>
 	</string>
 
@@ -766,8 +771,8 @@
 		<text>Part condition dots Y offset</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkmods_parts_dot_pos_y_desc">
-		<text>Adjusts the vertical offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt. Enabling or disabling the dots themselves is a setting controlled in Utjan's MCM menu.
-		 \n
+		<text>Adjusts the vertical offset for the part condition dots added by Utjan's Item UI Improvements addon. This position is measured relative to the end of the primary text prompt.\n
+
 		\nDefault: 9</text>
 	</string>	
 
@@ -1243,14 +1248,6 @@
 		\nThis setting is enabled by default in GAMMA, which includes that addon.</text>
 	</string>
 
-    <string id="st_player_skills_hint_scavenging">
-		<text>Grants increased drops from stalkers.\nIf enabled in DotMarks MCM, grants increased interaction mark visibility range.\n \nLevels are gained by looting stalkers, higher rank stalkers give more exp. \n \n</text>
-	</string>
-
-    <string id="st_skills_stats_dotmark_bonus_range">
-        <text>\n%c[255,255,201,86]•%c[ui_6] Bonus interaction mark range: %c[d_green]+$stat m</text>
-    </string>
-
 	<string id="ui_mcm_dotmarks_dmarkadv_font_scale_w">
 		<text>Scale font width allowance</text>
 	</string>
@@ -1320,17 +1317,17 @@
 
 			\n%c[ui_gray_1]From %c[pda_yellow]MCM %c[pda_white]>  %c[pda_yellow]Interaction Dot Marks%c[ui_gray_1]:\n
 
-			%c[pda_white]• %c[pda_blue]General Settings%c[ui_gray_1]: Settings that control whether and how the core elements of the interaction UI are shown. If there's a particular detail you do or don't want to see, you'll probably find it here.\n
+			%c[pda_white]вЂў %c[pda_blue]General Settings%c[ui_gray_1]: Settings that control whether and how the core elements of the interaction UI are shown. If there's a particular detail you do or don't want to see, you'll probably find it here.\n
 
-			%c[pda_white]• %c[pda_blue]Secondary Interact%c[ui_gray_1]: Settings related the the Secondary Interact function and its associated keybind, as well as whether or not each of the new actions is enabled.\n
+			%c[pda_white]вЂў %c[pda_blue]Secondary Interact%c[ui_gray_1]: Settings related the the Secondary Interact function and its associated keybind, as well as whether or not each of the new actions is enabled.\n
 
-			%c[pda_white]• %c[pda_blue]Icon Settings%c[ui_gray_1]: Settings that control whether various context-specific icons are shown, as well as their size, color and transparency.\n
+			%c[pda_white]вЂў %c[pda_blue]Icon Settings%c[ui_gray_1]: Settings that control whether various context-specific icons are shown, as well as their size, color and transparency.\n
 
-			%c[pda_white]• %c[pda_blue]Object Settings%c[ui_gray_1]: Settings that selectively control whether markers are shown at all for various individual classes of object in the game.\n
+			%c[pda_white]вЂў %c[pda_blue]Object Settings%c[ui_gray_1]: Settings that selectively control whether markers are shown at all for various individual classes of object in the game.\n
 
-			%c[pda_white]• %c[pda_blue]Other Addons%c[ui_gray_1]: Settings related to integration or compatibility with other addons, such as Sorting Plus or Utjan's Item UI.\n
+			%c[pda_white]вЂў %c[pda_blue]Other Addons%c[ui_gray_1]: Settings related to integration or compatibility with other addons, such as Sorting Plus or Utjan's Item UI.\n
 
-			%c[pda_white]• %c[pda_blue]Advanced Settings%c[ui_gray_1]: Extremely granular settings that let you fine-tune the fonts, sizes, and exact screen positions of various interaction UI elements. To be used with care, but essential if your monitor is unusually large or wide--or if you're as picky about your UI as I am.\n
+			%c[pda_white]вЂў %c[pda_blue]Advanced Settings%c[ui_gray_1]: Extremely granular settings that let you fine-tune the fonts, sizes, and exact screen positions of various interaction UI elements. To be used with care, but essential if your monitor is unusually large or wide--or if you're as picky about your UI as I am.\n
 
 			\n%c[pda_white]Feel free to experiment, and don't worry about messing anything up--you can always click the %c[pda_yellow]Defaults %c[pda_white]button in MCM.\n
 
@@ -1339,7 +1336,7 @@
 
 			--------------------------------------------------------------------------------\n \n
 
-			%c[pda_red]••• IMPORTANT: To report any bug, you must do the following: •••\n \n
+			%c[pda_red]вЂўвЂўвЂў IMPORTANT: To report any bug, you must do the following: вЂўвЂўвЂў\n \n
 			%c[ui_gray_1]1. %c[pda_white]Go to %c[pda_yellow]MCM %c[pda_white]> %c[pda_yellow]Interaction Dot Marks %c[pda_white]> %c[pda_yellow]Advanced Settings\n
 			%c[ui_gray_1]2. %c[pda_white]Enable %c[pda_yellow]Debug logging%c[pda_white] and %c[pda_yellow]Verbose logging\n
 			%c[ui_gray_1]3. %c[pda_white]Exit and restart the game completely\n
@@ -1361,6 +1358,35 @@
 
 	<string id="st_dotmarks_upgrade_defaulted">
 		<text>Some of its settings have been reset to default due to a version upgrade.</text>
+	</string>
+
+	<!-- Added in 1.1.0 --> 
+
+	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_shift">
+		<text>Simple presses ignore Shift modifier</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_shift_desc">
+		<text>When this setting is enabled, DotMarks will not register a simple (unmodified) press if the player was holding down the Shift key at the time. This allows you to use Shift in key combos without triggering unwanted duplicate actions.\n
+
+		\nWhen disabled, a simple press will occur even while holding Shift. This allows you to rebind Shift to something else (e.g. Sprint) and use it on its own.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_ctrl">
+		<text>Simple presses ignore Ctrl modifier</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_ctrl_desc">
+		<text>When this setting is enabled, DotMarks will not register a simple (unmodified) press if the player was holding down the Ctrl key at the time. This allows you to use Ctrl in key combos without triggering unwanted duplicate actions.\n
+
+		\nWhen disabled, a simple press will occur even while holding Ctrl. This allows you to rebind Ctrl to something else (e.g. Crouch) and use it on its own.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_alt">
+		<text>Simple presses ignore Alt modifier</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_alt_desc">
+		<text>When this setting is enabled, DotMarks will not register a simple (unmodified) press if the player was holding down the Alt key at the time. This allows you to use Alt in key combos without triggering unwanted duplicate actions.\n
+
+		\nWhen disabled, a simple press will occur even while holding Alt. This allows you to rebind Alt to something else (e.g. Autoloot) and use it on its own.</text>
 	</string>
 
 </string_table>

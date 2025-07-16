@@ -4,7 +4,7 @@
 		CALLBACK DEFINITIONS
 -- =======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
-	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+	Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
 
 	Interaction Dot Marks includes a collection of new callbacks that are 
 	intended to allow other addons to hook into it or add compatibility.

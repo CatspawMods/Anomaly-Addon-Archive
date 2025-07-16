@@ -1,0 +1,18 @@
+<!-- ====================================================================
+    Interaction Dot Marks
+    Author: Catspaw
+    Updated: 20250715
+    Permission granted to freely translate this file into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+    <string id="st_player_skills_hint_scavenging">
+		<text>Grants increased drops from stalkers.\nIf enabled in DotMarks MCM, grants increased interaction mark visibility range.\n \nLevels are gained by looting stalkers, higher rank stalkers give more exp. \n \n</text>
+	</string>
+
+    <string id="st_skills_stats_dotmark_bonus_range">
+        <text>\n%c[255,255,201,86]•%c[ui_6] Bonus interaction mark range: %c[d_green]+$stat m</text>
+    </string>
+
+</string_table>

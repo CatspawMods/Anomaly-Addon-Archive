@@ -3,6 +3,7 @@
 -- ======================================================================
  	MCM initialization script
  	Author: Catspaw (CatspawMods @ ModDB)
+ 	https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
  	https://github.com/CatspawMods/Anomaly-Addon-Archive/
 -- ====================================================================]]
 assert(utils_catspaw_common, "\n\n"..
@@ -351,7 +352,11 @@ function get_sec_menu()
 
 		{ id = "long_press_delay", 		type = "input", 	val = 2, min = 50, max = 2000, def = cfg.long_press_delay },
 
-		{ id = "sec_enable_use_act", 	type = "check", 		val = 1, def = cfg.sec_enable_use_act },
+		{ id = "simple_press_ignore_shift", type = "check", val = 1, def = cfg.simple_press_ignore_shift },
+		{ id = "simple_press_ignore_ctrl", 	type = "check", val = 1, def = cfg.simple_press_ignore_ctrl },
+		{ id = "simple_press_ignore_alt", 	type = "check", val = 1, def = cfg.simple_press_ignore_alt },
+
+		{ id = "sec_enable_use_act", 	type = "check", 	val = 1, def = cfg.sec_enable_use_act },
 		{ id = "sec_enable_unload_act", type = "check", 	val = 1, def = cfg.sec_enable_unload_act },
 		{ id = "sec_enable_takeall_act",type = "check", 	val = 1, def = cfg.sec_enable_takeall_act },
 		{ id = "sec_enable_heal_act",	type = "check", 	val = 1, def = cfg.sec_enable_heal_act },
@@ -555,6 +560,8 @@ function get_mods_menu()
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 		},
+		{ id = "show_parts_weapons", 		type = "check", 	val = 1, def = cfg.show_parts_weapons },
+		{ id = "show_parts_armor", 			type = "check", 	val = 1, def = cfg.show_parts_armor },
 
 		{ id = "parts_dot_orientation", 	type= "list", 		val = 2, def = cfg.parts_dot_orientation, 
 			content = {

@@ -18,6 +18,7 @@
 		<texture id = "ui_catsy_marker_water_pump" x="448" y="256" width="64" height="64" />
 
 		<texture id = "ui_catsy_marker_recycle_bin" x="512" y="256" width="64" height="64" />
+		<texture id = "ui_catsy_marker_vehicle" x="576" y="256" width="64" height="64" />
 
 		<texture id = "ui_catsy_icon_sortplus_fave" x="448" y="320" width="64" height="64" />
 		<texture id = "ui_catsy_icon_sortplus_junk" x="512" y="320" width="64" height="64" />

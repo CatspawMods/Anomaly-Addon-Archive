@@ -36,6 +36,7 @@ door_visuals
 dotmark_preset
 explosive_tools
 grenade_ammo_clsids
+ignored_modkeys
 in_pickup_range
 interactable_physmarks
 invboxes
@@ -127,6 +128,14 @@ use_hover_targeting 		= true
 ; Review whether this is performant at scale
 fallback_distance_check 	= true
 ; If use_get_target_obj is enabled, checks distance of object against obj_interact_dist
+simple_press_ignore_shift 	= true
+simple_press_ignore_ctrl 	= true
+simple_press_ignore_alt 	= true
+; If these flags are enabled, simple presses will be ignored if the player is also 
+; pressing a modifier key
+; If not, then Shift/Ctrl/Alt + a key will be treated the same as just pressing that key
+; Enabling them lets you use rebind that modifier key directly, while disabling lets you 
+; use it in combos without triggering two different actions from a single simple press
 sec_enable_use_act			= true
 ; Enables the default "use/consume" secondary action for pickup items
 sec_enable_takeall_act		= true
@@ -320,9 +329,12 @@ enable_icon_door 			= true
 ; Enables the special icon used for doors
 enable_icon_stash 			= true
 ; Enables the special icon used for stashes
+enable_icon_vehicles 		= true
+; Enables the special icon used for vehicles
+; There is currently no entry for this in MCM
 enable_icon_zrb 			= true
 ; Enables the special icon used for the Zone Recycle Bin
-; There is no entry for this in MCM
+; There is currently no entry for this in MCM
 sp_hide_junk_items 			= true
 ; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
 sp_flag_favejunk 			= true
@@ -364,10 +376,10 @@ show_condition_color 		= true
 ; Changes the color of the condition text based on the condition
 show_stash_weight 			= false
 ; Iterate stash contents and show their weight on the prompt - may have performance cost
-show_parts_dots 			= false
-show_parts_weapons 			= false
-show_parts_armor 			= false
-; If Utjan's Item UI is installed, these are loaded from its MCM settings on_option_change
+;show_parts_dots 			= true
+show_parts_weapons 			= true
+show_parts_armor 			= true
+; If Utjan's Item UI is installed, enable its part condition dots
 parts_wpo_colors 			= true
 ; Uses Weapon Parts Overhaul condition color thresholds
 parts_dot_scale				= 1
@@ -1033,6 +1045,9 @@ sec_enable_unload_act 	= dotmarks/dmarksec/
 sec_enable_takeall_act 	= dotmarks/dmarksec/
 sec_enable_heal_act 	= dotmarks/dmarksec/
 sec_mode_setupthebomb 	= dotmarks/dmarksec/
+simple_press_ignore_shift = dotmarks/dmarksec/
+simple_press_ignore_ctrl = dotmarks/dmarksec/
+simple_press_ignore_alt = dotmarks/dmarksec/
 
 ; =================================================================================
 ; Other addons menu
@@ -1048,6 +1063,8 @@ sec_enable_arty_anim 	= dotmarks/dmarkmods/
 sp_hide_junk_items		= dotmarks/dmarkmods/
 sp_icon_pos_x 			= dotmarks/dmarkmods/
 sp_icon_pos_y 			= dotmarks/dmarkmods/
+show_parts_weapons 		= dotmarks/dmarkmods/
+show_parts_armor 		= dotmarks/dmarkmods/
 parts_dot_orientation 	= dotmarks/dmarkmods/
 parts_dot_pos_x 		= dotmarks/dmarkmods/
 parts_dot_pos_y 		= dotmarks/dmarkmods/
@@ -1078,6 +1095,7 @@ argb_icon_box			= dotmarks/dmarkicons/
 argb_icon_boom			= dotmarks/dmarkicons/
 argb_icon_butcher		= dotmarks/dmarkicons/
 argb_icon_stash			= dotmarks/dmarkicons/
+argb_icon_vehicles 		= dotmarks/dmarkicons/
 argb_service_trade		= dotmarks/dmarkicons/
 argb_service_mech		= dotmarks/dmarkicons/
 argb_service_medic		= dotmarks/dmarkicons/
@@ -1145,9 +1163,9 @@ fddar_container_search 	= fddar/body_search/enable_anm_for_containers
 fddar_disable_walk 		= fddar/body_search/disable_walk
 fdda_anims_enabled 		= EA_settings/enable_animations
 fdda_pickup_anim 		= EA_settings/take_item_anim
-show_parts_dots 		= item_icon_info/part_dots/enable
-show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
-show_parts_armor		= item_icon_info/part_dots/show_on_armor
+;show_parts_dots 		= item_icon_info/part_dots/enable
+;show_parts_weapons		= item_icon_info/part_dots/show_on_wpn
+;show_parts_armor		= item_icon_info/part_dots/show_on_armor
 parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
 parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
 parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
