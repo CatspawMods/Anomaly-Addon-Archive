@@ -31,8 +31,13 @@ You can also download it from the [Github page for MCM](https://github.com/RAX-A
 These other fantastic addons are not required, but DotMarks is designed to integrate with them and extend its functionality with theirs--or vice-versa. Click the title of each to go to their Moddb pages.
 > [!TIP]
 > All of these features either respect the relevant MCM settings of each addon, or have their own settings in the DotMarks MCM menu to configure or disable them.
-## [FDDA or FDDA Redone](https://www.moddb.com/mods/stalker-anomaly/addons/fdda-redone)
-Secondary actions--for example, using consumables--will automatically hand the action and animation off to FDDA or FDDA Redone. The latter is recommended, but either will work.
+## [FDDA Redone](https://www.moddb.com/mods/stalker-anomaly/addons/fdda-redone)
+Secondary actions--for example, using consumables--will automatically hand the action and animation off to FDDA or FDDA Redone.
+> [!WARNING]
+> Either version will work, but FDDA Redone is *very strongly recommended*. The original FDDA is known to cause "busy hands" issues that can irreparably corrupt your save game, and support for it is not as well-maintained as it is for FDDAR.
+>
+> If you are using FDDA, and have any issues with animations or pickups, please first try upgrading to FDDAR. There isn't really any reason not to do so.
+
 > [!NOTE]
 > Even if you don't normally use either version of FDDA, I recommend giving this a try. It's hard to overstate how immersive it is to see your character pick up an item and immediately begin using it, all without entering your inventory or any other menu.
 ## [Animated NPC Healing](https://www.moddb.com/mods/stalker-anomaly/addons/animated-npc-healing10)
