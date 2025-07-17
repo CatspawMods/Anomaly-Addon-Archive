@@ -1,0 +1,1695 @@
+-- =======================================================================
+--[[    Catsy's utilities: HUD markers
+-- ===================================================================--]]
+script_name     = "utils_catspaw_hudmarks"
+script_version  = "1.3"
+release_date    = 20250717
+--[[======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+    There are a bunch of functions that I use across my addons, and over
+    time they've added up to a fair bit of duplicated code that I also 
+    have to update in multiple places anytime they get improved/fixed.
+
+    I will endeavor to always make these utilities backwards-compatible, 
+    so heed well:
+
+        IN THE EVENT OF A FILE CONFLICT, ALWAYS USE THE MOST RECENT.
+
+    Feel free to crib code from this or include a copy of it in your own 
+    addon, but in the interest of avoiding any possibility of conflicts:
+
+            PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+    Seriously. Just copy the code into yours if you want to mess with it.
+-- ======================================================================
+
+    TL;DR:
+    Parameterized functions for floating icons on the HUD in world space.
+
+    See "HUD MARKER MANAGER USAGE" below for usage of the mark manager.
+
+    See "HUD MARKER CLASS USAGE" below for usage of the marker class.
+
+    A large number of markers may have a performance impact.
+
+-- ===================================================================--]]
+--      DEPENDENCIES
+-- =======================================================================
+assert(utils_catspaw_common, "\n\n"..
+    "! utils_catspaw_hudmarks requires utils_catspaw_common, which does not exist!\n\n"
+)
+assert(utils_catspaw_text, "\n\n"..
+    "! utils_catspaw_hudmarks requires utils_catspaw_text, which does not exist!\n\n"
+)
+assert(utils_catspaw_mapspots, "\n\n"..
+    "! utils_catspaw_hudmarks requires utils_catspaw_mapspots, which does not exist!\n\n"
+)
+-- Required: configs\ui\ui_hud_marker.xml, if you don't pass args.xmlfile
+-- ======================================================================
+
+local dl, vl, xml
+local logdiv    = utils_catspaw_common.logdiv
+debug_dump      = false -- flag used to dump one-time detailed info for certain things
+debuglogs       = false
+verbose         = false
+logprefix       = ""
+vprefix         = ""
+
+function allow_local_logging(onoff)
+    -- By default, logging in this script inherits its debuglogs/verbose settings from utils_catspaw_common
+    -- This function allows anyone to switch on debug logging for this script's operations only
+    if onoff then
+        dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+    else
+        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+    end
+end
+allow_local_logging(true)
+
+function set_debug_logging(debug_en, verbose_en, dump_en)
+    if (debug_en ~= nil) then debuglogs = debug_en end
+    if (verbose_en ~= nil) then verbose = verbose_en end
+    if (debug_dump ~= nil) then debug_dump = dump_en end
+end
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+
+-- ======================================================================
+
+local paw               = tasks_placeable_waypoints
+local is_living_thing   = utils_catspaw_common.is_living_thing
+local valid_id          = utils_catspaw_common.valid_id
+local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
+local get_next_check    = utils_catspaw_common.get_next_tg_interval
+local lerp              = utils_catspaw_common.lerp
+local round10           = utils_catspaw_common.round10
+local dec2              = utils_catspaw_common.dec2
+local to360             = utils_catspaw_common.to360
+local get_game_object   = utils_catspaw_common.get_game_object
+local bestname          = utils_catspaw_text.bestname
+local int_to_rgba       = utils_catspaw_text.int_to_rgba
+local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
+local get_argb          = utils_catspaw_mapspots.get_argb
+local gts               = game.translate_string
+local markers           = {}
+local nearest           = {}
+local unsquish_ratio    = 1
+local hover_tolerance   = 0.8
+
+-- ======================================================================
+--      PHYSICS OBJECT CALLBACK
+--  Monkeypatch generic_physics_binder.death_callback to add an actual
+--  script callback, which for some reason doesn't already exist.
+--  Spelled the way it is to match the vanilla naming scheme.
+-- ======================================================================
+AddScriptCallback("physic_object_on_death_callback")
+local original_binder = bind_physic_object.generic_physics_binder.death_callback
+bind_physic_object.generic_physics_binder.death_callback = function(self, victim, killer)
+    original_binder(self, victim, killer)
+    SendScriptCallback("physic_object_on_death_callback", victim, killer)
+end
+
+-- ======================================================================
+--      MARKER PRESETS
+-- ======================================================================
+marker_presets = {
+--[[=====================================================================
+    Presets are essentially templates with a list of properties that 
+    should be preloaded whenever this key is passed to the UIHUDMarker 
+    class in args.preset.
+        
+        Your script can inject your own presets like so:
+    
+    utils_catspaw_hudmarks.add_marker_preset(preset_name, val_tbl)
+
+    Where val_tbl is a table of key-value pairs that contain marker
+    properties defined in the "HUD MARKER CLASS USAGE" section below,
+    and preset_name is a unique, valid Lua key name.
+-- ====================================================================]]
+    ["waypoint"] = (
+        -- Personal Adjustable Waypoint preset - only use with PAW
+        function(args)
+            local id    = args and args.id
+            if not id then return end
+            return {
+                id              = id,
+                is_wp           = true,
+                near_fade_dist  = paw and paw.wp_near_fade_dist,
+                near_hide_dist  = paw and paw.wp_near_hide_dist,
+                far_fade_dist   = paw and paw.wp_far_fade_dist,
+                far_hide_dist   = paw and paw.wp_far_hide_dist,
+                xmlfile         = "paw_hud_wp_icon.xml",
+            }
+        end
+    ),
+    ["pin"] = (
+        -- PAW pin marker preset
+        function(args)
+            local id    = args and args.id
+            local pin   = id and paw and paw.pins and paw.pins[id]
+            if not pin then return end
+            return {
+                id              = id,
+                is_pin          = true,
+                near_fade_dist  = paw and paw.pin_near_fade_dist,
+                near_hide_dist  = paw and paw.pin_near_hide_dist,
+                far_fade_dist   = paw and paw.pin_far_fade_dist,
+                far_hide_dist   = paw and paw.pin_far_hide_dist,
+                xmlfile         = "paw_hud_marker.xml",
+                texture         = get_mapspot_tex(pin.icon).t,
+                custom_argb     = pin.colors,
+            }
+        end
+    ),
+}
+
+function add_marker_preset(preset_name, table_or_functor, overwrite)
+    if not (preset_name and table_or_functor) then return end
+    if preset_name and marker_presets[preset_name] and not overwrite then return end
+    marker_presets[preset_name] = table_or_functor
+end
+-- ======================================================================
+
+local function get_object_bearing(pos, obj, id)
+    -- Thanks to demonized for help with this
+    -- For some reason it causes the main loop to shit the bed though
+    -- Unused for now
+    if not db.actor then return end
+    if not pos then
+        obj         = obj or (id and get_game_object(id))
+        pos         = obj and obj:position()
+    end
+    if not pos then return end
+    local dirToPos  = pos:sub(device().cam_pos):normalize()
+    local dir       = device().cam_dir
+    local dirToPosH = to360(-math.deg(dirToPos:getH()))
+    local dirH      = to360(-math.deg(dir:getH()))
+    local degree    = to360(dirH - dirToPosH)
+    return degree
+end
+
+function get_object_center(id, obj)
+    obj = obj or (id and get_game_object(id))
+    return obj and obj:center()
+end
+
+function update_unsquish_ratio()
+    -- Scaling multiplier for all horizontal screen coordinates and sizes
+    -- Makes things not look squished/stretched in widescreen
+    unsquish_ratio  = (device().height / device().width) / (768 / 1024)
+    return unsquish_ratio
+end
+
+function dotproduct_for_pos(pos)
+    local toPoint = vector():set(pos):sub(device().cam_pos):normalize()
+    return toPoint:dotproduct(device().cam_dir)
+end
+
+function check_los_to_obj(id, range, bone, flags, tolerance, pos_adjust)
+    -- For some reason LOS is very jittery
+    -- The HUD marker class has functions to smooth it out
+    if not demonized_geometry_ray then return end
+    if not db.actor then return end
+    local obj = id and get_game_object(id)
+    local pos = id and get_object_center(id)
+
+    if IsStalker(obj) then
+        bone = bone or (obj:alive() and "bip01_head" or "bip01_spine1")
+    end
+    pos = bone and utils_obj.safe_bone_pos(obj, bone) or pos
+
+    if pos and pos_adjust then
+        pos = vector():set(pos):add(pos_adjust)
+    end
+
+    local dist = pos and db.actor:position():distance_to(pos)
+    if not dist then return end
+
+    range = range or 800
+    flags = flags or 3
+    local ray = pos and demonized_geometry_ray.geometry_ray({
+        ray_range = range,
+        ignore_object = obj,
+        flags = flags,
+    })
+    local res = ray and ray:get(pos, device().cam_pos:sub(pos):normalize())
+    local ray_diff = dist - math.floor(res and res.distance or range)
+    local has_los = ray_diff < (tolerance or 0.3)
+    vl("check_los_to_obj: %s | ID %s dist %s | ray dist %s | diff %s", has_los, id, dist, res and res.distance, ray_diff)
+    return has_los
+end
+
+
+function fade_by_dist(element, dist, flr, min, mid, max, alpha, r, g, b, mode)
+    --printf("fade_by_dist called: dist %s | flr %s min %s mid %s max %s\ncustom_argb %s,%s,%s,%s, mode %s",dist, flr, min, mid, max, alpha, r, g, b, mode)
+    --[[ 
+    element is a valid UI element, and how the fade is done is determined by mode:
+        mode 0 = fade a Static element (default)
+        mode 1 = fade text in a Static
+        mode 2 = fade text in a TextWnd
+    --]]
+    alpha   = alpha or 255
+    r       = r or 255
+    g       = g or 255
+    b       = b or 255
+    if not (paw and (paw.cart_mode and paw.cartmode_unfade)) then
+        if (dist < flr) then
+            alpha = 0
+        elseif (dist < min) then
+            alpha = alpha * (dist / (min - flr))
+        elseif (mid > 0) then
+            if (dist > (mid + max)) then
+                alpha = 0
+            elseif (dist > mid) then
+                alpha = alpha * (1 - ((dist - mid) / max))
+            end
+        end
+    end
+    if element then
+        if mode == 1 then
+            element:TextControl():SetTextColor(GetARGB(alpha,r,g,b))
+        elseif mode == 2 then
+            element:SetTextColor(GetARGB(alpha,r,g,b))
+        else
+            element:SetTextureColor(GetARGB(alpha,r,g,b))
+        end
+    end
+    if debug_dump then
+        printf("[utils_catspaw_hudmarks.fade_by_dist] Fading elements by dist %s:\n"..
+            "- near_fade %s | near_hide %s | far_fade %s | far_hide %s\n" ..
+            "= Result: Alpha %s | %s,%s,%s",
+            dist, flr, min, mid, max, alpha, r, g, b
+        )
+    end
+    return {a=alpha,r=r,g=g,b=b}
+end
+
+function scale_by_dist(element, dist, w, h, min, mid, max, up_amt, dn_amt, unsquish)
+    --printf("scale_by_dist for %sx%s element at dist %s | unsquish %s | %s - %s -  %s ",w,h,dist,unsquish,min,mid,max)
+    dist        = clamp(dist,0,max)
+    local nw    = w
+    local nh    = h
+    up_amt      = up_amt or 0.5
+    dn_amt      = dn_amt or 0.4
+    if (dist <= min) then
+        nw      = w + ((1 - (dist / min)) * (w * up_amt))
+        nh      = h + ((1 - (dist / min)) * (h * up_amt))
+    elseif dist > mid then
+        nw      = w - (((dist - mid) / (max - mid)) * (w * dn_amt))
+        nh      = h - (((dist - mid) / (max - mid)) * (h * dn_amt))
+    end
+
+    if unsquish or (unsquish == nil) then
+        nw = nw * unsquish_ratio
+    end
+    --printf("scale_by_dist for %sx%s element:\nw %s -> nw %s | h %s -> nh %s | ratio: %s",element:GetWidth(),element:GetHeight(),w,nw,h,nh,unsquish_ratio)
+    
+    return nw,nh
+end
+
+
+function world_to_ui(pos, obj, id, return_offscreen)
+    if not pos then
+        id = id or (obj and obj:id())
+        obj = obj or (id and get_game_object(id))
+        pos = obj and obj:position()
+    end
+    local vec = pos and game.world2ui(vector():set(pos.x, pos.y, pos.z), return_offscreen)
+    --printf("vec for %s: %s,%s",id,vec and vec.x,vec and vec.y)
+    if (vec and (vec.x ~= -9999) and (vec.y ~= 0)) then
+        return vec
+    end
+end
+
+
+function get_screen_coords(args)
+    if not args then return end
+    if args.locked_screen_pos then return args.locked_screen_pos end
+    local id        = args.id or nil
+    local pos       = args.pos or nil
+
+    local is_npc, is_place, is_wp, obj, se_obj
+    if id and not pos then
+        vl("no pos passed to get_screen_coords, looking for pos by type")
+        obj       = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+        se_obj    = alife_object(id)
+        vl("get_screen_coords: id %s -> obj %s (%s) | se_obj %s",id,obj and obj:name(),obj and obj:id(),se_obj and se_obj:name())
+        is_wp     = paw and paw.is_current_waypoint(id)
+        if (obj and IsStalker(obj) or IsMonster(obj)) then
+            -- Marker object is an npc
+            pos         = obj and utils_obj.safe_bone_pos(obj, args.bone or (obj:alive() and "bip01_head" or "bip01_spine1"))
+            is_npc      = true
+        elseif (se_obj:clsid() == clsid.smart_terrain) or (se_obj:clsid() == clsid.script_zone) then
+            -- Marker object is a place
+            --pos         = se_obj.position        
+            is_place    = true
+        elseif args.bone then
+            pos         = obj and utils_obj.safe_bone_pos(obj, args.bone)
+        end
+        pos = pos or get_object_center(id)
+
+        if (pos == nil) then
+            if not (se_obj and se_obj.online) then
+                -- Marker is a server object that is offline, return nothing
+                return nil
+            elseif (se_obj:clsid() == clsid.online_offline_group_s) then
+                -- Marker object is an npc squad, use their squad leader's pos
+                local i     = se_obj:commander_id()
+                local npc   = i and db.storage[i] and db.storage[i].object or level.object_by_id(i)
+                pos         = npc and utils_obj.safe_bone_pos(npc, args.bone or "bip01_head")
+                is_npc      = true
+            else
+                -- Marker is some other kind of se_obj, hopefully with a valid pos
+                local tmp   = se_obj and se_obj.position
+                pos         = tmp and vector():set(tmp.x,tmp.y,tmp.z)
+            end
+        end
+    end
+    if not ((pos and pos.x) and (pos and pos.x) and (pos and pos.z)) then
+        dl("! utils_catspaw_hudmarks.get_screen_coords: unable to get valid pos for %s",id)
+        return nil
+    end
+
+
+    vl("* pos found for id %s: %s,%s,%s",id,pos and pos.x,pos and pos.y,pos and pos.z)
+
+    local dist          = db.actor:position():distance_to(pos)
+    local base_y        = args.base_y or 0.575      -- starting point
+    local min_dist      = args.min_dist or 0        -- distance floor for proximity adjustment range
+    local near_dist     = args.near_dist or 15      -- max dist where proximity adjustment range begins
+    local mid_dist      = args.mid_dist or 15       -- dist at which far adjustments begin
+    local max_dist      = args.max_dist or 60       -- distance ceiling for the far adjustment range
+    local near_adj      = args.near_adj or 0        -- max icon vertical position change from proximity
+    local far_adj       = args.far_adj or 1.75      -- max icon vertical position change from distance
+
+    if is_wp and paw and paw.waypoint_is_scriptzone then
+        base_y          = args.base_y or 0          -- arbitrary targeted waypoints should be precise
+        far_adj         = args.far_adj or 0
+    elseif is_place then
+        near_adj        = args.near_adj or 1.2      -- location spots are usually on or in the ground
+    elseif is_npc then
+        min_dist        = args.min_dist or 2        -- to allow for npc bounding box
+        near_adj        = args.near_adj or 0.45     -- max increase in height above npc head from proximity < 12m
+    end
+
+    local vert_adj      = near_adj
+    local dist_prog     = 0     -- 0 to 1 progress from beginning to end of adjustment range
+    local dist_coef     = 1     -- 0 to 1 multiplier based on distance
+    dist = clamp(dist,min_dist,max_dist)
+
+    if (dist <= near_dist) then
+        dist_prog       = ((near_dist - min_dist) - (dist - min_dist)) * 0.1
+        dist_coef       = math.abs(math.sqrt(math.pow(dist_prog, 2)))
+        vert_adj        = near_adj - (near_adj * dist_coef)
+    elseif (dist > mid_dist) then
+        local far_range = max_dist - mid_dist
+        local far_dist  = dist - mid_dist
+        if dist >= max_dist then
+            dist_prog = 1
+        else
+            dist_prog = (far_dist / far_range)
+        end
+        dist_coef       = args.dist_easing and args.dist_easing(dist_prog) or dist_prog
+        -- linear by default, but you can pass an easing function in args
+        -- testing stuff below:
+        --dist_coef       = math.cos(((1 - dist_prog) * math.pi) / 2) -- easeInSine - this one works ok
+        --dist_coef       = math.sin((dist_prog * math.pi) / 2) -- easeOutSine
+        --dist_coef       = math.abs(math.sqrt(math.pow(dist_prog, 2)))
+        vert_adj        = near_adj + (dist_coef * far_adj)
+    end
+    --local zoom_coef = get_current_fov_coef() or 1
+    local zoom_coef = (device().fov / 85)
+    
+    pos.y               = base_y + pos.y + (vert_adj * zoom_coef)
+    --printf("* Actor is %s from %s (near_dist %s | max_dist %s\n* dist_prog %s | dist_coef %s\n| Final vertical adjustment: %s",true_dist,id,near_dist,max_dist,dist_prog,dist_coef,vert_adj)
+
+    --local vec = pos and game.world2ui(vector():set(pos.x,pos.y,pos.z),false)
+    local vec = world_to_ui(pos)
+    --printf("final vec for %s: %s,%s",id,vec and vec.x,vec and vec.y)
+    if (vec and (vec.x ~= -9999) and (vec.y ~= 0)) then
+        return vec
+    end
+    
+    return nil
+end
+
+-- ======================================================================
+class "HUDMarkerManager"
+function HUDMarkerManager:__init()
+    dl("[HUDMarkMgr] Initializing HUD Marker Manager")
+    self.init_time          = time_global()
+    self.update_int         = 15
+    self.next_update        = 0
+    self.hover_tolerance    = hover_tolerance
+    self.hover_dist         = 2
+    self.best_hover_id      = nil
+    self.best_hover_dp      = 0
+end
+
+function HUDMarkerManager:RegisterCallbacks()
+    dl("[HUDMarkMgr] Registering marker management callbacks")
+    RegisterScriptCallback("actor_on_update", self)
+    RegisterScriptCallback("actor_on_update_pickup", self)
+    RegisterScriptCallback("GUI_on_show", self)
+    RegisterScriptCallback("GUI_on_hide", self)
+    return true
+end
+
+function HUDMarkerManager:actor_on_update()
+    --vl("[HUDMarkerManager:actor_on_update]")
+    local obj = level.get_target_obj()
+    self.last_crosshair     = self.current_crosshair
+    self.current_crosshair  = obj and obj:id() or nil
+
+    if db.actor.get_actor_object_looking_at then
+        self.last_target    = self.current_target
+        local obj           = db.actor:get_actor_object_looking_at()
+        self.current_target = obj and obj:id() or nil
+        --vl("Actor is looking at: %s", self.current_target)
+    end
+    
+    if (self.next_update or 0) > time_global() then return end
+    self.next_update        = time_global() + (self.update_int or 15)
+    self:Update()
+end
+
+function HUDMarkerManager:actor_on_update_pickup(obj)
+    --vl("[HUDMarkerManager:actor_on_update_pickup]")
+    self.last_pickup     = self.current_pickup
+    self.current_pickup  = obj and obj:id() or nil
+    --vl("Current pickup target: %s", self.current_pickup)
+end
+
+function HUDMarkerManager:GUI_on_show() self:Update() end
+
+function HUDMarkerManager:GUI_on_hide() self:Update() end
+
+function HUDMarkerManager:GenerateMarkUID(args)
+    args = args or {}
+    local pos = args.locked_world_pos or args.locked_screen_pos
+    local st = (args.id and tostring(args.id)) or string.format("%.1f-%.1f", pos.x, pos.y)
+    local pre = args.preset or "marker"
+    args.mark_id = pre .. "_" .. st
+    vl("* [HUDMarkMgr:GenerateMarkID] generated new mark_id %s for id %s and preset %s", args.mark_id, args.id, args.preset)
+    return args.mark_id
+end
+
+function HUDMarkerManager:SetCheckOnscreen(onoff)
+    self.check_onscreen = onoff
+end
+
+function HUDMarkerManager:AddMarker(args)
+    --printf("HUDMarkerManager:AddMarker called")
+    args = args or {}
+    local id = args.id
+    local pos = args.locked_world_pos or args.locked_screen_pos
+    local log_args = " (" .. size_table(args) .. " args passed)" or ""
+    local pos_args = pos and " (using locked_world_pos instead)" or ""
+    vl("-[HUDMarkMgr:AddMarker] %s%s | mark_id %s%s", id, pos_args, args.mark_id, log_args)
+    --[[    HUD MARKER MANAGER USAGE
+
+        The HUD Marker Manager allows HUD markers to be quickly and simply added for
+        any object or screen/world pos, but customized with a wide variety of behaviors. 
+
+        You can also just instantiate markers directly with the UIHUDMarker class, and iterate
+        through your own updates, but the manager helps keep everything in one place so that 
+        markers are easy to debug and simple to manage.
+
+        Usage:
+            local hmm = utils_catspaw_hudmarks.get_hud_mark_manager()
+            local ctrl = hmm:AddMarker(args)
+
+        Required: id or pos to attach to in table of args, see CLASS USAGE for details
+
+        Returns: the marker handler object, and the mark_id (an arbitrary string UID assigned to the marker)
+    --]]
+    if not (pos or valid_id(id)) then return end
+    if not args.mark_id then
+        args.mark_id = self:GenerateMarkUID(args)
+    end
+    if markers[args.mark_id] then
+        vl("~ [HUDMarkMgr:AddMarker] mark_id %s already exists, replacing with new marker for ID %s", mark_id)
+    end
+    markers[args.mark_id] = UIHUDMarker(args)
+    if not (self.first_marker) then
+        self.first_marker = true
+        CreateTimeEvent("hmm_callbacks", time_global(), 0.25, self.RegisterCallbacks, self)
+    end
+
+    local custom_on_destroy = nil
+    if markers[args.mark_id].func_on_destroy then
+        --printf("Mark %s already has a func_on_destroy, monkeypatching it")
+        custom_on_destroy = markers[args.mark_id].func_on_destroy
+    end
+
+    markers[args.mark_id].func_on_destroy = (
+        function(mark)
+            if not (mark and mark.mark_id) then return end
+            if custom_on_destroy then custom_on_destroy(mark) end
+            local hmm = get_hud_mark_manager()
+            hmm:DelMarker(mark and mark.mark_id)
+        end
+    )
+    return markers[args.mark_id], args.mark_id
+end
+
+function HUDMarkerManager:DelMarker(mark_id)
+    --vl("[HUDMarkerManager:DelMarker] m_id: %s", mark_id)
+    if not (mark_id and markers[mark_id]) then return end
+    nearest[markers[mark_id].id or 0] = nil
+    markers[mark_id]:Destroy(true, "shutdown by mark manager")
+    markers[mark_id] = nil
+end
+
+function HUDMarkerManager:GetMarker(mark_id)
+    --vl("[HUDMarkerManager:GetMarker] m_id: %s%s", mark_id, (markers[mark_id] ~= nil) and " - exists" or " - marker doesn't exist yet")
+    return markers[mark_id]
+end
+
+function HUDMarkerManager:HoverIn(mark)
+    if not mark then return end
+    --vl("[HUDMarkerManager:HoverIn] Best hovered marker is now %s | %s", mark.mark_id, mark.last_hover)
+    self.best_hover_mk  = mark.mark_id
+    self.best_hover_id  = mark.id
+    self.best_hover_dp  = mark.last_hover
+    mark.best_hover     = true
+end
+
+function HUDMarkerManager:HoverOut(mark)
+    if not mark then return end
+    --vl("[HUDMarkerManager:HoverOut] %s is no longer the best hovered marker | dist %s | dp %s", mark.mark_id, mark.last_dist, mark.last_hover)
+    if (mark.mark_id == self.best_hover_mk) then
+        self.best_hover_mk  = nil
+        self.best_hover_id  = nil
+        self.best_hover_dp  = 0
+        mark.best_hover     = false
+    end
+end
+
+function HUDMarkerManager:HoverDist(mark)
+    return mark and mark.hover_dist or self.hover_dist or 2
+end
+
+function HUDMarkerManager:HoverTolerance(mark)
+    return mark and mark.hover_tolerance or self.hover_tolerance or hover_tolerance or 0.8
+
+end
+
+function HUDMarkerManager:Update()
+    for k,v in pairs(markers) do
+        if v.managed_updates and not (v.killswitched or v.destroying) then
+            v:Update()
+        end
+        --vl("checking hover for marker %s (%s) | hovered %s | last_hover %s | last_dist %s", v.name, v.id, v.hovered, v.last_hover, v.last_dist)
+        local id = v.id
+        nearest[id] = v.last_dist
+        if (id == self.best_hover_id) then
+            --vl("%s is the last best_hover_id, checking distance and tolerance", v.id)
+            if (v.last_dist > self:HoverDist(v)) or (v.last_hover < self:HoverTolerance(v)) then
+                self:HoverOut(v)
+            else
+                self:HoverIn(v)
+            end
+        elseif v.hovered and (v.last_dist <= self:HoverDist(v)) then
+            if (v.last_hover > self.best_hover_dp) and (v.last_hover >= self:HoverTolerance(v)) then
+                self:HoverOut(self:GetMarker(self.best_hover_mk))
+                self:HoverIn(v)
+            end
+        end
+    end
+end
+
+
+-- ======================================================================
+
+local markmanager
+
+function get_hud_mark_manager()
+    if not markmanager then
+        markmanager = HUDMarkerManager()
+    end
+    return markmanager
+end
+
+function get_marker_table()
+    return markers
+end
+
+function get_nearest(num)
+    -- needs testing
+    if not nearest then nearest = {} end
+    if is_empty(nearest) then return end
+    table.sort(nearest)
+    local i = 1
+    local tbl = {}
+    num = num or size_table(nearest)
+    for id,dist in spairs(nearest) do
+        tbl[i] = {id=id,dist=dist}
+        i = i + 1
+        if i > num then break end
+    end
+    return tbl
+end
+
+function get_hover_tolerance(mark_id)
+    local hmm = get_hud_mark_manager()
+    local mark = mark_id and hmm:GetMarker(mark_id)
+    return hmm:HoverTolerance(mark)
+end
+
+function is_obj_crosshair_target(id) return hmm and hmm.current_crosshair and (id == hmm.current_crosshair) end
+function is_obj_pickup_target(id) return hmm and hmm.current_pickup and (id == hmm.current_pickup) end
+function is_obj_current_target(id) return hmm and hmm.current_target and (id == hmm.current_target) end
+
+function is_object_already_targeted(id)
+    if not id then return end
+    local hmm       = get_hud_mark_manager()
+    local is_xhair  = is_obj_crosshair_target(id)
+    local is_pickup = is_obj_pickup_target(id)
+    local is_target = is_obj_current_target(id)
+    local result    = is_pickup or is_target or is_xhair
+    local _         = debug_dump and vl("is_object_already_targeted(%s): %s | pickup: %s | look_target: %s | crosshair: %s", id, result, is_pickup, is_target, is_xhair)
+end
+
+function init_hud_mark(xml, texture, args)
+    if not xml then return end
+    args = args or {}
+    local marker = xml:InitStatic("marker", args.anchor or ActorMenu.get_maingame())
+    vl("* Initting texture %s for marker", texture or "[BLANK]")
+    marker:InitTexture(texture or "")
+    if args.color then
+        marker:SetTextureColor(args.color)
+    end
+    if args.pos or args.screen_pos then
+        local spos = args.screen_pos
+        if args.pos then
+            spos = world_to_ui(args.pos, nil, nil, true)
+        end
+        if not spos then return marker end
+        marker:SetWndPos(spos)
+    end
+    return marker
+end
+
+class "UIHUDMarker" (CUIScriptWnd)
+-- ======================================================================
+--[[    HUD MARKER CLASS USAGE
+
+        marker = UIHUDMarker(args)
+        Where args is a table of parameters, which must contain both a texture, and an object or world position to attach to.
+            args.texture
+                The texture of the marker
+
+            Either args.id or args.locked_world_pos or args.locked_screen_pos
+                The "anchor" for the marker, use one or the other
+                args.id must be a valid non-actor obj ID, or
+                args.locked_world_pos must be a valid world pos vector
+                args.locked_screen_pos must be a valid 1024x768 coordinate
+
+        All others that follow are optional:
+            anim_take_x_end (default 512)
+            anim_take_y_end (default 768)
+                Customizes the final screen position of the "item take" animation that plays when the actor takes a marker item
+
+            custom_argb
+                Overrides the texture's default ARGB
+
+            d_near_fade_dist (no default)
+                Distance text will begin to fade out when actor is this close. Overrides marker setting.
+
+            d_near_hide_dist (no default)
+                Distance text will be completely hidden when actor is this close. Overrides marker setting.
+
+            dist_on_hover (default false)
+                If enabled, distance will be shown, but only when marker is the best hover.
+
+            far_end_dist (default 99999 : disabled))
+                Marker will be destroyed when actor gets this far away.
+
+            far_fade_dist (default 99999 : disabled)
+                Marker alpha will begin to fade out when actor gets this far away, disappearing at far_hide_dist.
+
+            far_hide_dist (default 99999 : disabled)
+                Marker will be completely hidden when actor gets this far past the far_fade_dist.
+
+            func_anim_take_curve (no default)
+                Optional functor to provide an easing curve for the "item take" animation.
+                See utils_catspaw_common.easing for examples.
+            
+            func_los_check (no default)
+                Optional functor executed when LOS is lost, if bool is returned will override marker show state.
+
+            func_on_destroy (no default)
+                Optional functor that is executed on marker destruction, passes the args table.
+            
+            func_on_update (no default)
+                Optional functor that is executed at the very start of each marker update, passes the marker
+
+            func_on_update_end (no default)
+                Optional functor that is executed at the very end of each marker update if the marker is shown
+
+            h_near_fade_dist (no default)
+                Hint text will begin to fade out when actor is this close. Overrides marker setting.
+
+            h_near_hide_dist (no default)
+                Hint text will be completely hidden when actor is this close. Overrides marker setting.
+
+            height (default 24)
+                Screen canvas height of the marker texture, optionally scaled by distance
+
+            hint_font (default: GetFontSmall() for en, GetFontMedium() for ru)
+                Force use of a specific font for the hint text
+
+            hint_on_hover (default false)
+                If enabled, hint text will be shown, but only when marker is the best hover
+
+            hover_tolerance (default 0.8)
+                Sets how close (0 to 1) the crosshair must be for the marker to be "hovered"
+
+            id (set automatically)
+                The ID of the object
+
+            lock_x (no default)
+            lock_y (no default)
+                Optionally lock the X and/or Y screen coordinate in place
+
+            adj_final_x (no default)
+            adj_final_y (no default)
+                Added directly as an adjustment to the final screen position of the marker
+
+            locked_screen_pos (no default)
+                Like using both lock_x and lock_y, but stored as a pos vector - used to fix something in place on the screen
+
+            locked_world_pos (no default)
+                Forces the marker to be centered on a fixed world pos rather than an object
+
+            los_check_int (no default, therefore disabled)
+                Enables LOS checks in intervals of this many ms
+                Set to a negative number to disable LOS checks
+
+            los_dist_min (no default)
+                If set, LOS checks are ignored when actor is closer than this
+
+            los_dist_max (no default)
+                If set, LOS checks are ignored when actor is further away than this
+
+            los_smoothing (default true)
+                Smooths out LOS jitter, don't disable unless you suspect issues
+
+            lost_los_delay (default 1000)
+                Anti-jitter setting, delay in ms before LOS is lost
+
+            lost_los_dist (default 2)
+                Anti-jitter setting, actor must travel this far in meters before LOS is lost
+
+            mark_id (generated if not passed)
+                Arbitrary string ID unique to this marker
+
+            min_x (default 0)
+            min_y (default 0)
+            max_x (default 1024)
+            max_y (default 768)
+                Set screen canvas constraints within which the marker will stay
+
+            managed_hover
+                Lets the HUD Marker Manager handle hover state determination
+
+            managed_updates
+                The marker will not register callbacks to do its own update loops
+                Your script (or HUD Marker Manager) must invoke marker:Update() manually
+    
+            name 
+                Override the system-generated name for the marker's object
+
+            near_end_dist (default -1 : disabled)
+                Marker will be destroyed when actor gets this close
+
+            near_fade_dist (default -1 : disabled)
+                Marker alpha will begin to fade out when actor is this close
+
+            near_hide_dist (default -1 : disabled)
+                Marker will be completely hidden when actor is this close
+
+            med_hint_font
+                Forces RU-friendly hint font it not auto-detected
+
+            dist_y_adj (no default)
+                Moves the distance text away from its default position below the marker
+
+            hint_y_adj (no default)
+                Moves the hint text away from its default position above the marker
+
+            scale_dist_min (default 10)
+                At this distance or closer, the marker is scaled up to its maximum size
+
+            scale_dist_mid (default 20)
+                The distance at which the marker is scaled to exactly the specified size
+
+            scale_dist_max (default 50)
+                At this distance or further, the marker is scaled down to its minimum size
+
+            scale_up_amt (default 0.5)
+                Scaling coef used to increase the size of the marker when it's closer than scale_dist_mid
+
+            scale_dn_amt (default 0.4)
+                Scaling coef used to decrease the size of the marker when it's further than scale_dist_mid
+
+            show_dist (default false)
+                If enabled, distance will always be shown when the marker is visible
+
+            show_hint (default false)
+                If enabled, hint text will always be shown when the marker is visible
+
+            show_offline (default false)
+                Show the marker even if its server object is offline - not usually recommended
+
+            show_on_other_maps (default false)
+                Show the marker even if its object is on a different map than the actor - not recommended
+
+            take_duration (default 100)
+                duration in ms of the "item take" animation that plays when actor takes a marker item
+
+            texture (required, no default)
+                Sets the texture for the marker's visible HUD icon
+
+            update_int
+                Update interval for the marker in ms
+
+            width (default 24)
+                Screen canvas width of the marker texture, optionally scaled by distance
+
+--]]
+-- ======================================================================
+
+function UIHUDMarker:__init(args) super()
+    if not (args and (args.id or args.locked_world_pos or args.locked_screen_pos)) then return end
+    vl("[UIHUDMarker] Initializing new HUD marker %s%s%s", 
+        args and args.preset  and "as " .. args.preset .. " " or "",
+        args.id, 
+        args and args.mark_id and (" | " .. args.mark_id) or ""
+    )
+    self:InitSettings(args)
+    self:InitMarker()
+    self:ShowMarker(true, "__init")
+    RegisterScriptCallback("on_localization_change", self)
+    RegisterScriptCallback("actor_on_net_destroy", self)
+    RegisterScriptCallback("actor_on_item_take", self)
+    RegisterScriptCallback("server_entity_on_unregister", self)
+    if args and args.physics_obj then
+        vl("[UIHUDMarker] registering physic_object_on_death_callback")
+        RegisterScriptCallback("physic_object_on_death_callback", self)
+    end
+
+    if (args and args.managed_updates) then
+        vl("[UIHUDMarker] args.managed_updates is true, skipping self-management and auto-update callbacks")
+    else
+        self:RegisterSelfManagementCallbacks()
+    end
+    if not (args and args.skip_first_update) then self:Update() end
+end
+
+function UIHUDMarker:RegisterSelfManagementCallbacks()
+    vl("[UIHUDMarker:RegisterSelfManagementCallbacks][ID %s]", self.id)
+    RegisterScriptCallback("actor_on_update", self)
+    RegisterScriptCallback("GUI_on_show", self)
+    RegisterScriptCallback("GUI_on_hide", self)
+end
+
+function UIHUDMarker:UnregisterSelfManagementCallbacks()
+    vl("[UIHUDMarker:UnregisterSelfManagementCallbacks][ID %s]", self.id)
+    UnregisterScriptCallback("actor_on_update", self)
+    UnregisterScriptCallback("GUI_on_show", self)
+    UnregisterScriptCallback("GUI_on_hide", self)
+end
+
+function UIHUDMarker:LoadPassedArgs(args)
+    args                = args or {}
+    self.args           = {}
+    local _
+    local preset_args   = nil
+    if args.preset then
+        self.args = marker_presets[args.preset](args)
+        if self.args then
+            vl("[UIHUDMarker:InitSettings] Loading settings from preset %s", args.preset)
+            for k,v in pairs(self.args) do
+                _ = debug_dump and vl("[UIHUDMarker:InitSettings] Preset arg %s = %s", k, v)
+                self[k] = v
+            end
+        end
+    end
+    _ = (not is_empty(args)) and vl("[UIHUDMarker:InitSettings] Loading %s passed args", size_table(args))
+    for k,v in pairs(args) do
+        if self.args[k] then
+            _ = debug_dump and vl("[UIHUDMarker:InitSettings] Overriding existing val %s: %s -> %s", k, self[k], v)
+        else
+            _ = debug_dump and vl("[UIHUDMarker:InitSettings] Loading passed arg %s: %s", k, v)
+        end
+        self.args[k] = v
+        self[k] = v
+    end
+end
+
+function UIHUDMarker:InitSettings(args)
+    self.id             = args.id
+    local id            = self.id
+    local se_obj        = id and alife_object(id)
+    local _
+    self:LoadPassedArgs(args)
+    if not (self.skip_online_checks or self.locked_world_pos or self.locked_screen_pos) then
+        local level_name= se_obj and alife():level_name(game_graph():vertex(se_obj.m_game_vertex_id):level_id())
+        if level_name ~= level.name() and not self.living_thing then
+            vl("%s se_obj level name %s is not actor map %s, destroying marker", se_obj and se_obj:name() or "Missing", level_name, level.name())
+            self:Destroy(nil, "different map")
+        return end
+    end
+
+    self.xmlfile        = self.xmlfile or "ui_hud_marker.xml"
+    self.start          = get_time_elapsed()
+    self.name           = self.name or (id and bestname and bestname(id)) or (se_obj and (se_obj.character_name and se_obj:character_name() or se_obj:name())) or ""
+    local pin           = paw and (paw.pins and paw.pins[id])
+    self.min_x          = self.min_x or 0
+    self.min_y          = self.min_y or 0
+    self.max_x          = self.max_x or 1024
+    self.max_y          = self.max_y or 768
+    self.hint_y_adj     = self.hint_y_adj or 0
+    self.dist_y_adj     = self.dist_y_adj or 0
+    self.width          = self.width or 24
+    self.height         = self.height or self.width or 24
+    if self.los_check_int then
+        -- los_smoothing enables the following settings that smooth out LOS jitter -- don't disable
+        self.los_smoothing  = true
+        -- Ignore failed LOS if last good check was less than this long ago (in ms)
+        self.lost_los_delay = self.lost_los_delay or 1000
+        -- Ignore failed LOS if actor has traveled less than this distance since last good check
+        self.lost_los_dist  = self.lost_los_dist or 2
+        -- Do initial LOS check to init the remaining settings
+        self:CheckActorLos()
+    end
+
+    self.near_fade_dist = self.near_fade_dist or -1
+    self.near_hide_dist = self.near_hide_dist or -1
+    self.far_fade_dist  = self.far_fade_dist or 99999
+    self.far_hide_dist  = self.far_hide_dist or 99999
+    self.near_end_dist  = self.near_end_dist or -1
+    self.far_end_dist   = self.far_end_dist or 99999
+    self.language       = ui_options.curr_localization()
+    self.med_hint_font  = self.med_hint_font or (ui_options.curr_localization() == "rus")
+    self.update_int     = self.update_int or 100
+    self.next_update    = time_global()
+    self:UpdateBaseMarkerSize()
+    
+    if debug_dump then dl(logdiv .. "-[UIHUDMarker:InitSettings] for %s (%s) [m_id %s] completed at %s:\n" ..
+        "=| pin %s | wp %s | preset %s | %s | texture %s\n" ..
+        "=| min_x %s y %s | max_x %s y %s | ARGB %s,%s,%s,%s\n" ..
+        "=| near fade %sm hide %sm | far fade %sm hide %sm | near end %sm | far end %sm\n" ..
+        "=| update int %s | next %s\n" .. logdiv,
+        self.name, self.id, self.mark_id, time_global(),
+        self.is_pin, self.is_wp, args.preset, self.xmlfile, self.texture,
+        self.min_x, self.min_y, self.max_x, self.max_y, 
+        self.custom_argb and self.custom_argb.a or "default",
+        self.custom_argb and self.custom_argb.r or "default",
+        self.custom_argb and self.custom_argb.g or "default",
+        self.custom_argb and self.custom_argb.b or "default",
+        self.near_fade_dist, self.near_hide_dist, self.far_fade_dist, self.far_hide_dist, 
+        self.near_end_dist, self.far_end_dist,
+        self.update_int, self.next_update
+    ) end
+end
+
+function UIHUDMarker:InitMarker()
+    self:SetAutoDelete(true)
+    self.element_list = {
+        ["marker"]    = true,
+        ["dist"]      = true,
+        ["dist_sh"]   = true,
+        ["label"]     = true,
+        ["label_sh"]  = true
+    }
+    if not xml then
+        xml = CScriptXmlInit()
+    end
+    vl("[UIHUDMarker:InitMarker][%s] Loading marker UI from %s", self.mark_id, self.xmlfile)
+    xml:ParseFile(self.xmlfile)
+
+
+    local color = GetARGB(255, 255, 255, 255)
+    if self.custom_argb and not is_empty(self.custom_argb) then
+        local pcc = self.custom_argb
+        vl("* Marker %s has custom ARGB %s,%s,%s,%s", self.id, pcc.a, pcc.r, pcc.g, pcc.b)
+        color = GetARGB(pcc.a,pcc.r,pcc.g,pcc.b)
+    end
+    if (not self.marker) then
+        self.marker     = init_hud_mark(xml, self.texture, { color = color, anchor = self })
+    end
+    if (not self.label) then
+        self.label = xml:InitStatic("marker:label", self)
+    end
+    self.label:TextControl():SetTextColor( GetARGB(255,230,230,230) )
+    self.label:SetWndPos(vector2():set(0, self.hint_y_adj))
+    if (not self.label_sh) then
+        self.label_sh    = xml:InitStatic("marker:label_sh", self.label)
+    end
+    self.label_sh:TextControl():SetTextColor( GetARGB(255,0,0,0) )
+    self.label_sh:SetWndPos(vector2():set(1, 1 + self.hint_y_adj))
+    if (not self.lref) then
+        self.lref       =  xml:InitStatic("marker:label",self.label)
+    end
+    self.label:TextControl():SetText(self.name)
+    self.label_sh:TextControl():SetText(self.name)
+    self.lref:TextControl():SetFont(self.hint_font or GetFontSmall())
+    self.lref:Show(false)
+    self:on_localization_change()
+
+    if (not self.dist) then
+        self.dist       = xml:InitStatic("marker:distance", self)
+    end
+    self.dist:TextControl():SetTextColor( GetARGB(255,230,230,230) )
+    self.dist:TextControl():SetFont(GetFontSmall())
+    self.label:SetWndPos(vector2():set(0, self.dist_y_adj))
+    if (not self.dist_sh) then
+        self.dist_sh    = xml:InitStatic("marker:distance_sh", self.dist)
+    end
+    self.dist_sh:TextControl():SetTextColor( GetARGB(255,0,0,0) )
+    self.dist_sh:TextControl():SetFont(GetFontSmall())
+    self.dist_sh:SetWndPos(vector2():set(1, 1))
+    if (not self.wref) then
+        self.wref       = xml:InitStatic("marker:distance", self.dist)
+    end
+    self.wref:TextControl():SetFont(GetFontSmall())
+    self.wref:Show(false)    
+    self.last_dist = 0
+    self.last_hover = 0
+    get_hud():AddDialogToRender(self)
+    self.init_time = time_global()
+
+    dl("[UIHUDMarker:InitMarker][%s] complete at %s | hint %s", self.mark_id, self.init_time, self.name)
+end
+
+
+function UIHUDMarker:Destroy(managed, reason)
+    if self.destroying then return end
+    if (not managed) and hmm and hmm.markers and self.mark_id and hmm.markers[self.mark_id] then
+        vl("[UIHUDMarker:Destroy][%s] Marker is managed, passing call to hud_mark_manager():DelMarker first", self.mark_id)
+        hmm:DelMarker(self.mark_id)
+        return
+    end
+    self.destroying = true
+    dl("[UIHUDMarker:Destroy][%s] HUD Marker %s", self.mark_id, reason and ("| " .. reason) or  "")
+    if paw and self.id then paw.hide_hud_pin(self.id) end
+    if self.func_on_destroy then
+        vl("[UIHUDMarker:Destroy] Executing custom on_destroy functor %s", self.func_on_destroy)
+        self.func_on_destroy(self)
+    end
+    get_hud():RemoveDialogToRender(self)
+end
+
+function UIHUDMarker:UpdateBaseMarkerSize(w, h)
+    self.base_w = w or self.base_w or self.width
+    self.base_h = h or self.base_h or self.base_w or self.height
+    --vl("[%s][%s] UpdateBaseMarkerSize: %s|%s -> %sx%s", time_global(), self.name or self.mark_id, dec2(w), dec2(h), dec2(self.base_w), dec2(self.base_h))
+end
+
+function UIHUDMarker:SetMarkerSize(w, h, scale)
+    scale = scale or self.marker_scale or 1
+    w = w or self.base_w
+    h = h or self.base_h
+    self.width = w * scale
+    self.height = h * scale
+    --vl("[%s][%s] SetMarkerSize: [%s x %s] -> [%s x %s] | scale %s", time_global(), self.name or self.mark_id, dec2(w), dec2(h), dec2(self.width), dec2(self.height), scale)
+    self.marker:SetWndSize(vector2():set(self.width, self.height))
+end
+
+function UIHUDMarker:ScaleMarkerByDistance(w, h, dist, scale)
+    --printf("[%s][%s] ScaleMarkerByDistance: %sx%s | dist %s | scale %s", time_global(), self.name or self.mark_id, w and dec2(w), h and dec2(h), dec2(dist or self.last_dist or 0), scale)
+    self:UpdateBaseMarkerSize(w, h)
+    w, h = scale_by_dist(
+                self.marker, dist or self.last_dist or 0,
+                self.base_w, 
+                self.base_h,
+                self.scale_dist_min or 10,
+                self.scale_dist_mid or 20,
+                self.scale_dist_max or 50,
+                self.scale_up_amt,
+                self.scale_dn_amt,
+                self.correct_aspect
+            )
+    self:SetMarkerSize(w, h, scale)
+    return w, h
+end
+
+
+function UIHUDMarker:physic_object_on_death_callback(victim, killer)
+    --vl("[%s] UIHUDMarker:physic_object_on_death_callback")
+    if victim and victim:id() and (victim:id() == self.id) then
+        --vl("Destroying marker for %s (%s)", self.name, self.id)
+        self:Destroy(nil, "physic_object_on_death_callback")
+    end
+end
+
+
+function UIHUDMarker:on_localization_change()
+    --vl("[UIHUDMarker:on_localization_change][%s]", self.mark_id)
+    if not self.hint_font then
+        self.language       = ui_options.curr_localization()
+        self.detected_font  = (self.med_hint_font or (self.language == "rus")) and GetFontMedium() or GetFontSmall()
+    end
+    self.label:TextControl():SetFont(self.hint_font or self.detected_font)
+    self.label_sh:TextControl():SetFont(self.hint_font or self.detected_font)
+    self.lref:TextControl():SetFont(self.hint_font or self.detected_font)
+end
+
+
+function UIHUDMarker:server_entity_on_unregister(se_obj, type_name)
+    if self.id and se_obj and (se_obj.id == self.id) then
+        self:Destroy(nil, "server_entity_on_unregister")
+    end
+end
+
+
+function UIHUDMarker:actor_on_net_destroy()
+    self.destroying = true
+    get_hud():RemoveDialogToRender(self)
+end
+
+
+function UIHUDMarker:actor_on_item_take(obj)
+    if obj and self.id and (obj:id() == self.id) then
+        self.take_duration      = self.take_duration or 150
+        self.anim_take_start    = time_global()
+        self.anim_take_end      = self.anim_take_start + self.take_duration
+        local screen_pos        = self.last_screen_pos or self:GetPos(self.pos_adjust)
+        if not (screen_pos and screen_pos.x and screen_pos.y) then return end
+        self.anim_take_x_start  = screen_pos.x
+        self.anim_take_y_start  = screen_pos.y
+        self.anim_take_x_end    = self.anim_take_x_end or 512
+        self.anim_take_y_end    = self.anim_take_y_end or 768
+        self.anim_take_prog     = 0
+        self.actor_taking       = true
+        vl("Initiating item take animation for marker %s | %s,%s @ %s -> %s,%s @ %s", self.mark_id, self.anim_take_x_start, self.anim_take_y_start, self.anim_take_start, self.anim_take_x_end, self.anim_take_y_end, self.anim_take_end)
+        CreateTimeEvent("catsy_animate_take"..self.id, time_global(), 0, 
+            function()
+                local abort = self.func_abort_take and self.func_abort_take()
+                if abort then
+                    --vl("Received abort for take animation for obj %s", self.id)
+                    self.anim_take_prog = 1
+                else
+                    local func  = self.func_anim_take_curve or (function(xy) return xy end)
+                    local c     = func(self.anim_take_prog)
+                    local x     = lerp(self.anim_take_x_start, self.anim_take_x_end, c)
+                    local y     = lerp(self.anim_take_y_start, self.anim_take_y_end, c)
+                    vl("Take animation pos at %s: %s | x %s | y %s", time_global(), c, x, y)
+                    self.screen_pos_override = vector2():set(x, y)
+                end
+
+                if (self.anim_take_prog == 1) then
+                    vl("Take animation for %s completed at %s",self.mark_id,time_global())
+                    self:Destroy(nil, "item taken, animation complete")
+                    return true
+                end
+                self.anim_take_prog = math.min(1, normalize(time_global(), self.anim_take_start, self.anim_take_end))
+            end
+        )
+    end
+end
+
+function UIHUDMarker:actor_on_update()
+    if (self.next_update or 0) > time_global() then return end
+    self.next_update = get_next_check(self.update_int or 50)
+    --vl("[UIHUDMarker:actor_on_update][%s] tg %s | next_update %s", self.mark_id, time_global(), self.next_update)
+    --vl("[UIHUDMarker:actor_on_update] Time to update %s", self.id)
+    self:Update()
+end
+
+function UIHUDMarker:GUI_on_show() self:Update() end
+
+function UIHUDMarker:GUI_on_hide() self:Update() end
+
+
+function UIHUDMarker:UpdateLastLOS(was_good)
+    self.good_los_time = was_good and time_global() or nil
+    self.good_los_pos = was_good and db.actor and db.actor:position() or nil
+    self.los_check_changed  = (was_good ~= self.last_los_check)
+    self.last_los_check = was_good
+    --vl("[UIHUDMarker:UpdateLastLOS] %s | last good time %s | last good pos %s", was_good, self.good_los_time, self.good_los_pos)
+    return was_good
+end
+
+function UIHUDMarker:ValidateMarkerServerObj()
+    local se_obj = self.id and alife_object(self.id)
+    if (not se_obj) and not (self.locked_world_pos or self.locked_screen_pos) then
+        self:Destroy(nil, "no valid server object")
+        return
+    end
+    return se_obj
+end
+
+function UIHUDMarker:CheckActorLos()
+    local now = time_global()
+    if self.los_check_int and (self.los_check_int < 0) then
+        self.last_los_check = true
+        return self.last_los_check
+    elseif self.los_check_int and (self.los_check_int > 0) then
+        if (not self.next_los_check) then self.next_los_check = 0 end
+        if self.next_los_check > now then return self.last_los_check end
+        self.next_los_check = get_next_check(self.los_check_int)
+    end
+    if (self.last_los_check == nil) then self.last_los_check = false end
+    --vl("[UIHUDMarker:CheckActorLos][ID %s] tg %s | next %s | interval %s", self.id, now, self.next_los_check, self.los_check_int)
+    local has_los = check_los_to_obj(self.id, self.los_check_range or 15, self.args.bone, self.los_check_flags, self.los_check_tolerance, self.los_pos_adjust)
+    if (has_los == nil) then
+        return self.last_los_check
+    elseif (not has_los) and self.los_smoothing then
+        --vl("[UIHUDMarker:CheckActorLos][%s][%s] Initial LOS check failed | good_los_time %s | good_los_pos %s", self.id, now, self.good_los_time, self.good_los_pos)
+        if self.good_los_time and self.lost_los_delay then
+            local los_loss_timeout = (self.good_los_time + self.lost_los_delay)
+            --vl("[UIHUDMarker:CheckActorLos] good_los_time %s | los_loss_timeout %s | lost_los_delay %s", self.good_los_time, los_loss_timeout, self.lost_los_delay)
+            if los_loss_timeout and (los_loss_timeout < now) then
+                --vl("[UIHUDMarker:CheckActorLos] Too long since last good LOS, clearing")
+                self.good_los_time = nil
+            else
+                --vl("[UIHUDMarker:CheckActorLos] %sms since last good LOS, skipping LOS check", now - self.good_los_time)                return true
+            end
+        end
+
+        if self.good_los_pos and (self.los_dist_max or self.lost_los_dist) then
+            local actor_movement = db.actor:position():distance_to(self.good_los_pos)
+            --vl("[UIHUDMarker:CheckActorLos] move dist: %s | los_dist_max %s | self.lost_los_dist %s", actor_movement, self.los_dist_max, self.lost_los_dist)
+            if self.los_dist_max and actor_movement and (actor_movement > self.los_dist_max) then
+                --vl("[UIHUDMarker:CheckActorLos] self.lost_los_dist is %s, forgetting last known good pos and time", self.lost_los_dist)
+                self.good_los_pos = nil
+            elseif self.lost_los_dist and actor_movement and (actor_movement < self.lost_los_dist) then
+                --vl("[UIHUDMarker:CheckActorLos] self.lost_los_dist is %s, not far enough", self.lost_los_dist)
+                return true
+            end
+        end
+    end
+    return self:UpdateLastLOS(has_los)
+end
+
+
+function UIHUDMarker:HasLOS(dist)
+    local skip_los  = is_object_already_targeted(self.id)
+    local result    = skip_los or self:CheckActorLos()
+    local _ = debug_dump and vl("[UIHUDMarker:HasLOS][%s][%s] skip %s", self.id, result, skip_los)
+    return result
+end
+
+function UIHUDMarker:GetBonePos(bone, obj)
+    obj = obj or (self.id and get_game_object(self.id))
+    bone = bone or self.args.bone
+    return obj and bone and utils_obj.safe_bone_pos(obj, bone)
+end
+
+function UIHUDMarker:GetBasePos()
+    local obj = self.id and get_game_object(self.id)
+    return obj and (self.args.bone and self:GetBonePos(self.args.bone, obj) or get_object_center(nil, obj)) or nil
+end
+
+function UIHUDMarker:GetPos(pos_adjust)
+    if self.locked_world_pos then return self.locked_world_pos end
+    local pos = self:GetBasePos()--self.locked_world_pos or self:GetBonePos(self.args.bone, obj) or get_object_center(self.id)--(se_obj and se_obj.position)
+    local adjtxt = ""
+    if pos and pos_adjust then
+        adjtxt = debug_dump and string.format("\n* Was: %s,%s,%s | Adjusted by: %s,%s,%s", pos.x, pos.y, pos.z, pos_adjust.x, pos_adjust.y, pos_adjust.z) or ""
+        pos = vector():set(pos):add(pos_adjust)
+    end
+    vl("UIHUDMarker:GetPos[%s]: %s,%s,%s%s", self.id, pos.x, pos.y, pos.z, adjtxt)
+    return pos
+end
+
+
+function UIHUDMarker:IsHovered()
+    --vl("[UIHUDMarker:IsHovered][%s] hovered %s | best %s | managed %s", self.mark_id, self.hovered, self.best_hover, self.managed_hover)
+    return (
+        (self.hovered and not self.managed_hover) or
+        (self.best_hover and self.managed_hover)
+    )
+end
+
+function UIHUDMarker:IsHintHovered() return self.hint_on_hover and self:IsHovered() end
+
+function UIHUDMarker:IsDistHovered() return self.dist_on_hover and self:IsHovered() end
+
+function UIHUDMarker:IsCentered()
+    local x         = self.last_screen_pos and self.last_screen_pos.x or 0
+    local offcenter = math.abs(512 - x)
+    --vl("marker at x pos %s is off-center by %s | tolerance %s", x, offcenter, self.center_tolerance)
+    return offcenter < (self.center_tolerance or 10)
+end
+
+function UIHUDMarker:HideAll(reason)
+    reason = reason or ""
+    vl("[UIHUDMarker:HideAll | Hiding all UI elements for %s | %s", self.mark_id, reason)
+    self.dist:Show(false)
+    self.dist_sh:Show(false)
+    self.label:Show(false)
+    self.label_sh:Show(false)
+    self.marker:Show(false)
+    self.is_shown = false
+end
+
+function UIHUDMarker:TextCanBeShown(state)
+    local show_dist, show_hint
+    if self.is_wp and (self.preset == "waypoint") then
+        show_dist   = state and paw and paw.marker_dist_shown("wp") and true or false
+        show_hint   = state and paw and paw.marker_hint_shown("wp") and true or false
+    elseif self.is_pin and (self.preset == "pin") then
+        show_dist   = state and paw and paw.marker_dist_shown("pins") and true or false
+        show_hint   = onoff and paw and paw.marker_hint_shown("pins") and true or false
+    else
+        show_dist   = state and (not self.actor_taking) and (self.show_dist or self:IsDistHovered()) or (self.dist_on_center_x and self:IsCentered()) and true or false
+        show_hint   = state and (not self.actor_taking) and (self.show_hint or self:IsHintHovered()) or (self.hint_on_center_x and self:IsCentered()) and true or false
+    end
+    return show_dist, show_hint
+end
+
+
+function UIHUDMarker:ShowMarker(onoff, reason)
+    local show_dist, show_hint
+    if self.destroying then
+        vl("[UIHUDMarker:ShowMarker][%s] Marker is being shut down, hiding all elements", self.mark_id)
+        show_dist   = false
+        show_hint   = false
+        onoff       = false
+    else
+        show_dist, show_hint = self:TextCanBeShown(onoff)
+    end
+    --[[
+    elseif self.is_wp and (self.preset == "waypoint") then
+        show_dist   = onoff and paw and paw.marker_dist_shown("wp") and true or false
+        show_hint   = onoff and paw and paw.marker_hint_shown("wp") and true or false
+    elseif self.is_pin and (self.preset == "pin") then
+        show_dist   = onoff and paw and paw.marker_dist_shown("pins") and true or false
+        show_hint   = onoff and paw and paw.marker_hint_shown("pins") and true or false
+    else
+        show_dist   = onoff and (not self.actor_taking) and (self.show_dist or self:IsDistHovered()) or (self.dist_on_center_x and self:IsCentered()) and true or false
+        show_hint   = onoff and (not self.actor_taking) and (self.show_hint or self:IsHintHovered()) or (self.hint_on_center_x and self:IsCentered()) and true or false
+    end
+    --]]
+    vl("[UIHUDMarker:ShowMarker][%s][%s] %s | hint %s | dist %s", self.mark_id, reason or "no reason", onoff, show_hint, show_dist)
+    self.dist:Show(show_dist)
+    self.dist_sh:Show(show_dist)
+    self.label:Show(show_hint)
+    self.label_sh:Show(show_hint)
+    self.marker:Show(onoff)
+    self.is_shown = onoff
+end
+
+function UIHUDMarker:GetMarkerStatic(element)
+    element = element or "marker"
+    if not (self.element_list and self.element_list[element]) then return end
+    return self[element]
+end
+
+function UIHUDMarker:OnscreenCheck()
+    local pos           = self:GetBasePos()
+    self.screen_check   = world_to_ui(pos)
+    self.killswitched   = not self.screen_check
+    if self.killswitched and self.is_shown then
+        self:HideAll("mark not onscreen, killswitch set")
+    end
+end
+
+function UIHUDMarker:Update()
+    if self.destroying or (not db.actor) then
+        return
+    end
+    if not self.skip_onscreen_precheck then
+        self:OnscreenCheck()
+    end
+    if self.killswitched then
+        return
+    end
+
+    local _ = debug_dump and printf("[UIHUDMarker:Update][%s][%s] Killswitch checks passed", self.mark_id, time_global())
+
+    self.current_use_target = false
+    vl("[UIHUDMarker:Update][%s]", self.mark_id)
+
+    if self.expire_time and (time_global() > self.expire_time) then
+        vl("[%s][%s] Marker set to expire at %s, destroying", self.mark_id, time_global(), self.expire_time)
+        self:Destroy(nil, "marker ttl expired")
+        return
+    end
+
+    if self.func_on_update then
+        vl("[UIHUDMarker:Update] Executing custom func_on_update %s", self.func_on_update)
+        local args = {ret_value = true}
+        self.func_on_update(self, args)
+        if not args.ret_value then
+            self:HideAll("func_on_update args.ret_value=false")
+            return
+        end
+    end
+
+    local id            = self.id
+    local show_dist, show_hint = self:TextCanBeShown(true)
+    
+    if show_hint and not self.skip_hint then
+        if id and self.is_wp then
+            id          = paw and paw.get_current_waypoint()
+            self.name   = paw and (
+                (paw.get_waypoint_name and paw.get_waypoint_name()) or (paw.placed_waypoint and paw.placed_waypoint.name)
+            ) or self.name
+        end
+        if (self.name == "no hint") then
+            self.name   = ""
+        end
+    end
+
+
+    local obj = id and get_game_object(id)
+    if (self.validate_game_object and not obj) or (obj and obj:parent() ~= nil) then
+        vl("Invalid game object, destroying HUD marker | obj exists %s | has parent %s", obj and "exists" or nil, not not (obj and obj:parent()))
+        self:Destroy(nil, "invalid game object")
+        return
+    end
+
+    local se_obj, pin
+    if not (self.locked_world_pos or self.locked_screen_pos or self.skip_seobj_check) then
+        se_obj = self:ValidateMarkerServerObj()
+        if not se_obj then return end
+
+        pin = paw and self.is_pin and id and paw.pins and paw.pins[id]
+        -- Destroy marker if ID's object is invalid, or if it's a pin with an invalid pin record
+
+        if (self.is_pin and not pin) then
+            vl("Invalid pin or server object, destroying HUD marker for pin %s | se_obj %s", id or self.name or self.mark_id, se_obj and "exists" or nil)
+            self:Destroy(nil, "invalid se_obj or pin")
+            return
+        end
+    end
+
+    self.last_pos   = self:GetPos(self.pos_adjust)
+    local dist      = self.last_pos and db.actor:position():distance_to(self.last_pos) or 1
+    -- Destroy marker if the object falls outside of its min/max "end" distances
+    if self.near_end_dist and ((dist < self.near_end_dist) or (dist > self.far_end_dist)) then
+        self:Destroy(nil, "end distance reached")
+        return
+    elseif self.near_hide_dist and (dist < self.near_hide_dist) then
+        self:HideAll("too close")
+        return
+    end
+
+    self.dist_delta = (math.abs(dist - self.last_dist))
+    self.last_dist  = dist
+
+    if self.los_check_int then
+
+        -- Check for line-of-sight to marker if an interval is set in los_check_int
+        local has_los = self:HasLOS(dist)
+        if (has_los == nil) then
+            has_los = self.last_los_check
+        end
+        -- If func_los_check is set, it can be used to externally override the result of a LOS check
+        -- Passes the marker itself as the first parameter
+        local los_marker_state = self.func_los_check and self.func_los_check(self, {has_los=has_los}) or false
+        if not (has_los or los_marker_state) then
+            if self.los_check_changed then
+                vl("Could not find actor LOS to %s (%s) - setting marker visibility to %s", self.name, id, los_marker_state)
+                self.los_check_changed = false
+            end
+            self:ShowMarker(los_marker_state, "Failed LOS")
+        return end
+    end
+    local level_name, same_map
+    if se_obj then
+        level_name    = alife():level_name(se_obj and game_graph():vertex(se_obj.m_game_vertex_id):level_id())
+        same_map      = (level_name == level.name())
+    end
+    
+    if debug_dump and not self.dump_once then
+        -- Noisy debug info gets output once on first update, but only if debug_dump is true
+        self.dump_once = true
+        local pindata = pin and string.format("\n* Text: %s\n* icon: %s\nlocked %s | hud %s | label %s", pin.text, pin.icon, pin.locked, pin.hud, pin.label)
+        local typedata = self.is_wp and " (current waypoint)" or self.is_pin and " (pin)" or ""
+        printf("~ ========================================================================")
+        printf("[UIHUDMarker:Update][First update for ID %s]%s", self.mark_id, typedata)
+        _ = self.custom_argb and printf("Found custom_argb: %s,%s,%s,%s", self.custom_argb.a, self.custom_argb.r, self.custom_argb.g, self.custom_argb.b)
+        printf("HUD Marker %s (%s) | obj %s - online: %s\n* Level: %s | Dist: %sm%s",
+            self.name, id, se_obj and se_obj:name(), se_obj and se_obj.online, level_name, dist, pin and pindata or ""
+        )
+        printf("~ ========================================================================")
+    else
+        --vl("[UIHUDMarker:Update][%s] Current distance to %s: %sm", self.mark_id, self.name, dist)
+    end
+
+    -- Hide marker if PDA is open and show_in_pda is false
+    if (item_device.is_pda_active() and not self.show_in_pda) then
+        self:HideAll("PDA open")
+    return end
+
+    if se_obj and not self.skip_online_checks then
+        -- Hide marker if se_obj is offline and show_offline is false
+        if (not se_obj.online) and not self.show_offline then
+            self:HideAll("not online")
+        return end
+
+        -- Hide marker if se_obj is on a different map than the actor
+        if (not same_map) and not self.show_on_other_maps then
+            self:HideAll("other map")
+        return end
+    end
+
+    --printf("[UIHUDMarker:Update][%s][%s] Checking to see if there are screen coords for %s", self.id, self.mark_id, self.name)
+    -- Visual update logic
+    if (main_hud_shown() or axr_main.binoc_is_zoomed or axr_main.scoped_weapon_is_zoomed) then
+        local args  = self.coord_args or {}
+        args.id     = self.id
+        --args.bone   = self.bone
+        args.pos    = self.locked_world_pos or self.last_pos
+        local vec   = self.locked_screen_pos or get_screen_coords(args)
+
+        --printf("[UIHUDMarker:Update][%s][%s] Got as far as checking screen pos", time_global(), self.mark_id)
+
+        if (vec) then
+            if self.hide_when_oob then
+                if  (vec.x < self.min_x) or
+                    (vec.x > self.max_x) or 
+                    (vec.y < self.min_y) or 
+                    (vec.y > self.max_y) then
+                        self:HideAll("out of bounds")
+                return end
+            end
+            vec             = vector2():set(
+                                    clamp((self.lock_x or vec.x) + (self.adj_final_x or 0), self.min_x, self.max_x),
+                                    clamp((self.lock_y or vec.y) + (self.adj_final_y or 0), self.min_y, self.max_y)
+                                )
+            self.last_screen_pos = vec
+            self.marker:SetWndPos(vec)
+            vl("[UIHUDMarker:Update][%s] Final screen coords: %s, %s", self.mark_id, vec.x, vec.y)
+
+            local unsquish  = self.correct_aspect
+            if (unsquish == nil) then 
+                unsquish = true
+            end
+
+            self.timestamp = time_global()
+            local szx, szy = self:ScaleMarkerByDistance()
+            --printf("[%s] width %s | height %s | timestamp %s", self.mark_id, self.width, self.height, self.timestamp)
+            --vl("scaling by distance and aspect")
+
+            local m_nhide   = self.near_hide_dist
+            local m_near    = self.near_fade_dist
+            local m_far     = self.far_fade_dist
+            local m_fhide   = self.far_hide_dist
+            local h_nhide   = self.h_near_hide_dist or self.near_hide_dist
+            local h_near    = self.h_near_fade_dist or self.near_fade_dist
+            local h_far     = self.h_far_fade_dist or self.far_fade_dist
+            local h_fhide   = self.h_far_hide_dist or self.far_hide_dist
+            local d_nhide   = self.d_near_hide_dist or self.near_hide_dist
+            local d_near    = self.d_near_fade_dist or self.near_fade_dist
+            local d_far     = self.d_far_fade_dist or self.far_fade_dist
+            local d_fhide   = self.d_far_hide_dist or self.far_hide_dist
+            local colors    = dup_table(self.custom_argb and (not is_empty(self.custom_argb)) and self.custom_argb or {a=255,r=255,g=255,b=255})
+            local c         = fade_by_dist(nil, dist, m_nhide, m_near, m_far, m_fhide, colors.a, colors.r, colors.g, colors.b)
+            c               = get_argb(c.a, c.r, c.g, c.b)
+            self.marker:SetTextureColor(c)
+
+            if self.managed_hover or self.hint_on_hover or self.dist_on_hover then
+                local xdot      = dotproduct_for_pos(self.last_pos)
+                self.last_hover = xdot or 0
+            end
+
+            -- Logic related to updating the label and distance text
+            if (show_hint or show_dist) and not (self.skip_hint and self.skip_dist) then
+                c = fade_by_dist(nil, dist, h_nhide, h_near, h_far, h_fhide, 255, 230, 230, 230) or c
+                c = get_argb(c.a, c.r, c.g, c.b)
+                self.label:TextControl():SetTextColor(c)
+                self.dist:TextControl():SetTextColor(c)
+                c = fade_by_dist(nil, dist, h_nhide, h_near, h_far, h_fhide, 255, 0, 0, 0) or c
+                c = get_argb(c.a, c.r, c.g, c.b)
+                self.label_sh:TextControl():SetTextColor(c)
+                self.dist_sh:TextControl():SetTextColor(c)
+
+                local name          = self.name or self.is_pin and pin and pin.text
+                local maxd          = 100
+                local disty         = dist
+                if dist >= maxd then 
+                    disty           = maxd
+                end
+                local yadj          = (disty / maxd * 6)
+                local pos           = self.marker:GetWndPos()
+                local nx,ny,dx,dy,tw
+
+                -- Update label display hint
+                if show_hint and not self.skip_hint then
+                    if (name ~= self.prev_name) then
+                        self.label:TextControl():SetText(name)
+                        self.label_sh:TextControl():SetText(name)
+                        self.lref:TextControl():SetText(name)
+                        self.lref:AdjustWidthToText()
+                        self.prev_name = name
+                    end
+                    tw              = self.lref:GetWidth()
+                    nx              = pos.x - (tw * .5)
+                    ny              = pos.y - 22 + yadj + (self.hint_y_adj or 0)
+                    self.label:SetWndPos(vector2():set(nx, ny))
+                end
+
+                -- Update distance display text
+                if show_dist and not self.skip_dist then
+                    local dist_txt  = string.format("%.1f",dist).."m"
+                    self.dist:TextControl():SetText(dist_txt)
+                    self.dist_sh:TextControl():SetText(dist_txt)
+                    self.wref:TextControl():SetText(dist_txt)
+                    self.wref:AdjustWidthToText()
+                    tw              = self.wref:GetWidth()
+                    nx              = pos.x - (tw * .5)
+                    ny              = pos.y + szy - 11 + yadj + (self.dist_y_adj or 0)
+                    self.dist:SetWndPos(vector2():set(nx, ny))
+                end
+            end
+
+            -- Execute func_on_update_end, if any
+            if self.func_on_update_end then
+                self.func_on_update_end(self)
+            end
+            self:ShowMarker(true, "completed update")
+            CUIScriptWnd.Update(self)
+            return
+        end
+        --vl("No screen cooords found for %s", self.id)
+        self:HideAll("no screen coords")
+    else
+        self:HideAll("wrong UI mode")
+    end
+end
+
+function on_option_change()
+    update_unsquish_ratio()
+end
+
+function actor_on_first_update()
+    update_unsquish_ratio()
+end
+
+function on_game_start()
+    RegisterScriptCallback("on_option_change", on_option_change)
+    RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+end
+
+printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)

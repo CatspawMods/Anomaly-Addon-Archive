@@ -1,0 +1,279 @@
+-- =======================================================================
+--[[    Catsy's utilities: mapspot handling
+-- ===================================================================--]]
+script_name     = "utils_catspaw_mapspots"
+script_version  = "1.1"
+release_date    = 20250406
+--[[======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+    There are a bunch of functions that I use across my addons, and over
+    time they've added up to a fair bit of duplicated code that I also 
+    have to update in multiple places anytime they get improved/fixed.
+
+    I will endeavor to always make these utilities backwards-compatible, 
+    so heed well:
+
+        IN THE EVENT OF A FILE CONFLICT, ALWAYS USE THE MOST RECENT.
+
+    Feel free to crib code from this or include a copy of it in your own 
+    addon, but in the interest of avoiding any possibility of conflicts:
+
+            PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+    Seriously. Just copy the code into yours if you want to mess with it.
+-- ===================================================================--]]
+--      DEPENDENCIES
+-- =======================================================================
+assert(utils_catspaw_common,
+"! ERROR: " .. script_name .. " requires utils_catspaw_common, which could not be found!")
+-- =======================================================================
+--      SHORTCUTS AND LOGGING
+-- =======================================================================
+local dl, vl, xml
+logprefix       = "[Catsy:Mapspots] "
+debuglogs       = false
+verbose         = false
+vprefix         = ""
+
+function allow_local_logging(onoff)
+    -- By default, logging in this script inherits its debuglogs/verbose settings from utils_catspaw_common
+    -- This function allows anyone to temporarily switch on debug logging for this script's operations only
+    if onoff then
+        dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+    else
+        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+    end
+end
+allow_local_logging(true)
+
+function set_debug_logging(debug_en, verbose_en)
+    if (debug_en ~= nil) then debuglogs = debug_en end
+    if (verbose_en ~= nil) then verbose = verbose_en end
+end
+--set_debug_logging(true, true) --uncomment this line to enable all logging for troubleshooting
+
+-- =======================================================================
+local get_mapspot_static    = level.map_get_object_spot_static
+local get_minimap_static    = level.map_get_object_minimap_spot_static
+local remove_all_mapspots   = level.map_remove_all_object_spots
+local using_modded_exes     = utils_catspaw_common.using_modded_exes
+-- =======================================================================
+
+task_mapspot_whitelist = {
+    ["storyline_task_location"]                 = true,
+    ["storyline_task_location_complex_timer"]   = true,
+    ["secondary_task_location"]                 = true,
+    ["secondary_task_location_complex_timer"]   = true,
+}
+
+mapspot_data_cache = {}
+
+-- =======================================================================
+
+function add_mapspot(id, icon, hint)
+    dl("add_mapspot | %s | %s | %s", id, icon, hint)
+    if not (id and icon) then return end
+    level.map_add_object_spot(id, icon, hint or "")
+    return true
+end
+
+
+function remove_mapspot(id, icon)
+    dl("remove_mapspot | %s | %s", id, icon)
+    if not (id and icon) then return end
+    level.map_remove_object_spot(id, icon)
+    return true
+end
+
+
+function change_mapspot(id, old_icon, new_icon, hint)
+    vl("change_mapspot | %s | %s -> %s | %s", id, old_icon, new_icon, hint)
+    old_icon = old_icon or new_icon
+    remove_mapspot(id, old_icon)
+    return add_mapspot(id, new_icon, hint)
+end
+
+
+function has_mapspot(id, icon)
+    return id and icon and (level.map_has_object_spot(id, icon) == 1)
+end
+
+
+function get_all_mapspots(id)
+    vl("get_all_mapspots for ID %s", id)
+    if not level.map_get_object_spots_by_id then return {} end
+    return id and level.map_get_object_spots_by_id(id)
+end
+
+function get_mapspot_icon_list(id)
+    local spots = id and get_all_mapspots(id)
+    if (not spots) or (#spots == 0) then return end
+    local mapspot_list = {}
+    for _,ms in pairs(spots) do
+        mapspot_list[ms.spot_type] = ms.text or ""
+    end
+    return mapspot_list
+end
+
+function safe_remove_all_mapspots(id, include_task_markers)
+    if not remove_all_mapspots then return end
+    -- By itself, level.map_remove_all_object_spots is really dangerous!
+    -- It is very, very easy to accidentally wipe task markers. Ask me how I know.
+    -- This wrapper function checks whether any object has a known task marker on it, and
+    -- restores those markers after wiping the rest.
+    dl("safe_remove_all_mapspots called for ID %s%s", id, include_task_markers and "\n! WARNING: skipping backup of any task markers!" or "")
+    -- If include_task_markers is true, that backup/restore is skipped and task markers will also be wiped
+    local task_spots = {}
+    
+    if not include_task_markers then
+        local spots = get_all_mapspots(id)
+        vl("* %s has %s mapspots", id, #spots)
+        for _,ms in pairs(spots) do
+            if task_mapspot_whitelist and ms and ms.spot_type and task_mapspot_whitelist[ms.spot_type] then
+                vl("+ Backing up task mapspot %s with hint %s", ms.spot_type, ms.hint)
+                task_spots[ms.spot_type] = ms.hint    
+            end
+        end
+    end
+    vl("Wiping ALL mapspots attached to ID %s", id)    
+    remove_all_mapspots(id)
+
+    if (not include_task_markers) and task_spots and (not is_empty(task_spots)) then
+        for spot,hint in pairs(task_spots) do
+            vl("+ Restoring task mapspot %s | %s", ms.spot_type, ms.hint)
+            add_mapspot(id, spot, hint)
+        end
+    end
+end
+
+
+function get_argb(a, r, g, b, def_a, def_r, def_g, def_b)
+    -- Basically just a wrapper for GetARGB that provides safe fallback defaults with customization
+    -- Updated 20250225 with type conversion for passing string numbers
+    return GetARGB(
+        tonumber(a or def_a) or 255,
+        tonumber(r or def_r) or 255,
+        tonumber(g or def_g) or 255,
+        tonumber(b or def_b) or 255
+    )
+end
+
+
+function set_pdamap_spot_colors(id, icon, a, r, g, b)
+    vl("set_pdamap_spot_colors | %s | %s | ARGB %s,%s,%s,%s", id, icon, a, r, g, b)
+    if not using_modded_exes then return end
+    if not (id and icon) then return end
+    local spot = get_mapspot_static and get_mapspot_static(id, icon)
+    if spot then spot:SetTextureColor(get_argb(a, r, g, b)) end
+end
+
+
+function set_minimap_spot_colors(id, icon, a, r, g, b)
+    vl("set_minimap_spot_colors | %s | %s | ARGB %s,%s,%s,%s", id, icon, a, r, g, b)
+    if not using_modded_exes then return end
+    if not (id and icon) then return end
+    local spot = get_minimap_static and get_minimap_static(id, icon)
+    if spot then spot:SetTextureColor(get_argb(a, r, g, b)) end
+end
+
+
+function change_mapspot_texture(id, icon, texture, clr, minimap_also, w, h, x, y)
+    dl("change_mapspot_texture | %s | %s | texture: %s\n" .. 
+        "custom color: %s | minimap_also: %s\n" ..
+        "width/height: %sx%s | x %s | y %s",
+    id, icon, texture, clr ~= nil, minimap_also, w, h, x, y)
+    if not using_modded_exes then return end
+    if not (id and icon and has_mapspot(id, icon)) then return end
+    local pmspot, mmspot, pmover, mmover, argb
+    if clr then
+        argb = get_argb(clr.a, clr.r, clr.g, clr.b)
+    end
+    function change_texture(static, scale)
+        scale = scale or 1
+        if not static then return end
+        static:InitTexture(texture)
+        if clr then
+            static:SetTextureColor(argb)
+        end
+        if (x and y) then
+            static:SetWndPos(vector2():set(x * scale, y * scale))
+        end
+        if (w and h) then
+            static:SetWndSize(vector2():set(w * scale, h * scale))
+        end
+    end
+    pmspot      = get_mapspot_static and get_mapspot_static(id, icon)
+    pmover      = change_texture(pmspot)
+    if minimap_also then
+        mmspot  = get_minimap_static and get_minimap_static(id, icon)
+        mmover  = change_texture(mmspot, 0.8)
+    end
+end
+
+function get_mapspot_texture_data(spot)
+    if not mapspot_data_cache then
+        mapspot_data_cache = {}
+    end
+    if not mapspot_data_cache[spot] then
+        vl("trying to find texture data for %s",spot)
+        local tex, th, tw, ta, tr, tg, tb, nested
+        local attr_tex      = "texture"
+        local attr_minimap  = "mini_map"
+        local attr_levelmap = "level_map"
+        if not xml then
+            xml = CScriptXmlInit()
+            xml:ParseFile("map_spots.xml")
+        end
+
+        local function get_spot_data(node)
+            xml:NavigateToRoot()
+            th    = xml:ReadAttribute(node, 0, "height") or th
+            tw    = xml:ReadAttribute(node, 0, "width") or tw
+            vl("Found height %s width %s for node %s", th, tw, node)
+            xml:NavigateToNode(node, 0)
+            if xml:NodeExist(attr_tex, 0) then
+                tex = xml:ReadValue(attr_tex, 0)
+                ta  = xml:ReadAttribute(attr_tex, 0, "a")
+                tr  = xml:ReadAttribute(attr_tex, 0, "r")
+                tg  = xml:ReadAttribute(attr_tex, 0, "g")
+                tb  = xml:ReadAttribute(attr_tex, 0, "b")
+                vl("Found texture %s for node %s (argb %s,%s,%s,%s)", tex, node, ta, tr, tg, tb)
+                return true
+            elseif not nested then
+                vl("No texture node found for %s, checking subspots", node)
+                local subspot = ""
+                local typ = ""
+                if xml:NodeExist(attr_minimap) then
+                    subspot = xml:ReadAttribute(attr_minimap,0,"spot")
+                    typ = attr_minimap
+                end
+                if xml:NodeExist(attr_levelmap) then
+                    subspot = xml:ReadAttribute(attr_levelmap,0,"spot")
+                    typ = attr_levelmap
+                end
+                return get_spot_data(subspot)
+            end
+        end
+        if not get_spot_data(spot) then
+            vl("! ERROR: No texture data found, exiting get_mapspot_texture_data!")
+            return
+        end
+        mapspot_data_cache[spot] = {
+            t = tex,
+            h = th and tonumber(th) or nil,
+            w = tw and tonumber(tw) or nil,
+            a = ta and tonumber(ta) or nil,
+            r = tr and tonumber(tr) or nil,
+            g = tg and tonumber(tg) or nil,
+            b = tb and tonumber(tb) or nil,
+        }
+    end
+
+    return mapspot_data_cache[spot]
+end
+
+printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)

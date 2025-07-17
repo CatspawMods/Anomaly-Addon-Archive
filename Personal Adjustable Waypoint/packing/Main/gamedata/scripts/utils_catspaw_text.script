@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.10.1"
-release_date    = 20250420
+script_version 	= "1.11"
+release_date    = 20250717
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -152,14 +152,14 @@ function refresh_tokens(args)
 		local afirst, alast	= get_firstname_lastname()
 		local actor_comm 	= gameplay_disguise.get_default_comm()
 		local disg_comm 	= db.actor:character_community()
-		local fac 			= faction_expansions.faction[actor_comm]
+		local fac 			= actor_comm and faction_expansions.faction and faction_expansions.faction[actor_comm]
 
 		actor_tokens["actorcomm"]	= actor_comm	-- Actor true faction
 		actor_tokens["actordisg"] 	= disg_comm 	-- Actor disguised faction (or true faction if not disguised)
 		actor_tokens["actorname"]	= actor_name 	-- Actor character name in this save
 		actor_tokens["actorfn"] 	= afirst 		-- Actor first name
 		actor_tokens["actorln"] 	= alast 		-- Actor last name
-		actor_tokens["actorlead"]	= gts(fac["leader_name"] or "") -- Actor faction leader name
+		actor_tokens["actorlead"]	= fac and gts(fac["leader_name"] or "") -- Actor faction leader name
 		actor_tokens["actorloc"] 	= dynamic_news_helper.GetPointDescription(db.actor)
 		-- Actor nearest spot location description - the blurb used in news messages about
 		-- a particular location at a point, e.g. "in Cordon, east of the Rookie Village"
@@ -227,11 +227,11 @@ function csv_argb_to_tbl(csv)
     end
 
     return c and {
-        a = c[1] or 255,
-        r = c[2] or 255,
-        g = c[3] or 255,
-        b = c[4] or 255,
-        v = c[5] or nil -- threshold value for use in state lerping
+        a = tonumber(c[1]) or 255,
+        r = tonumber(c[2]) or 255,
+        g = tonumber(c[3]) or 255,
+        b = tonumber(c[4]) or 255,
+        v = tonumber(c[5]) or nil -- threshold value for use in state lerping
     } or nil
 end
 
