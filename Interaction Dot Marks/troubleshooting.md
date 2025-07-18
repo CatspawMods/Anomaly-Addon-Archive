@@ -79,6 +79,15 @@ Some modpacks have embedded older versions of MCM, and some have even edited the
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
+## I'm a GAMMA user and I don't see any of the prompts for secondary actions
+These prompts are disabled in GAMMA's current default settings, but you can easily change that in MCM:
+
+**MCM > DotMarks > Interactions**
+
+There you can place a check beside any secondary actions you want to enable.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 ## Not seeing an interaction prompt when you think one should appear (or vice-versa)
 If you ever have any question whether or not DotMarks is correctly displaying a prompt when it should do so, go to **MCM > DotMarks > Advanced** and turn off the [Hide vanilla interact UI](#hide_vanilla_interact_ui) setting. This is the feature that hides the text prompts at the bottom of the screen.
 
