@@ -79,6 +79,17 @@ Some modpacks have embedded older versions of MCM, and some have even edited the
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
+## Not seeing an interaction prompt when you think one should appear (or vice-versa)
+If you ever have any question whether or not DotMarks is correctly displaying a prompt when it should do so, go to **MCM > DotMarks > Advanced** and turn off the [Hide vanilla interact UI](#hide_vanilla_interact_ui) setting. This is the feature that hides the text prompts at the bottom of the screen.
+
+If you see a vanilla text interaction prompt, but DotMarks does not correctly display a prompt--or vice-versa--please do the usual and [create a clean debug log](#1-generate-a-clean-debug-log) for me to examine.
+
+If you disable that setting and still do not see a vanilla interact prompt, then you wouldn't see one whether or not DotMarks was installed.
+> [!NOTE]
+> Drivable vehicles have huge hitboxes that are difficult to handle with a single marker, and the prompt appearance will not always be consistent with the vanilla prompt. It's a known issue, no need to further report it. It won't stop you from doing the actual interaction.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 ## Poor performance / FPS loss / stutter
 The setting that shows the total weight within stashes and other containers can cause an FPS loss in bases with many containers, or when there are many lootable bodies nearby. You can turn this off (or customize many other things) in the DotMarks MCM menu.
 
