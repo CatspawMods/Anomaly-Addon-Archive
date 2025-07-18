@@ -1,0 +1,365 @@
+-- ======================================================================
+--[[    Fair Fast Travel System
+-- ======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+    https://www.youtube.com/@CatspawAdventures
+-- ======================================================================
+        NEW PLAYER EXPERIENCE TUTORIAL MODULE
+
+    Will have no effect if NPE is not installed, and is safe to ignore.
+-- ====================================================================]]
+assert(utils_catspaw_common,
+    "\n! ERROR: Fair Fast Travel and its NPE module require utils_catspaw_common, which does not exist!\n"
+)
+assert(utils_catspaw_text,
+    "\n! ERROR: Fair Fast Travel and its NPE module require utils_catspaw_text, which does not exist!\n"
+)
+-- ======================================================================
+local gts           = game.translate_string
+local get_config    = utils_catspaw_common.get_main_config
+local greater_of    = utils_catspaw_common.greater_of
+local using_gamma   = utils_catspaw_common.using_gamma_modpack
+local parse_colors  = utils_catspaw_text and utils_catspaw_text.parse_color_tokens
+local parse_vanilla = utils_xml.parse_string_keys
+local ft_state      = 0
+start_delay         = 10000 -- don't allow FFT tutorial to trigger until this long after first update
+unsquish_ratio      = 1
+token_handler       = parse_colors or parse_vanilla
+local initial_check
+
+local dl = function(logtext, ...) utils_catspaw_common.dlog(game_fast_travel, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(game_fast_travel, logtext, ...) end
+
+-- ======================================================================
+
+function update_unsquish_ratio()
+    -- Scaling multiplier for all horizontal screen coordinates and sizes
+    -- Makes things not look squished/stretched at different aspects
+    -- Set card[index].fix_aspect = true to enable
+    unsquish_ratio  = (device().height / device().width) / (768 / 1024)
+    return unsquish_ratio
+end
+
+
+function unsquish_card_image(card, image)
+    if not image then return end
+    card.image_w    = card.image_w or 350
+    card.image_h    = card.image_h or 350
+    image:SetWndSize(vector2():set(card.image_w * (unsquish_ratio or 1), card.image_h))
+end
+
+-- This is basically what's ran every couple of seconds by NPE. When this returns true the tutorial associated will trigger.
+function has_fast_travel_unlocked()
+    initial_check = initial_check or time_global()
+    if (time_global() - initial_check) < start_delay then return end
+    local found = tonumber(game_fast_travel.locations_found)
+    vl("has_fast_travel_unlocked: %s | found %s | state %s", found and ft_state and ((ft_state > 0) and (found + ft_state > 2)), found, ft_state)
+    return found and ft_state and ((ft_state > 0) and (found + ft_state > 2))
+end
+
+-- =======================================================================
+
+EVENT = {
+    FAST_TRAVEL_VISITED = { 
+        name    = "Fast Travel System",
+        handler =  {
+            name    = "on_actor_unlock_fast_travel",
+            functors =  {
+                { "npe_fair_fast_travel_tutorials_mcm", "has_fast_travel_unlocked" }
+            }
+        }
+    }
+}
+
+-- =======================================================================
+
+function get_rid_of_dof()
+    if npe_dialog.Disable_dof then
+        npe_dialog.Disable_dof()
+    else
+        actor_menu.last_mode = 0
+    end
+    -- DOF belongs in screenshots and cinematics
+    -- It is absolute fucking eye cancer during gameplay and I won't have it in my addon
+end
+
+function get_tutorial_desc(set, index)
+    set.cards[index].token_list = utils_catspaw_text.get_default_tokens()
+    return cfg.get_desc(set, index) or ""
+end
+
+local npe_dialog_init = npe_dialog_tutorial and npe_dialog_tutorial.UINewPlayerExperience.InitControls
+local npe_dialog_next = npe_dialog_tutorial and npe_dialog_tutorial.UINewPlayerExperience.OnButtonNext
+local npe_dialog_prev = npe_dialog_tutorial and npe_dialog_tutorial.UINewPlayerExperience.OnButtonPrev
+
+if npe_dialog_init then
+    function npe_dialog_tutorial.UINewPlayerExperience:InitControls(set)
+        vl("[UINewPlayerExperience:InitControls] FFT")
+        npe_dialog_init(self, set)
+        fft_post_update_adjustments(self)
+    end
+
+    function npe_dialog_tutorial.UINewPlayerExperience:OnButtonNext()
+        vl("[UINewPlayerExperience:OnButtonNext] FFT")
+        npe_dialog_next(self)
+        fft_post_update_adjustments(self)
+    end
+
+    function npe_dialog_tutorial.UINewPlayerExperience:OnButtonPrev()
+        vl("[UINewPlayerExperience:OnButtonPrev] FFT")
+        npe_dialog_prev(self)
+        fft_post_update_adjustments(self)
+    end
+    
+    function npe_dialog_tutorial.UINewPlayerExperience:FFTDescriptionText(text)
+        vl("[UINewPlayerExperience:FFTDescriptionText]")
+        if not self.card_description then return end
+        local card  = self.set.cards[self.cardIndex]
+        text        = text or get_tutorial_desc(self.set, self.cardIndex) or game.translate_string(card.description)
+        self.card_description:SetTextComplexMode(true)
+        text        = text and token_handler(text, card.token_list, true)
+        self.card_description:SetText(text or "")
+    end
+
+    function npe_dialog_tutorial.UINewPlayerExperience:Unsquish(force)
+        -- Refresh/adjustment can be triggered by an external script with the force argument
+        local card = self.set.cards[self.cardIndex]
+        if not (force or (card and card.unsquish)) then return end
+        unsquish_card_image(card, self.card_image)
+    end
+end
+
+function fft_post_update_adjustments(self)
+    if not (self.set and self.set.id and self.set.id:find("^fft_tut")) then return end
+    self:FFTDescriptionText()
+    self:Unsquish()
+    get_rid_of_dof()
+end
+
+-- =======================================================================
+--  Deck attributes
+-- =======================================================================
+
+local tutorial_image = string.format("ui_fft_tutorial_ftunlock_%s1", using_gamma and "gamma_" or "")
+cfg = {
+    deck = {
+        title   = "Fast Travel Tutorial",
+        module  = "fft_tutorial",
+        id      = "fft_tutorial",
+
+        mcm_menu_name = "ui_mcm_menu_fftd",
+        -- [MANDATORY] The mcm_menu_name is used to define the name of the module in the MCM menu (left sidebar)
+        mcm_menu_title = "ui_mcm_npe_module_fft_tutorial_title",
+        -- [MANDATORY] The mcm_menu_title is used to define the title of the module in the MCM menu page
+        mcm_menu_desc = "",
+
+        dialog  = npe and npe.DIALOG.UI_TUTORIAL,
+        sets    = {
+    -- =======================================================================            
+            {
+                -- =======================================================================
+                id      = "fft_tut_travel_unlocked", -- used also for MCM
+                title   = "ui_mcm_npe_module_fft_tutorial_title",
+                cards   = {
+                    [1] = {
+                        title       = "ui_fft_tutorial_unlocked_title",
+                        description = "placeholder",
+                        image_w     = 500,
+                        unsquish    = true,
+                        image       = tutorial_image
+                    },
+                    [2] = {
+                        title       = "ui_fft_tutorial_card_02_title",
+                        description = "placeholder",
+                        image_w     = 500,
+                        unsquish    = true,
+                        image       = tutorial_image
+                    },
+                    [3] = {
+                        title       = "ui_fft_tutorial_card_03_title",
+                        description = "placeholder",
+                        image_w     = 500,
+                        unsquish    = true,
+                        image       = tutorial_image
+                    }
+                },
+                context = {
+                    event = EVENT.FAST_TRAVEL_VISITED,
+                    pause_game = true,
+                    delay = 0,
+                },
+            },
+        },
+    },
+    tuts = {
+        ["fft_tut_travel_unlocked"] = {
+            -- =======================================================================
+            [1] = {
+                desc = (
+                    function()
+                        local mode  = clamp(tonumber(ft_state) or 0, 0, 2)
+                        local desc  = string.format(gts("ui_fft_tut_ftunlocked_01_content"), 
+                            gts("ui_fft_tut_ftunlocked_01_ft_state" .. tostring(mode)),
+                            gts("ui_fft_tut_ftunlocked_ft_cfg_van"),
+                            gts("ui_fft_tut_ftunlocked_01_fft_intro"),
+                            gts("ui_fft_tut_ftunlocked_ft_cfg_mcm"),
+                            string.format("$clr_def"..gts("ui_fft_tutorial_clicknext"), " "..gts("ui_fft_tut_ftunlocked_01_clicknext"))
+                        )
+                        return desc
+                    end
+                )
+            },
+            -- =======================================================================
+            [2] = {
+                desc = (
+                    function()
+                        local basecfg   = game_fast_travel and game_fast_travel.basecfg
+                        local mode      = clamp(tonumber(ft_state) or 0, 0, 2)
+                        local tt        = set and set.tt or "ft"
+                        local tdata     = game_fast_travel and game_fast_travel.get_travel_type(tt)
+                        local distdur   = game_fast_travel.show_dist_and_dur
+                        local squadtoo  = game_fast_travel.squad_local_travel
+                        local trip_fare = tdata.cfg.cost_coef or 0
+                        local has_fare  = trip_fare > 0
+                        local scorcher  = game_fast_travel.gate_northern_travel
+                        local psyicon   = game_fast_travel.psyblock_mapspots
+                        vl("Constructing description based on FFT settings:\n"..
+                            "has_fare: %s (%s) | time_pass %s | survival %s\n"..
+                            "scorcher %s | psyicon %s | tzones %s",
+                            has_fare, trip_fare, time_pass, survival,
+                            scorcher, psyicon, tzones
+                        )
+
+
+                        local desc = string.format(gts("ui_fft_tut_ftunlocked_02_content"), 
+                            string.format(gts("ui_fft_tut_ftunlocked_mapicon"),
+                                scorcher and psyicon and gts("ui_fft_tut_ftunlocked_ft_travel_hazard_icons") or ""
+                            ),
+                            string.format(gts("ui_fft_tut_ftunlocked_02_ft_howto"),
+                                has_fare and (gts("ui_fft_tut_ftunlocked_ft_payfare").." ") or "",
+                                distdur and (gts("ui_fft_tut_ftunlocked_ft_distdur").." ") or ""
+                            ),
+                            string.format(gts("ui_fft_tut_ftunlocked_ft_travelbegins"),
+                                squadtoo and gts("ui_fft_tut_ftunlocked_ft_companions") or ""
+                            ),
+                            string.format("$clr_def"..gts("ui_fft_tutorial_clicknext"), " "..gts("ui_fft_tut_ftunlocked_02_clicknext"))
+                        )
+                        vl("Description generated:\n%s", desc)
+                        return desc
+                    end
+                )
+            },
+            -- =======================================================================
+            [3] = {
+                desc = (
+                    function()
+                        local basecfg   = game_fast_travel and game_fast_travel.basecfg
+                        local mode      = clamp(tonumber(ft_state) or 0, 0, 2)
+                        local tt        = set and set.tt or "ft"
+                        local tdata     = game_fast_travel and game_fast_travel.get_travel_type(tt)
+                        local trip_fare = tdata.cfg.cost_coef or 0
+                        local has_fare  = trip_fare > 0
+                        local time_pass = not ui_options.get("gameplay/fast_travel/time")
+                        local survival  = not (tdata.map.pause_stats or tdata.loc.pause_stats)
+                        local gearwear  = (tdata.map.gear_dmg and tdata.map.gear_dmg > 0)  or (tdata.loc.gear_dmg and tdata.loc.gear_dmg > 0)
+                        local wear_en   = gearwear and not (game_fast_travel.cond_damage_mode < 0)
+                        local scorcher  = game_fast_travel.gate_northern_travel
+                        local psyicon   = game_fast_travel.psyblock_mapspots
+                        local tzmode    = tdata.cfg.zone_mode or 0
+                        local campbase  = tdata.cfg.campfire_base
+
+                        vl("Constructing description based on FFT settings:\n"..
+                            "has_fare: %s (%s) | time_pass %s | survival %s | wear_en %s\n"..
+                            "scorcher %s | psyicon %s | tzones %s",
+                            has_fare, trip_fare, time_pass, survival, wear_en,
+                            scorcher, psyicon, tzones
+                        )
+                        local warnings  = {
+                            [1] = gts("ui_fft_tut_ftunlocked_ft_neverknow"),
+                            [2] = has_fare and string.format(
+                                gts("ui_fft_tut_ftunlocked_ft_enable_fare"),
+                                trip_fare,
+                                gts("st_currency_rub")
+                            ) or "",
+                            [3] = time_pass and string.format(gts("ui_fft_tut_ftunlocked_ft_enable_time"),
+                                survival and gts("ui_fft_tut_ftunlocked_ft_survival_stats") or ""
+                            ) or "",
+                            [4] = wear_en and gts("ui_fft_tut_ftunlocked_ft_enable_gear") or "",
+                            [5] = scorcher and string.format(
+                                gts("ui_fft_tut_ftunlocked_ft_enable_scorcher_on"),
+                                psyicon and gts("ui_fft_tut_ftunlocked_ft_enable_scorcher_icon") or ""
+                            ) or "",
+                            [6] = (tzmode > 0) and string.format(
+                                (tzmode > 1) and gts("ui_fft_tut_ftunlocked_ft_travel_zones_ally")
+                                or gts("ui_fft_tut_ftunlocked_ft_travel_zones_friendly"),
+                                campbase and gts("ui_fft_tut_ftunlocked_ft_travel_zones_campfire") or ""
+                            ) or "",
+                            [7] = gts("ui_fft_tut_ftunlocked_ft_guide_travel")
+                        }
+                        vl("gathering %s warnings", size_table(warnings))
+                        local bullet    = gts("ui_catsy_text_bullet_item")
+                        local warning   = ""
+                        for i = 1,size_table(warnings) do
+                            local text = warnings[i]
+                            if text and (text ~= "") then
+                                warning = warning .. string.format(bullet, "$clr_def", "$ui_gray_1", text)
+                            end
+                        end
+
+                        local desc = string.format(gts("ui_fft_tut_ftunlocked_03_content"), 
+                            warning,
+                            gts("ui_fft_tut_ftunlocked_ft_playyourway"),
+                            gts("ui_fft_tut_ftunlocked_ft_cfg_mcm"),
+                            gts("ui_fft_tut_ftunlocked_ft_goodhunting")
+                        )
+                        vl("Description generated:\n%s", desc)
+                        return desc
+                    end
+                )
+            }
+            -- =======================================================================
+        }
+    },
+    get_desc = (
+        function(set, index)
+            return cfg.tuts[set.id][index].desc()
+        end
+    )
+}
+
+function refresh_ft_state()
+    local basecfg   = game_fast_travel and game_fast_travel.basecfg
+    ft_state        = ui_options.get("gameplay/fast_travel/state")
+end
+
+function on_mcm_load()
+    if killswitch or not npe then return end
+    op = npe_mcm and { 
+        id = cfg.deck.id,
+        sh = true,
+        text = cfg.deck.mcm_menu_name,
+        gr = npe_mcm.get_module_menu(cfg.deck)
+    }
+    return op, "npe_module"
+end
+
+
+function on_option_change()
+    update_unsquish_ratio()
+    refresh_ft_state()
+end
+
+function actor_on_first_update()
+    on_option_change()
+    initial_check = time_global()
+end
+
+function on_game_start()
+    if killswitch or not (npe and npe_director and utils_catspaw_common and utils_catspaw_text) then return end
+    utils_catspaw_text.set_color_token("ui_gray_1", "%" .. "%c[ui_gray_1]")
+    RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+    RegisterScriptCallback("on_option_change", on_option_change)
+    on_option_change()
+    npe_director.Register_npe_module(cfg.deck)
+end

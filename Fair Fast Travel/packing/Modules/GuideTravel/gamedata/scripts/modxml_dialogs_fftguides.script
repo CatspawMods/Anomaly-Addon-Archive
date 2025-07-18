@@ -199,9 +199,9 @@ dialogue_replacements = {
 					<action>game_guide_travel.travel_to_red_forest_guid</action>
 				]]},
 				[5] = {		new = [[
-					<script_text>game_guide_travel.menutext_jup_underground_2_guid</script_text>
-					<precondition>game_guide_travel.allowed_jup_underground_2_guid</precondition>
-					<action>game_guide_travel.travel_to_jup_underground_2_guid</action>
+					<script_text>game_guide_travel.menutext_jupiter_underground_2_guid</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_underground_2_guid</precondition>
+					<action>game_guide_travel.travel_to_jupiter_underground_2_guid</action>
 				]]},
 				[6] = {		new = [[
 					<script_text>game_guide_travel.menutext_zaton_guid</script_text>
@@ -278,9 +278,9 @@ dialogue_replacements = {
 					<action>game_guide_travel.travel_to_jupiter_guid</action>
 				]]},
 				[6] = {		new = [[
-					<script_text>game_guide_travel.menutext_jup_underground_2_guid</script_text>
-					<precondition>game_guide_travel.allowed_jup_underground_2_guid</precondition>
-					<action>game_guide_travel.travel_to_jup_underground_2_guid</action>
+					<script_text>game_guide_travel.menutext_jupiter_underground_2_guid</script_text>
+					<precondition>game_guide_travel.allowed_jupiter_underground_2_guid</precondition>
+					<action>game_guide_travel.travel_to_jupiter_underground_2_guid</action>
 				]]},
 				[7] = {		new = [[
 					<script_text>game_guide_travel.menutext_zaton_guid</script_text>
@@ -403,7 +403,7 @@ dialogue_replacements = {
 							del = {"text"},
 				},
 				[4] = {	new = 
-					[[<script_text>game_guide_travel.menutext_yantar_from_freedom_guid</script_text>]],
+					[[<script_text>game_guide_travel.menutext_yantar_guid_from_freedom_base</script_text>]],
 							del = {"text"},
 				},
 				[8] = {		new = [[
@@ -419,8 +419,8 @@ dialogue_replacements = {
 							del = {"precondition","action"},
 				},
 				[10] = {	new = [[
-					<precondition>game_guide_travel.allowed_yantar_from_freedom_guid</precondition>
-					<action>game_guide_travel.travel_to_yantar_from_freedom_guid</action>
+					<precondition>game_guide_travel.allowed_yantar_guid_from_freedom_base</precondition>
+					<action>game_guide_travel.travel_to_yantar_guid_from_freedom_base</action>
 				]],
 							del = {"precondition","action"},
 				},

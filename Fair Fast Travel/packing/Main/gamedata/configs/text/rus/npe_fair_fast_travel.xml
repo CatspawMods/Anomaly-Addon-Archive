@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+    <string id="ui_catsy_text_bullet_item">
+        <text>\n%s • %s%s</text>
+    </string>
+
+    <string id="ui_catsy_text_crlf">
+        <text>\n%s</text>
+    </string>
+
+    <string id="ui_fft_tutorial_clicknext">
+        <text>Нажмите $clr_gldДалее$clr_def%s.</text>
+    </string>
+
+    <string id="ui_mcm_npe_module_fft_tutorial">
+        <text>Fair Fast Travel</text>
+    </string>
+
+    <string id="ui_mcm_npe_module_fft_tutorial_title">
+        <text>Учебник по быстрым путешествиям</text>
+    </string>
+
+    <string id="ui_mcm_npe_module_fft_tutorial_fft_tut_travel_unlocked">
+        <text>Обзор системы быстрого перемещения</text>
+    </string>
+
+    <string id="ui_fft_tutorial_unlocked_title">
+        <text>Обзор системы быстрого перемещения</text>
+    </string>
+
+    <string id="ui_fft_tutorial_card_01_title">
+        <text>Система быстрого перемещения в игре теперь разблокирована.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_content">
+        <text>%s\n
+            \nИз главного меню:
+            %s\n
+            \n%s\n
+            \nЧтобы персонализировать настройки:
+            %s\n
+            \n%s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_ft_state0">
+        <text>$ui_gray_1В настоящее время в настройках игрового процесса$clr_red отключено$ui_gray_1 быстрое перемещение, поэтому вы вообще не должны были получать всплывающее окно с инструкцией. Пожалуйста, сообщите об этом как об ошибке. Если вы включите эту функцию, то сможете щелкнуть правой кнопкой мыши на карте КПК, чтобы быстро перемещаться из одного места в другое.
+Руководство по КПК</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_ft_state1">
+        <text>$ui_gray_1Теперь, когда вы обнаружили более одного места в Зоне, вы можете использовать эту систему для быстрого перемещения между вашим текущим местоположением и$clr_gld любой точкой путешествия, которую вы уже посетили$ui_gray_1. Если вы предпочитаете иметь возможность свободно перемещаться в любое место, вы можете изменить это в настройках Аномалии.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_ft_state2">
+        <text>$ui_gray_1Вы можете использовать эту систему для быстрого перемещения между вашим текущим местоположением и $clr_gld любой точкой путешествия на карте$ui_gray_1. Текущие настройки не требуют, чтобы вы сначала посетили локацию для быстрого перемещения к ней, но вы можете изменить это в настройках Аномалии, если хотите, чтобы они были более строгими.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_fft_intro">
+        <text>$ui_gray_1В вашем списке модов все типы быстрых путешествий обрабатываются аддоном под названием $clr_gldFair Fast Travel$ui_gray_1 - названным так потому, что все его функции (включая все упомянутые здесь и далее) настраиваются в MCM, и могут быть отключены или настроены по вашему желанию.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_clicknext">
+        <text>, чтобы узнать, как это работает</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_02_clicknext">
+        <text>, чтобы получить несколько советов, основанных на ваших текущих настройках</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_cfg_mcm">
+        <text>\n$clr_lblMCM$clr_def > $clr_lblFair Fast Travel\n$clr_def</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_cfg_van">
+        <text>\n$clr_lblНастройки$clr_def > $clr_lblГеймплей$clr_def > $clr_lblБыстрое перемещение\n$clr_def</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_pdainfo_feat">
+        <text>$clr_lblРуководство по КПК$clr_def > $clr_lblНастройки$clr_def > $clr_lblГеймплей$clr_def > $clr_lblБыстрое перемещение$clr_def)</text>
+    </string>
+
+    <string id="ui_fft_tutorial_card_02_title">
+        <text>Использование быстрых путешествий</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_02_content">
+        <text>%s\n
+            \n%s\n
+            \n%s\n
+            \n%s
+        </text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_02_ft_howto">
+        <text>$ui_gray_1Чтобы воспользоваться системой быстрых путешествий, $clr_gld щелкните правой кнопкой мыши на любой точке путешествия$ui_gray_1, которую вы видите на карте КПК, и выберите один из $clr_gldдоступных вариантов путешествия$ui_gray_1. Каждый вариант показывает %s%sлюбые соответствующие ограничения.</text>
+    </string>
+
+
+    <string id="ui_fft_tut_ftunlocked_mapicon">
+        <text>$ui_gray_1Доступные точки путешествия имеют$clr_gld специальный значок карты$ui_gray_1, показанный справа. %s
+        </text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_hazard_icons">
+        <text>Если мощное пси-поле или другая опасность препятствует проезду к месту, это будет обозначено другим значком.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_distdur">
+        <text>расстояние и продолжительность поездки, а также</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_payfare">
+        <text>тариф, который необходимо оплатить, и</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travelbegins">
+        <text>$ui_gray_1Когда вы нажмете на опцию путешествия, оно автоматически начнется после короткого затухания. %s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_companions">
+        <text>Ваши спутники, если таковые имеются, будут путешествовать вместе с вами - если только вы не попросили их подождать.</text>
+    </string>
+
+    <string id="ui_fft_tutorial_card_03_title">
+        <text>Прежде чем отправиться в путешествие, обратите внимание на следующее:</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_03_content">
+        <text>%s\n
+            \n%s
+            \n%s\n
+            \n%s
+        </text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_warn">
+        <text>\n%s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_neverknow">
+        <text>$clr_gldТщательно планируйте свою поездку$ui_gray_1- никогда не знаешь, что ждет на другом конце. Путешествовать вслепую по небезопасным местам - значит попасть в засаду.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_fare">
+        <text>$clr_gldТарифы на быструю езду включены$ui_gray_1. Чтобы воспользоваться этой услугой, вы должны заплатить  $clr_gld%s %s$ui_gray_1 за метр расстояния. Если вы не можете заплатить, вы не сможете путешествовать.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_time">
+        <text>$clr_gldВо время быстрого перемещения время будет идти$ui_gray_1%s.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_survival_stats">
+        <text>. В конце долгого путешествия вы можете обнаружить, что $clr_gldпроголодались или устали$ui_gray_1</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_gear">
+        <text>$clr_gldИзнос снаряжения включен $ui_gray_1 - ваше снаряжение может получить незначительную потерю состояния, чтобы$clr_gld смоделировать эффект путешествия$ui_gray_1.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_scorcher_icon">
+        <text>Об этом будет свидетельствовать специальный красный значок.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_scorcher_on">
+        <text>Пока вы не пройдете основной сюжет и$clr_gld не деактивируете Brain Scorcher$ui_gray_1, опасное пси-поле будет$clr_gld препятствовать быстрому перемещению$ui_gray_1 между некоторыми частями севера и юга карты. %s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_zones_friendly">
+        <text>Ваши текущие настройки позволяют начать путешествие, только если вы находитесь$clr_gld в пределах дружественной базы$ui_gray_1%s.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_zones_ally">
+        <text>Ваши текущие настройки позволяют начать путешествие, только если вы находитесь$clr_gld на базе своей фракции$ui_gray_1%s.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_zones_campfire">
+        <text>. Вы также можете путешествовать, если находитесь$clr_gld рядом с костром$ui_gray_1.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_guide_travel">
+        <text>Чтобы преодолеть или смягчить некоторые из этих проблем, воспользуйтесь платным$clr_gld Путешествием с гидом$ui_gray_1 или сделайте тайники для$clr_gld Путешествия с рюкзаком$ui_gray_1.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_playyourway">
+        <text>И опять же, вы можете изменить любую из этих функций по своему вкусу в MCM:</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_goodhunting">
+        <text>$clr_gldУдачной охоты, сталкер!</text>
+    </string>
+
+</string_table>

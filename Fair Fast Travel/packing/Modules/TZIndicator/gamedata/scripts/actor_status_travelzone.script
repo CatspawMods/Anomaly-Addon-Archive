@@ -16,13 +16,13 @@ assert(utils_catspaw_common,
 "! ERROR: FFT's travel zone indicator requires utils_catspaw_common, which is missing!")
 assert(actor_status_from_ltx, 
 "! ERROR: FFT's travel zone indicator requires actor_status_from_ltx.script, which is missing!")
+assert(game_fast_travel,
+"! ERROR: FFT's travel zone indicator requires game_fast_travel, which is missing!")
 if actor_status 		then end
-if game_fast_travel 	then end
 -- =======================================================================
 local dl = function(logtext, ...) utils_catspaw_common.dlog(game_fast_travel, logtext, ...) end
 local vl = function(logtext, ...) utils_catspaw_common.vlog(game_fast_travel, logtext, ...) end
 local fft_aitz 			= game_fast_travel.actor_in_travel_zone
-local travel_types 		= game_fast_travel.all_travel_types
 local get_mcm 			= utils_catspaw_common.get_mcm_or_default_val
 local get_next_check 	= utils_catspaw_common.get_next_tg_interval
 -- =======================================================================
@@ -34,6 +34,7 @@ feature_mode 			= 1
 feature_enabled 		= (feature_mode > 1)
 check_interval 			= 500
 icon_suffix 			= "black"
+local travel_types 		= {}
 local next_state_check	= 0
 local last_ret
 
@@ -52,7 +53,10 @@ function show_travel_zone_icon()
 		end
 		local mode = game_fast_travel.get_zone_mode(tt)
 		if mode and mode > 0 then
-			in_zone = in_zone or fft_aitz(tt)
+			if fft_aitz(tt) then
+				in_zone = true
+				break
+			end
 		end
 	end
 	last_ret = in_zone and 1 or 0
@@ -79,6 +83,7 @@ function reset_indicator()
 		for tt,_ in pairs(travel_types) do
 			local mode = game_fast_travel.get_zone_mode(tt)
 			if mode and mode > 0 then
+				vl("Found travel type %s with zone_mode %s")
 				enabled = true
 				break
 			end
@@ -96,6 +101,14 @@ function reset_indicator()
 end
 
 -- =======================================================================
+function actor_on_first_update()
+	on_option_change()
+end
+
+function sync_travel_types()
+	travel_types = game_fast_travel.all_travel_types or {}
+end
+
 function on_option_change()
 	feature_mode = tonumber(get_mcm("fftd/gen/show_zone_status_icon", feature_mode))
 	feature_enabled = (feature_mode or 0) > 0
@@ -104,5 +117,5 @@ end
 
 function on_game_start()
 	RegisterScriptCallback("on_option_change", on_option_change)
-	RegisterScriptCallback("actor_on_first_update", on_option_change)
+	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
 end

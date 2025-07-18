@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+    <string id="ui_catsy_text_bullet_item">
+        <text>\n%s • %s%s</text>
+    </string>
+
+    <string id="ui_catsy_text_crlf">
+        <text>\n%s</text>
+    </string>
+
+    <string id="ui_fft_tutorial_clicknext">
+        <text>Click $clr_gldNext$clr_def%s.</text>
+    </string>
+
+    <string id="ui_mcm_npe_module_fft_tutorial">
+        <text>Fair Fast Travel</text>
+    </string>
+
+    <string id="ui_mcm_npe_module_fft_tutorial_title">
+        <text>Fast Travel Tutorials</text>
+    </string>
+
+    <string id="ui_mcm_npe_module_fft_tutorial_fft_tut_travel_unlocked">
+        <text>Fast Travel Overview</text>
+    </string>
+
+    <string id="ui_fft_tutorial_unlocked_title">
+        <text>Fast Travel Overview</text>
+    </string>
+
+    <string id="ui_fft_tutorial_card_01_title">
+        <text>Anomaly's fast travel system is now unlocked.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_content">
+        <text>%s\n
+            \nFrom the Main Menu:
+            %s\n
+            \n%s\n
+            \nTo personalize your settings:
+            %s\n
+            \n%s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_ft_state0">
+        <text>$ui_gray_1Fast travel is currently $clr_reddisabled$ui_gray_1 in your gameplay settings, so you shouldn't have received a tutorial pop-up for it at all. Please report that as a bug. That said, if you enable it, you'll be able to right-click on your PDA map to quickly travel from location to location.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_ft_state1">
+        <text>$ui_gray_1Now that you've discovered more than one location within the Zone, you can make use of this system to quickly travel between your current location and $clr_gldany travel point you've already visited$ui_gray_1. If you'd rather be able to freely travel anywhere, you can change that in Anomaly's settings.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_ft_state2">
+        <text>$ui_gray_1You can use this system to quickly travel between your current location and $clr_gldany travel point on the map$ui_gray_1. Your current settings don't require you to visit a location first$ui_gray_1 in order to fast travel to it, but you can change that in Anomaly's settings if you'd prefer it to be more restrictive.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_fft_intro">
+        <text>$ui_gray_1In your mod list, all types of fast travel are handled by an addon called $clr_gldFair Fast Travel$ui_gray_1--so named because all of its features (including all the ones mentioned hereafter) are configurable in MCM, and can be disabled or customized as you prefer.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_01_clicknext">
+        <text>for an overview of how it works</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_02_clicknext">
+        <text>for a few words of advice based on your current settings</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_cfg_mcm">
+        <text>\n$clr_lblMod Configuration Menu$clr_def > $clr_lblFair Fast Travel\n$clr_def</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_cfg_van">
+        <text>\n$clr_lblSettings$clr_def > $clr_lblGameplay$clr_def > $clr_lblFast Travel\n$clr_def</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_pdainfo_feat">
+        <text>$clr_lblPDA Guide$clr_def > $clr_lblSettings$clr_def > $clr_lblGameplay$clr_def > $clr_lblFast Travel$clr_def)</text>
+    </string>
+
+    <string id="ui_fft_tutorial_card_02_title">
+        <text>Using Fast Travel</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_02_content">
+        <text>%s\n
+            \n%s\n
+            \n%s\n
+            \n%s
+        </text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_02_ft_howto">
+        <text>$ui_gray_1To use the fast travel system, $clr_gldright-click on any travel point$ui_gray_1 you see in your PDA map, and select one of the $clr_gldavailable travel options$ui_gray_1. Each option will show %s%sany relevant restrictions.</text>
+    </string>
+
+
+    <string id="ui_fft_tut_ftunlocked_mapicon">
+        <text>$ui_gray_1Available travel points have a $clr_gldspecial map icon$ui_gray_1, seen to the right. %s
+        </text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_hazard_icons">
+        <text>If a powerful psy field or other hazard is preventing travel to a location, this will be indicated by a different icon.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_distdur">
+        <text>the distance and duration of the trip, along with</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_payfare">
+        <text>the fare that must be paid, and</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travelbegins">
+        <text>$ui_gray_1Once you click the travel option, your trip will automatically begin after a brief fade. %s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_companions">
+        <text>Your companions, if any, will travel with you--unless you've told them to wait.</text>
+    </string>
+
+    <string id="ui_fft_tutorial_card_03_title">
+        <text>Before you travel, take heed of the following:</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_03_content">
+        <text>%s\n
+            \n%s
+            \n%s\n
+            \n%s
+        </text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_warn">
+        <text>\n%s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_neverknow">
+        <text>$clr_gldPlan your trip carefully$ui_gray_1--you never know what's waiting at the other end. Traveling blindly to unsecured locations is asking to get ambushed.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_fare">
+        <text>$clr_gldFast travel fares are enabled$ui_gray_1. You must pay $clr_gld%s %s$ui_gray_1 per meter of distance to use this service. If you can't pay, you can't travel.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_time">
+        <text>$clr_gldTime will pass during fast travel$ui_gray_1%s.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_survival_stats">
+        <text>, and you may find yourself $clr_gldhungry or tired$ui_gray_1 at the end of a long trip</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_gear">
+        <text>$clr_gldEquipment wear-and-tear is enabled$ui_gray_1--your equipped gear may suffer some minor condition loss to $clr_gldsimulate the effects of travel$ui_gray_1.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_scorcher_icon">
+        <text>This will be indicated by a special red icon.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_enable_scorcher_on">
+        <text>Until you progress the main story and $clr_glddeactivate the Brain Scorcher$ui_gray_1, a dangerous psy field will $clr_gldprevent fast travel$ui_gray_1 between certain parts of the north and south of the map. %s</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_zones_friendly">
+        <text>Your current settings only allow you to begin travel if you are $clr_gldwithin a friendly base$ui_gray_1%s.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_zones_ally">
+        <text>Your current settings only allow you to begin travel if you are $clr_gldwithin your own faction's base$ui_gray_1%s.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_travel_zones_campfire">
+        <text>, or if you are $cld_gldnext to a campfire$ui_gray_1</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_guide_travel">
+        <text>To overcome or mitigate some of these challenges, consider taking advantage of paid $clr_gldGuide Travel$ui_gray_1, or setting up stashes for $clr_gldBackpack Travel$ui_gray_1.</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_playyourway">
+        <text>And again, you can change any of these features to your liking in MCM:</text>
+    </string>
+
+    <string id="ui_fft_tut_ftunlocked_ft_goodhunting">
+        <text>$clr_gldGood hunting, stalker!</text>
+    </string>
+
+</string_table>

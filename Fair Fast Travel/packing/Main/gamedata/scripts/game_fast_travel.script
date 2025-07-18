@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.17.2"
-release_date 	= 20250422
+script_version 	= "2.18"
+release_date 	= 20250718
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
@@ -21,31 +21,51 @@ release_date 	= 20250422
 -- ======================================================================
 --		DEPENDENCIES AND SHORTCUTS
 -- ====================================================================]]
-debuglogs				= false		-- Debug logging for troubleshooting issues - this should always be "false" in the release version
-verbose 				= false 	-- Noisier verbose logging - no effect if debuglogs is false
-logprefix 				= "[FFT] "
-assert(utils_catspaw_common,
-    "\n! ERROR: Fair Fast Travel requires utils_catspaw_common, which does not exist!\n"
+assert(utils_catspaw_common and utils_catspaw_common.import_metatable,
+    "\n! ERROR: Fair Fast Travel requires utils_catspaw_common, which does not exist or is outdated!\n"
 )
 assert(utils_catspaw_text,
     "\n! ERROR: Fair Fast Travel requires utils_catspaw_text, which does not exist!\n"
 )
-printf("%sFair Fast Travel v%s (rel %s) began initialization at tg %s", logprefix, script_version, release_date, time_global())
-local dl 				= function(logtext, ...) utils_catspaw_common.dlog(game_fast_travel, logtext, ...) end
-local vl 				= function(logtext, ...) utils_catspaw_common.vlog(game_fast_travel, logtext, ...) end
-local dotip 			= function(tiptext, dur, src, beep, icon, snd) utils_catspaw_common.dotip(tiptext, dur, src or gts("st_fftd_ftsystem"), beep, icon or "ui_iconsTotal_found_money", snd) end
+assert(utils_catspaw_mapspots,
+    "\n! ERROR: Fair Fast Travel requires utils_catspaw_mapspots, which does not exist!\n"
+)
+printf("Fair Fast Travel v%s (rel %s) began initialization at %s", script_version, release_date, time_global())
+utils_catspaw_common.import_metatable(this, utils_catspaw_common)
+utils_catspaw_common.import_metatable(this, utils_catspaw_text)
+utils_catspaw_common.import_metatable(this, utils_catspaw_mapspots)
 -- ======================================================================
-local round100 			= utils_catspaw_common.round100
-local dec2 				= utils_catspaw_common.dec2
-local strbool 			= utils_catspaw_common.strbool
-local greater_of 		= utils_catspaw_common.greater_of
-local in_sine 			= utils_catspaw_common.easing.InSine
-local get_time_elapsed 	= utils_catspaw_common.get_time_elapsed
-local get_mcm 			= utils_catspaw_common.get_mcm_or_default_val
-local get_stash_hint 	= utils_catspaw_common.get_stash_hint
-local set_stash_hint 	= utils_catspaw_common.set_stash_hint
-local using_modded_exes = utils_catspaw_common.using_modded_exes
-local parse_tokens 		= utils_catspaw_text.parse_color_tokens
+local dl, vl
+logprefix   = "[FFT] "
+debuglogs   = false
+verbose     = false
+debug_dump  = false
+
+function allow_local_logging(onoff)
+    if onoff then
+        dl = function(logtext, ...) dlog(this, logtext, ...) end
+        vl = function(logtext, ...) vlog(this, logtext, ...) end
+    else
+        dl = function(logtext, ...) dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) vlog(nil, logtext, ...) end
+    end
+end
+allow_local_logging(true)
+
+function set_debug_logging(debug_en, verbose_en, dump_en)
+    if (debug_en ~= nil) then debuglogs = debug_en end
+    if (verbose_en ~= nil) then verbose = verbose_en end
+    if (dump_en ~= nil) then debug_dump = dump_en end
+end
+
+--set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
+-- First two values will be overridden by MCM once the game loads
+
+local dotip 			= function(tiptext, dur, src, beep, icon, snd) dotip(tiptext, dur, src or gts("st_fftd_ftsystem"), beep, icon or "ui_iconsTotal_found_money", snd) end
+-- ======================================================================
+local parse_tokens 		= parse_color_tokens
+local in_sine 			= easing.InSine
+local get_mcm 			= get_mcm_or_default_val
 local psk           	= utils_data.parse_string_keys
 local get_spot_desc 	= dynamic_news_helper.GetPointDescription
 local gts 				= game.translate_string
@@ -338,7 +358,7 @@ function actor_has_ftzone_permission(ftzone, mode)
 	local acomm = zones_use_disguises and character_community(db.actor):sub(7) or get_actor_true_community()
 	local is_enemy = game_relations.is_factions_enemies(comm,acomm)
 	-- don't enable, log line is spammy when travel zone indicator is active
-	--vl("actor_has_ftzone_permission for %s in mode %s: comm %s | acomm %s | is_enemy %s",ftzone,mode,comm,acomm,is_enemy)
+	--printf("[FFT] actor_has_ftzone_permission for %s in mode %s: comm %s | acomm %s | is_enemy %s",ftzone,mode,comm,acomm,is_enemy)
 	return (
 		(mode == 0) or
 		((mode == 1) and not is_enemy) or
@@ -386,11 +406,15 @@ end
 function actor_in_travel_zone(tt)
 	if not db.actor then return end
 	tt = tt or "ft"
+	local mode = td[tt]["cfg"].zone_mode or 0
+	if mode == 0 then
+		-- Feature not enabled, allow all travel origins
+		return true
+	end
+
 	if campfires_are_bases(tt) and actor_is_near_lit_campfire() then
 		return true
 	end
-	local mode = td[tt]["cfg"].zone_mode or 0
-	if mode == 0 then return true end
 
 	for k,v in pairs(spawned_travel_zones) do
 		if db.actor_inside_zones[k] then
@@ -416,19 +440,23 @@ function actor_in_recent_combat()
     for id,_ in pairs(xr_combat_npcs) do
 		if id and (id > 0) then
 			local npc = get_object_by_id(id)
-			local npos = npc and npc:position()
-			local dist = db.actor:position():distance_to(npos) or 0
-			if dist <= npc_combat_distance then
-			    local now = time_global()
-				if npc and npc:see(db.actor) then
-					actor_last_seen = now
-					--vl("NPC %s is in combat with actor, last saw actor at %s")
-					return true
+			if npc and npc:alive() then
+				local npos = npc and npc:position()
+				local dist = db.actor:position():distance_to(npos) or 0
+				if dist <= npc_combat_distance then
+				    local now = time_global()
+					if npc and npc:alive() and npc:see(db.actor) then
+						actor_last_seen = now
+						--vl("NPC %s is in combat with actor, last saw actor at %s")
+						return true
+					end
+					if actor_last_seen < (now + npc_combat_timeout) then
+						--vl("Actor has been seen in the last %s seconds",npc_combat_timeout/1000)
+						return true
+					end
 				end
-				if actor_last_seen < (now + npc_combat_timeout) then
-					--vl("Actor has been seen in the last %s seconds",npc_combat_timeout/1000)
-					return true
-				end
+			else
+				table.remove(xr_combat_ignore.fighting_with_actor_npcs, id)
 			end
 		end
 	end
@@ -1347,7 +1375,7 @@ function map_spot_menu_property_clicked(property_ui,id,level_name,prop)
 	-- ============================================================
 	--	Time and location change
 	-- ============================================================
-	SendScriptCallback("on_before_fast_travel",trip)
+	SendScriptCallback("on_before_fast_travel", trip)
 	if not trip.ret_value then
 		dl("Another script set ret_value to false during on_before_fast_travel, aborting")
 		reset_trip_data()
@@ -1388,7 +1416,7 @@ end
 function update_mcm()
 	if not ui_mcm then return end
 	
-	printf("[FFT] Loading settings from MCM - nil value warnings are harmless and expected, ignore")
+	printf("[FFT] Loading settings from MCM - warnings about invalid paths are harmless and expected, ignore")
 	-- Nil values occur because I'm looping through all_travel_types to 
 	-- pull all the MCM settings, but not all settings exist for all
 	-- travel types - this is 100% harmless
@@ -1476,7 +1504,7 @@ function actor_on_interaction(typ, obj, name)
 		return
 	end
 
-	if (level.map_has_object_spot(obj.id, "fast_travel") == 0) then
+	if has_mapspot(obj.id, "fast_travel") then
 		local hint = gts(name)
 		local prefix = ""
 		local mid = longnames and ":" or ""
@@ -1486,7 +1514,7 @@ function actor_on_interaction(typ, obj, name)
 			prefix = gts(level_name)
 			hint = " "..hint
 		end
-		level.map_add_object_spot(obj.id, "fast_travel", prefix..hint)
+		add_mapspot(obj.id, "fast_travel", prefix..hint)
 		if markermessage then
 			actor_menu.set_msg(1, prefix..mid..hint.." "..gts("st_fast_travel_discovered"), 4)
 			locations_found = (locations_found or 0) + 1
@@ -1510,52 +1538,16 @@ function set_disguise_timer(on_or_off)
 	end
 end
 
-function get_argb(a, r, g, b, def_a, def_r, def_g, def_b)
-	return GetARGB(a or (def_a or 255), r or (def_r or 255), g or (def_g or 255), b or (def_b or 255))
-end
-
-function has_mapspot(id, icon)
-    return level.map_has_object_spot(id, icon) == 1
-end
-
-function change_mapspot_texture(id, icon, texture, clr, minimap_also, w, h, x, y)
-	if not using_modded_exes then return end
-	if not (id and icon and has_mapspot(id, icon)) then return end
-	local pmspot, mmspot, pmover, mmover, argb
-	if clr then
-		argb = get_argb(clr.a, clr.r, clr.g, clr.b)
-	end
-    function change_texture(static, scale)
-    	scale = scale or 1
-	    static:InitTexture(texture)
-	    if clr then
-	    	static:SetTextureColor(argb)
-	    end
-	    if (x and y) then
-			static:SetWndPos(vector2():set(x * scale, y * scale))
-	    end
-	    if (w and h) then
-			static:SetWndSize(vector2():set(w * scale, h * scale))
-	    end
-    end
-    pmspot 		= level.map_get_object_spot_static(id, icon)
-    pmover 		= change_texture(pmspot)
-    if minimap_also then
-    	mmspot 	= level.map_get_object_minimap_spot_static(id, icon)
-    	mmover 	= change_texture(mmspot, 0.8)
-    end
-end
-
 function set_travel_point_mapspot(id, mapspot, hint)
 	if not id then return end
 	if mapspot and has_mapspot(id, mapspot) then
-		level.map_remove_object_spot(id, mapspot)
+		remove_mapspot(id, mapspot)
 	end
 	if has_mapspot(id, travel_mapspot) then
-		level.map_remove_object_spot(id, travel_mapspot)
+		remove_mapspot(id, travel_mapspot)
 	end
     if not mapspot then return end
-	level.map_add_object_spot(id, mapspot, hint or "")
+	add_mapspot(id, mapspot, hint or "")
 end
 
 function get_travel_spot_name(smart)
@@ -1574,6 +1566,7 @@ function update_travel_markers()
 	local faction = character_community(db.actor):sub(7)
 	local pini = ini_file("plugins\\faction_quick_travel.ltx")
 	tsmarts = utils_data.collect_section(pini,faction,true)
+	locations_found = 0
 	if not (is_empty(tsmarts)) then
 		xml:ParseFile("fft_ui_elements.xml")
 		local level_name
@@ -1593,8 +1586,8 @@ function update_travel_markers()
 					if psyblock_mapspots and scorcher_blocks_travel(curr_lvl, level_name) then
 						change_mapspot_texture(id, travel_mapspot, mapspot_texture_psy, color_dimmed, nil, 15, 20)
 					end
-					
-					vl("Added travel point mapspot %s for: %s (%s) | %s", travel_mapspot, smartname, id, hint)
+					locations_found = locations_found + 1
+					vl("Added travel point mapspot %s for: %s (%s) | %s | total known: %s", travel_mapspot, smartname, id, hint, locations_found)
 				end
 			end
 		end
@@ -1804,6 +1797,9 @@ function actor_on_first_update()
 	local outdated = ((zone_spawn_version or 0) < release_date)
 	if outdated or not has_alife_info("fft_restrictors_spawned") then
 		spawn_fast_travel_zones(outdated)
+   	end
+   	if actor_status_travelzone then
+   		actor_status_travelzone.sync_travel_types()
    	end
 end
 

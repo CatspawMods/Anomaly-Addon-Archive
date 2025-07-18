@@ -101,6 +101,8 @@
 --		SCRIPT DEPENDENCIES
 -- ======================================================================
 levels_by_guidespot_name = {}
+-- Populated by game_guide_travel.load_file_data
+
 if game_fast_travel then end
 assert(utils_catspaw_common,
     "\n! ERROR: game_guide_travel requires utils_catspaw_common, which does not exist!\n"
@@ -148,11 +150,16 @@ gated_menu_text 	= ""
 -- ======================================================================
 --		VANILLA ROUTE CUSTOMIZATIONS
 -- ======================================================================
-mlr_utils.CLT["marsh_post_guid"] 		= {-294.81405639648,0.71730107069016,21.673492431641,3145,153}
-mlr_utils.CLT["marsh_pump_water_guid"]	= {-7.9008584022522,0.46835023164749,-38.745407104492,138848,20}
-mlr_utils.CLT["marsh_old_church_guid"]	= {314.69299316406,0.8691970705986,-134.10293579102,344628, 222}
-mlr_utils.CLT["marsh_tech_yard_guid"]	= {381.63909912109,2.7934539318085,243.89410400391,392419, 98}
--- local Marsh travel, CS legacy
+local_travel_guidespots = {
+	["marsh_post_guid"] 		= {-294.81405639648,0.71730107069016,21.673492431641,3145,153},
+	["marsh_pump_water_guid"]	= {-7.9008584022522,0.46835023164749,-38.745407104492,138848,20},
+	["marsh_old_church_guid"]	= {314.69299316406,0.8691970705986,-134.10293579102,344628, 222},
+	["marsh_tech_yard_guid"]	= {381.63909912109,2.7934539318085,243.89410400391,392419, 98}
+}
+for k,v in pairs(local_travel_guidespots) do
+	-- local Marsh travel, CS legacy
+	mlr_utils.CLT[k] = v
+end
 mlr_utils.CLT["mil_to_yant_on_heli"] 	= {28.6637,-5.93,-270.2215,78867,2198}
 -- better landing spot for the heli trip to yantar
 -- ======================================================================
@@ -920,133 +927,25 @@ function generate_guide_intro(s1, s2)
 end
 
 --[[=====================================================================
-	Guide Travel dialog functors
+	DIALOG FUNCTORS
+	Generate handler functions based on their guidespot names
 -- ==================================================================--]]
---	SHORTCUTS
--- ======================================================================
-ita = is_travel_allowed
-gmt	= generate_menu_text
-lgt	= start_local_npc_guide_travel
-mgt = start_newmap_npc_guide_travel
--- ======================================================================
---	TRAVEL PRECONDITION TESTS
--- ======================================================================
-function allowed_marsh_post_guid(s1, s2) 			return ita(s1, s2, "marsh_post_guid") end
-function allowed_marsh_pump_water_guid(s1, s2) 		return ita(s1, s2, "marsh_pump_water_guid") end
-function allowed_marsh_old_church_guid(s1, s2) 		return ita(s1, s2, "marsh_old_church_guid") end
-function allowed_marsh_tech_yard_guid(s1, s2) 		return ita(s1, s2, "marsh_tech_yard_guid") end
-function allowed_escape_guid(s1, s2) 				return ita(s1, s2, "escape_guid") end
-function allowed_escape_guid_military(s1, s2) 		return ita(s1, s2, "escape_guid_military") end
-function allowed_escape_village_guid(s1, s2) 		return ita(s1, s2, "escape_village_guid") end
-function allowed_agroprom_guid(s1, s2) 				return ita(s1, s2, "agroprom_guid") end
-function allowed_l05_bar_guid(s1, s2) 				return ita(s1, s2, "l05_bar_guid") end
-function allowed_garbage_guid(s1, s2) 				return ita(s1, s2, "garbage_guid") end
-function allowed_military_guid(s1, s2) 				return ita(s1, s2, "military_guid") end
-function allowed_yantar_guid(s1, s2) 				return ita(s1, s2, "yantar_guid") end
-function allowed_jupiter_guid(s1, s2) 				return ita(s1, s2, "jupiter_guid") end
-function allowed_marsh_guid(s1, s2) 				return ita(s1, s2, "marsh_guid") end
-function allowed_pripyat_guid(s1, s2) 				return ita(s1, s2, "pripyat_guid") end
-function allowed_pripyat_guid_mon(s1, s2) 			return ita(s1, s2, "pripyat_guid_mon") end
-function allowed_l11_pripyat_guid(s1, s2) 			return ita(s1, s2, "l11_pripyat_guid") end
-function allowed_l11_pripyat_guid_mon(s1, s2) 		return ita(s1, s2, "l11_pripyat_guid_mon") end
-function allowed_red_forest_guid(s1, s2) 			return ita(s1, s2, "red_forest_guid") end
-function allowed_red_forest_guid_mon(s1, s2) 		return ita(s1, s2, "red_forest_guid_mon") end
-function allowed_zaton_guid(s1, s2) 				return ita(s1, s2, "zaton_guid") end
-function allowed_stancia_guid(s1, s2) 				return ita(s1, s2, "stancia_guid") end
-function allowed_pripyat_2_guid(s1, s2) 			return ita(s1, s2, "pripyat_2_guid") end
-function allowed_radar_guid(s1, s2) 				return ita(s1, s2, "radar_guid") end
-function allowed_jup_underground_2_guid(s1, s2)		return ita(s1, s2, "jupiter_underground_2_guid") end
-function allowed_yantar_from_freedom_guid(s1, s2)	return ita(s1, s2, "yantar_guid_from_freedom_base") end
-function allowed_jup_guid_bandit_cont(s1, s2) 		return ita(s1, s2, "jup_guid_bandit_cont") end
-function allowed_trucks_cemetery_guid(s1, s2) 		return ita(s1, s2, "trucks_cemetery_guid") end
-function allowed_zat_trash_station(s1, s2) 			return ita(s1, s2, "zat_trash_station") end
-function allowed_jupiter_guid_mon(s1, s2) 			return ita(s1, s2, "jupiter_guid_mon") end
-function allowed_darkscape_guid_military(s1, s2) 	return ita(s1, s2, "darkscape_guid_military") end
-function allowed_agroprom_guid_military(s1, s2) 	return ita(s1, s2, "agroprom_guid_military") end
-function allowed_mil_to_yant_on_heli(s1, s2) 		return ita(s1, s2, "mil_to_yant_on_heli") end
-function allowed_jup_depo(s1, s2) 					return ita(s1, s2, "jup_depo") end
-function allowed_out_entrance(s1, s2) 				return ita(s1, s2, "out_entrance") end
-function allowed_ds_soviet_store(s1, s2)			return ita(s1, s2, "ds_soviet_store") end
--- ======================================================================
---	DIALOG MENU OPTION TEXT
--- ======================================================================
-function menutext_marsh_post_guid(s1, s2) 			return gmt(s1, s2, "marsh_post_guid") end
-function menutext_marsh_pump_water_guid(s1, s2) 	return gmt(s1, s2, "marsh_pump_water_guid") end
-function menutext_marsh_old_church_guid(s1, s2) 	return gmt(s1, s2, "marsh_old_church_guid") end
-function menutext_marsh_tech_yard_guid(s1, s2) 		return gmt(s1, s2, "marsh_tech_yard_guid") end
-function menutext_escape_guid(s1, s2) 				return gmt(s1, s2, "escape_guid") end
-function menutext_escape_guid_military(s1, s2) 		return gmt(s1, s2, "escape_guid_military") end
-function menutext_escape_village_guid(s1, s2) 		return gmt(s1, s2, "escape_village_guid") end
-function menutext_agroprom_guid(s1, s2) 			return gmt(s1, s2, "agroprom_guid") end
-function menutext_l05_bar_guid(s1, s2) 				return gmt(s1, s2, "l05_bar_guid") end
-function menutext_garbage_guid(s1, s2) 				return gmt(s1, s2, "garbage_guid") end
-function menutext_military_guid(s1, s2) 			return gmt(s1, s2, "military_guid") end
-function menutext_yantar_guid(s1, s2) 				return gmt(s1, s2, "yantar_guid") end
-function menutext_jupiter_guid(s1, s2) 				return gmt(s1, s2, "jupiter_guid") end
-function menutext_marsh_guid(s1, s2) 				return gmt(s1, s2, "marsh_guid") end
-function menutext_l11_pripyat_guid(s1, s2) 			return gmt(s1, s2, "l11_pripyat_guid") end
-function menutext_l11_pripyat_guid_mon(s1, s2) 		return gmt(s1, s2, "l11_pripyat_guid_mon") end
-function menutext_pripyat_guid(s1, s2) 				return gmt(s1, s2, "pripyat_guid") end
-function menutext_pripyat_guid_mon(s1, s2) 			return gmt(s1, s2, "pripyat_guid_mon") end
-function menutext_red_forest_guid(s1, s2) 			return gmt(s1, s2, "red_forest_guid") end
-function menutext_red_forest_guid_mon(s1, s2) 		return gmt(s1, s2, "red_forest_guid_mon") end
-function menutext_zaton_guid(s1, s2) 				return gmt(s1, s2, "zaton_guid") end
-function menutext_stancia_guid(s1, s2) 				return gmt(s1, s2, "stancia_guid") end
-function menutext_pripyat_2_guid(s1, s2) 			return gmt(s1, s2, "pripyat_2_guid") end
-function menutext_radar_guid(s1, s2) 				return gmt(s1, s2, "radar_guid") end
-function menutext_jup_underground_2_guid(s1, s2)	return gmt(s1, s2, "jupiter_underground_2_guid") end
-function menutext_yantar_from_freedom_guid(s1, s2)	return gmt(s1, s2, "yantar_guid_from_freedom_base") end
-function menutext_jup_guid_bandit_cont(s1, s2) 		return gmt(s1, s2, "jup_guid_bandit_cont") end
-function menutext_trucks_cemetery_guid(s1, s2) 		return gmt(s1, s2, "trucks_cemetery_guid") end
-function menutext_zat_trash_station(s1, s2) 		return gmt(s1, s2, "zat_trash_station") end
-function menutext_jupiter_guid_mon(s1, s2) 			return gmt(s1, s2, "jupiter_guid_mon") end
-function menutext_darkscape_guid_military(s1, s2) 	return gmt(s1, s2, "darkscape_guid_military") end
-function menutext_agroprom_guid_military(s1, s2) 	return gmt(s1, s2, "agroprom_guid_military") end
-function menutext_mil_to_yant_on_heli(s1, s2) 		return gmt(s1, s2, "mil_to_yant_on_heli") end
-function menutext_jup_depo(s1, s2) 					return gmt(s1, s2, "jup_depo") end
-function menutext_out_entrance(s1, s2) 				return gmt(s1, s2, "out_entrance") end
-function menutext_ds_soviet_store(s1, s2)			return gmt(s1, s2, "ds_soviet_store") end
--- ======================================================================
---	TRAVEL EXECUTION
--- ======================================================================
--- Local travel (Marsh-only, CS legacy)
-function travel_to_marsh_post_guid(s1, s2) 			lgt(s1, s2, "marsh_post_guid") end
-function travel_to_marsh_pump_water_guid(s1, s2) 	lgt(s1, s2, "marsh_pump_water_guid") end
-function travel_to_marsh_old_church_guid(s1, s2) 	lgt(s1, s2, "marsh_old_church_guid") end
-function travel_to_marsh_tech_yard_guid(s1, s2) 	lgt(s1, s2, "marsh_tech_yard_guid") end
--- Travel to other maps
-function travel_to_escape_guid(s1, s2) 				mgt(s1, s2, "escape_guid") end
-function travel_to_escape_guid_military(s1, s2) 	mgt(s1, s2, "escape_guid_military") end
-function travel_to_escape_village_guid(s1, s2) 		mgt(s1, s2, "escape_village_guid") end
-function travel_to_agroprom_guid(s1, s2) 			mgt(s1, s2, "agroprom_guid") end
-function travel_to_l05_bar_guid(s1, s2) 			mgt(s1, s2, "l05_bar_guid") end
-function travel_to_garbage_guid(s1, s2) 			mgt(s1, s2, "garbage_guid") end
-function travel_to_military_guid(s1, s2) 			mgt(s1, s2, "military_guid") end
-function travel_to_yantar_guid(s1, s2) 				mgt(s1, s2, "yantar_guid") end
-function travel_to_jupiter_guid(s1, s2) 			mgt(s1, s2, "jupiter_guid") end
-function travel_to_marsh_guid(s1, s2) 				mgt(s1, s2, "marsh_guid") end
-function travel_to_l11_pripyat_guid(s1, s2) 		mgt(s1, s2, "l11_pripyat_guid") end
-function travel_to_l11_pripyat_guid_mon(s1, s2) 	mgt(s1, s2, "l11_pripyat_guid_mon") end
-function travel_to_pripyat_guid(s1, s2) 			mgt(s1, s2, "pripyat_guid") end
-function travel_to_pripyat_guid_mon(s1, s2) 		mgt(s1, s2, "pripyat_guid_mon") end
-function travel_to_red_forest_guid(s1, s2) 			mgt(s1, s2, "red_forest_guid") end
-function travel_to_red_forest_guid_mon(s1, s2) 		mgt(s1, s2, "red_forest_guid_mon") end
-function travel_to_zaton_guid(s1, s2) 				mgt(s1, s2, "zaton_guid") end
-function travel_to_stancia_guid(s1, s2) 			mgt(s1, s2, "stancia_guid") end
-function travel_to_pripyat_2_guid(s1, s2) 			mgt(s1, s2, "pripyat_2_guid") end
-function travel_to_radar_guid(s1, s2) 				mgt(s1, s2, "radar_guid") end
-function travel_to_jup_underground_2_guid(s1, s2)	mgt(s1, s2, "jupiter_underground_2_guid") end
-function travel_to_yantar_from_freedom_guid(s1, s2)	mgt(s1, s2, "yantar_guid_from_freedom_base") end
-function travel_to_jup_guid_bandit_cont(s1, s2) 	mgt(s1, s2, "jup_guid_bandit_cont") end
-function travel_to_trucks_cemetery_guid(s1, s2) 	mgt(s1, s2, "trucks_cemetery_guid") end
-function travel_to_zat_trash_station(s1, s2) 		mgt(s1, s2, "zat_trash_station") end
-function travel_to_jupiter_guid_mon(s1, s2) 		mgt(s1, s2, "jupiter_guid_mon") end
-function travel_to_darkscape_guid_military(s1, s2) 	mgt(s1, s2, "darkscape_guid_military") end
-function travel_to_agroprom_guid_military(s1, s2) 	mgt(s1, s2, "agroprom_guid_military") end
-function travel_to_mil_to_yant_on_heli(s1, s2) 		mgt(s1, s2, "mil_to_yant_on_heli") end
-function travel_to_jup_depo(s1, s2) 				mgt(s1, s2, "jup_depo") end
-function travel_to_out_entrance(s1, s2) 			mgt(s1, s2, "out_entrance") end
-function travel_to_ds_soviet_store(s1, s2)			mgt(s1, s2, "ds_soviet_store") end
+local function setup_dialog_handlers()
+	local function get_functor_names(gs)
+		return "allowed_"..gs, "menutext_"..gs, "travel_to_"..gs
+	end
+	local function generate_functors(guidespot, islocal)
+		local allowed, menutext, travelto = get_functor_names(guidespot)
+		local start_travel 	= islocal and start_local_npc_guide_travel or start_newmap_npc_guide_travel
+		vl("Setting up travel dialog functors for %s", guidespot)
+		this[allowed] = function(s1, s2) return is_travel_allowed(s1, s2, guidespot) end
+		this[menutext] = function(s1, s2) return generate_menu_text(s1, s2, guidespot) end
+		this[travelto] = function(s1, s2) return start_travel(s1, s2, guidespot) end		
+	end
+	for k,_ in pairs(local_travel_guidespots) do generate_functors(k, true) end
+	for k,_ in pairs(levels_by_guidespot_name) do generate_functors(k) end
+end
+
 -- ======================================================================
 --	STARTUP
 -- ======================================================================
@@ -1110,6 +1009,7 @@ end
 
 function actor_on_first_update()
 	update_gft_vars()
+	setup_dialog_handlers()
 	setup_wg_guides()
 end
 

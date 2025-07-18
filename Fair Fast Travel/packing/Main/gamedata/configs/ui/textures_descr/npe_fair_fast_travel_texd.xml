@@ -1,0 +1,6 @@
+<w>
+    <file name="ui\fair_fast_travel\ui_fft_tutorials">
+        <texture id="ui_fft_tutorial_ftunlock_1" x="0" y="0" width="1000" height="700"/>
+        <texture id="ui_fft_tutorial_ftunlock_gamma_1" x="0" y="700" width="1000" height="700"/>
+    </file>
+</w>
