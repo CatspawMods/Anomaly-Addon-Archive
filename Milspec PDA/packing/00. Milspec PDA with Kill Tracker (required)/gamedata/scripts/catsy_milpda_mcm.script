@@ -101,6 +101,9 @@ function on_mcm_load()
 						},
 					{id = "autoclear", type = "check", val = 1, def = true},
 					{id = "squadmate_mapspots", type = "check", val = 1, def = false},
+					{id = "hide_intro_header", type= "check", val = 1, def = false, 
+						precondition = {catsy_milpda_mcm.intro_header_disabled}
+					},
 					{id = "debuglogs", type = "check", val = 1, def = false},
 					{id = "verbose", type = "check", val = 1, def = false},
 					{id = "wipe_all", type = "check", val = 1, def = false},
@@ -282,7 +285,7 @@ function init_mcm_header_element(anchor, handlers, opts, flags)
 		tbox1:SetWndSize(vector2():set(480 * unsquish_ratio, 20))
 		tbox1:SetText(psk("$clr_tgr"..rel_version, color_tokens))
 		tbox1:SetWndPos(vector2():set(8, 72))
-		tbox1:SetFont(GetFontMedium())
+		--tbox1:SetFont(GetFontMedium())
 	elseif handlers.desc and opt_id:find("header_") then
 		handlers.desc:SetText("")
 		local head 	= xml:InitStatic("box",anchor)
@@ -294,30 +297,27 @@ function init_mcm_header_element(anchor, handlers, opts, flags)
 		local function setup_mpda_header(menu, anc_y, box_h, t1_h, t1_y, t2_h, t2_y)
 			if not menu then return end
 			local locst	= "ui_mcm_milpda_" .. menu .. "_complex"
+			local text 	= psk(gts(locst), color_tokens)
 			anchor:SetWndPos(vector2():set(0, anc_y))
 
-			tbg1:SetWndSize(vector2():set(675 * unsquish_ratio, box_h))
-			tbg1:SetWndPos(vector2():set(10, -5))
-
-			local text 	= psk(gts(locst .. "1"), color_tokens)
-			tbox1:SetWndSize(vector2():set(650 * unsquish_ratio, t1_h))
+			tbox1:SetTextComplexMode(true)
 			tbox1:SetText(text)
+			tbox1:SetWndSize(vector2():set(655 * unsquish_ratio, 20))
+			tbox1:AdjustHeightToText()
 			tbox1:SetWndPos(vector2():set(10, t1_y))
-
-			text 		= psk(gts(locst .. "2"), color_tokens)
-			tbox2:SetWndSize(vector2():set(630 * unsquish_ratio, t2_h))
-			tbox2:SetText(text)
-			tbox2:SetWndPos(vector2():set(10, t2_y))
+			local h = tbox1:GetHeight()
+			tbg1:SetWndPos(vector2():set(10, -5))
+			tbg1:SetWndSize(vector2():set(675 * unsquish_ratio, h + 20))
+			return h
 		end
 
 		if (opt_id == "header_main") then
 			if intro_header_disabled() then return end
-			printf("got past intro header test")
-			setup_mpda_header(opt_id, 12, 	160, 125,	12, 50, 95)
+			local h = setup_mpda_header(opt_id, 9, 160, 125,	12, 50, 95)
+			tbg1:SetWndSize(vector2():set(675 * unsquish_ratio, h + 42))
 
 			local chk = SimpleCheck(tbg1, false, "milpda/milpdagen", "hide_intro_header")
-			chk.ctrl:SetWndPos(vector2():set(630 * unsquish_ratio, 125))
-			printf("set up check")
+			chk.ctrl:SetWndPos(vector2():set(630 * unsquish_ratio, h + 10))
 
 		    local cap  = xml:InitTextWnd("hide_head", chk.ctrl)
 		    cap:SetWndSize(vector2():set(300 * unsquish_ratio, 30))
@@ -325,7 +325,7 @@ function init_mcm_header_element(anchor, handlers, opts, flags)
 		    cap:SetTextAlignment(4) -- right-align
 		    cap:SetText(psk(gts("ui_catsy_hide_intro_header"), color_tokens))
 		elseif (opt_id == "header_prog") then
-			setup_mpda_header(opt_id, 1, 	130, 125,	7,	60, 62)
+			setup_mpda_header(opt_id, 1, 	130, 125,	10,	60, 62)
 		elseif (opt_id == "header_bl") then
 			setup_mpda_header(opt_id, 2, 	110, 50,	10, 60, 55)
 		end

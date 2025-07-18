@@ -486,60 +486,57 @@
                  • Includes Kill Tracker: customizable body tracking with optional support for PAW map icons\n
                  • Powerful progression system lets the player unlock access to faction GPS data by looting stalker PDAs\n
                  • Blacklist lets you prevent certain factions from appearing on any PDA, regardless of its capabilities\n
-                 \n
-                All features are optional, and customizable here in MCM.\n
+                 
+                 \nAll features are optional, and customizable here in MCM.\n
                 For more information, see the Moddb page:\n
                 https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
         </text>
     </string>
 
-    <string id="ui_mcm_milpda_header_main_complex1">
+    <string id="ui_mcm_milpda_header_main_complex">
         <text>\n$clr_def
                 $clr_def • $clr_whtAllows detailed $clr_gldcustomization of squad and body mapspots$clr_wht supported by each tier of PDA\n
                 $clr_def • $clr_whtAdds the $clr_milMilspec PDA$clr_wht: a $clr_gldnew tier 4 device that isn't sold or dropped$clr_wht, and is difficult to craft\n
                 $clr_def • $clr_whtIncludes $clr_milKill Tracker$clr_wht: $clr_gldcustomizable dead body tracking$clr_wht with optional support for PAW map icons\n
                 $clr_def • $clr_whtPowerful $clr_milprogression system$clr_wht lets the player $clr_gldunlock access to faction GPS data by looting stalker PDAs\n
                 $clr_def • $clr_milBlacklist$clr_wht lets you $clr_gldprevent certain factions from appearing on any PDA$clr_wht, regardless of its capabilities\n
-        </text>
-    </string>
 
-    <string id="ui_mcm_milpda_header_main_complex2">
-        <text>$clr_def
-            All features are optional, and customizable here in MCM. For more information, see the Moddb page:\n
+                \n$clr_defAll features are optional, and customizable here in MCM. For more information, see the Moddb page:\n
             $clr_lblhttps://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
         </text>
     </string>
 
     <string id="ui_mcm_milpda_header_prog_plaintext">
-        <text>\nNormally, the game decides if you can see a squad on the map based on whether their faction is neutral to yours, allied, or an enemy. As soon as you buy a more advanced PDA, you can immediately see all the factions it supports.\n
+        <text>\nNormally, the game decides if you can see a squad on the map based on whether their faction is neutral to yours, allied, or an enemy.\n
+
+        \nAs soon as you buy a more advanced PDA, you can immediately see all the factions it supports.\n
         --------------------------------------------------\n
         That's a powerful advantage, especially against enemy factions. Progressive Mode forces you to earn that advantage by looting PDAs from dead stalkers, and using what you find on those rare drops to break into their faction's network and gain access to their squad GPS data. You can fine-tune the settinngs to your liking below.\n
         </text>
     </string>
 
-    <string id="ui_mcm_milpda_header_prog_complex1">
-        <text>$clr_defThe game normally decides if you can see a squad on the map based on whether their faction is $clr_gldneutral$clr_def to yours, $clr_grnallied$clr_def, or an $clr_redenemy$clr_def. As soon as you equip a more advanced PDA, you can immediately see all the factions it supports.</text>
-    </string>
+    <string id="ui_mcm_milpda_header_prog_complex">
+        <text>$clr_defThe game normally decides if you can see a squad on the map based on whether their faction is $clr_gldneutral$clr_def to yours, $clr_grnallied$clr_def, or an $clr_redenemy$clr_def.\n
 
-    <string id="ui_mcm_milpda_header_prog_complex2">
-        <text>$clr_defThat's a powerful advantage, especially against enemy factions. $clr_milProgressive Mode $clr_defforces you to earn that advantage by $clr_gldlooting PDAs from dead stalkers$clr_def, and using what you find on those rare drops to $clr_gldbreak into their faction's network$clr_def and $clr_gldgain access to their squad GPS data$clr_def. You can fine-tune the settings to your liking below.
+        \nAs soon as you equip a more advanced PDA, you can immediately see all the factions it supports.\n
+        
+        \n$clr_defThat's a powerful advantage, especially against enemy factions. $clr_milProgressive Mode $clr_defforces you to earn that advantage by $clr_gldlooting PDAs from dead stalkers$clr_def, and using what you find on those rare drops to $clr_gldbreak into their faction's network$clr_def and $clr_gldgain access to their squad GPS data$clr_def. You can fine-tune the settings to your liking below.
         </text>
     </string>
 
     <string id="ui_mcm_milpda_header_bl_plaintext">
         <text>Perhaps you think nobody should ever be able to see ISG or Monolith on the map. Maybe you're doing a special challenge ruleset, or you're roleplaying a stalker who's been locked out of certain factions.\n
-        Whatever the reason, enabling the Blacklist will prevent you from seeing certain factions on the map, even if your PDA could normally show that faction. By default, it will also prevent you from gaining data for a blacklisted faction in Progressive Mode.</text>
+        
+        \nWhatever your reasons, enabling the Blacklist will prevent you from seeing certain factions on the map, even if your PDA could normally show that faction. By default, it will also prevent you from gaining data for a blacklisted faction in Progressive Mode.</text>
     </string>
 
-    <string id="ui_mcm_milpda_header_bl_complex1">
-        <text>$clr_defPerhaps you think nobody should ever be able to see ISG or Monolith on the map. Maybe you're doing a special challenge ruleset, or you're roleplaying a stalker who's been locked out of certain factions.</text>
-    </string>
+    <string id="ui_mcm_milpda_header_bl_complex">
+        <text>$clr_defPerhaps you think nobody should ever be able to see ISG or Monolith on the map. Maybe you're doing a special challenge ruleset, or you're roleplaying a stalker who's been locked out of certain factions.\n
 
-    <string id="ui_mcm_milpda_header_bl_complex2">
-        <text>$clr_defWhatever your reasons, enabling the $clr_milBlacklist$clr_def will $clr_gldprevent you from seeing certain factions on the map$clr_def, even if your PDA could normally show that faction. By default, it will also $clr_gldprevent you from gaining data for a blacklisted faction$clr_def when playing in $clr_milProgressive Mode$clr_def.
+        \n$clr_defWhatever your reasons, enabling the $clr_milBlacklist$clr_def will $clr_gldprevent you from seeing certain factions on the map$clr_def, even if your PDA could normally show that faction. By default, it will also $clr_gldprevent you from gaining data for a blacklisted faction$clr_def when playing in $clr_milProgressive Mode$clr_def.
         </text>
     </string>
-    
+
     <string id="ui_mcm_milpda_header_pda_plaintext">
         <text>If desired, you can customize the features supported by this device using the settings below. These settings will only be applied to your game if you enable the top option.</text>
     </string>
@@ -663,4 +660,10 @@
             \nSettings: %c[pda_yellow]Mod Configuration Menu > Milspec PDA%c[ui_gray_1]
         </text>
     </string>
+
+<!-- Added in 1.15 -->
+    <string id="ui_mcm_milpda_milpdagen_hide_intro_header">
+        <text>Hide Milspec PDA's MCM intro header</text>
+    </string>
+
 </string_table>
