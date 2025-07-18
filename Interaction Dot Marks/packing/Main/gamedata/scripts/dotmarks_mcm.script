@@ -352,10 +352,6 @@ function get_sec_menu()
 
 		{ id = "long_press_delay", 		type = "input", 	val = 2, min = 50, max = 2000, def = cfg.long_press_delay },
 
-		{ id = "simple_press_ignore_shift", type = "check", val = 1, def = cfg.simple_press_ignore_shift },
-		{ id = "simple_press_ignore_ctrl", 	type = "check", val = 1, def = cfg.simple_press_ignore_ctrl },
-		{ id = "simple_press_ignore_alt", 	type = "check", val = 1, def = cfg.simple_press_ignore_alt },
-
 		{ id = "sec_enable_use_act", 	type = "check", 	val = 1, def = cfg.sec_enable_use_act },
 		{ id = "sec_enable_unload_act", type = "check", 	val = 1, def = cfg.sec_enable_unload_act },
 		{ id = "sec_enable_takeall_act",type = "check", 	val = 1, def = cfg.sec_enable_takeall_act },
@@ -368,6 +364,14 @@ function get_sec_menu()
 			   {-1,"dmarks_action_disabled"}
 			}
 		},
+
+		{ id = "divider", type= "line" },
+
+		{ id = "simple_press_ignore_shift", type = "check", val = 1, def = cfg.simple_press_ignore_shift },
+		{ id = "simple_press_ignore_ctrl", 	type = "check", val = 1, def = cfg.simple_press_ignore_ctrl },
+		{ id = "simple_press_ignore_alt", 	type = "check", val = 1, def = cfg.simple_press_ignore_alt },
+
+		{ id = "divider", type= "line" },
 	}
 end
 
@@ -619,6 +623,7 @@ function get_adv_menu()
 		{ id = "hide_mute_stalkers", 	type = "check",		val = 1, def = cfg.hide_mute_stalkers },
 		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
 		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
+		{ id = "hide_keybind_element", 	type = "check", 	val = 1, def = cfg.hide_keybind_element },
 		{ id = "hide_pri_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_pri_interact_ui },
 		{ id = "hide_sec_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_sec_interact_ui },
 		{ id = "hide_van_interact_ui", 	type = "check", 	val = 1, def = cfg.hide_van_interact_ui },

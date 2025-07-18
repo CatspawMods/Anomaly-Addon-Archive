@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.1.0"
-release_date    = 20250716
+script_version  = "1.2.0"
+release_date    = 20250718
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
@@ -1369,10 +1369,17 @@ function is_companion_squad_member(npc)
 end
 
 function is_blacklisted(id, cls, sec, kind)
-    return (cls and cfg.blacklisted_clsids and cfg.blacklisted_clsids[cls]) or
+    local blocked = (cls and cfg.blacklisted_clsids and cfg.blacklisted_clsids[cls]) or
             (id and cfg.blacklisted_ids and cfg.blacklisted_ids[id]) or
             (sec and cfg.blacklisted_sections and cfg.blacklisted_sections[sec]) or
             (kind and cfg.blacklisted_kinds and cfg.blacklisted_kinds[kind])
+    if not blocked then
+        local obj = get_game_object(id)
+        if not obj then return false end
+        local name = obj:name()
+        blocked = name and cfg.blacklisted_names[name] or false
+    end
+    return blocked
 end
 
 function get_val_or_funcval(val_or_func, ...)

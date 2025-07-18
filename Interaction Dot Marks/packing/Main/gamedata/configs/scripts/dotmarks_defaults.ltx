@@ -22,6 +22,7 @@ blacklisted_clsids
 ; contents will get loaded into the table: ui_hud_dotmarks.cfg.blacklisted_clsids
 blacklisted_ids
 blacklisted_kinds
+blacklisted_names
 blacklisted_sections
 bones
 bones_by_section
@@ -247,6 +248,8 @@ hide_interaction_dots 		= false
 ; Disable showing dots (or other marker icons) at all
 hide_connecting_line 		= true
 ; Disable the animated white line that appears
+hide_keybind_element		= false
+; Completely disable the prompt element that shows the keybind icon and text
 hide_pri_interact_ui 		= false
 ; Disable the replacement primary interact UI
 ; Note that if you enable this option and hide the vanilla UI, you may not have interact 
@@ -266,6 +269,9 @@ sec_use_x_offset 			= -9
 sec_use_y_offset 			= 48
 ; Screen positions for the primary and secondary interact prompts
 ; By default these are measured from the attached interaction dot
+timed_prompt_x 				= 16
+timed_prompt_y 				= 384
+; not implemented yet
 fixed_screen_pos 			= false
 ; If enabled, screen positions will instead be measured from the upper left of the screen
 ; These are canvas coordinates so 1024x768
@@ -727,6 +733,12 @@ nogravity_zone
 zone_radioactive
 zone_rusty_hair
 
+[blacklisted_names]
+red_forest_box_4_5
+; Duplicate inventory_box object by Forester's camp, just in front of the
+; stash model and in addition to the inventory_box that's in the correct place
+; on that model (the correct one is named red_smart_terrain_4_2_box).
+
 [grenade_ammo_clsids]
 ; Defines which clsids are classified as GL ammo for the purposes of scan detection
 ; If an addon really must introduce new grenade clsids, they can DLTX them here
@@ -1114,6 +1126,7 @@ argb_service_leader		= dotmarks/dmarkicons/
 hide_interaction_dots 	= dotmarks/dmarkadv/
 hide_mute_stalkers 		= dotmarks/dmarkadv/
 hide_connecting_line 	= dotmarks/dmarkadv/
+hide_keybind_element	= dotmarks/dmarkadv/
 hide_pri_interact_ui 	= dotmarks/dmarkadv/
 hide_sec_interact_ui 	= dotmarks/dmarkadv/
 hide_van_interact_ui 	= dotmarks/dmarkadv/

@@ -333,9 +333,11 @@
 			a table of controls as follows:
 
 			flags.ret_value	<boolean>
-				If set false in the start callback, will skip setting the 
-				vanilla tutorial text. In the stop callback, will abort 
-				clearing of the text.
+				If set to false during the start callback, will skip 
+				setting the vanilla tutorial text.
+
+				During the stop callback, it will instead abort clearing 
+				of the text.
 		
 			flags.hint <string>
 				Overrides tutorial text with this localization string.

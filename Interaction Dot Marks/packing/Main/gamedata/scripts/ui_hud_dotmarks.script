@@ -14,14 +14,26 @@ script_name     = "ui_hud_dotmarks"
 	secondary interactions.
 -- =======================================================================
 	See dotmarks_main.script for dependencies.
+
+-- =======================================================================
+	KNOWN ISSUES
 -- =======================================================================
 	* HF stashes (others?) no longer getting correct name
 	* Task target focus marker doesn't go away when task ends
 	* HF display cases showing tiny stash icon instead of dotmark
 	* PAW faction badges don't play pop-in anim
 	* Vehicle prompt focus doesn't match 1:1 with vanilla prompt
+		which is because vehicle hitboxes are fuckhuge
+		look into detecting whether actor is looking at any vehicle bone
+	* Hold indicator doesn't scale with UI/button scaling
+		seems there's a way to scale CUIProgressBar elements, investigate
+	* Have native speaker review RUS for grammar in prompt action text
+	* Breakable object marker remains after physobj destruction
+	* Blank textures are white squares in DX8?
+		investigate setting alpha to 0 to hide, instead of blank textures
 
-	POST-RELEASE:
+-- =======================================================================
+	POST-RELEASE TO-DO:
 	- MCM live preview for prompt elements - lots of work
 		Look into possibly using imgui
 	- NPE module(s) - not hard, but time-consuming and low priority
@@ -59,7 +71,7 @@ utils_catspaw_common.import_metatable(this, dotmarks_main)
 -- If a public key does not exist in ui_hud_dotmarks, search dotmarks_main (and its imports)
 printf("Interaction Dot Marks %s (rel %s) began initialization at %s", script_version or "(version not found)", release_date or "missing", time_global())
 -- =======================================================================
-local dl, vl, xml
+local dl, vl, pl, xml
 logprefix   = "[DotMarks] "
 debuglogs   = false
 verbose     = false
@@ -71,9 +83,11 @@ function allow_local_logging(onoff)
 	if onoff then
 		dl = function(logtext, ...) dlog(this, logtext, ...) end
 		vl = function(logtext, ...) vlog(this, logtext, ...) end
+		pl = function(prefix, logtext, ...) plog(this, prefix, logtext, ...) end
 	else
 		dl = function(logtext, ...) dlog(nil, logtext, ...) end
 		vl = function(logtext, ...) vlog(nil, logtext, ...) end
+		pl = function(prefix, logtext, ...) plog(nil, prefix, logtext, ...) end
 	end
 end
 allow_local_logging(true)
@@ -84,7 +98,7 @@ end
 
 local function alert(logtext, ...)
 	if not logtext then return end
-	printf("! " .. logprefix .. logtext, ...)
+	pl("! ", logtext, ...)
 end
 
 function set_debug_logging(debug_en, verbose_en, dump_en)
@@ -1670,6 +1684,11 @@ function InteractPrompt:ParseArgs(args)
 	args.act    = args.act or ""
 	args.name   = args.name or ""
 	args.fixed  = ((args.fixed ~= nil) and args.fixed) or cfg.fixed_screen_pos
+	if args.bind_icon then
+		args.style 		= nil
+	else
+		args.style 		= args.style or cfg.keybind_bg_style or 0
+	end
 	self.args   = args
 end
 
@@ -1858,11 +1877,9 @@ function InteractPrompt:BuildUI()
 	local args          = self.args
 	local boxlen        = fontscale_w(#args.bind * cfg.bind_char_scale)
 	local boxpos        = -(boxlen - 4)
-	self.args.style     = cfg.keybind_bg_style or 0
-	self.black_text     = (self.args.style > 1)
 	local stretch_adj   = 0
-	self.wnd            = xml:InitStatic("alt_interact", self.anchor)
 
+	self.wnd            = xml:InitStatic("alt_interact", self.anchor)
 	self.drop           = xml:InitStatic("box", self.wnd)
 	setwndpos(self.drop,
 		-boxlen + fontscale_w(cfg.interact_drop_x),
@@ -1872,31 +1889,53 @@ function InteractPrompt:BuildUI()
 	self:eleSetBaseColorScheme(self.drop, clr_tbl(clamp(tonumber(cfg.interact_drop_alpha) * 255, 0, 255), 255, 255, 255))
 	self:SetupConnectingLine()
 
-	local one_char = (#args.bind == 1)
+	local one_char = args.bind and (#args.bind == 1)
 
-	if one_char then
-		self.prompt     = xml:InitStatic("alt_interact:prompt", self.wnd)
-		self.prompt:InitTexture("ui_catsy_keybind_bg_single_v" .. self.args.style)
-		setwndsize(self.prompt, fontscale_w(15), fontscale_h(20))
-	else
-		self.prompt     = xml:InitStatic("box", self.wnd)
-		
-		self.prompt_l   = xml:InitStatic("alt_interact:prompt_l", self.prompt)
-		self.prompt_c   = xml:InitStatic("alt_interact:prompt_c", self.prompt)
-		self.prompt_r   = xml:InitStatic("alt_interact:prompt_r", self.prompt)
-		self.prompt_l:InitTexture("ui_catsy_keybind_bg_left_v" .. args.style)
-		self.prompt_c:InitTexture("ui_catsy_keybind_bg_center_v" .. args.style)
-		self.prompt_r:InitTexture("ui_catsy_keybind_bg_right_v" .. args.style)
-
-		stretch_adj     = 2
-		setwndsize(self.prompt_l, fontscale_w(5.3125), fontscale_h(20))
-		setwndpos(self.prompt_l, 0, 0)
-		setwndsize(self.prompt_c, boxlen, fontscale_h(20))
-		setwndpos(self.prompt_c, fontscale_w(5.1125), 0)
-		setwndpos(self.prompt_r, fontscale_w(4.78) + boxlen, 0)
-		setwndsize(self.prompt_r, fontscale_w(5.3125), fontscale_h(20))
+	if self.args.style then
+		self.dark_text  = (self.args.style > 1)
 	end
-	setwndpos(self.prompt, boxpos or 0, 0)
+
+	if cfg.hide_keybind_element then
+		self.prompt     = xml:InitStatic("box", self.wnd)
+		self.prompt:Show(false)
+		self.args.bind 	= ""
+	else
+		if self.args.bind_icon then
+			self.prompt     = xml:InitStatic("alt_interact:prompt", self.wnd)
+			self.prompt:InitTexture(self.args.bind_icon)
+			if self.args.bind_icon_w or self.args.bind_icon_h then
+				setwndsize(self.prompt, self.args.bind_icon_w or 0, self.args.bind_icon_h or 0)
+			end
+			if self.args.bind_icon_x or self.args.bind_icon_y then
+				setwndpos(self.prompt, self.args.bind_icon_x or 0, self.args.bind_icon_y or 0)
+			end
+			self.args.bind = ""
+		else
+			if one_char then
+				self.prompt     = xml:InitStatic("alt_interact:prompt", self.wnd)
+				self.prompt:InitTexture("ui_catsy_keybind_bg_single_v" .. self.args.style)
+				setwndsize(self.prompt, fontscale_w(15), fontscale_h(20))
+			else
+				self.prompt     = xml:InitStatic("box", self.wnd)
+				
+				self.prompt_l   = xml:InitStatic("alt_interact:prompt_l", self.prompt)
+				self.prompt_c   = xml:InitStatic("alt_interact:prompt_c", self.prompt)
+				self.prompt_r   = xml:InitStatic("alt_interact:prompt_r", self.prompt)
+				self.prompt_l:InitTexture("ui_catsy_keybind_bg_left_v" .. args.style)
+				self.prompt_c:InitTexture("ui_catsy_keybind_bg_center_v" .. args.style)
+				self.prompt_r:InitTexture("ui_catsy_keybind_bg_right_v" .. args.style)
+
+				stretch_adj     = 2
+				setwndsize(self.prompt_l, fontscale_w(5.3125), fontscale_h(20))
+				setwndpos(self.prompt_l, 0, 0)
+				setwndsize(self.prompt_c, boxlen, fontscale_h(20))
+				setwndpos(self.prompt_c, fontscale_w(5.1125), 0)
+				setwndpos(self.prompt_r, fontscale_w(4.78) + boxlen, 0)
+				setwndsize(self.prompt_r, fontscale_w(5.3125), fontscale_h(20))
+			end
+			setwndpos(self.prompt, boxpos or 0, 0)
+		end
+	end
 
 	-- Set up long press progress indicator
 	if args.long then
@@ -1922,7 +1961,7 @@ function InteractPrompt:BuildUI()
 
 	-- Keybind text indicator
 	self.bind           = xml:InitStatic("alt_interact:label", self.prompt)
-	self:eleSetBaseColorScheme(self.bind, self.black_text and self.text_color_dark or self.text_color_light)
+	self:eleSetBaseColorScheme(self.bind, self.dark_text and self.text_color_dark or self.text_color_light)
 	self.bind:TextControl():SetFont(get_font_obj())
 
 	self:SetBindText(bindtext(self:BindKey(), self:ModKey()))
@@ -1944,7 +1983,7 @@ function InteractPrompt:BuildUI()
 	self.label:TextControl():SetFont(get_font_obj())
 
 	self:eleSetBaseColorScheme(self.bind_sh, self.text_color_dark)
-	if self.black_text then
+	if self.dark_text then
 		self.bind_sh:Show(false)
 	end
 	self:eleSetBaseColorScheme(self.label_sh, self.text_color_dark)
@@ -2483,7 +2522,7 @@ function InteractPrompt:on_option_change()
 
 	self:BuildUI()
 
-	self.bind_sh:Show((not self.black_text) and (not cfg.hide_drop_shadow))
+	self.bind_sh:Show((not self.dark_text) and (not cfg.hide_drop_shadow))
 	self.label_sh:Show(not cfg.hide_drop_shadow)
 end
 
@@ -2505,7 +2544,7 @@ function InteractPrompt:BusyState(tf, prefix, force_update)
 		else
 			self.active_prefix = self.args.act
 			self:eleSetCurrentColorScheme(self.label, self.text_color_light)
-			self:eleSetCurrentColorScheme(self.bind, self.black_text and self.text_color_dark or self.text_color_light)
+			self:eleSetCurrentColorScheme(self.bind, self.dark_text and self.text_color_dark or self.text_color_light)
 			self.active_prompt  = first_upper(self.active_prompt)
 		end
 		if self.itemcard and cfg.show_item_card then
@@ -3010,6 +3049,10 @@ function InteractPrompt:CheckWoundedStalkers()
 end
 
 function InteractPrompt:actor_on_update()
+	if self.args.func_destroy and self.args.func_destroy(self) then
+		self:Destroy("func_destroy returned true")
+		return
+	end
 	if self.destroyed or cfg.killswitch_all then return end
 	local _ = debug_dump and vl("[%s][%s]InteractPrompt:actor_on_update | %s%s", self.args.id, self.args.event, self.init_done and "" or "first run at ", time_global())
 	self:UpdateFilteredHints()
@@ -3419,10 +3462,10 @@ function get_args_for_valid_objects(id)
 	local cls 	= obj:clsid()
 	local sec 	= obj:section()
 	local kind 	= get_obj_kind(obj)
-
-	vl("get_args_for_valid_objects: %s - clsid %s", nameid(nil, id), cls)
+	local name 	= obj:name()
+	vl("get_args_for_valid_objects: %s - clsid %s", nameid(name, id), cls)
 	if is_blacklisted(id, cls, sec, kind) then
-		local _ = debug_dump and vl("Object matched one or more blacklists: id %s | cls %s | sec %s | kind %s", cfg.blacklisted_ids[id], cfg.blacklisted_clsids[cls], cfg.blacklisted_sections[sec], cfg.blacklisted_kinds[kind])
+		local _ = debug_dump and vl("Object matched one or more blacklists: id %s | cls %s | sec %s | kind %s | name %s", cfg.blacklisted_ids[id] and id, cfg.blacklisted_clsids[cls] and cls, cfg.blacklisted_sections[sec] and sec, cfg.blacklisted_kinds[kind] and kind, cfg.blacklisted_names[name] and name)
 		return
 	end
 	local args 	= { logged_type = "something else", name = cfg.names_by_section[sec], kind = kind, section = sec, clsid = cls, ret_value = true}
@@ -3912,11 +3955,9 @@ function setup_marker_for_object(id, args)
 	local sec = obj:section()
 	local cls = obj:clsid()
 
-	if debug_dump then
-		vl("Passing the following args to utils_catspaw_hudmarks:")
-		for k,v in pairs(args) do
-			vl("%s = %s", k, v)
-		end
+	vl("Passing the following args to utils_catspaw_hudmarks:")
+	for k,v in pairs(args) do
+		vl("%s = %s", k, v)
 	end
 
 	if not cfg.markers then cfg.markers = {} end
@@ -3947,7 +3988,26 @@ function setup_marker_for_object(id, args)
 		mark.active_swap = cfg.swap_dotactive
 	end
 	--init_ied_mark_anim(mark) -- not working yet
-
+	mark.initial_pos 	= mark.last_pos or mark:GetPos(mark.pos_adjust)
+	mark.initial_dist 	= mark.last_dist or distance_to_nearby_object(obj)
+	pl("$ ", "[%s] New marker finalized %s for %s (%s):\n" ..
+		"%s Primary interact: %s | %s\n" ..
+		"%s Secondary interact: %s | %s\n" ..
+		"= Obj name: %s | item_class %s | dist %s\n" ..
+	 	"= marker pos %s | obj pos %s",
+		time_global(),
+		mark.mark_id, mark.name, mark.logged_type or "unknown type",
+		
+		mark.use_pri and "-" or "~",
+		not not mark.use_pri,
+		mark.use_pri and mark.use_pri:GetFullPrompt() or "",
+		
+		mark.alt_interact and "-" or "~",
+		not not mark.alt_interact,
+		mark.alt_interact and mark.alt_interact:GetFullPrompt() or "",
+		
+		obj:name(), mark.item_class or "none", mark.initial_dist, mark.initial_pos, obj:position()
+	)
 	tracelog("end", "setup_marker_for_object", id)
 end
 
@@ -5142,7 +5202,7 @@ function actor_on_update()
 		loop_num = (loop_num or 0) + 1
 		tracelog("start", "actor_on_update", "loop "..tostring(loop_num))
 	end
-	--perform_debugging_checks() -- only uncommented when needed
+	perform_debugging_checks() -- only uncommented when needed
 	if not scanning then return end
 	do_garbage_collection()
 	update_hint_filters()

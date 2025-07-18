@@ -260,9 +260,6 @@ if dotmarks_callbacks then
                 function(args, mark)
                     if (not mark) or (not mark.hf_placeable) then return end
 
-                    if true then return end
-
-
                     if mark.hf_workshop then 
                         mark.item_class = "Workshops"
                     elseif (mark.hf_placeable == "stash") then
