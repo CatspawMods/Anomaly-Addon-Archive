@@ -56,7 +56,7 @@
     </string>
 
     <string id="ui_fft_tut_ftunlocked_01_fft_intro">
-        <text>$ui_gray_1In your mod list, all types of fast travel are handled by an addon called $clr_gldFair Fast Travel$ui_gray_1--so named because all of its features (including all the ones mentioned hereafter) are configurable in MCM, and can be disabled or customized as you prefer.</text>
+        <text>$ui_gray_1In your mod list, all types of fast travel are handled by the $clr_gldFair Fast Travel$ui_gray_1 addon--so named because all of its features (including all the ones mentioned hereafter) are configurable in MCM, and can be disabled or customized as you prefer.</text>
     </string>
 
     <string id="ui_fft_tut_ftunlocked_01_clicknext">

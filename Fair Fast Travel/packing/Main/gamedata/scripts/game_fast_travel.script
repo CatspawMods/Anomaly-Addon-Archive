@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.18"
-release_date 	= 20250718
+script_version 	= "2.18.1"
+release_date 	= 20250718.1
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
@@ -1504,7 +1504,7 @@ function actor_on_interaction(typ, obj, name)
 		return
 	end
 
-	if has_mapspot(obj.id, "fast_travel") then
+	if (level.map_has_object_spot(obj.id, "fast_travel") == 0) then
 		local hint = gts(name)
 		local prefix = ""
 		local mid = longnames and ":" or ""
@@ -1514,7 +1514,7 @@ function actor_on_interaction(typ, obj, name)
 			prefix = gts(level_name)
 			hint = " "..hint
 		end
-		add_mapspot(obj.id, "fast_travel", prefix..hint)
+		level.map_add_object_spot(obj.id, "fast_travel", prefix..hint)
 		if markermessage then
 			actor_menu.set_msg(1, prefix..mid..hint.." "..gts("st_fast_travel_discovered"), 4)
 			locations_found = (locations_found or 0) + 1
