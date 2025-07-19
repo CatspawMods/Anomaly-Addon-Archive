@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.2.0"
-release_date    = 20250718
+script_version  = "1.2.1"
+release_date    = 20250718.1
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/

@@ -129,6 +129,12 @@ use_hover_targeting 		= true
 ; Review whether this is performant at scale
 fallback_distance_check 	= true
 ; If use_get_target_obj is enabled, checks distance of object against obj_interact_dist
+scan_unmarked_classes 		= true
+; When enabled, hidden markers will still be generated for item classes that are unchecked
+; in MCM. This allows interactions and other mechanics to still occur. If disabled, then
+; any item class disabled in the Objects menu in MCM won't even get a hidden marker.
+rescan_delay_physobj 		= 200
+; Delay before an unregistered physobj can be rescanned, to give it time to stop existing
 simple_press_ignore_shift 	= true
 simple_press_ignore_ctrl 	= true
 simple_press_ignore_alt 	= true

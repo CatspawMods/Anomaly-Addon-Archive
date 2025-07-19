@@ -18,6 +18,7 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	KNOWN ISSUES
 -- =======================================================================
+	* Prioritize improving performance - string ops, texture inits, loops
 	* HF stashes (others?) no longer getting correct name
 	* Task target focus marker doesn't go away when task ends
 	* HF display cases showing tiny stash icon instead of dotmark
@@ -114,15 +115,16 @@ end
 function tracelog(event, fname, val)
 	if not cfg.debug_trace then return end
 	local fn = fname or script_name
-	local tg = time_global()
+	--local ts = time_global()
+	local ts = os.clock()
 	local ev = event or "heartbeat"
 	cfg.metrics = cfg.metrics or {}
-	cfg.metrics[tg] = cfg.metrics[tg] or {}
-	local i = #cfg.metrics[tg] + 1
-	cfg.metrics[tg][i] = cfg.metrics[tg][i] or {}
-	cfg.metrics[tg][i][fn] = cfg.metrics[tg][i][fn] or {}
-	cfg.metrics[tg][i][fn][ev] = val or ""
-	printf("%s [%s][%s] Trace: [%s][%s] %s", logprefix, tg, i, fn, ev, val or "")
+	cfg.metrics[ts] = cfg.metrics[ts] or {}
+	local i = #cfg.metrics[ts] + 1
+	cfg.metrics[ts][i] = cfg.metrics[ts][i] or {}
+	cfg.metrics[ts][i][fn] = cfg.metrics[ts][i][fn] or {}
+	cfg.metrics[ts][i][fn][ev] = val or ""
+	printf("%s [%s][%s] Trace: [%s][%s] %s", logprefix, ts, i, fn, ev, val or "")
 end
 
 function dump_debug_trace()
@@ -460,7 +462,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 						mark.marker_scale = cfg.dot_marker_size
 						mark:ScaleMarkerByDistance()
 					end
-					mark.marker:InitTexture(texture)
+					if (texture ~= mark.last_texture) then
+						mark.marker:InitTexture(texture)
+						mark.last_texture = texture
+					end
 					log_marker_update_loop(mark)
 				end
 			),
@@ -490,7 +495,8 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 				function(mark)
 					if not (mark and mark.id) then return end
 					vl("Marker for %s destroyed, unregistering", mark.id)
-					this.unregister_scanned_entity(mark.id)
+					local rescan_delay = mark.physics_obj and (cfg.rescan_delay_physobj or 200) or cfg.rescan_delay_all or 0
+					this.unregister_scanned_entity(mark.id, rescan_delay)
 				end
 			),
 		}
@@ -1066,7 +1072,10 @@ function hide_marker_and_prompts(mark_id, reason)
 	local mark = mark_id and hmm:GetMarker(mark_id)
 	if not mark then return end
 	hide_mark_prompts(mark)
-	mark.marker:InitTexture("")
+	if mark.last_texture ~= "" then
+		mark.marker:InitTexture("")
+		mark.last_texture = ""
+	end
 	mark:HideAll(reason or "hide_marker_and_prompts called")
 end
 
@@ -3450,7 +3459,7 @@ end
 
 --- @param item_class string
 function is_object_scannable(item_class)
-	return (item_class == "Addon") or (not not (item_class and cfg.scan[item_class]))
+	return not not (item_class and cfg.scan[item_class])
 end
 
 --- @param id number
@@ -3510,7 +3519,7 @@ function get_args_for_valid_objects(id)
 			setup_item_args(ktype)
 		else
 			for item_class, enabled in pairs(cfg.scan) do
-				if cfg.is_item[item_class] then
+				if (enabled or cfg.scan_unmarked_classes) and cfg.is_item[item_class] then
 					local isitem, special = cfg.is_item[item_class](obj, sec, cls, kind)
 					if isitem then
 						vl("Type found via iteration: %s", item_class)
@@ -3800,9 +3809,17 @@ end
 local scanned = {}
 
 --- @param id number
-function unregister_scanned_entity(id)
+function unregister_scanned_entity(id, rescan_delay)
 	if not id then return end
-	scanned[id] = nil
+	rescan_delay = tonumber(rescan_delay) or 0
+	CreateTimeEvent(
+		"rescan_delay" .. tostring(id), 0, rescan_delay, (
+			function()
+				scanned[id] = nil
+				return true
+			end
+		)
+	)
 	if (locked_id == id) then
 		locked_id = nil
 	end

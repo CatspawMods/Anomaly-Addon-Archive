@@ -1417,4 +1417,21 @@
 		<text>Если эта настройка включена, она скрывает значок и/или текст, указывающий, какую клавишу следует нажать.</text>
 	</string>
 
+
+<!-- Added in 1.2.1 -->
+
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_weapons">
+		<text>Показать точки состояния деталей для оружия</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_weapons_desc">
+		<text>Если эта опция включена, то в подсказке к оружию будут отображаться точки состояния детали из аддона Utjan's Item UI Improvements.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_armor">
+		<text>Показать точки состояния деталей для брони</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_armor_desc">
+		<text>Если эта опция включена, в подсказке к броне и головным уборам будут отображаться точки состояния деталей из аддона Utjan's Item UI Improvements.</text>
+	</string>
+
 </string_table>

@@ -1398,4 +1398,20 @@
 		<text>If enabled, this setting will hide the icon and/or text that indicates which keybind to press.</text>
 	</string>
 
+<!-- Added in 1.2.1 -->
+
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_weapons">
+		<text>Show part condition dots for weapons</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_weapons_desc">
+		<text>If enabled, the part condition dots from Utjan's Item UI Improvements addon will be shown on the prompt for weapons.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_armor">
+		<text>Show part condition dots for armor</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_armor_desc">
+		<text>If enabled, the part condition dots from Utjan's Item UI Improvements addon will be shown on the prompt for armor and headgear.</text>
+	</string>
+
 </string_table>
