@@ -16,34 +16,34 @@ script_name     = "ui_hud_dotmarks"
 	See dotmarks_main.script for dependencies.
 
 -- =======================================================================
-	KNOWN ISSUES
+	KNOWN ISSUES / TO-DO
 -- =======================================================================
-	* Prioritize improving performance - string ops, texture inits, loops
-	* HF stashes (others?) no longer getting correct name
-	* Task target focus marker doesn't go away when task ends
-	* HF display cases showing tiny stash icon instead of dotmark
-	* PAW faction badges don't play pop-in anim
-	* Vehicle prompt focus doesn't match 1:1 with vanilla prompt
+	(**) Improve performance - optimize string ops, texture inits, loops
+		This will be a long-term, ongoing effort
+	(*) Task target focus marker doesn't go away when task ends
+		only happens when you end task in dialogue, low pri
+	(*) Hold indicator doesn't scale with UI/button scaling
+		seems there's a way to scale CUIProgressBar elements, investigate
+		cosmetic, but alignment of these elements needs review anyway
+	(*) Vehicle prompt focus doesn't match 1:1 with vanilla prompt
 		which is because vehicle hitboxes are fuckhuge
 		look into detecting whether actor is looking at any vehicle bone
-	* Hold indicator doesn't scale with UI/button scaling
-		seems there's a way to scale CUIProgressBar elements, investigate
-	* Have native speaker review RUS for grammar in prompt action text
-	* Breakable object marker remains after physobj destruction
-	* Blank textures are white squares in DX8?
+	(*)	Figure out how to get condition of loose loot parts
+	- Blank textures are white squares in DX8/DX9
+		current workaround via scan_unmarked_classes config setting
 		investigate setting alpha to 0 to hide, instead of blank textures
 
--- =======================================================================
-	POST-RELEASE TO-DO:
 	- MCM live preview for prompt elements - lots of work
 		Look into possibly using imgui
 	- NPE module(s) - not hard, but time-consuming and low priority
+		First create timed floating interstitial prompt, to ask user
+		if they want to see the tutorial without interrupting gameplay
 	- Unload prompt changes to field strip usable parts for empty guns
 	- Review adding support for Placeable Explosives addon (PES)
 		From what I understand they're implemented using the Hideout
 		Furniture framework, which means they'll either be trivially 
 		easy or a titanic pain in the ass
-	- IED marker anims - WIP not working, disabled, reconsidering
+		Has some kind of interactive keypad that needs accounting for
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -250,6 +250,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 
 					local hide          = mark.hidden
 					local hide_reason 	= hide and "mark itself is hidden" or "none"
+					local dd 			= (debug_dump)
 					local _             = (not hide) and dump("[%s][%s] Visibility and UI checks for %s | dist %s", mark.id, now, mark.name or mark.tutorial or mark.text, dist)
 					
 					cfg.in_pickup_range[id] = mark.is_pickup and in_range and dist or nil
@@ -295,7 +296,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 						-- ================================================================================
 						-- Check availability of primary interact prompt
 						if mark.use_pri and mark.use_pri.init_done then
-							dump("Checking whether to show pri interact prompt for %s | targeted %s | in_range %s", mark.name, targeted, in_range)
+							_=dd and dump("Checking whether to show pri interact prompt for %s | targeted %s | in_range %s", mark.name, targeted, in_range)
 							if not in_range then
 								show_pri = false
 							elseif mark.is_npc then
@@ -325,19 +326,25 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 								end
 							elseif mark.is_container and not mark.is_display then
 								-- Update contents of inventory containers
-								mark.body_claimed = is_body_claimed(id)
-								local is_managed_stash = not not (mark.body_claimed or is_container_unsearched_stash(id))
+								mark.body_claimed 	= is_body_claimed(id)
+								mark.managed_stash 	= not not (mark.body_claimed or is_container_unsearched_stash(id))
+								--dump("managed stash: %s | item tbl %s | searched %s", mark.managed_stash, cfg.invboxes[id] and cfg.invboxes[id].items and true or false, cfg.invboxes[id] and cfg.invboxes[id].searched)
 								local text = ""
 								local num_items = 0
 								if (not cfg.invboxes[id]) then
-									cfg.invboxes[id] = {}
+									init_new_inventory_box(id)
 								end
+								if can_display and not is_invbox_found(id) then
+									cfg.invboxes[id].found = true
+									mark.is_concealed = false
+								end
+								--dump("invbox %s | owned %s | found %s", id, cfg.invboxes[id].owned, cfg.invboxes[id].found)
 								if not mark.body_claimed then
 									if (not cfg.invboxes[id].items) then
 										cfg.invboxes[id].items, num_items = get_inventory_table(obj, id)
 										_ = debug_dump and vl("[%s] No inventory table for container %s, iterated and found %s items", time_global(), mark.name, num_items)
-										if is_managed_stash and (num_items == 0) then
-											-- treasure manager stashes return as empty until searched
+										if mark.managed_stash and (num_items == 0) then
+											-- make treasure manager stashes return as empty until searched
 											cfg.invboxes[id].items = nil
 										else
 											mark.has_items = num_items > 0
@@ -356,7 +363,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 										else
 											text = " " .. gts("st_alti_empty")
 										end
-									elseif mark.body_claimed or (is_managed_stash and not cfg.invboxes[id].items) then
+									elseif (mark.managed_stash and not cfg.invboxes[id].items) then
 										text = " (" .. gts("st_unknown_contents") .. ")"
 									else
 										text = " " .. gts("st_alti_empty")
@@ -405,7 +412,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 									end
 								end
 							end
-							dump("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id))
+							_=dd and dump("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id))
 							if mark.use_pri then
 								mark.use_pri:ShowPrompt(show_pri)
 							end
@@ -415,21 +422,21 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 								show_sec = (show_pri and not mark.body_claimed)
 								if cfg.hide_sec_interact_ui then
 									show_sec        = false
-									dump("Secondary interactions disabled via config, hiding UI for %s", mark.name)
+									_=dd and dump("Secondary interactions disabled via config, hiding UI for %s", mark.name)
 								elseif show_sec and not sec_forced then
 									if mark.ammo_count and (mark.ammo_count == 0) then
-										dump("No ammo in weapon, hiding secondary interact")
+										_=dd and dump("No ammo in weapon, hiding secondary interact")
 										show_sec    = false
 									elseif mark.has_battery and mark.condition and (mark.condition < 0.01) then
-										dump("No battery or charge in device, hiding secondary interact")
+										_=dd and dump("No battery or charge in device, hiding secondary interact")
 										show_sec    = false
 									elseif mark.is_container then
 										show_sec    = show_pri and mark.has_items
-										dump("No items in container, no need to show secondary interact")
+										_=dd and dump("No items in container, no need to show secondary interact")
 									elseif mark.was_wounded then
 										show_sec 	= show_pri and validate_wounded_prompt(mark)
 									end
-									dump("Checking whether to show alt interact prompt for %s | show_pri %s | targeted %s", mark.name, show_pri, targeted)
+									_=dd and dump("Checking whether to show alt interact prompt for %s | show_pri %s | targeted %s", mark.name, show_pri, targeted)
 								end
 								mark.alt_interact:ShowPrompt(show_sec or sec_forced)
 							end
@@ -437,10 +444,10 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 						end
 					end
 
-					dump("[%s][%s] Done with both prompt checks:\n* final state: %s | show_pri %s | show_sec %s | forced %s", time_global(), mark.name, prompts_shown, show_pri, show_sec, forced_on)
+					_=dd and dump("[%s][%s] Done with both prompt checks:\n* final state: %s | show_pri %s | show_sec %s | forced %s", time_global(), mark.name, prompts_shown, show_pri, show_sec, forced_on)
 					-- ================================================================================
 					local texture = mark.texture or ""
-					local no_marker = (hide or cfg.hide_interaction_dots)
+					local no_marker = (hide or cfg.hide_interaction_dots or mark.is_concealed)
 					update_marker_active_state(mark, prompts_shown)
 
 					if (not no_marker) and mark.active_swap then
@@ -456,7 +463,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 					end
 
 					if no_marker then
-						dump("Mark is hidden (%s) clearing texture", hide_reason or "no reason set")
+						_=dd and dump("Mark is hidden (%s) clearing texture", hide_reason or "no reason set")
 						texture = ""
 					else
 						mark.marker_scale = cfg.dot_marker_size
@@ -926,6 +933,7 @@ function do_marker_anim_cycle(
 		w_start, h_start, w_end, h_end, duration,
 		anim_func, on_finish_func, abort_func
 	)
+	-- This was only used in a now-abandoned feature, but has potential for reuse
 	if not mark_id then return end
 	local anim_state 	= 0
 	local anim_id 		= mark_id .. "_popin"
@@ -987,25 +995,6 @@ function do_marker_anim_cycle(
 			end
 			anim_state = math.min(1, normalize(time_global(), start_time, end_time))
 		end
-	)
-end
-
---- @param mark utils_catspaw_hudmarks.UIHUDMarker
-function init_ied_mark_anim(mark)
-	if not cfg.anim_ied_hazard then return end
-	if not mark then return end
-	local id = mark.id
-	local mode = get_ied_mode(id, true)
-	if not mode then return end
-
-	do_marker_anim_cycle(
-		mark.mark_id,
-		mark.args.width * 0.5, mark.args.height * 0.5,
-		mark.args.width, mark.args.height,
-		1000,
-		ied_anim_cycle_func,
-		nil,
-		nil
 	)
 end
 
@@ -1651,7 +1640,7 @@ function InteractPrompt:on_before_key_press(key, bind, dis, flags)
 			self:CycleBombMode(bind)
 			flags.ret_value = false
 		end
-	elseif (bind == key_bindings.kUSE) and cfg.watch_use then
+	elseif (bind == key_bindings.kUSE) then --and cfg.watch_use then
 		if self.args.is_glowstick or can_interact_physpickup(self.args.id) then
 			local obj = get_game_object(self.args.id)
 			vl("Forcing actor to take physics pickup %s", self.args.name)
@@ -1951,6 +1940,7 @@ function InteractPrompt:BuildUI()
 		self.longpress  = xml:InitProgressBar("prog_longpress", self.prompt)
 		self.longpress:SetColor(getargb(self.progress_color))
 		self.longpress:SetProgressPos(0)
+		setwndsize(self.longpress, fontscale_w(15), fontscale_h(20))
 	end
 
 	-- Set up text drop shadows
@@ -2037,7 +2027,7 @@ function InteractPrompt:SetupSuffix(obj)
 	local is_mag    = magazine_binder and sec and magazine_binder.is_magazine(sec)
 	local wpn_cnd 	= (self.args.is_weapon and cfg.show_gun_condition)
 	local gear_cnd  = (self.args.has_parts and cfg.show_item_condition) and not self.args.is_weapon
-	local part_cnd 	= (self.args.is_part_cnd and cfg.show_item_condition)
+	local part_cnd 	= (self.args.is_part_cnd and cfg.show_item_condition and cfg.parts_have_condition)
 	local batt_cnd  = ((self.args.has_power or self.args.has_battery) and cfg.show_item_charge)
 	if self.args.multi_uses then
 		-- Setup suffix text for multiuse items
@@ -3549,7 +3539,6 @@ function get_args_for_valid_objects(id)
 	end
 
 	local method_txt = (method > 3) and "callback" or (method > 2) and "addon" or (method > 1) and "iteration" or (method > 0) and "kind" or "section"
-	--local _ = (DEV_DEBUG or debuglogs) and printf("[DotMarks] get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
 	dl("[DotMarks] get_args_for_valid_objects: %s classification is %s (matched by %s) | section %s | kind %s", nameid(obj), args.logged_type, method_txt, sec, kind)
 	tracelog("end", "get_args_for_valid_objects", id)
 	return args
@@ -4004,7 +3993,6 @@ function setup_marker_for_object(id, args)
 	if (not mark.active_swap) and cfg.enable_icon_targetdot then
 		mark.active_swap = cfg.swap_dotactive
 	end
-	--init_ied_mark_anim(mark) -- not working yet
 	mark.initial_pos 	= mark.last_pos or mark:GetPos(mark.pos_adjust)
 	mark.initial_dist 	= mark.last_dist or distance_to_nearby_object(obj)
 	pl("$ ", "[%s] New marker finalized %s for %s (%s):\n" ..
@@ -4185,7 +4173,6 @@ function update_targeted_object()
 		targeted_id = id
 	end
 
-	cfg.active_task_target_id = get_task_target()
 	if targeted_id then
 		if target and (method < 1) and cfg.fallback_distance_check and (targeted_id ~= last_id) then
 			local apos = db.actor:position()
@@ -4947,13 +4934,6 @@ function take_and_use(id)
 	CreateTimeEvent("delayed_actor_use", time_global(), cfg.item_use_delay, delay_action_for_anim, args)
 end
 
-
-function is_container_unsearched_stash(id)
-	local mark = get_mark(id)
-	if not mark then return end
-	return is_container_a_tm_stash(id) and not mark.container_searched
-end
-
 --- @param obj game_object
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 function is_item_manual_use(obj, mark)
@@ -5224,6 +5204,7 @@ function actor_on_update()
 	do_garbage_collection()
 	update_hint_filters()
 	cfg.actor_comm  = character_community(db.actor):sub(7)
+	cfg.active_task_target_id = get_task_target()
 	-- ===================================================================
 	--  Tutorial monitors
 	--  Watches for state flags set by modxml_tutorial_hooks.script
@@ -5475,6 +5456,7 @@ function remove_obj_from_box_table(box, item)
 	local i_id = item:id()
 	if not i_id then return end
 	cfg.invboxes[b_id].items[i_id] = nil
+	cfg.invboxes[b_id].searched = true
 
 	local mark      = cfg.markers[b_id] or {}
 	local was_items = mark.has_items
@@ -5490,7 +5472,7 @@ function add_obj_to_box_table(box, item)
 	local b_id = box:id()
 	if not b_id then return end
 	if not cfg.invboxes[b_id] then
-		cfg.invboxes[b_id] = {}
+		init_new_inventory_box(b_id)
 	end
 	if not cfg.invboxes[b_id].items then
 		cfg.invboxes[b_id].items = {}
@@ -5502,6 +5484,7 @@ function add_obj_to_box_table(box, item)
 
 	local mark      = cfg.markers[b_id] or {}
 	mark.has_items  = true
+	cfg.invboxes[b_id].owned = true
 	vl("add_obj_to_box_table completed for %s -> %s", item:name(), box:name())
 end
 
@@ -5713,14 +5696,14 @@ local function log_other_addon_settings()
 		"fddar/pickup/enable -> fddar_pickup_anim %s\n" ..
 		"EA_settings/enable_animations -> fdda_anims_enabled: %s\n" ..
 		"EA_settings/take_item_anim -> fdda_pickup_anim: %s\n" ..
-		"item_icon_info/part_dots/show_on_wpn -> show_parts_weapons: %s\n" ..
-		"item_icon_info/part_dots/show_on_armor -> show_parts_armor: %s\n" ..
+		--"item_icon_info/part_dots/show_on_wpn -> show_parts_weapons: %s\n" ..
+		--"item_icon_info/part_dots/show_on_armor -> show_parts_armor: %s\n" ..
 		"item_icon_info/part_dots/wpo_green -> parts_wpo_grn: %s\n" ..
 		"item_icon_info/part_dots/wpo_yellow -> parts_wpo_yel: %s\n" ..
 		"item_icon_info/part_dots/wpo_orange -> parts_wpo_orn: %s",
 		cfg.fddar_multipickup, cfg.fddar_pickup_anim,
 		cfg.fdda_anims_enabled, cfg.fdda_pickup_anim,
-		cfg.show_parts_weapons, cfg.show_parts_armor,
+		--cfg.show_parts_weapons, cfg.show_parts_armor,
 		cfg.parts_wpo_grn, cfg.parts_wpo_yel, cfg.parts_wpo_orn
 	)
 end

@@ -189,7 +189,7 @@ if dotmarks_callbacks then
                     args.texture        = (args.hf_workshop and get_texture("Workshops") or get_texture("Tools")) or cfg.marker_dotmark or "ui_catsy_marker_intdot"
                     args.inv_section    = ini_sys:r_string_ex(section, "item_section")
                     -- Section name of the physobj's inventory item counterpart
-                    args.name           = args.inv_section and gts(utils_catspaw_text.inventory_name(nil, args.inv_section)) or args.name
+                    args.name           = args.inv_section and gts(utils_catspaw_text.inventory_name(nil, args.inv_section)) or best_localized_name(obj) or args.name or ""
                     -- Localized name of the pickup item
                     args.hint_filters       = {
                     -- Vanilla interact text to trap
@@ -220,9 +220,6 @@ if dotmarks_callbacks then
                     if args.hf_placeable == "stash" then
                         -- The stash in the homestead workshop is hidden, and not treated like others
                         dotmarks_main.set_target_data(id, cfg.metadata_types.is_container, not hfws_stash)
-                        args.logged_type    = hfws_stash and "a workshop stash" or "a placeable stash"
-                        args.texture        = hfws_stash and "" or cfg.marker_dotmark or "ui_catsy_marker_intdot"
-                        args.text           = (not hfws_stash) and string.format("%s %s", gts("st_alti_search"), args.name) or ""
                         if hfws_stash then
                             args.no_update_loop = true
                             -- Excludes this object from the main marker update loop
@@ -230,7 +227,6 @@ if dotmarks_callbacks then
                             -- Skips the check for whether marker has a secondary prompt
                             args.workshop_stash = true
                         else
-                            args.name           = best_localized_name(obj)
                             args.func_interact1 = ( function() end )
                             args.func_interact2 = ui_hud_dotmarks.pick_up_backpack
                             args.verb_secondary = is_zrb and "st_alti_pickup_zrb" or "st_alti_pickup_bp"
@@ -247,6 +243,9 @@ if dotmarks_callbacks then
                             }
                             args.active_swap = cfg.enable_icon_stash and cfg.swap_stash and dup_table(cfg.swap_stash) or nil
                         end
+                        args.logged_type    = hfws_stash and "a workshop stash" or "a placeable stash"
+                        args.texture        = hfws_stash and "" or cfg.marker_dotmark or "ui_catsy_marker_intdot"
+                        args.text           = (not hfws_stash) and string.format("%s %s", gts("st_alti_search"), args.name) or ""
                     end
                 end
             )

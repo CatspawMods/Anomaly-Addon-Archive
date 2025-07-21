@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250716
+    Updated: 20250719
     Translated using DeepL. Corrections or suggestions are welcome.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -1000,17 +1000,7 @@
 		<text>Регулирует вертикальное смещение текста привязки клавиш в поле значка. Это текст, указывающий, какую клавишу или кнопку вы нажимаете, например «Т».
 		 \n
 		\nПо умолчанию: 3.5</text>
-	</string>	
-<!--
-	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale">
-		<text>Шкала символов для метки привязки клавиш</text>
 	</string>
-	<string id="ui_mcm_dotmarks_dmarkadv_bind_char_scale_desc">
-		<text>Устанавливает настройку горизонтального размера блока значков привязки клавиш на каждый символ длины строки в тексте привязки.
-		 \n
-		\nПо умолчанию: 5.825</text>
-	</string>
--->
 
 	<string id="ui_mcm_dotmarks_dmarkmain_show_stash_weight">
 		<text>Показать общий вес в контейнерах</text>
@@ -1375,10 +1365,6 @@
 		<text>Некоторые из его настроек были сброшены по умолчанию в результате обновления версии.</text>
 	</string>
 
-	<string id="st_dotmarks_upgrade_defaulted">
-		<text>Some of its settings have been reset to default due to a version upgrade.</text>
-	</string>
-
 	<!-- Added in 1.1.0 --> 
 
 	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_shift">
@@ -1434,4 +1420,13 @@
 		<text>Если эта опция включена, в подсказке к броне и головным уборам будут отображаться точки состояния деталей из аддона Utjan's Item UI Improvements.</text>
 	</string>
 
+<!-- Added in 1.3.0 -->
+
+	<string id="ui_mcm_dotmarks_dmarkicons_must_discover_stashes">
+		<text>Скрыть маркеры для еще не найденных тайников</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkicons_must_discover_stashes_desc">
+		<text>Если эта опция включена, маркеры тайников, которые не были созданы игроком, не будут отображаться до тех пор, пока игрок не «обнаружит» этот тайник, вызвав появление подсказки о его взаимодействии.</text>
+	</string>
+	
 </string_table>

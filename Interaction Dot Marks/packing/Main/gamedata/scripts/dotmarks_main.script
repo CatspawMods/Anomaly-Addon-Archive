@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.2.1"
-release_date    = 20250718.1
+script_version  = "1.3.0"
+release_date    = 20250721
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
@@ -417,9 +417,11 @@ local base_config = {
                 local is_zrb        = (sec == "inv_trashcan")
                 local is_bp         = is_zrb or (sec == "inv_backpack")
                 set_target_data(id, cfg.metadata_types.is_container, true)
+                init_new_inventory_box(id)
                 local args = {
                     logged_type     = "a stash",
                     is_container    = true,
+                    is_concealed    = is_concealed_stash_marker(id) or nil,
                     verb_secondary  = is_zrb and "st_alti_pickup_zrb" or is_bp and "st_alti_pickup_bp" or nil,
                     always_show_sec = is_zrb or nil,
                     is_backpack     = is_bp or nil,
@@ -660,11 +662,11 @@ local base_config = {
                 local cls           = obj:clsid()
                 set_target_data(id, cfg.metadata_types.is_pickup, true)
 
-                local inv_section   = ini_sys:r_string_ex(section, "item_section")
-                local blast         = ini_sys:r_float_ex(section, "blast")
-                local multi_uses    = nil
                 local is_glowstick  = (section == "lights_glowstick")
                 local glowstick_sec = is_glowstick and get_glowstick_section(id)
+                local inv_section   = glowstick_sec or ini_sys:r_string_ex(section, "item_section")
+                local blast         = ini_sys:r_float_ex(section, "blast")
+                local multi_uses    = nil
                 local name          = inv_section and gts(inventory_name(nil, inv_section))
                 local explodes      = blast and (blast > 0)
                 if explodes and not cfg.explosive_tools[section] then
@@ -686,7 +688,7 @@ local base_config = {
                     manual_use      = true,
                     inv_section     = inv_section or nil,
                     is_glowstick    = is_glowstick or nil,
-                    physics_obj     = (cls == clsid.obj_physic) or nil,
+                    physics_obj     = (not not glowstick_sec) or (cls == clsid.obj_physic) or nil,
                     name            = name or nil,
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = pos_adjust_by_section(section, 0.05),
@@ -1099,6 +1101,7 @@ local base_config = {
 }
 -- =======================================================================
 
+--- @param obj game_object
 function best_localized_object_name(obj)
     local id = obj and obj:id()
     local section = obj and obj:section()
@@ -1106,28 +1109,89 @@ function best_localized_object_name(obj)
     return secname and gts(secname) or id and bestname(id)
 end
 
+--- @param section string
+--- @param base_y number
 function pos_adjust_by_section(section, base_y)
     local adj_by_sec = section and cfg.pos_adj_by_section and cfg.pos_adj_by_section[section]
     local adj = adj_by_sec and tonumber(adj_by_sec) or 0
     return vector():set(0, adj + (base_y or 0), 0)
 end
 
+--- @param id number
 function is_container_a_tm_stash(id)
     return id and treasure_manager.caches and treasure_manager.caches[id]
 end
 
+--- @param id number
+function get_player_stash_by_id(id)
+    local m_data = alife_storage_manager.get_state()
+    return id and m_data and m_data.player_created_stashes and m_data.player_created_stashes[id]
+end
+
+--- @param id number
+function is_container_unsearched_stash(id)
+    local mark = id and cfg.markers[id]
+    if not mark then return end
+    if get_player_stash_by_id(id) then return end
+    return is_container_a_tm_stash(id) and not (cfg.invboxes[id] and cfg.invboxes[id].searched)
+end
+
+--- @param id number
+function init_new_inventory_box(id)
+    if id and not cfg.invboxes[id] then
+        local owned_stash = not not get_player_stash_by_id(id)
+        cfg.invboxes[id] = {
+            owned       = owned_stash,
+            found       = owned_stash,
+            searched    = owned_stash
+        }
+        --if not verbose then return end
+        local mark = id and cfg.markers[id]
+        vl("New inventory box record initialized for %s | owned %s", mark and mark.name, owned_stash)
+    end
+end
+
+--- @param id number
+function is_invbox_owned(id)
+    return id and cfg.invboxes[id] and cfg.invboxes[id].owned
+end
+
+--- @param id number
+function is_invbox_found(id)
+    return id and cfg.invboxes[id] and cfg.invboxes[id].found
+end
+
+--- @param id number
+function is_invbox_searched(id)
+    return id and cfg.invboxes[id] and cfg.invboxes[id].searched
+end
+
+--- @param id number
+function is_concealed_stash_marker(id)
+    if not cfg.must_discover_stashes then return false end
+    local invbox = id and cfg.invboxes[id]
+    --dump("is_concealed_stash_marker | %s | invbox %s | owned %s | found %s", id, not not invbox, invbox and invbox.owned, invbox and invbox.found)
+    if not invbox then return false end
+    if (invbox.found or invbox.owned) then return false end
+    return true
+end
+
+--- @param section string
 function is_container_whitelisted(section)
     return not not (section and cfg.container_whitelist and cfg.container_whitelist[section])
 end
 
+--- @param section string
 function is_object_physpickup(section)
     return not not (section and cfg.physobj_pickups and cfg.physobj_pickups[section])
 end
 
+--- @param section string
 function is_placeable_mine(section)
     return txr_mines and txr_mines.EXPLOSIVE_SECTION_LOOKUP and (not not txr_mines.EXPLOSIVE_SECTION_LOOKUP[section])
 end
 
+--- @param sec string
 function is_recipe_known(sec)
     if not sec then return end
     -- Largely lifted from Utjan's Item UI Improvements
@@ -1147,27 +1211,30 @@ function is_recipe_known(sec)
     end
 end
 
-function get_artefact_container_type(sec)
+--- @param section string
+function get_artefact_container_type(section)
     return (
-        sec:find("af_aac") and "aac" or
-        sec:find("af_aam") and "aam" or
-        sec:find("af_iam") and "iam" or
-        sec:find("_lead_box") and "lead"
+        section:find("af_aac") and "aac" or
+        section:find("af_aam") and "aam" or
+        section:find("af_iam") and "iam" or
+        section:find("_lead_box") and "lead"
     ) or nil
 end
 
-function get_artefact_true_section(sec)
-    if sec and get_artefact_container_type(sec) then
-        if system_ini():line_exist(sec, "1icon_layer") then
-            return system_ini():r_string_ex(sec, "1icon_layer", "")
+--- @param section string
+function get_artefact_true_section(section)
+    if section and get_artefact_container_type(section) then
+        if system_ini():line_exist(section, "1icon_layer") then
+            return system_ini():r_string_ex(section, "1icon_layer", "")
         end
     end
-    return sec
+    return section
 end
 
-function get_artefact_anim_name(sec)
+--- @param section string
+function get_artefact_anim_name(section)
     if not af_inspect then return end
-    local anim = sec and ("tch_" .. get_artefact_true_section(sec) .. "_hud")
+    local anim = section and ("tch_" .. get_artefact_true_section(section) .. "_hud")
     if not (anim and af_inspect.ini:section_exist(anim)) then return end
     return anim
 end

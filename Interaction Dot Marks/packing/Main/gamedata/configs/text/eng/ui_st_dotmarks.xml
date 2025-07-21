@@ -1414,4 +1414,13 @@
 		<text>If enabled, the part condition dots from Utjan's Item UI Improvements addon will be shown on the prompt for armor and headgear.</text>
 	</string>
 
+<!-- Added in 1.3.0 -->
+
+	<string id="ui_mcm_dotmarks_dmarkicons_must_discover_stashes">
+		<text>Hide markers for undiscovered stashes</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkicons_must_discover_stashes_desc">
+		<text>If enabled, markers for stashes that weren't created by the player will not be shown until the player has "discovered" that stash by causing its interaction prompt to appear.</text>
+	</string>
+
 </string_table>

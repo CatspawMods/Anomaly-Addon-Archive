@@ -17,7 +17,8 @@
 ; If there is a section name below that also exists in this config file, that 
 ; subtable will be filled with the values loaded from that section. Otherwise it
 ; will still be created, but empty.
-blacklisted_clsids
+
+blacklisted_clsidsb
 ; For example, because [blacklisted_clsids] exists in this config file, its 
 ; contents will get loaded into the table: ui_hud_dotmarks.cfg.blacklisted_clsids
 blacklisted_ids
@@ -71,6 +72,9 @@ vendors
 version_resets
 weight_colors
 workshop_stashes
+; Because I use this to pre-instantiate nearly all of the empty tables that get 
+; used at runtime, this can also serve as something of an index of most of the 
+; addon's working tables.
 
 [template_tables]
 ; Like above, but loaded first and are populated with the section by the same name
@@ -269,6 +273,10 @@ hide_pickup_item_names 		= true
 ; Uses modded exes cvar g_draw_pickup_item_names to turn off vanilla floating item text
 hide_drop_shadow 			= false
 ; Disable the drop shadow beneath prompts
+must_discover_stashes		= true
+; If enabled, markers will not be shown for non-player-placed stashes until the actor
+; has "hovered" the stash once
+; Discovery state is not currently remembered between saveloads - planned
 pri_use_x_offset 			= -13
 pri_use_y_offset 			= 24
 sec_use_x_offset 			= -9
@@ -382,6 +390,10 @@ show_gun_condition 			= true
 ; Disabled by default in GAMMA
 show_item_condition 		= true
 ; Shows a non-weapon item's percentage condition suffixed to the item name, if applicable
+parts_have_condition 		= false
+; If show_item_condition is enabled, it will also show condition for loose gear parts
+; This is currently disabled until I figure out how to show their correct condition
+; prior to pickup, since it seems to not instantiate until then.
 show_item_charge 			= true
 ; Shows the item's percentage of battery charge suffixed to the item name, if applicable
 show_condition_color 		= true
@@ -557,10 +569,11 @@ tutorial_campfire_extinguish 	= st_extinguish_fire
 ; Will be ignored if the key doesn't begin with "clr_", to avoid clobbering non-color tokens
 ; Fifth value in some is a threshold/breakpoint for internal use in condition color lerping
 ; It's probably best not to mess with these unless you know what you're doing with ARGB values.
-
-clr_dmark_norm 	= 255,255,255,255
-clr_dmark_focus	= 255,255,255,255
-; Base colors for the marker itself - not yet used
+clr_dmark_norm 	= 220,255,255,255
+clr_dmark_focus	= 220,255,255,255
+; Base colors for the marker itself
+clr_dmark_def 	= 220,255,255,255
+; Default base color for all other markers
 clr_wpo_red		= 255,196,18,18
 clr_wpo_orn 	= 255,238,153,26
 clr_wpo_yel 	= 255,255,255,118
@@ -604,7 +617,7 @@ guide 		= ui_catsy_marker_guide
 leader 		= ui_catsy_marker_leader
 
 [setting_icons]
-; Required only for iteration in an MCM menu, no gameplay function
+; Lookup table used only for iteration in an MCM menu, no gameplay function
 enable_icon_box 			= Boxes
 enable_icon_door 			= Doors
 enable_icon_talk 			= Stalkers
@@ -613,6 +626,7 @@ enable_icon_stash 			= Stashes
 
 [display_cases]
 ; Containers with a section listed here will be treated as Hideout Furniture display cases
+; TODO: Investigate a better method of detection using analysis of the object's attributes
 placeable_arti_display 		= true
 placeable_weapon_rack 		= true
 placeable_pistol_shelf 		= true
@@ -653,6 +667,7 @@ line_adj_h  = -11
 ; Not used anymore by default, adjusts the height of the "white connecting line" texture
 ; Need to adjust this and other related values for EVERY swap table anytime a prompt 
 ; changes position or an icon changes size -- which is why it's now disabled by default
+
 [swap_butcher]
 texture     = ui_catsy_marker_butcher
 load_argb 	= argb_icon_butcher
@@ -1119,7 +1134,7 @@ argb_service_mech		= dotmarks/dmarkicons/
 argb_service_medic		= dotmarks/dmarkicons/
 argb_service_guide		= dotmarks/dmarkicons/
 argb_service_leader		= dotmarks/dmarkicons/
-
+must_discover_stashes 	= dotmarks/dmarkicons/
 ; =================================================================================
 ; Objects menu is populated procedurally
 ; =================================================================================

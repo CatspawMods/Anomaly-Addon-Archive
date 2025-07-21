@@ -1,5 +1,5 @@
 <!-- ====================================================================
-	Interaction Dot Marks
+    Interaction Dot Marks
     Vehicle module
     Author: Catspaw
     Updated: 20250715
@@ -7,9 +7,13 @@
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
 <string_table>
+
+    <string id="ui_mcm_dotmarks_addons_vehicles">
+        <text>$clr_gldНастройки транспорта</text>
+    </string>
     
     <string id="st_enter_vehicle">
-        <text>$clr_gldВведите автомобиль</text>
+        <text>Введите автомобиль</text>
     </string>
 
     <string id="st_exit_vehicle">

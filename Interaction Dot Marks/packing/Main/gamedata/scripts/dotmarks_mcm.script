@@ -276,7 +276,7 @@ function get_argb_input_element(opt_id, def, preset)
 		id 		= opt_id,
 		type 	= "input",
 		val 	= 0,
-		def 	= def or "255,255,255,255",
+		def 	= def or cfg.colors.clr_dmark_def or "255,255,255,255",
 		ui_hook_functor = { ui_mcm_argb_input.init_mcm_argb_control },
 		ui_snd_path 	= "catspaw\\paw_blip",
 		preset_args 	= preset or argb_control_preset,
@@ -468,6 +468,11 @@ function generate_icons_menu()
 				icon_x = 450, 	icon_y = 11
 			}
 		)
+		if (opt_id == "enable_icon_stash") then
+			table.insert(gr, 
+				{ id = "must_discover_stashes", type = "check", val = 1, def = cfg.must_discover_stashes }
+			)	
+		end
 		table.insert(gr, get_argb_input_element(argb_id))
 	end
 
