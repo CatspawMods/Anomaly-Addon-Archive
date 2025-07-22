@@ -109,6 +109,9 @@ main_drop_texture 			= ui_dotmarks_main_drop
 ; Texture used for the main prompt drop shadow
 welcome_message_shown 		= false
 ; This gets set true once the welcome message is shown, so that it won't be shown again
+write_to_save 				= true
+; If enabled, DotMarks will write some persistent data to the save in order to track
+; details such as which stashes the actor has interacted with
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 near_scan_interval          = 104
@@ -222,7 +225,7 @@ target_lenience 			= 0.8
 ; How far from center the crosshair can be for old targeting method
 ; Required for properly handling focus detection for glowsticks and other physobjs 
 ; that aren't actually true pickups
-fddar_fix_scav_bug 			= true
+fddar_fix_scav_bug 			= false
 ; FDDAR 1.2.15 monkeypatches the Scavenger skill in Skill System, but it's bugged so that
 ; it only triggers it when body search is enabled. When this option is enabled, DotMarks
 ; will work around that by manually triggering the function.
@@ -390,10 +393,8 @@ show_gun_condition 			= true
 ; Disabled by default in GAMMA
 show_item_condition 		= true
 ; Shows a non-weapon item's percentage condition suffixed to the item name, if applicable
-parts_have_condition 		= false
+parts_have_condition 		= true
 ; If show_item_condition is enabled, it will also show condition for loose gear parts
-; This is currently disabled until I figure out how to show their correct condition
-; prior to pickup, since it seems to not instantiate until then.
 show_item_charge 			= true
 ; Shows the item's percentage of battery charge suffixed to the item name, if applicable
 show_condition_color 		= true
@@ -1144,6 +1145,7 @@ must_discover_stashes 	= dotmarks/dmarkicons/
 ; =================================================================================
 ; Advanced menu
 ; =================================================================================
+write_to_save 			= dotmarks/dmarkadv/
 hide_interaction_dots 	= dotmarks/dmarkadv/
 hide_mute_stalkers 		= dotmarks/dmarkadv/
 hide_connecting_line 	= dotmarks/dmarkadv/

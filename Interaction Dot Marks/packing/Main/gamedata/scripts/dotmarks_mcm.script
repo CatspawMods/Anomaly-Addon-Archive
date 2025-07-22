@@ -624,6 +624,10 @@ function get_adv_menu()
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
 		},
 
+		{ id = "write_to_save", 		type = "check", 	val = 1, def = ui_hud_dotmarks.write_to_save },
+
+		{ id = "divider", type= "line" },
+
 		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
 		{ id = "hide_mute_stalkers", 	type = "check",		val = 1, def = cfg.hide_mute_stalkers },
 		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },

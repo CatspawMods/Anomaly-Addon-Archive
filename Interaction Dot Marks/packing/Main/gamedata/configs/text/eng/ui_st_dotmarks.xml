@@ -1423,4 +1423,15 @@
 		<text>If enabled, markers for stashes that weren't created by the player will not be shown until the player has "discovered" that stash by causing its interaction prompt to appear.</text>
 	</string>
 
+<!-- Added in 1.4.0 -->
+
+	<string id="ui_mcm_dotmarks_dmarkadv_write_to_save">
+		<text>Store interaction data in savegame</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_write_to_save_desc">
+		<text>If enabled, DotMarks will add a small amount of data to the savegame in order to track details such as which stashes the actor has already discovered.\n
+
+		\nRegardless of this setting, it is ALWAYS safe to add or remove DotMarks at any time during your playthrough.</text>
+	</string>
+
 </string_table>

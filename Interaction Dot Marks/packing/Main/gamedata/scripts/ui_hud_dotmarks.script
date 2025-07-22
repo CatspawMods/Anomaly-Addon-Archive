@@ -13,32 +13,29 @@ script_name     = "ui_hud_dotmarks"
 	and some of its other UI niceties such as floating prompts and 
 	secondary interactions.
 -- =======================================================================
-	See dotmarks_main.script for dependencies.
-
--- =======================================================================
 	KNOWN ISSUES / TO-DO
 -- =======================================================================
 	(**) Improve performance - optimize string ops, texture inits, loops
 		This will be a long-term, ongoing effort
+		investigate string overhead (if any) from disabled logging
+	(**) Hold indicator doesn't scale with UI/button scaling
+		cosmetic, but alignment of these elements needs review anyway
 	(*) Task target focus marker doesn't go away when task ends
 		only happens when you end task in dialogue, low pri
-	(*) Hold indicator doesn't scale with UI/button scaling
-		seems there's a way to scale CUIProgressBar elements, investigate
-		cosmetic, but alignment of these elements needs review anyway
 	(*) Vehicle prompt focus doesn't match 1:1 with vanilla prompt
 		which is because vehicle hitboxes are fuckhuge
 		look into detecting whether actor is looking at any vehicle bone
-	(*)	Figure out how to get condition of loose loot parts
+
+	Low priority:
 	- Blank textures are white squares in DX8/DX9
 		current workaround via scan_unmarked_classes config setting
 		investigate setting alpha to 0 to hide, instead of blank textures
-
-	- MCM live preview for prompt elements - lots of work
+	- PAW-style live preview for prompt elements - lots of work
 		Look into possibly using imgui
 	- NPE module(s) - not hard, but time-consuming and low priority
 		First create timed floating interstitial prompt, to ask user
 		if they want to see the tutorial without interrupting gameplay
-	- Unload prompt changes to field strip usable parts for empty guns
+	- New feature: when unloaded, unload prompt changes to field strip
 	- Review adding support for Placeable Explosives addon (PES)
 		From what I understand they're implemented using the Hideout
 		Furniture framework, which means they'll either be trivially 
@@ -404,12 +401,7 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 								end
 								if mark.show_condition then
 									-- Update condition for degradable objects
-									local cond = obj:condition()
-									if cond ~= mark.condition then
-										mark.condition = cond
-										mark.use_pri:SetConditionText(sec, cond)
-										mark.use_pri:SetPrompt()
-									end
+									update_mark_condition(mark, show_pri)
 								end
 							end
 							_=dd and dump("Final primary interact state: %s | %s", show_pri, nameid(mark.name, mark.id))
@@ -515,7 +507,33 @@ utils_catspaw_hudmarks.marker_presets["dotmark"] = (
 	end
 )
 
+function update_mark_condition(mark, prompt_shown)
+	local id = mark and mark.id
+	local obj = id and get_game_object(mark.id)
+	if not obj then return end
+	local is_world = game_setup.is_world_item(id)
+	if prompt_shown and is_world and (not mark.world_obj_cond) then
+		-- Loose loot spawned in the world doesn't actually have condition or other metadata
+		-- until the actor picks them up for the first time
+		-- So we need to instantiate it the first time the prompt is displayed
+		local name = id and game_setup.world_itm_on and game_setup.world_itm_on[id]
+		local cond = name and game_setup.world_itm_num and game_setup.world_itm_num[name]
+		dump("Condition %s loaded for degraded world item [%s] from loot spot [%s]", cond, nameid(obj), name)
+		mark.world_obj_cond = cond
+	end	
+	local cond = (not is_world) and obj:condition() or mark.world_obj_cond
+	if mark.use_pri and cond and (cond ~= mark.condition) then
+		vl("Updating marker condition for %s", nameid(obj))
+		mark.condition = cond
+		mark.use_pri:SetConditionText(mark.section, cond)
+		mark.use_pri:SetPrompt()
+	end
+end
 
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+--- @param show_pri boolean
+--- @param vis_range number
+--- @param in_range boolean
 function update_mark_stalker_health(mark, show_pri, vis_range, in_range)
 	if mark and mark.is_stalker and mark.is_alive then
 		local id = mark.id
@@ -557,6 +575,8 @@ function update_mark_stalker_health(mark, show_pri, vis_range, in_range)
 	return show_pri, false
 end
 
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
+--- @param state boolean
 function update_marker_active_state(mark, state)
 	if mark and (mark.is_active ~= state) then
 		vl("[%s][%s] Mark active status changed to %s (was %s)", time_global(), mark.name, state, mark.is_active)
@@ -614,22 +634,28 @@ function is_system_active()
 	return scanning and not killswitch("markloop")
 end
 
+--- @param id number
 function get_mark(id)
 	return id and cfg.markers[id]
 end
 
+--- @param id number
+--- @param bone string
 function set_mark_bone(id, bone)
 	local mark = get_mark(id)
 	if not mark then return end
 	mark.bone = bone
 end
 
+--- @param id number
+--- @param by_whom game_object
 function use_obj_by_id(id, by_whom)
 	local obj = id and get_object_by_id(id)
 	if not obj then return end
 	obj:use(by_whom or db.actor)
 end
 
+--- @param id number
 function get_mark_name(id)
 	local mark = get_mark(id)
 	return mark and mark.name
@@ -1940,7 +1966,8 @@ function InteractPrompt:BuildUI()
 		self.longpress  = xml:InitProgressBar("prog_longpress", self.prompt)
 		self.longpress:SetColor(getargb(self.progress_color))
 		self.longpress:SetProgressPos(0)
-		setwndsize(self.longpress, fontscale_w(15), fontscale_h(20))
+		--setwndsize(self.longpress, fontscale_w(15), fontscale_h(20))
+		-- resizing disabled until it can be done right
 	end
 
 	-- Set up text drop shadows
@@ -2053,6 +2080,8 @@ end
 function InteractPrompt:SetConditionText(sec, cond)
 	 if (cond and sec) then
 		cond = math.floor(cond * 100)
+	 	if (cond == self.last_cond_text) then return end
+	 	self.last_cond_text = cond
 		local c = get_condition_color(cond, sec)
 		local key = "clr_" .. cond .. (self.args.has_power and "_batt" or "_cond")
 		local str   = c and string.format("%" .. "%c[%s,%s,%s,%s]", c.a, c.r, c.g, c.b)
@@ -2063,6 +2092,7 @@ function InteractPrompt:SetConditionText(sec, cond)
 		else
 			self.active_suffix = string.format(" ($%s%s%%$clr_def)", key, cond)
 		end
+		self:UpdatePromptLength()
 	else
 		self.active_suffix = ""
 	end
@@ -2073,8 +2103,12 @@ function InteractPrompt:UpdatePromptLength()
 	self.prompt_length  = self.lref:GetWidth() + 25
 	if len == self.prompt_length then return self.prompt_length end
 	if self.itemcard then
-		setwndpos(self.itemcard, cfg.item_card_pos_x + self.prompt_length, cfg.item_card_pos_y or 0)
+		local o 	= fontscale_w(self.prompt_length)
+		local x 	= (cfg.item_card_pos_x + o + (self.dots_x or 0))
+		local y 	= (cfg.item_card_pos_y or 0)
+		setwndpos(self.itemcard, x, y)
 	end
+	--dump("Prompt length for %s: %s", self.lref:TextControl():GetText(), self.prompt_length)
 	return self.prompt_length
 end
 
@@ -2102,11 +2136,10 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 	xml:ParseFile(cfg.interact_uifile)
 	local offset    = fontscale_w(self:UpdatePromptLength())
 	self.itemcard   = self.xml:InitStatic("box", anchor or self.wnd)
-
 	local show_dots = can_show_part_dots(self.args.id)
 	local icon_sz   = cfg.item_card_icon_sz
-	local dots_x 	= show_dots and (10 * cfg.unsquish_ratio) or 0
-	local wnd_x     = cfg.item_card_pos_x + dots_x
+	self.dots_x 	= show_dots and (10 * cfg.unsquish_ratio) or 0
+	local wnd_x     = cfg.item_card_pos_x + self.dots_x
 	local wnd_y     = cfg.item_card_pos_y
 	local text_y    = cfg.item_card_text_y
 	local elem_x    = cfg.item_card_elem_x
@@ -2116,6 +2149,7 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 	local icon_y    = cfg.item_card_icon_y
 
 	setwndpos(self.itemcard, wnd_x + offset, wnd_y)
+	--dump("Initting item card position as %s, %s", wnd_x + offset, wnd_y)
 	local card_font = get_font_obj(cfg.font_item_card or 0)
 	self.card_wgt = self.xml:InitStatic("box", self.itemcard)
 	setwndpos(self.card_wgt, elem_x, elem_y)
@@ -2185,7 +2219,6 @@ function InteractPrompt:SetupItemCard(anchor, obj)
 	self.longest_card = math.max(weight_w, value_w)
 
 	self:UpdateFaveJunkIcon()
-
 	self.itemcard:Show(true)
 end
 
@@ -3057,6 +3090,11 @@ function InteractPrompt:actor_on_update()
 	self:UpdateFilteredHints()
 
 	local mark = self:GetMark()
+
+	if mark and mark.is_part_cnd then
+		update_mark_condition(mark, not self.disabled)
+		local obj = get_game_object(self.args.id)
+	end
 
 	if (self.args.tutorial or (mark and mark.is_stalker)) then
 		self:CheckForStuckTutorial()
@@ -5325,8 +5363,9 @@ function on_before_key_press(key, bind, dis, flags)
 	end
 end
 
+--- @param id number
 function trigger_fddar_scavenger_effect(id)
-	if not (haru_skills and cfg.fddar_body_search) then return end
+	if not (haru_skills and not cfg.fddar_body_search) then return end
 	vl("FDDAR body search is disabled, triggering Scavenger skill gain manually to fix FDDAR bug")
 	CreateTimeEvent("fddar_manual_scav", 0, 0.15, (
 		function()
@@ -5617,6 +5656,10 @@ function parse_file_data()
 	end
 	hintfilters = cfg.hint_filter
 	cfg.grok_claim = not not grok_loot_claim
+	local save_flag = axr_main.config:r_value("mcm", "dotmarks/dmarkadv/write_to_save", {val=1})
+	if save_flag ~= nil then
+		cfg.write_to_save = save_flag
+	end
 end
 
 --- @param kill boolean
@@ -5825,14 +5868,38 @@ function on_option_change()
 	reset_nearby_item_tables()
 	set_handler_callbacks()
 	st_kg           = gts("st_kg")
-	--cfg.show_parts_weapons 	= cfg.show_parts_weapons and cfg.show_parts_dots
-	--cfg.show_parts_armor 		= cfg.show_parts_armor and cfg.show_parts_dots
 	cfg.show_part_condition     = cfg.show_parts_weapons or cfg.show_parts_armor
 	cfg.double_tap_time 		= get_mcm("mcm/mcm_kb/mcm_kb_main/dtaptime2", 200)
 	cfg.sec_enable_arty_anim 	= af_inspect and cfg.sec_enable_arty_anim
 	local pickup_names_cmd 		= "g_draw_pickup_item_names " .. (cfg.hide_pickup_item_names and "0" or "1") 
 	exec_console_cmd(pickup_names_cmd)
 	CreateTimeEvent("autoloot_override", 0, 0.25, hijack_autoloot_keybind)
+end
+
+function load_state(data)
+	if not cfg.write_to_save then return end
+	if not (data and data.dotmarks) then return end
+	cfg.invboxes = data.dotmarks.invboxes or cfg.invboxes or {}
+end
+
+function save_state(data)
+	if cfg.clean_save_data and data and data.dotmarks then
+		empty_table(data.dotmarks)
+		data.dotmarks = nil
+		cfg.clean_save_data = false
+		return
+	end
+	if not cfg.write_to_save then return end
+    data.dotmarks = data.dotmarks or {}
+    if cfg.invboxes then
+    	data.dotmarks.invboxes = {}
+    	for k,v in pairs(cfg.invboxes) do
+    		if v.found then
+    			printf("Storing found stash data for %s", nameid(v.name, id))
+    			data.dotmarks.invboxes[k] = v
+    		end
+    	end
+    end
 end
 
 function on_game_start()
@@ -5862,6 +5929,9 @@ function on_game_start()
 		if stealth_kill_detection then
 			RegisterScriptCallback("npc_on_silent_kill_callback", npc_on_silent_kill_callback)
 		end
+		RegisterScriptCallback("load_state", load_state)
+		RegisterScriptCallback("save_state", save_state)
+
 		on_option_change()
 		if (fdda_installed and fddar_installed) then
 			alert("WARNING: Both FDDA and FDDA Redone scripts were found, but FDDA scripts should be disabled! Leaving them both active can lead to busyhands or other serious issues.")
