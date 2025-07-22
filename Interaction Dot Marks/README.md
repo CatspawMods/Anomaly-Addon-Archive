@@ -54,7 +54,8 @@ DotMarks will show Utjan's part condition dots on the Item Card if it detects th
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # Installation / Uninstallation
-**Interaction Dot Marks does not write anything to your save file. It is safe to install or uninstall mid-playthrough at any time.**
+**Interaction Dot Marks does not write anything to your save file unless `write_to_save` is enabled--and whether or not that setting is enabled, it is _always_ safe to install or uninstall mid-playthrough at any time.**
+
 ## Install Instructions
 Use Mod Organizer 2. It's the only one supported. Others may work, but I can't help if they don't.
 1. Click on File > Install Mod... (Ctrl-M)
