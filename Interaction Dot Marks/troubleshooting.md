@@ -13,12 +13,34 @@ Here are the most common issues that DotMarks users have, and how to solve them:
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
+## Blatantly-incompatible modpacks/addons
+Interaction Dot marks is _known to be incompatible_ with the following:
+
+----
+### Unsupported: Anomaly Custom
+Every currently-known variant of the Anomaly Custom modpack uses a customized copy of MCM that cannot be upgraded to a current, DotMarks-compatible version without breaking the modpack itself.
+
+Distributing altered copies of MCM should never be done, and this is a perfect example of why. If you want to use IDM on Anomaly Custom, ask the modpack author(s) to at least update their copy of MCM to be based upon MCM 1.7.0 or newer. If their modded exes meet the requiements, then that is the only currently-known blocking issue.
+
+----
+### Unsupported: Anomaly Optmized Engine (AOE/AOEngine)
+I have received multiple reports of unusual and inconsistent issues from AOE users: flickering icons, doors not being properly recognized, and all manner of other bizarre behaviors. All I can tell is that AOE is doing some very strange things "under the hood" that apparently cause incompatibilities with some addons--including IDM. 
+
+I recommend that you _do not_ use or support proprietary closed-source engines like this, whatever the benefits. The [modded exes by TheMrDemonized](https://github.com/themrdemonized/xray-monolith) are open-source and community-vetted, and anyone--including the authors of closed-source engines--can suggest fixes or additions so that they benefit (and can be tested by) the whole community.
+
+> [!CAUTION]
+> If you are using either of the above, then please do not report issues with DotMarks--they won't be supported or assisted.
+>
+> You should assume that you're highly likely to encounter problems of some kind or another--and that if you don't, you're very lucky.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 ## Nothing works at all, not even the "DotMarks" MCM menu - it's like the addon isn't even installed
 Well that sucks.
 
 DotMarks is pretty robust. If it isn't working at all, and you don't even see its MCM menu, then something has caused the main script to completely fail to load. And that probably means that a critical file is either missing or outdated. When it first starts to load, DotMarks checks to make sure it has all its core files--particularly my utility scripts.
 
-Those scripts are also used by my other addons. If you load a much older one after DotMarks, and it replaces one of those core scripts with one that doesn't have the right functions, DotMarks will fail to load. And if the main script fails to load, the MCM script won't load either.
+Those scripts are also used by my other addons. If you load a much older one after DotMarks, and it replaces one of those core scripts with one that doesn't have the right functions, then DotMarks will fail to load. And if the main script fails to load, the MCM script won't load either.
 
 And there won't be any question at all that this is what's happened--just open your game log, and search for the text "Interaction Dot Marks". What you _should_ be seeing is a line like this, with the version number and release date:
 ```
@@ -28,12 +50,16 @@ If the main script failed to load, you'll instead see a stack trace followed by 
 ```
 ! Interaction Dot Marks requires script utils_catspaw_common, which is outdated or missing!
 ```
-If you are seeing any error like that mentioning one of my utility scripts, then moving DotMarks to the bottom of your load order to resolve it. This is a good general troubleshooting step anyway. It'd also be a good idea to update my other addons to their most recent versions as well, because one or more is outdated.
+If you are seeing any error like that mentioning one of my utility scripts, then move DotMarks to the bottom of your load order to resolve it. It'd also be a good idea to update my other addons to their most recent versions as well, because one or more is clearly outdated.
+> [!TIP]
+> Updating your addons to the latest version is _very often_ a good general troubleshooting step anyway--before reporting a problem or giving up on it. That's especially true if it's any of my addons that are included in GAMMA--which I take special care to ensure are stable.
+>
+> If you search your log for the names of my addons (e.g. "Personal Adjustable Waypoint", "Milspec PDA", "Fair Fast Travel, etc), then the first line will usually be a similiar initialization string telling you what the version is. Check Moddb and make sure it's the latest.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 ## Missing dependencies
-I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the [debuglogs](#enable-debug-logging) setting is enabled, DotMarks will output a block of text on startup that looks like this:
+I've tried to set up safety checks that display a message to the player a few moments after they first load into the game if a dependency is missing. But in case that fails, if something isn't working right, there's a good chance that you need to properly update a dependency. You can find out by enabling debug logging and searching the game log for the string `Checking for dependencies`. Whenever the [debuglogs](README.md#enable-debug-logging) setting is enabled, DotMarks will output a block of text on startup that looks like this:
 ```
 [DotMarks] [V] config loaded: true
 [DotMarks] [V] using_modded_exes: true
