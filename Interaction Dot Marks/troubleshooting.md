@@ -114,8 +114,15 @@ There you can place a check beside any secondary actions you want to enable.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
-## Not seeing an interaction prompt when you think one should appear (or vice-versa)
-If you ever have any question whether or not DotMarks is correctly displaying a prompt when it should do so, go to **MCM > DotMarks > Advanced** and turn off the [Hide vanilla interact UI](#hide_vanilla_interact_ui) setting. This is the feature that hides the text prompts at the bottom of the screen.
+## I uninstalled DotMarks in MO2, but now holding the Interact key doesn't show item names like it used to do
+Unlike most of the settings in DotMarks, which are stored solely in MCM, the [Hide vanilla floating pickup names](README.md#hide-vanilla-floating-pickup-names) setting is tied to a console variable, or *cvar*--in other words, a command you type into the game's console. These persist between game sessions, and MO2 has no way to change that setting when you disable or uninstall an addon.
+
+To get the original vanilla pickup names back, either disable the above setting in MCM before removing DotMarks, or type `g_draw_pickup_item_names 1` into the console at any time afterwards.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
+## I'm not seeing an interaction prompt when one should appear (or vice-versa)
+If you ever have any question whether or not DotMarks is correctly displaying a prompt or allowing interaction when it's appropriate to do so, go to **MCM > DotMarks > Advanced** and turn off the [Hide vanilla interact UI](#hide_vanilla_interact_ui) setting. This is the feature that hides the text prompts at the bottom of the screen.
 
 If you see a vanilla text interaction prompt, but DotMarks does not correctly display a prompt--or vice-versa--please do the usual and [create a clean debug log](#1-generate-a-clean-debug-log) for me to examine.
 
