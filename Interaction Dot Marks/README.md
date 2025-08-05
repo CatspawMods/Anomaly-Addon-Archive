@@ -676,8 +676,15 @@ If enabled, the custom secondary interact UI added by DotMarks will not be shown
 * Default: `true`
 
 If enabled, any vanilla interact prompts (the text at the bottom of the screen) will be hidden if they have been replaced by a custom version.
-
-This setting has no effect if the custom primary interaction UI is also hidden.
+## Hide vanilla floating pickup names
+* Config setting: `hide_pickup_item_names`
+* Default: `true`
+  
+If enabled, the floating pickup item names--which normally appear in vanilla when holding down the Interact key--will be completely hidden. This sets the `g_draw_pickup_item_names` console variable from the modded exes to a value of `0`.
+> [!IMPORTANT]
+> MO2 has no way to set console variables on uninstall, so if you disable/uninstall Interaction Dot Marks in MO2, this cvar won't automatically go back to its old value--cvars persist between game sessions.
+>
+> You'll need to either disable this setting in MCM before removing DotMarks, or type `g_draw_pickup_item_names 1` into the console afterwards.
 ## Disable UI sound effects
 * Config setting: `disable_all_sounds`
 * Default: `false`
