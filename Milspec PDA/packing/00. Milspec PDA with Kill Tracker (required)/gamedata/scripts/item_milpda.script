@@ -374,6 +374,16 @@ function has_faction_network_data(comm)
 end
 
 function is_actor_enemy(comm)
+	if ish_kill_tracker.allies_mode == ish_kill_tracker.ALLIES_MODE_PERSONAL then
+		comm = validated_faction(comm)
+
+		local communities_relation = relation_registry.community_relation(get_actor_true_community(), comm)
+		local relation_to_actor = relation_registry.community_goodwill(comm, AC_ID)
+		local total_relation_to_actor = relation_to_actor + communities_relation
+
+		return total_relation_to_actor <= game_relations.ENEMIES
+	end
+
 	return game_relations.is_factions_enemies(get_actor_true_community(),validated_faction(comm))
 end
 

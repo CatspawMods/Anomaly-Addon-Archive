@@ -111,6 +111,9 @@ local show_monsters_comp        = (monster_tracking_mode > 1)
 local show_monsters_all         = (monster_tracking_mode > 2)
 local ini_mutant                = ini_file("items\\settings\\mutant_loot.ltx")
 local mutant_decay_time         = ini_mutant:r_float_ex("mutant_loot_mod","decay_time") or 7200
+ALLIES_MODE_FACTION = 0
+ALLIES_MODE_PERSONAL = 1
+allies_mode = ALLIES_MODE_FACTION
 tracked_bodies                  = {}
 
 
@@ -633,6 +636,19 @@ function on_option_change()
         local pbo           = mode_bio == "upaw"
         default_style_actor = ((not pba) and mode_bi) or default_style_actor
         default_style_other = ((not pbo) and mode_bio) or default_style_other
+
+        function validate_allies_mode(mode)
+            if mode == ALLIES_MODE_FACTION then
+                return ALLIES_MODE_FACTION
+            elseif mode == ALLIES_MODE_PERSONAL then
+                return ALLIES_MODE_PERSONAL
+            end
+
+            vl("Allies mode invalid (%s), defaulting to FACTION", mode)
+            return ALLIES_MODE_FACTION
+        end
+        allies_mode = validate_allies_mode(tonumber(ui_mcm.get("milpda/milpdagen/allies_mode")))
+
         local autoclear     = ui_mcm.get("milpda/milpdagen/autoclear")
 
         if autoclear ~= nil then clear_on_loot = autoclear end

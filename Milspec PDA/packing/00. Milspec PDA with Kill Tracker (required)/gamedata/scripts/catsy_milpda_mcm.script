@@ -99,6 +99,12 @@ function on_mcm_load()
 									{"deadbody_location_ldot","milpda_ldot"},
 								}
 						},
+					{id = "allies_mode", type = "list", val = 2, def = 0,
+						 content= {
+							 {0,"milpda_allies_mode_faction"},
+							 {1,"milpda_allies_mode_personal"}
+						 }
+						},
 					{id = "autoclear", type = "check", val = 1, def = true},
 					{id = "squadmate_mapspots", type = "check", val = 1, def = false},
 					{id = "hide_intro_header", type= "check", val = 1, def = false, 
