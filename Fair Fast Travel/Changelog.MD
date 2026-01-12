@@ -3,6 +3,10 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-durati
 
 ## Change Log
 
+**2.18.3:**
+- Added another null-value sanity check
+- Fix for campfire travel checks not working in some circumstances
+
 **2.18.2:**
 - Added null value checks in various places to avoid rare crashes that ought to be impossible
 - Improved size and positioning in high resolutions for some MCM text header elements
