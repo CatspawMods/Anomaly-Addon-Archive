@@ -3,6 +3,20 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-durati
 
 ## Change Log
 
+**2.18.2:**
+- Added null value checks in various places to avoid rare crashes that ought to be impossible
+- Improved size and positioning in high resolutions for some MCM text header elements
+
+**2.18.1:**
+- Fix for location discovery spam
+
+**2.18.0:**
+- Updated utility scripts to 20250717, and overhauled/refactored using their recent features
+- This also brings along many fixes to them from recent months, especially with text handling
+- Added new NPE tutorial module, which plays the first time fast travel is unlocked
+- Removed my old MCM monkeypatch script, as it is for a version of MCM and Anomaly that is no longer supported
+- Minor adjustments to travel zone indicator script
+
 **2.17.2:**
 - Updated utility scripts to the 20250422 versions
 

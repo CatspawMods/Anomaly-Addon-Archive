@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.18.1"
-release_date 	= 20250718.1
+script_version 	= "2.18.2"
+release_date 	= 20260108
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
@@ -190,7 +190,7 @@ AddScriptCallback("on_new_fast_travel_point") 	-- sent when first encountering a
 	If you wanted to block the player from fast traveling out of the 
 	Brain Scorcher as long as the countdown is active, you could put 
 	something like this in its own script:
--- ======================================================================
+----
 
 function scorcher_travel_check(trip)
     if (level.name() == "l10u_bunker") and IsStoryMode() and (not dialogs.actor_true_monolith()) and (not game_statistics.has_actor_achievement("duga_free")) then
@@ -204,7 +204,7 @@ function on_game_start()
     RegisterScriptCallback("on_before_fast_travel", scorcher_travel_check)
 end
 
--- ======================================================================
+----
 	Setting trip.ret_value to false aborts travel if the player is on
 	the correct level, in story mode, isn't Monolith, and doesn't have 
 	the	Duga Free achievement they get for shutting off the Scorcher.
@@ -296,12 +296,15 @@ function monolith_science_toys_off()
 		)
 end
 
+function valid_travel_type(tt)
+	return not not (tt and td and td[tt])
+end
+
 function get_travel_type(tt, maploc_or_bool)
 	-- disable this log line when not testing
 	-- vl("get_travel_type: tt %s | maploc_or_bool %s",tt,maploc_or_bool)
-	if not (tt and td[tt]) then
-		return td
-	elseif maploc_or_bool == nil then
+	if not valid_travel_type(tt) then return end
+	if (maploc_or_bool == nil) then
 		return td[tt]
 	else
 		local maploc = maploc_or_bool
@@ -312,6 +315,10 @@ function get_travel_type(tt, maploc_or_bool)
 	end
 end
 
+function get_travel_cfg(tt)
+	local tdata = get_travel_type(tt)
+	return tdata and tdata["cfg"] or nil
+end
 
 local function use_skillsystem()
 	return skillsystem_exists and skillsystem_enabled and skillsystem_started
@@ -368,18 +375,21 @@ end
 
 
 function get_zone_mode(tt)
-	tt = tt or "ft"
-	return td[tt] and td[tt]["cfg"] and td[tt]["cfg"].zone_mode
+	--tt = tt or "ft"
+	return get_travel_cfg(tt or "ft").zone_mode
+	--return td[tt] and td[tt]["cfg"] and td[tt]["cfg"].zone_mode
 end
 
 function get_camp_mode(tt)
-	tt = tt or "ft"
-	return td[tt] and td[tt]["loc"] and td[tt]["loc"].camp_mode
+	--tt = tt or "ft"
+	return get_travel_cfg(tt or "ft").camp_mode
+	--return td[tt] and td[tt]["loc"] and td[tt]["loc"].camp_mode
 end
 
 
 function campfires_are_bases(tt)
-	return td[tt] and td[tt]["cfg"] and td[tt]["cfg"].campfire_base
+	return get_travel_cfg(tt or "ft").campfire_base
+	--return td[tt] and td[tt]["cfg"] and td[tt]["cfg"].campfire_base
 end
 
 
@@ -406,7 +416,8 @@ end
 function actor_in_travel_zone(tt)
 	if not db.actor then return end
 	tt = tt or "ft"
-	local mode = td[tt]["cfg"].zone_mode or 0
+	--local mode = td[tt] and td[tt]["cfg"].zone_mode or 0
+	local mode = get_travel_cfg(tt).zone_mode or 0
 	if mode == 0 then
 		-- Feature not enabled, allow all travel origins
 		return true
@@ -590,7 +601,8 @@ end
 function travel_cost_coef(tt, is_npc)
 	is_npc = is_npc and true or false
 	local coef = is_npc and guide_npc_cost_coef
-	return coef or (td and td[tt] and td[tt]["cfg"] and td[tt]["cfg"].cost_coef) or 0
+	--return coef or (td and td[tt] and td[tt]["cfg"] and td[tt]["cfg"].cost_coef) or 0
+	return coef or get_travel_cfg(tt or "ft").cost_coef or 0
 end
 
 function cost_to_travel(dist, tt, is_npc, map_coef)
@@ -632,21 +644,30 @@ end
 
 
 function pin_travel_allowed(tt)
-	return td[tt] and td[tt]["cfg"].allow_pin_travel
+	--tt = tt or "ft"
+	--return td[tt] and td[tt]["cfg"].allow_pin_travel
+	return get_travel_cfg(tt or "ft").allow_pin_travel
 end
 
 
 function travel_cooldown_enabled(tt)
-	tt = tt or "ft"
-	local cden = (td and td[tt]["cfg"].travel_cooldown or 0) > 0
+	--tt = tt or "ft"
+	--local cden = (td and td[tt] and td[tt]["cfg"].travel_cooldown or 0) > 0
+	local cden = (get_travel_cfg(tt or "ft").travel_cooldown or 0) > 0
 	dl("travel_cooldown_enabled(%s) = %s",tt,cden)
 	return cden
+end
+
+function get_next_travel_for_type(tt)
+	--tt = tt or "ft"
+	--return td and td[tt] and td[tt].next_travel or 0
+	return get_travel_type(tt or "ft").next_travel or 0
 end
 
 function travel_on_cooldown(tt)
 	tt = tt or "ft"
 	if not travel_cooldown_enabled(tt) then return end
-	local next_travel = td[tt].next_travel or 0
+	local next_travel = get_next_travel_for_type(tt)
 	local t = get_time_elapsed()
 	if t and next_travel then
 		local toosoon = (t < next_travel)
@@ -658,7 +679,7 @@ end
 function travel_cooldown_remaining(tt)
 	tt = tt or "ft"
 	local elapsed = get_time_elapsed()
-	local cdrem = math.ceil(td[tt].next_travel - elapsed)
+	local cdrem = math.ceil(get_next_travel_for_type(tt) - elapsed)
 	dl("travel_cooldown_remaining(%s) = %s",tt,cdrem)
 	return cdrem
 end
@@ -671,7 +692,7 @@ function update_travel_cooldown(tt)
 		end
 	else
 		td[tt].next_travel = get_time_elapsed() + (td[tt]["cfg"].travel_cooldown * 6)
-		dl("shared_ft_cooldown is %s | gte %s | next_travel for %s is %s",shared_ft_cooldown,get_time_elapsed(),tt,td[tt].next_travel)
+		dl("shared_ft_cooldown is %s | gte %s | next_travel for %s is %s", shared_ft_cooldown, get_time_elapsed(), tt, get_next_travel_for_type(tt))
 	end
 end
 
@@ -904,7 +925,7 @@ function map_spot_menu_add_property(property_ui, id, level_name)
 
 		if condition then
 			vl("Travel type %s condition test: %s",tt,condition)
-			local mode 	= td[tt]["cfg"].zone_mode or 0
+			local mode 	= get_travel_cfg(tt).zone_mode or 0
 			if (mode ~= 0) and not actor_in_travel_zone(tt) then
 				local st_mode 	= tostring(mode)
 				local st_tt 	= string.lower(gts("ui_mcm_menu_"..tt.."cfg"))
@@ -1858,7 +1879,7 @@ function save_state(data)
     fts.locations_found = locations_found
     fts.cooldowns = {}
     for tt,_ in pairs(all_travel_types) do
-    	fts.cooldowns[tt] = td[tt].next_travel or 0
+    	fts.cooldowns[tt] = get_next_travel_for_type(tt) or 0
     end
 end
 
