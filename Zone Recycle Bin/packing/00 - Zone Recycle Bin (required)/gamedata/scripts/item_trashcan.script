@@ -20,8 +20,8 @@
 		* demonized for the time events and modded binaries
 		* Utjan for actormenu_on_item_before_move usage
 -- ==================================================================--]]
-script_version 	= "2.0"
-release_date    = 20240425
+script_version 	= "2.1"
+release_date    = 20260113
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 
@@ -50,6 +50,7 @@ local show_mapspots 		= false		-- If true, show a special map icon for the Recyc
 local mollyguard 			= true 		-- If true, the player will get warned with shouty all-caps messages about how deleting stuff works
 local add_new_recipe 		= true 		-- If true and DLTX is unavailable, the mod will add a crafting recipe for the Recycle Bin
 local recipe_added			= false 	-- Flag to prevent dupe recipes from being added
+--local use_hf_placement 		= false 	-- If true, and Hideout Furniture is installed, ZRB will try to use its mechanics and UI for placement
 local gimme_one 			= false
 -- If true, the script will spawn a copy of the bin in the player's 
 -- inventory. It will do this every single time the game loads if you 
@@ -95,7 +96,7 @@ local bin_place_snd 	= "material\\metal_box\\collide\\big_metal_2"
 local bin_open_snd 		= "interface\\inv_ruck_on"
 -- ======================================================================
 
-local logprefix = "<ZRB> "
+local logprefix = "[ZRB] "
 function dl(logtext,...)
 	-- Debug logging
 	--local prefix = scriptname..": "
@@ -291,6 +292,13 @@ function uninstall_cleanup()
 	return true
 end
 
+function using_hideout_furniture()
+	local hf_type = ini_sys:r_string_ex(bin_placeable, "placeable_type")
+	local support_installed = hf_type and (hf_type == "stash")
+	local hf_installed = not not placeable_furniture
+	return hf_installed and support_installed
+end
+
 function menu_placebin(obj) -- return context menu "place" text
 	local p = obj:parent()
 	if not (p and p:id() == AC_ID) then return end
@@ -299,53 +307,89 @@ function menu_placebin(obj) -- return context menu "place" text
 	end
 end
 
-function func_placebin(obj)
+function create_placed_object()
+	if using_hideout_furniture() then return end
+	local se_obj = alife_create(bin_worlditem,db.actor:position(),db.actor:level_vertex_id(),db.actor:game_vertex_id())
+	if se_obj then
+		dl("Created new ZRB world object %s (%s)", bin_worlditem, se_obj.id)
+	else
+		printf(logprefix.."ERROR: Could not instantiate %s for ZRB!", bin_worlditem)
+	end
+	return se_obj
+end
+
+function setup_tip_text(id)
+	function set_tip()
+		-- Delayed to give the new object time to exist
+		local tiptxt = gts("st_trashcan_searchtip")
+		local obj = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+		if obj then
+			obj:set_tip_text(tiptxt)
+		end
+		return true
+	end
+	CreateTimeEvent("zrb_set_tiptext", 0, 0.5, set_tip)
+end
+
+function notify_on_bin_placement()
+	local showtxt
+	if mollyguard then 
+		showtxt = gts("st_trashcan_mollyguard")..
+		" "..tostring(trashcan_deletion_timeout).." "..
+		gts("st_trashcan_seconds").."!"
+	else
+		showtxt = gts("st_trashcan_shutupwesley")
+	end
+	actor_menu.set_msg(1, showtxt, 4)
+end
+
+function create_stash_record(id, section, name)
+	local m_data = alife_storage_manager.get_state()
+	if not (m_data.player_created_stashes) then 
+		m_data.player_created_stashes = {}
+	end
+	m_data.player_created_stashes[id] = section
+	local data = {
+		stash_id = id,
+		stash_name = name,
+		stash_section = section,
+	}
+	SendScriptCallback("actor_on_stash_create",data)
+end
+
+function func_placebin(obj, se_obj)
+	if obj and not se_obj then
+		se_obj = create_placed_object()
+	end
 	local sec = obj and obj:section()
 	local id = obj and obj:id()
-	local se_obj = alife_create(bin_worlditem,db.actor:position(),db.actor:level_vertex_id(),db.actor:game_vertex_id())
-	if (se_obj) then
-		
-		printf("Search tip: %s",txt)
-		local sid = se_obj.id
-		function set_tip()
-			local tiptxt = gts("st_trashcan_searchtip")
-			local obj = db.storage[sid] and db.storage[sid].object or level.object_by_id(sid)
-			if obj then
-				obj:set_tip_text(tiptxt)
-			end
-			return true
-		end
-		CreateTimeEvent("zrb_set_tiptext",0,0.5,set_tip)
 
-		txt = gts("st_itm_placeable_trashcan_name")
+	if se_obj then
+		hide_hud_inventory()
+		local sid = se_obj.id
+		setup_tip_text(sid)
+		local txt = gts("st_itm_placeable_trashcan_name")
 		if show_mapspots then
 			level.map_add_object_spot(sid, mapspot_string, txt)
 		end
-		local showtxt
-		if mollyguard then 
-			showtxt = gts("st_trashcan_mollyguard")..
-			" "..tostring(trashcan_deletion_timeout).." "..
-			gts("st_trashcan_seconds").."!"
-		else
-			showtxt = gts("st_trashcan_shutupwesley")
-		end
-		actor_menu.set_msg(1,showtxt,4)
-		local m_data = alife_storage_manager.get_state()
-		if not (m_data.player_created_stashes) then 
-			m_data.player_created_stashes = {}
-		end
-		m_data.player_created_stashes[sid] = sec
-		alife_release_id(id)
-		local data = {
-			stash_id = sid,
-			stash_name = txt,
-			stash_section = sec,
-		}
+		notify_on_bin_placement()
+		if using_hideout_furniture() then return end
 
-		SendScriptCallback("actor_on_stash_create",data)
+		create_stash_record(sid, sec, txt)
+		alife_release_id(id)
 	end
-	hide_hud_inventory()
+	
 	play_sound_for_actor(bin_place_snd)
+end
+
+function hf_on_furniture_place(id)
+	local se_obj = id and alife_object(id)
+	func_placebin(nil, se_obj)
+end
+
+function hf_on_before_furniture_release(id)
+
+
 end
 
 function menu_openbin(obj) -- return context menu "open" text
@@ -401,6 +445,7 @@ end
 
 
 function on_option_change()
+	--local use_hf = use_hf_placement
 	if ui_mcm then
 		-- If you have MCM, if will override the hardcoded settings
 		deletion_enabled 			= ui_mcm.get("zrb/mod_enabled")
@@ -408,6 +453,7 @@ function on_option_change()
 		show_mapspots 	 			= ui_mcm.get("zrb/use_mapspots") and modded_exes and true or false
 		mollyguard					= ui_mcm.get("zrb/warn_enabled")
 		add_new_recipe				= ui_mcm.get("zrb/add_recipe")
+		--use_hf_placement 			= ui_mcm.get("zrb/use_hf_placement")
 		gimme_one 					= ui_mcm.get("zrb/spawn_bin")
 		uninstall 					= ui_mcm.get("zrb/uninstall")
 		debuglogs 					= ui_mcm.get("zrb/debuglogs")
@@ -419,6 +465,7 @@ function on_option_change()
 		gimme_one = false
 		ui_mcm.set("zrb/spawn_bin",gimme_one)
 	end
+
 	if uninstall then
 		dl("Removing all copies of the Recycle Bin from player's inventory")
 		uninstall_cleanup()
@@ -463,11 +510,21 @@ function actor_on_item_take_from_box(box,obj)
 	local name = obj:name()
 	dl("Player took %s (%s) from trash, processing",name,id)
 	last_interaction = time_global()
+	remove_from_trash(id)
 
 	if (box:is_inv_box_empty()) then
 		hide_hud_inventory()
 		local box_id = box:id()
-		if (sec == bin_worlditem) or (sec == bin_virtual) then
+		local se_obj = box_id and alife_object(box_id)
+
+		function release_stash_object()
+			if not se_obj then return end
+			alife_release(se_obj)
+		end
+		if (sec == bin_virtual) then
+			virtual_stash = nil
+			CreateTimeEvent("remove_virtual_stash", 0, 0.5, release_stash_object)
+		elseif (sec == bin_worlditem) and not using_hideout_furniture() then
 			local data = {
 				stash_id = box_id,
 				cancel = false,
@@ -475,7 +532,6 @@ function actor_on_item_take_from_box(box,obj)
 			SendScriptCallback("actor_on_stash_remove",data)
 			if data.cancel then
 				dl("stash removal for %s canceled by another script",box_id)
-				remove_from_trash(id)
 				return
 			else
 				if show_mapspots then
@@ -489,18 +545,9 @@ function actor_on_item_take_from_box(box,obj)
 					m_data.player_created_stashes[box_id] = nil
 				end
 			end
-		end
-		remove_from_trash(id)
-		local se_obj = alife_object(box_id)
-		if se_obj then
-			alife_release(se_obj)
-		end
-		if box_id == virtual_stash then
-			virtual_stash = nil
+			release_stash_object()
 		end
 	end
-
-
 end
 
 function actor_on_item_use(obj)
@@ -531,6 +578,10 @@ end
 
 function on_game_start()
 	if not killswitch then
+		if using_hideout_furniture() then
+			RegisterScriptCallback("hf_on_furniture_place", hf_on_furniture_place)
+			RegisterScriptCallback("hf_on_before_furniture_release", hf_on_before_furniture_release)
+		end
 		RegisterScriptCallback("ActorMenu_on_item_before_move",ActorMenu_on_item_before_move)
 		RegisterScriptCallback("actor_on_item_take_from_box",actor_on_item_take_from_box)
 		RegisterScriptCallback("actor_on_item_put_in_box",actor_on_item_put_in_box)
