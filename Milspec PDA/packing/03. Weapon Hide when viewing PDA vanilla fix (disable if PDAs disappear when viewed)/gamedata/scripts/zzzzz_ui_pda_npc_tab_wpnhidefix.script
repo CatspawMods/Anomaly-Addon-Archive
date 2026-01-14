@@ -9,6 +9,10 @@
   out, but only if the (engine-based) legacy 2D PDA is being used. 
   The fix forces the actor to stow their weapon, and makes the PDA 
   wait until the weapon stow animation is completed before displaying.
+
+  That said: some users have reported that this fix causes the very issue
+  it's supposed to fix, but only in combination with certain other 
+  addons. If you experience this, try disabling this script.
 -- ====================================================================]]
 
 printf("[MPDA][zzzzz_ui_pda_npc_tab_wpnhidefix.script] monkeypatch override of ui_pda_npc_tab.use_view()")

@@ -4,8 +4,8 @@
     Author: Catspaw
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
-script_version          = "1.15.0"
-release_date            = 20250717
+script_version          = "1.16.0"
+release_date            = 20260113
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:
@@ -25,22 +25,51 @@ logprefix               = "[MPDA:KT] "
 assert(utils_catspaw_common,
     "! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_common, which does not exist!"
 )
-assert(utils_catspaw_mapspots,
-"! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_mapspots, which could not be found!"
+assert(utils_catspaw_text,
+    "! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_text, which could not be found!"
 )
-local dl                = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
-local vl                = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+assert(utils_catspaw_mapspots,
+    "! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_mapspots, which could not be found!"
+)
+assert(utils_catspaw_taskmonitor,
+    "! ERROR: Milspec PDA's Kill Tracker requires utils_catspaw_taskmonitor, which could not be found!"
+)
+-- ======================================================================
+local dl, vl
+
+function allow_local_logging(onoff)
+    -- By default, logging in this script inherits its debuglogs/verbose settings from utils_catspaw_common
+    -- This function allows anyone to temporarily switch on debug logging for this script's operations only
+    if onoff then
+        dl = function(logtext, ...) utils_catspaw_common.dlog(this, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(this, logtext, ...) end
+    else
+        dl = function(logtext, ...) utils_catspaw_common.dlog(nil, logtext, ...) end
+        vl = function(logtext, ...) utils_catspaw_common.vlog(nil, logtext, ...) end
+    end
+end
+allow_local_logging(true)
+
+function set_debug_logging(debug_en, verbose_en)
+    if (debug_en ~= nil) then debuglogs = debug_en end
+    if (verbose_en ~= nil) then verbose = verbose_en end
+end
+
+--set_debug_logging(true, true) --uncomment this line to enable all logging for troubleshooting
+-- First two values will be overridden by MCM once the game loads
+
 local valid_id          = utils_catspaw_common.valid_id
 local safeid            = utils_catspaw_common.safeid
 local get_time_elapsed  = utils_catspaw_common.get_time_elapsed
 local get_next_interval = utils_catspaw_common.get_next_tg_interval
 local get_mcm           = utils_catspaw_common.get_mcm_or_default_val
 local is_living_thing   = utils_catspaw_common.is_living_thing
+local MAX_ID            = utils_catspaw_common.MAX_ID
 local nameid            = utils_catspaw_text.obj_name_and_id
 local remove_all_spots  = utils_catspaw_mapspots.safe_remove_all_mapspots
 local add_mapspot       = utils_catspaw_mapspots.add_mapspot
 local remove_mapspot    = utils_catspaw_mapspots.remove_mapspot
-local MAX_ID            = utils_catspaw_common.MAX_ID
+local is_id_task_target = utils_catspaw_taskmonitor.is_id_task_target or (function() end)
 local gts               = game.translate_string
 local game_time_now     = game.get_game_time
 local level_start       = level.get_start_time
@@ -51,6 +80,7 @@ local sec_task_mapspot  = "secondary_task_location"
 
 local mode_bi, mode_bio
 styles = {
+    -- If desired, any addon can poke different texture values into this table
     whtx = "deadbody_location_whtx",
     skul = "deadbody_location_skul",
     sdot = "deadbody_location_sdot",
@@ -257,8 +287,8 @@ function killspot_icon(id)
 end
 
 
-function add_body_dot(id,text)
-    if not id then return end
+function add_body_dot(id, text)
+    if (not id) or is_id_task_target(id) then return end
     local tb = tracked_bodies[id]
     if not tb then return end
     local mapspot_text = text or ""
@@ -313,8 +343,8 @@ function add_dot_if_tracked(id, text)
 end
 
 
-function remove_dot(id,style)
-    if not id then return end
+function remove_dot(id, style)
+    if (not id) or is_id_task_target(id) then return end
     local tb = tracked_bodies[id] or {icon = default_style}
     local removed_style = style or tb.icon or default_style_actor
     tb.icon = nil
@@ -441,6 +471,14 @@ function new_silent_kill(victim, killer, weapon, was_melee)
 end
 
 
+function check_task_monitor()
+    if disable_task_monitor then return end
+    if not (utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.is_monitor_active) then return end
+    if not utils_catspaw_taskmonitor.is_monitor_active() then
+        utils_catspaw_taskmonitor.set_monitor_active(true, "Milspec PDA")
+    end
+end
+
 local function tick()
     local now = time_global()
     if now < next_tick then return end
@@ -452,6 +490,7 @@ local function tick()
         reset_markers()
         last_set = killspots_visible
     end
+    check_task_monitor()
 end
 
 
@@ -477,6 +516,8 @@ function invalid_body_record(id, kd)
     
     if not se_obj then
         dl("%s: ID %s is no longer a valid se_obj", kd.kill_id, id)
+    elseif is_id_task_target(id) then
+        dl("%s: object %s is a task target, don't mess with its mapspots", kd.kill_id, se_obj:name())
     elseif not is_living_thing(se_obj) then
         dl("%s: object %s is not classed as a living thing, so it can't be a corpse", kd.kill_id, se_obj:name())
     elseif se_obj:alive() then
@@ -689,6 +730,7 @@ end
 
 
 function on_game_start()
+    check_task_monitor()
     RegisterScriptCallback("load_state",load_state)
     RegisterScriptCallback("npc_on_death_callback", new_kill)
     RegisterScriptCallback("monster_on_death_callback", new_kill)

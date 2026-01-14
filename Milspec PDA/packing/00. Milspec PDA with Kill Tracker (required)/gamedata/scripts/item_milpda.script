@@ -16,8 +16,8 @@
 		* demonized for help with the NPC PDA weapon hide fix
 -- ==================================================================--]]
 script_name 			= "item_milpda"
-script_version        	= "1.15.0"
-release_date            = 20250717
+script_version        	= "1.16.0"
+release_date            = 20260112
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 		1. Pick up any Milspec PDAs and save your game
@@ -258,8 +258,14 @@ local faction_data = {
 }
 fd = faction_data
 
+local fake_factions = {
+	["greh_npc"] = "greh",
+	["army_npc"] = "army",
+	--["monster"] = "monster"
+}
+
 -- ======================================================================
--- Definitions for thenon-DLTX (i.e. vanilla binaries) crafting recipe
+-- Definitions for the non-DLTX (i.e. vanilla binaries) crafting recipe
 -- Valid IDs for parts are found in configs\items\settings\parts.ltx
 -- ======================================================================
 pda_craft_string = {
@@ -279,27 +285,25 @@ pda_craft_string = {
 
 -- ======================================================================
 
-function validated_faction(comm)
+function validated_faction(comm, fail_nil)
 	-- Sanitizes community value, catches nil and certain special cases
+	if fail_nil and not comm then return end
+
 	if (comm and fd and fd[comm]) then
 		--vl("validated_faction called for valid faction %s, returning",comm)
 		return comm
+	elseif fake_factions[comm] then
+		return fake_factions[comm]
 	elseif (not comm) then
-		vl("%s comm passed for validated_faction, returning \"missing\"", comm)
-		return "missing"
-	elseif (comm == "greh_npc") then
-		--vl("validated_faction(%s) called, returning \"greh\"",comm)
-		return "greh"
-	elseif (comm == "army_npc") then
-		--vl("validated_faction(%s) called, returning \"army\"",comm)
-		return "army"
+		vl("null comm passed for validated_faction, returning \"missing\"", comm)
+		return (not fail_nil) and "missing" or nil
 	elseif ((comm == "missing") or (comm == "unknown")) then
 		-- Catch if we've passed a bad faction through this function twice
 		-- This should rarely happen, so it's the last check
 		return comm
 	else
 		--vl("validated_faction(%s) called, returning \"unknown\"",comm)
-		return "unknown"
+		return (not fail_nil) and "unknown" or nil
 	end
 end
 
@@ -403,7 +407,7 @@ function pda_type_can_see_mapspot(target_comm)
 	if not sec then return false end
 	local pda 		= pda_defs[sec]
 	if not pda then return false end
-	-- Sanitize faction to ensure no nil values
+	-- Sanitize ands validate character community
 	local comm 		= validated_faction(target_comm)
 	if not (comm and fd[comm]) then return false end
 
@@ -431,7 +435,7 @@ end
 
 function get_reset_time(comm,silent)
 	comm = validated_faction(comm)
-	if not comm and fd and fd[comm] then return 0 end
+	if not (comm and fd and fd[comm]) then return 0 end
 	local now = get_time_elapsed()
 	local nowc = time_continual()
 	local adjtime = access_time * reset_time_coef
@@ -470,6 +474,7 @@ end
 
 local function extend_reset_time(comm,val)
 	comm = validated_faction(comm)
+	if not comm then return end
 	fd[comm].reset = fd[comm].reset + (val or 1000)
 	vl("extend_reset_time(%s,%s)",comm,val or 1000)
 end
@@ -707,9 +712,9 @@ function check_for_pda_progress(obj,method)
     return end
 --st_mapspot_access_unlock_nopda
     comm 			= validated_faction(comm)
-    local blisted 	= is_blacklisted(comm)
-    local blocked  	= no_blacklist_prog and blisted
-    local valid = fd[comm] and true or false
+    local blisted 	= comm and is_blacklisted(comm)
+    local blocked  	= blisted and no_blacklist_prog
+    local valid = comm and fd[comm] and true or false
 
     if blocked or not valid then
     	local reason = blisted and "blacklisted" or "invalid"

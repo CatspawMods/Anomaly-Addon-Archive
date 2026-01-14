@@ -34,6 +34,12 @@ local color_tokens = {
     ["clr_grn"] = "%" .. "%c[255,0,255,0]",
 }
 
+function is_crafting_module_installed()
+	local craft = itms_manager.ini_craft
+	local mpda = craft and craft[1] and craft[1].x_device_pda_milspec
+	return not not mpda
+end
+
 function on_mcm_load()
 	unsquish_ratio = (device().height / device().width) / (768 / 1024)
 

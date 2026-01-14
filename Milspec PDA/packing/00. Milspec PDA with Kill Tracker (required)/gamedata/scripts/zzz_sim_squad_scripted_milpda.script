@@ -127,7 +127,8 @@ function sim_squad_scripted.sim_squad_scripted.show(self)
 		local sim = alife()
 		local se_actor = sim:actor()
 		local comm = self:get_squad_community()
-		local smspot = "squadmate_" .. (comm or "stalker") .. "_spot"
+		local vcomm = comm and item_milpda.validated_faction(comm, true)
+		local smspot = "squadmate_" .. (vcomm or "stalker") .. "_spot"
 		local spot = ""
 		local reset_required = (show_squadmate_mapspots and not self.squadmate_mapspots) or
 								(self.squadmate_mapspots and not show_squadmate_mapspots)
