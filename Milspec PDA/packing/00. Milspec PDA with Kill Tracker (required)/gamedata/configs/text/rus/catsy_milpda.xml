@@ -679,4 +679,26 @@
         <text>Скрыть текст заголовка для Milspec PDA</text>
     </string>
 
+<!-- Added in 1.17 -->
+
+    <string id="ui_mcm_milpda_milpdagen_allies_mode">
+        <text>Отношения, используемые для видимости союзников/врагов</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_allies_mode_desc">
+        <text>Выберите, какой набор отношений определяет, считается ли фракция «врагом» для этого аддона. Это влияет на видимость фракции на вашем PDA, а также на некоторые правила в прогрессивном режиме.
+
+        \nФракция: это определяют глобальные отношения фракций.
+
+        \nЛичное: уровень личных отношений персонажа с этой фракцией определяет, является ли она врагом или нет.</text>
+    </string>
+
+    <string id="ui_mcm_lst_milpda_allies_mode_faction">
+        <text>Отношения между фракциями</text>
+    </string>
+
+    <string id="ui_mcm_lst_milpda_allies_mode_personal">
+        <text>Личные отношения</text>
+    </string>
+
 </string_table>

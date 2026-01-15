@@ -14,10 +14,11 @@
 		https://www.moddb.com/mods/stalker-anomaly/addons/bodydotsminimap-white-dots-but-blue
 		* AlphaLion (GAMMA Discord) for the "White X" style body markers
 		* demonized for help with the NPC PDA weapon hide fix
+		* SaloEater (GAMMA Discord) for the allies_mode feature
 -- ==================================================================--]]
 script_name 			= "item_milpda"
-script_version        	= "1.16.0"
-release_date            = 20260112
+script_version        	= "1.17.0"
+release_date            = 20260114
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 		1. Pick up any Milspec PDAs and save your game
@@ -72,6 +73,8 @@ tracking_mode               = 1
 local kiltrak_enabled       = (tracking_mode > 0)
 local tracking_companions   = (tracking_mode > 1)
 local tracking_all          = (tracking_mode > 2)
+allies_mode                 = 0 -- 0: Faction relations determine visibility
+                                -- 1: Individual relations determine visibility
 first_update				= false
 pda_inv_item	 			= "device_pda_milspec" -- Don't change this
 
@@ -378,6 +381,14 @@ function has_faction_network_data(comm)
 end
 
 function is_actor_enemy(comm)
+	if (allies_mode > 0) then
+		-- Use actor's community relation instead of global faction relations
+		comm = validated_faction(comm)
+		local communities_relation = relation_registry.community_relation(get_actor_true_community(), comm)
+		local relation_to_actor = relation_registry.community_goodwill(comm, AC_ID)
+		local total_relation_to_actor = relation_to_actor + communities_relation
+		return total_relation_to_actor <= game_relations.ENEMIES
+	end
 	return game_relations.is_factions_enemies(get_actor_true_community(),validated_faction(comm))
 end
 

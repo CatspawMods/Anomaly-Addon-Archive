@@ -666,4 +666,27 @@
         <text>Hide Milspec PDA's MCM intro header</text>
     </string>
 
+<!-- Added in 1.17 -->
+
+    <string id="ui_mcm_milpda_milpdagen_allies_mode">
+        <text>Relations to use for ally/enemy visibility</text>
+    </string>
+
+    <string id="ui_mcm_milpda_milpdagen_allies_mode_desc">
+        <text>Choose which set of relations determine whether a faction is considered an "enemy" by this addon. This affects that faction's visibility to your PDA, as well as certain rules in Progressive Mode.\n
+
+        \nFaction: global faction relations determine this.\n
+
+        \nPersonal: the actor's personal relation level with that faction determines this.</text>
+    </string>
+
+    <string id="ui_mcm_lst_milpda_allies_mode_faction">
+        <text>Faction relations</text>
+    </string>
+
+    <string id="ui_mcm_lst_milpda_allies_mode_personal">
+        <text>Personal relations</text>
+    </string>
+
+
 </string_table>

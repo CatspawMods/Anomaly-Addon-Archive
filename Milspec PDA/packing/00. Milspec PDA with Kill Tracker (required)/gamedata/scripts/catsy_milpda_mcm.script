@@ -84,7 +84,6 @@ function on_mcm_load()
 									{3,"milpda_trkmode_all"},
 								}
 						},						
-					--{id = "show_monsters", type = "check", val = 1, def = true},
 					{id = "bodyicon", type = "list", val = 0, def = "whtx", 
 							content= {
 									{"upaw","milpda_upaw"},
@@ -104,6 +103,12 @@ function on_mcm_load()
 									{"deadbody_location_mdot","milpda_mdot"},
 									{"deadbody_location_ldot","milpda_ldot"},
 								}
+						},
+					{id = "allies_mode", type = "list", val = 2, def = 0,
+						 content= {
+							 {0,"milpda_allies_mode_faction"},
+							 {1,"milpda_allies_mode_personal"}
+						 }
 						},
 					{id = "autoclear", type = "check", val = 1, def = true},
 					{id = "squadmate_mapspots", type = "check", val = 1, def = false},

@@ -4,8 +4,8 @@
     Author: Catspaw
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
-script_version          = "1.16.0"
-release_date            = 20260113
+script_version          = "1.17.0"
+release_date            = 20260114
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:
@@ -667,6 +667,8 @@ function on_option_change()
         show_monsters           = (monster_tracking_mode > 0)
         show_monsters_comp      = (monster_tracking_mode > 1)
         show_monsters_all       = (monster_tracking_mode > 2)
+        item_milpda.allies_mode = tonumber(ui_mcm.get("milpda/milpdagen/allies_mode"))
+
 
         mode_bi             = validate_icon("bodyicon",default_style_actor)
         mode_bio            = validate_icon("bodyicon_other",default_style_other)
@@ -674,6 +676,8 @@ function on_option_change()
         local pbo           = mode_bio == "upaw"
         default_style_actor = ((not pba) and mode_bi) or default_style_actor
         default_style_other = ((not pbo) and mode_bio) or default_style_other
+
+
         local autoclear     = ui_mcm.get("milpda/milpdagen/autoclear")
 
         if autoclear ~= nil then clear_on_loot = autoclear end
