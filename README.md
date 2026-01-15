@@ -1,6 +1,8 @@
 # **Catspaw's Anomaly Addon Archive**
 This is a version archive and general code repository for any [Stalker: Anomaly mods made by Catspaw](https://www.moddb.com/members/catspawmods/addons). 
 
+Please note, this is just an *archive*, not where I do active development. You can use PRs for suggestions, but they won't get merged here--and it might be some time before I even notice one is waiting.
+
 # Terms of use
 1. Feel free to use anything you find here for noncommercial purposes in your own addons, including using any bits of code in your own scripts.
 2. Generally speaking, please DO NOT include modified versions of the same files in your own addons.
