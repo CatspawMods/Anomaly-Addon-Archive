@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "1.4"
-release_date    = 20260113
+script_version  = "1.5"
+release_date    = 20260115
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -317,7 +317,7 @@ function world_to_ui(pos, obj, id, return_offscreen)
         obj = obj or (id and get_game_object(id))
         pos = obj and obj:position()
     end
-    local vec = pos and game.world2ui(vector():set(pos.x, pos.y, pos.z), return_offscreen)
+    local vec = pos and game.world2ui(vector():set(pos.x, pos.y, pos.z), false, return_offscreen)
     --printf("vec for %s: %s,%s",id,vec and vec.x,vec and vec.y)
     if (vec and (vec.x ~= -9999) and (vec.y ~= 0)) then
         return vec
@@ -427,7 +427,7 @@ function get_screen_coords(args)
     --printf("* Actor is %s from %s (near_dist %s | max_dist %s\n* dist_prog %s | dist_coef %s\n| Final vertical adjustment: %s",true_dist,id,near_dist,max_dist,dist_prog,dist_coef,vert_adj)
 
     --local vec = pos and game.world2ui(vector():set(pos.x,pos.y,pos.z),false)
-    local vec = world_to_ui(pos)
+    local vec = world_to_ui(pos, nil, nil, args.show_offscreen)
     --printf("final vec for %s: %s,%s",id,vec and vec.x,vec and vec.y)
     if (vec and (vec.x ~= -9999) and (vec.y ~= 0)) then
         return vec
@@ -686,7 +686,7 @@ function init_hud_mark(xml, texture, args)
     if args.pos or args.screen_pos then
         local spos = args.screen_pos
         if args.pos then
-            spos = world_to_ui(args.pos, nil, nil, true)
+            spos = world_to_ui(args.pos, nil, nil, args.show_offscreen)
         end
         if not spos then return marker end
         marker:SetWndPos(spos)
