@@ -2,8 +2,8 @@
 --[[    Task State Monitor
 -- ===================================================================--]]
 script_name     = "utils_catspaw_taskmonitor"
-script_version  = "2.0"
-release_date    = 20260113
+script_version  = "2.1"
+release_date    = 20260116
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -36,8 +36,8 @@ release_date    = 20260113
 
     Then use the following, all of which do exactly what they sound like:
 
-        utils_catspaw_taskmonitor.is_id_task_target(task_id)
-            returns bool
+        utils_catspaw_taskmonitor.is_id_task_target(id)
+            returns bool, id is any valid object id
 
         utils_catspaw_taskmonitor.is_task_storyline(task_id)
             returns bool

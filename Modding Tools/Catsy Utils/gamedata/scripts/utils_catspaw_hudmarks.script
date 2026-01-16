@@ -2,8 +2,8 @@
 --[[    Catsy's utilities: HUD markers
 -- ===================================================================--]]
 script_name     = "utils_catspaw_hudmarks"
-script_version  = "1.5"
-release_date    = 20260115
+script_version  = "1.6"
+release_date    = 20260116
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -49,7 +49,7 @@ assert(utils_catspaw_mapspots, "\n\n"..
 -- Required: configs\ui\ui_hud_marker.xml, if you don't pass args.xmlfile
 -- ======================================================================
 
-local dl, vl, xml, hud_marker_xml
+local dl, vl, xml
 local logdiv    = utils_catspaw_common.logdiv
 debug_dump      = false -- flag used to dump one-time detailed info for certain things
 debuglogs       = false
@@ -89,6 +89,7 @@ local round10           = utils_catspaw_common.round10
 local dec2              = utils_catspaw_common.dec2
 local to360             = utils_catspaw_common.to360
 local get_game_object   = utils_catspaw_common.get_game_object
+local get_xml_cache     = utils_catspaw_common.get_xml_cache
 local bestname          = utils_catspaw_text.bestname
 local int_to_rgba       = utils_catspaw_text.int_to_rgba
 local get_mapspot_tex   = utils_catspaw_mapspots.get_mapspot_texture_data
@@ -990,7 +991,7 @@ function UIHUDMarker:InitSettings(args)
         -- Do initial LOS check to init the remaining settings
         self:CheckActorLos()
     end
-
+    self.xmlfile        = self.xmlfile or "ui_hud_marker.xml"
     self.near_fade_dist = self.near_fade_dist or -1
     self.near_hide_dist = self.near_hide_dist or -1
     self.far_fade_dist  = self.far_fade_dist or 99999
@@ -1030,17 +1031,14 @@ function UIHUDMarker:InitMarker()
         ["label"]     = true,
         ["label_sh"]  = true
     }
-    if not (xml and hud_marker_xml) then
-        xml = CScriptXmlInit()
-        xml:ParseFile("ui_hud_marker.xml")
-        hud_marker_xml = xml
+
+    local xml = get_xml_cache(self.xmlfile, self.mark_id)
+    if not xml then
+        printf("! ERROR! UIHUDMarker could not initialize file %s, aborting setup of %s", self.xmlfile, self.mark_id)
+        self:Destroy("failed to load UI XML")
+        return
     end
-    if self.xmlfile then
-        vl("[UIHUDMarker:InitMarker][%s] Loading marker UI from %s", self.mark_id, self.xmlfile)
-        xml:ParseFile(self.xmlfile)
-    else
-        xml = hud_marker_xml
-    end
+    vl("[UIHUDMarker:InitMarker][%s] Loading marker UI from %s", self.mark_id, self.xmlfile)
 
     local color = GetARGB(255, 255, 255, 255)
     if self.custom_argb and not is_empty(self.custom_argb) then
@@ -1683,8 +1681,7 @@ function on_option_change()
 end
 
 function actor_on_first_update()
-    hud_marker_xml = CScriptXmlInit()
-    hud_marker_xml:ParseFile("ui_hud_marker.xml")
+    xml = get_xml_cache("ui_hud_marker.xml", "startup")
     update_unsquish_ratio()
 end
 

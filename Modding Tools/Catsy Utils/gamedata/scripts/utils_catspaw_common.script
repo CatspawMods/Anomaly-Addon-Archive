@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.16"
-release_date    = 20260113
+script_version 	= "1.17"
+release_date    = 20260116
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -450,6 +450,24 @@ function get_mcm_or_default_val(path, default)
 	local val 	= ui_mcm and ui_mcm.get(path)
 	if val ~= nil then return val end
 	return default
+end
+
+local xml_cache = {}
+
+function get_xml_cache(filepath, uid)
+	-- Caches repeat calls to open the same file in order to cut down on XML loads
+	-- the uid is optional and can be literally any value, it's just a way to 
+	-- identify the calling script or entity during logging, if desired
+    if not filepath then return end
+    xml_cache = xml_cache or {}
+    if xml_cache[filepath] then
+        vl("[get_xml_cache][%s] Using cached UI content from %s", uid or time_global(), filepath)
+    else
+        vl("[get_xml_cache][%s] Loading and cacheing UI content from %s", uid or time_global(), filepath)
+        xml_cache[filepath] = CScriptXmlInit()
+        xml_cache[filepath]:ParseFile(filepath)
+    end
+    return xml_cache[filepath]
 end
 
 function load_file_data(ini_name, cfg_table, args)
