@@ -317,7 +317,7 @@ function world_to_ui(pos, obj, id, return_offscreen)
         obj = obj or (id and get_game_object(id))
         pos = obj and obj:position()
     end
-    local vec = pos and game.world2ui(vector():set(pos.x, pos.y, pos.z), return_offscreen)
+    local vec = pos and game.world2ui(vector():set(pos.x, pos.y, pos.z), false, return_offscreen)
     --printf("vec for %s: %s,%s",id,vec and vec.x,vec and vec.y)
     if (vec and (vec.x ~= -9999) and (vec.y ~= 0)) then
         return vec
