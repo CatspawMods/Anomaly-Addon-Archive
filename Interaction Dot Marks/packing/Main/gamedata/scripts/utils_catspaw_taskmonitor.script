@@ -2,8 +2,8 @@
 --[[    Task State Monitor
 -- ===================================================================--]]
 script_name     = "utils_catspaw_taskmonitor"
-script_version  = "1.0"
-release_date    = 20250324
+script_version  = "2.1"
+release_date    = 20260116
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -12,7 +12,7 @@ release_date    = 20250324
 
     The only way to check whether a task is the actor's current active 
     task is to manually iterate through the task table on each update, and
-    check each and every one against db.actor:is_active_task(task_id).
+    check each and every one against db.actor:is_active_task().
 
     Doing this across multiple addons gets clunky and duplicates the same
     scan multiple times, which may or may not add up to a significant cost
@@ -24,9 +24,10 @@ release_date    = 20250324
 
 -- =======================================================================  
     USAGE: 
-    By default the monitor starts in a disabled state and has zero effect 
-    on anyone's game. It will only begin scanning if another script calls
-    this function:
+
+    By default the monitor scans once on startup, but begins in a disabled
+    state and has zero effect on anyone's game. It will only begin active
+    scanning if another script calls this function:
 
     utils_catspaw_taskmonitor.set_monitor_active()
 
@@ -35,10 +36,20 @@ release_date    = 20250324
 
     Then use the following, all of which do exactly what they sound like:
 
-    utils_catspaw_taskmonitor.is_task_storyline()    | returns bool
-    utils_catspaw_taskmonitor.get_active_task_id()   | returns string
-    utils_catspaw_taskmonitor.get_active_target_id() | returns number
-    utils_catspaw_taskmonitor.get_active_task()      | returns task record
+        utils_catspaw_taskmonitor.is_id_task_target(id)
+            returns bool, id is any valid object id
+
+        utils_catspaw_taskmonitor.is_task_storyline(task_id)
+            returns bool
+
+        utils_catspaw_taskmonitor.get_active_task_id()
+            returns string, current active task_id
+
+        utils_catspaw_taskmonitor.get_active_target_id()
+            returns number, object ID of the current task target
+
+        utils_catspaw_taskmonitor.get_active_task()
+            returns task record object for current active task
 
     Like all external functions, I recommend setting a local alias in your
     own script that is easier to type, e.g.:
@@ -55,65 +66,144 @@ release_date    = 20250324
     But the idea is to NOT have multiple different scripts doing this.
 -- ===================================================================--]]
 
+
 local get_next_tg_interval = utils_catspaw_common and utils_catspaw_common.get_next_tg_interval or (function (x) return x end)
-local monitor_active, active_target_id, active_task_id, storyline_task, next_monitor
+local strbool = utils_catspaw_common and utils_catspaw_common.strbool
+local monitor_active, active_target_id, active_task_id, storyline_task, next_monitor, last_target_update
 local monitor_interval = 1037
 -- Unusual number chosen to avoid stacking updates
+task_targets = {}
 
-function update_current_task_target()
-    local task_info = task_manager.get_task_manager().task_info
+function task_state_update_due()
+    return (time_global() - (last_target_update or 0) > 5000)
+end
 
-    if task_info and db.actor then
-        if (active_task_id) then
-            local task = task_info[active_task_id]
-            if (task and db.actor:is_active_task(task.t)) then
-                if (active_target_id ~= tonumber(task.current_target)) then
-                    active_target_id = tonumber(task.current_target)
-                end
-                return
-            else
-                active_task_id = nil
-                active_target_id = nil
+function get_task_table()
+    return task_manager.get_task_manager().task_info
+end
+
+function get_task(task_id)
+    local task_info = get_task_table()
+    return task_id and task_info and task_info[task_id]
+end
+
+function get_active_task_id()
+    return active_task_id
+end
+
+function get_active_task()
+    return get_task(active_task_id)
+end
+
+function get_active_target_id()
+    return active_target_id
+end
+
+function is_task_storyline(task_id)
+    if not task_id then
+        return strbool(storyline_task)
+    end
+    task_id = task_id or get_active_task_id()
+    return task_id and strbool(task_manager.task_ini:r_string_ex(task_id, "storyline"))
+end
+
+function is_id_task_target(id)
+    -- Is the object ID the target of any task in any state
+    if task_state_update_due() then
+        update_all_task_states()
+    end
+    return id and task_targets and task_targets[id]
+end
+
+function is_id_valid_target(id)
+    -- Is the object ID the target of any task in an active/valid state
+    if task_state_update_due() then
+        update_all_task_states()
+    end
+    return id and task_targets and task_targets[id] and task_targets[id].valid and task_targets[id] or nil
+end
+
+function is_id_story_target(id)
+    -- Is the object ID the target of a storyline task
+    local target = is_id_valid_target(id)
+    return target and target.story
+end
+
+function is_valid_task_state(state)
+    -- Is the task in a valid active state
+    return not ((state == "complete") or (state == "fail")) 
+end
+
+function update_task_target_id(task)
+    local curr_target = task and tonumber(task.current_target)
+    if not curr_target then return end
+    task_targets[curr_target] = task_targets[curr_target] or {}
+    task_targets[curr_target].valid = is_valid_task_state(task.last_check_task)
+    task_targets[curr_target].story = is_task_storyline(task.id)
+end
+
+function update_task_state(task_id, task)
+    if task and task.t and is_valid_task_state(task.last_check_task) then 
+        if db.actor:is_active_task(task.t) then
+            if (active_task_id ~= task_id) then
+                active_task_id = task_id
+                --storyline_task = task_manager.task_ini:r_string_ex(active_task_id, "storyline")
+                storyline_task = is_task_storyline(task_id)
             end
+            if (active_target_id ~= tonumber(task.current_target)) then
+                active_target_id = tonumber(task.current_target)
+            end            
         end
-        
-        if not active_task_id then
-            for task_id, task in pairs(task_info) do
-                if (task and task.t and db.actor:is_active_task(task.t)) then
-                    if (active_task_id ~= task_id) then
-                        active_task_id = task_id
+     
+    end
+end
 
-                        storyline_task = task_manager.task_ini:r_string_ex(active_task_id, "storyline")
-                    end
-                    
-                    if (active_target_id ~= tonumber(task.current_target)) then
-                        active_target_id = tonumber(task.current_target)
-                    end
-                end
-            end
+function update_all_task_states(task_info)
+    task_info = task_info or get_task_table()
+    last_target_update = time_global()
+    task_targets = {}
+    if task_info and not is_empty(task_info) then
+        for task_id, task in pairs(task_info) do
+            update_task_target_id(task)
+            update_task_state(task_id, task)
         end
     end
 end
 
-function get_task(task_id)
-    local task_info = task_manager.get_task_manager().task_info
-    return task_id and task_info and task_info[task_id]
+function check_for_task_updates()
+    local task_info = get_task_table()
+    if task_info and db.actor then
+        local task = active_task_id and task_info[active_task_id]
+        if task and db.actor:is_active_task(task.t) then
+            update_task_target_id(task)
+            return
+        end
+        
+        active_task_id = nil
+        active_target_id = nil
+        update_all_task_states(task_info)
+    end
 end
 
-function is_task_storyline() return storyline_task end
-function get_active_task_id() return active_task_id end
-function get_active_target_id() return active_target_id end
-function get_active_task() return get_task(active_task_id) end
-
-function set_monitor_interval(new)
-    monitor_interval = tonumber(new) or monitor_interval or 0
+function set_monitor_interval(new_val)
+    monitor_interval = tonumber(new_val) or monitor_interval or 1037
 end
 
-function set_monitor_active(onoff)
+function is_monitor_active()
+    return monitor_active and true or false
+end
+
+function set_monitor_active(onoff, called_by)
+    called_by = called_by and (" by " .. called_by) or ""
     if (onoff or (onoff == nil)) and not monitor_active then
+        local _ = DEV_DEBUG and printf("Task State Monitor activated at %s%s", time_global(), called_by)
         RegisterScriptCallback("actor_on_update", actor_on_update)
         monitor_active = true
-    elseif monitor_active then
+        return
+    end
+
+    if monitor_active and (onoff == false) then
+        local _ = DEV_DEBUG and printf("Task State Monitor shut down at %s%s", time_global(), called_by)
         UnregisterScriptCallback("actor_on_update", actor_on_update)
         monitor_active = false
     end
@@ -122,11 +212,15 @@ end
 function actor_on_update()
     if monitor_interval and next_monitor then
         if (next_monitor > time_global()) then return end
-        next_monitor   = get_next_tg_interval(monitor_interval)
+        next_monitor = get_next_tg_interval(monitor_interval)
     end
-    update_current_task_target()
+    check_for_task_updates()
 end
 
 function on_game_start()
+    last_target_update = 0
     next_monitor = 0
+    RegisterScriptCallback("actor_on_first_update", actor_on_update)
 end
+
+printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)

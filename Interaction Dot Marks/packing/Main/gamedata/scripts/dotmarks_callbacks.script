@@ -218,50 +218,6 @@
         	Set mark.checked_for_sec to true to skip any further handling
 
 -- =======================================================================
-	dotmarks_on_before_prompt_visibility_change(mark, prompt, state, flags)
--- =======================================================================
-	Take action just before any interaction prompt changes its visibility
-	state, and optionally cancel that change.
--- =======================================================================
-	
-		mark <CUIScriptWnd>
-			The marker object that is the parent of this prompt
-				You can get the marked object's ID from mark.id
-
-		prompt <CUIScriptWnd>
-			The prompt object being changed
-				This is the same as mark.use_pri for primary interacts, or
-				mark.alt_interact for secondary interacts
-
-		state <boolean>
-			The new visibility state that the prompt wants to use
-
-		flags <table>
-			A table of controls as follows:
-
-			flags.ret_value <boolean>
-				If set to false, the state change will not occur
-
--- =======================================================================
-	dotmarks_on_prompt_visibility_change(mark, prompt, state)
--- =======================================================================
-	Take action just after any interaction prompt changes its visibility
-	state, but after the prompt has finished updating itself.
--- =======================================================================
-
-		mark <CUIScriptWnd>
-			The marker object that is the parent of this prompt
-				You can get the marked object's ID from mark.id
-
-		prompt <CUIScriptWnd>
-			The prompt object being changed
-				This is the same as mark.use_pri for primary interacts, or
-				mark.alt_interact for secondary interacts
-
-		state <boolean>
-			The new visibility state that the prompt is now using
-
--- =======================================================================
 	dotmarks_on_before_secondary_action(id, mark, prompt, functor, flags)
 -- =======================================================================
 	Take action when the player triggers a prompt's secondary action, and
@@ -386,17 +342,6 @@ AddScriptCallback("dotmarks_on_setup_pri_interact")
 --- @param args table
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 AddScriptCallback("dotmarks_on_setup_sec_interact")
-
---- @param mark utils_catspaw_hudmarks.UIHUDMarker
---- @param prompt ui_hud_dotmarks.InteractPrompt
---- @param state boolean
---- @param flags table
-AddScriptCallback("dotmarks_on_before_prompt_visibility_change")
-
---- @param mark utils_catspaw_hudmarks.UIHUDMarker
---- @param prompt ui_hud_dotmarks.InteractPrompt
---- @param state boolean
-AddScriptCallback("dotmarks_on_prompt_visibility_change")
 
 --- @param id number
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker

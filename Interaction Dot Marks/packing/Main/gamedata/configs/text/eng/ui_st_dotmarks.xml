@@ -1,7 +1,7 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20250716
+    Updated: 20260118
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -395,7 +395,10 @@
 		<text>Hide vanilla floating pickup names</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_pickup_item_names_desc">
-		<text>If enabled, the floating item names that appear when holding down the interact key will be hidden. This sets the g_draw_pickup_item_names cvar from the modded exes.</text>
+		<text>If enabled, the floating item names that appear when holding down the interact key will be hidden. This sets the g_draw_pickup_item_names cvar from the modded exes.\n
+
+		\nThis is a console variable, so if you uninstall DotMarks without disabling this setting first, you will need to either manually reset the variable in the console, or do so in the Modded Exes Settings.
+		</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_connecting_line">
@@ -597,7 +600,7 @@
 		<text>Enable special icon for talking to NPCs</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkicons_enable_icon_talk_desc">
-		<text>If this option is enabled, stalkers will use a special "speech bubble" icon  instead the standard dot marker when the prompt to engage them in dialogue is shown.
+		<text>If this option is enabled, stalkers will use a special "speech bubble" icon  instead of the standard dot marker when the prompt to engage them in dialogue is shown.
 		</text>
 	</string>
 
@@ -1166,7 +1169,7 @@
 	<string id="ui_mcm_dotmarks_dmarkmods_hijack_autoloot_keybind_desc">
 		<text>If iTheon's Auto Looter is installed, and both Autoloot options are enabled in this menu, DotMarks will attempt to completely disable the Autoloot keybind.\n
 
-		\nFor some reason, Autoloot takes over the Alt key by default--it's bad behavior to hijack a basic modifier key like Alt that is used in hundreds of key combos. This option will free up that keybind, while still allowing you to trigger Autoloot via secondary action.</text>
+		\nFor some reason, Autoloot takes over the Alt key by default. This option will free up that keybind, while still allowing you to trigger Autoloot via secondary action.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarksec_sec_enable_use_act">
@@ -1368,7 +1371,7 @@
 	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_shift_desc">
 		<text>When this setting is enabled, DotMarks will register a simple (unmodified) press even if the player was holding down the Shift key at the time. This allows you to rebind Shift to something else (e.g. Sprint) and use it on its own.\n
 
-		\nWhen disabled, a simple press will occur even while holding Shift. This allows you to use Shift in key combos without triggering unwanted duplicate actions.</text>
+		\nWhen disabled, Shift is treated as a modifier key, and a simple press will not be registered while holding it. This allows you to use Shift in key combos without triggering unwanted duplicate actions.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_ctrl">
@@ -1377,7 +1380,7 @@
 	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_ctrl_desc">
 		<text>When this setting is enabled, DotMarks will register a simple (unmodified) press even if the player was holding down the Ctrl key at the time. This allows you to rebind Ctrl to something else (e.g. Crouch) and use it on its own.\n
 
-		\nWhen disabled, a simple press will occur even while holding Ctrl. This allows you to use Ctrl in key combos without triggering unwanted duplicate actions.</text>
+		\nWhen disabled, Ctrl is treated as a modifier key, and a simple press will not be registered while holding it. This allows you to use Ctrl in key combos without triggering unwanted duplicate actions.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_alt">
@@ -1386,7 +1389,7 @@
 	<string id="ui_mcm_dotmarks_dmarksec_simple_press_ignore_alt_desc">
 		<text>When this setting is enabled, DotMarks will register a simple (unmodified) press even if the player was holding down the Alt key at the time. This allows you to rebind Alt to something else (e.g. Autoloot) and use it on its own.\n
 
-		\nWhen disabled, a simple press will occur even while holding Alt. This allows you to use Alt in key combos without triggering unwanted duplicate actions.</text>
+		\nWhen disabled, Alt is treated as a modifier key, and a simple press will not be registered while holding it. This allows you to use Alt in key combos without triggering unwanted duplicate actions.</text>
 	</string>
 
 <!-- Added in 1.2.0 -->
@@ -1432,6 +1435,88 @@
 		<text>If enabled, DotMarks will add a small amount of data to the savegame in order to track details such as which stashes the actor has already discovered.\n
 
 		\nRegardless of this setting, it is ALWAYS safe to add or remove DotMarks at any time during your playthrough.</text>
+	</string>
+
+<!-- Added in 1.5.0 -->
+
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_toggle_marks">
+		<text>Hold key to show/hide markers</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_bind_toggle_marks_desc">
+		<text>While this key is held down, the "Hide interaction dots" setting (in the Advanced menu) will be toggled to the opposite of its normal value.\n
+
+		\nIn other words, if that setting is enabled (thus hiding all markers) then holding down this key will temporarily show them, or vice-versa.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_toggle_revert_delay">
+		<text>Delay before setting reverts to normal</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_toggle_revert_delay_desc">
+		<text>By default this delay is zero--meaning that the above setting immediately reverts to normal when you release the show/hide key.\n
+
+		\nYou can optionally set a delay of up to 10000ms (ten seconds) before the setting returns to its previous value after releasing the key. This would allow you to tap the hold key once to briefly toggle the setting without needing to hold it down.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_addons_wpo">
+		<text>$clr_gldWeapon Parts Overhaul</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_usable_cnd">
+		<text>Minimum part condition to field-strip</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_parts_usable_cnd_desc">
+		<text>A weapon part must have at least this much condition in order to be field-stripped by a secondary action.\n
+
+		\nThe WPO default is 60% condition or above.</text>
+	</string>
+
+	<string id="st_alti_field_strip">
+		<text>Field-strip usable parts from</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_ignore_hud_state">
+		<text>Ignore Anomaly's HUD state (hud_draw)</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_ignore_hud_state_desc">
+		<text>By default, DotMarks will respect the hud_draw console variable, and hide all of its UI elements whenever that is set to OFF.\n
+
+		\nEnabling this option will cause DotMarks to completely ignore that setting, which would allow you to--for example--play with the Anomaly HUD entirely off but still see IDM's HUD markers and interaction prompts.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_strip_act">
+		<text>Enable WPO "field strip" action</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkmods_sec_enable_strip_act_desc">
+		<text>Enables the secondary action that allows you to field strip an unloaded weapon on the ground. Requires Weapon Parts Overhaul.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_aspect_correction">
+		<text>Aspect correction multiplier</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_aspect_correction_desc">
+		<text>By default, DotMarks detects your display resolution and automatically tries to apply proper width correction for your aspect ratio. Most of you don't even need to know this setting exists.\n
+
+		\nIf you have a very unusual ultrawide display resolution of some sort, or simply don't like IDM's default aspect correction, you can adjust it here. This number effectively lets you fine-tune the width of all graphical elements.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_replace_keybinds_icons">
+		<text>Replace keybind text with icons, if available</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_replace_keybinds_icons_desc">
+		<text>Some buttons and special keys--such as the five typical mouse buttons--have their own icons that are used instead of the default keybind text. Disabling this option will disable all such icons, and cause all keybinds to use the default keybind text.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_hint_refresh_interval">
+		<text>Hint filter refresh interval</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hint_refresh_interval_desc">
+		<text>Sets the interval in ms between refreshes of the Hint Filter system.\n
+
+		\nHint filters are used to detect when Anomaly has tried to display a text prompt, which directly controls the GUI prompts in DotMarks. Put simply: IDM watches this text box for changes, and matches the text there with its own prompts to decide which replacements should be shown, and when.\n
+
+		\nThis involves string comparisons, so setting this too low can have a performance impact--a value of zero is equivalent to IDM 1.4, which did not throttle this check.\n
+
+		\nSetting it too high can result in a delay before some interaction prompts appear or update.</text>
 	</string>
 
 </string_table>

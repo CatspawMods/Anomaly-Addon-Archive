@@ -69,9 +69,10 @@ function unregister_hf_object(id)
 end
 
 function update_placement_mode_state()
+    if not (dotmarks_main.cfg.hf_suspend_on_placement) then return end
     local pmode = placement_mode
     placement_mode = placeable_furniture.in_placing_state()
-    if delaying then
+    if delaying and not (dotmarks_main.cfg.hf_suspend_hint_filters) then
         ui_hud_dotmarks.update_hint_filters()
         -- Allows suppression of the vanilla interact UI to continue
         return
@@ -111,7 +112,7 @@ mcm_menu_additions = {
         dmark_tex       = "ui_mcm_dmarks_messagebox_transbg_head90",
         ui_hook_functor = { dotmarks_mcm.init_header_element },
     },
-    { id = "hf_add_primary_pickup", type = "check", val = 1, def = true },
+    { id = "hf_add_primary_pickup", type = "check", val = 1, def = false },
     { id = "hf_show_default_secmenu", type = "check", val = 1, def = true },
     { id = "divider", type= "line" },
 }

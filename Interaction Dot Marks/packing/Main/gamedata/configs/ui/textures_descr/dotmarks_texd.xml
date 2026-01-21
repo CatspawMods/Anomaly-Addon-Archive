@@ -20,6 +20,9 @@
 		<texture id = "ui_catsy_marker_recycle_bin" x="512" y="256" width="64" height="64" />
 		<texture id = "ui_catsy_marker_vehicle" x="576" y="256" width="64" height="64" />
 
+		<texture id = "ui_catsy_marker_circleblank" x="640" y="256" width="64" height="64" />
+		<texture id = "ui_catsy_marker_ringblank" x="704" y="256" width="64" height="64" />
+
 		<texture id = "ui_catsy_icon_sortplus_fave" x="448" y="320" width="64" height="64" />
 		<texture id = "ui_catsy_icon_sortplus_junk" x="512" y="320" width="64" height="64" />
 
@@ -74,6 +77,15 @@
 		<texture id = "ui_catsy_keybind_bg_center_v4" x="1122" y="0" width="60" height="128" />
 		<texture id = "ui_catsy_keybind_bg_right_v4" x="1182" y="0" width="34" height="128" />
 
+		<texture id = "ui_catsy_keybind_mouseicon" x="1088" y="128" width="128" height="128"/>
+		<texture id = "ui_catsy_keybind_mouse1" x="1088" y="256" width="128" height="128"/>
+		<texture id = "ui_catsy_keybind_mouse2" x="1088" y="384" width="128" height="128"/>
+		<texture id = "ui_catsy_keybind_mouse3" x="1088" y="512" width="128" height="128"/>
+		<texture id = "ui_catsy_keybind_mouse4" x="1088" y="640" width="128" height="128"/>
+		<texture id = "ui_catsy_keybind_mouse5" x="1088" y="768" width="128" height="128"/>
+		<texture id = "ui_catsy_keybind_mwheelup" x="1088" y="896" width="128" height="128"/>
+		<texture id = "ui_catsy_keybind_mwheeldn" x="1088" y="1024" width="128" height="128"/>
+
 <!-- Frame not currently working, InitFrame can't cope with hi-res textures -->
 		<texture id = "ui_catsy_keybind_frame_v3_lt" x="64" y="256" width="34" height="34" />
 		<texture id = "ui_catsy_keybind_frame_v3_t" x="98" y="256" width="60" height="34" />
@@ -86,6 +98,10 @@
 		<texture id = "ui_catsy_keybind_frame_v3_lb" x="64" y="256" width="34" height="34" />
 		<texture id = "ui_catsy_keybind_frame_v3_b" x="98" y="256" width="60" height="34" />
 		<texture id = "ui_catsy_keybind_frame_v3_rb" x="158" y="256" width="34" height="34" />
+
+
+		<texture id = "ui_mcm_catsy_nested_end" x="1216" y="0" width="128" height="128" />
+		<texture id = "ui_mcm_catsy_nested_mid" x="1344" y="0" width="128" height="128" />
 
 
 		<texture id = "ui_catsy_longpress_full" x="194" y="2" width="10" height="126" />

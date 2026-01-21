@@ -18,7 +18,8 @@ function ui_inventory.start(mode, obj)
    local _     = log and printf("[%s] Trying to start inventory in %s mode for container %s (%s)", time_global(), mode, obj and obj:name(), obj and obj:id())
    
    if    idm and idm.is_system_active()            -- DotMarks is installed and running
-         and idm.cfg.block_loot_window             -- block_loot_window flag is enabled
+         and idm.cfg.manage_container_access       -- Container management is enabled
+         and idm.cfg.block_loot_window             -- block_loot_window flag is active
          and (mode == "loot")                      -- Inventory mode is "loot"
          and (not dm.is_container_whitelisted(sec))-- Container isn't whitelisted by section
          and (not (IsStalker(obj) and obj:alive()))-- Inventory owner isn't a living stalker 

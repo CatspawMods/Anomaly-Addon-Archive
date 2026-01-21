@@ -39,7 +39,7 @@
 override_id         = nil
 last_loot_remote    = false
 
-if z_auto_looter and not z_auto_looter.ignore_dotmarks_fix then
+if z_auto_looter then
     -- Hook into iTheon's Autoloot
     local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("zz_autoloot_dotmarks is monkeypatching z_auto_looter")
     

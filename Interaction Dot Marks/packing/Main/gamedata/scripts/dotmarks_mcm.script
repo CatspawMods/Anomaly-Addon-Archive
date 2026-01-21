@@ -62,6 +62,7 @@ local cache = {}
 local icons = {}
 
 function valid_mcm_version(silent)
+	if cfg.ignore_mcm_version then return true end
     if not (ui_mcm and ui_mcm.VERSION) then return end
     local log 	= DEV_DEBUG and not silent
     MCM_VERSION = ui_mcm and ui_mcm.VERSION
@@ -196,6 +197,29 @@ function init_header_element(anchor, handlers, opts, flags)
 end
 
 
+function indent_nested_element(anchor, handlers, opts, flags)
+	-- WIP, unused
+	printf("indent_nested_element | %s", opts and opts.id)
+	opts = opts or {}
+	local nested_element_name = opts.nested_element
+	--local element = nested_element_name and handlers and handlers[nested_element_name] or anchor
+	local element = handlers.cap
+	if not element then return end
+	printf("setting up nested element")
+	--element:SetWndPos(vector2():set(unsquish(opts.nest_x or 40), opts.nest_y or 0))
+	local pos = element:GetWndPos()
+	element:SetWndPos(vector2():set(pos.x + unsquish(40), pos.y))
+	local branch = xml:InitStatic("box", element)
+	--branch:InitTexture(opts.nest_tree_tex or "ui_mcm_nested_end")
+	branch:InitTexture("ui_mcm_catsy_nested_end")
+	--branch:SetWndSize(vector2():set(unsquish(opts.branch_w or 40), opts.branch_h or 0))
+	branch:SetWndSize(vector2():set(unsquish(40), 0))
+	--branch:SetWndPos(vector2():set(-unsquish(opts.branch_w or 40), opts.branch_y or 0))
+	branch:SetWndPos(vector2():set(-40, 0))
+	printf("finished nested element setup for %s", nested_element_name)
+end
+
+
 function sync_widget_color(ctrl, colors)
 	if not (ctrl and colors) then return end
 	ctrl:SetTextureColor(GetARGB(colors.a, colors.r, colors.g, colors.b))
@@ -282,6 +306,16 @@ function get_argb_input_element(opt_id, def, preset)
 		preset_args 	= preset or argb_control_preset,
 	}
 end
+
+function call_multi_hook_functors(anchor, handlers, opts, flags)
+	--WIP, unused
+	if not (opts and opts.hook_functor_list and type(opts.hook_functor_list) == "table") then return end
+	for k,v in pairs(opts.hook_functor_list) do
+		printf("%s = %s", k, v)
+		--ui_mcm.exec(unpack(v), anchor, handlers, opts, flags)
+	end
+end
+
 
 function hidden() return false end
 
@@ -565,6 +599,13 @@ function get_mods_menu()
 		{ id = "sp_icon_pos_x", 			type = "input", 	val = 2, min = -512, max = 1024, def = cfg.sp_icon_pos_x},
 		{ id = "sp_icon_pos_y", 			type = "input", 	val = 2, min = -384, max = 768, def = cfg.sp_icon_pos_y },
 
+		{ id = "header_wpo",				type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_wpo",
+			ui_hook_functor = {dotmarks_mcm.init_header_element},
+			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
+		},
+		{ id = "sec_enable_strip_act", 		type = "check", 	val = 1, def = cfg.sec_enable_strip_act },
+		{ id = "parts_usable_cnd", 			type = "input", 	val = 2, min = 1, max = 100, def = cfg.parts_usable_cnd },
+
 		{ id = "header_utjanui",			type = "desc", clr = {255,255,215,0}, text = "ui_mcm_dotmarks_addons_utjanui",
 			ui_hook_functor = {dotmarks_mcm.init_header_element},
 			dmark_tex 		= "ui_mcm_dmarks_messagebox_transbg_head90",
@@ -628,7 +669,12 @@ function get_adv_menu()
 
 		{ id = "divider", type= "line" },
 
+		--{ id = "disable_addon", 		type = "check", 	val = 1, def = cfg.disable_addon },
+
 		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
+		{ id = "ignore_hud_state", 		type = "check", 	val = 1, def = cfg.ignore_hud_state },
+		{ id = "bind_toggle_marks", 	type = "key_bind", 	val = 2, def = cfg.bind_toggle_marks },
+		{ id = "toggle_revert_delay", 	type = "input", 	val = 2, min = 0, max = 10000, def = cfg.toggle_revert_delay },
 		{ id = "hide_mute_stalkers", 	type = "check",		val = 1, def = cfg.hide_mute_stalkers },
 		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
 		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
@@ -639,12 +685,14 @@ function get_adv_menu()
 		{ id = "hide_pickup_item_names",type = "check", 	val = 1, def = cfg.hide_pickup_item_names },
 
 		{ id = "disable_all_sounds", 	type = "check", 	val = 1, def = cfg.disable_all_sounds },
+		{ id = "replace_keybinds_icons",type = "check", 	val = 1, def = cfg.replace_keybinds_icons },
 
 		{ id = "divider", type= "line" },
 
 		{ id = "ui_scale", 				type = "track", 	val = 2, min = 0, step = 0.01, max = 2, def = cfg.ui_scale },
 		{ id = "font_scale_w", 			type = "track", 	val = 2, min = 0, step = 0.01, max = 2, def = cfg.font_scale_w },
 		{ id = "font_scale_h", 			type = "track", 	val = 2, min = 0, step = 0.01, max = 2, def = cfg.font_scale_h },
+		{ id = "aspect_correction", 	type = "track", 	val = 2, min = 0, step = 0.01, max = 2, def = cfg.aspect_correction },
 
 		{id = "keybind_bg_style", type= "list", val = 2, def = cfg.keybind_bg_style, 
 			content = {
@@ -687,7 +735,7 @@ function get_adv_menu()
 		{ id = "action_text_pos_x", 	type = "input", 	val = 2, min = -384, max = 768, def = cfg.action_text_pos_x },
 		{ id = "action_text_pos_y", 	type = "input", 	val = 2, min = -512, max = 1024, def = cfg.action_text_pos_y },
 		{ id = "bind_text_pos_x", 		type = "input", 	val = 2, min = -512, max = 1024, def = cfg.bind_text_pos_x },
-		{ id = "bind_text_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.bind_text_pos_y },
+		{ id = "bind_text_pos_y", 		type = "input", 	val = 2, min = -384, max = 768, def = cfg.bind_text_pos_y - (utils_catspaw_common.using_gamma_modpack and 1.5 or 0)},
 
 		{ id = "divider", type= "line" },
 
@@ -721,6 +769,7 @@ function get_adv_menu()
 		{ id = "fixed_screen_pos", 		type = "check", 	val = 1, def = cfg.fixed_screen_pos },
 
 		{ id = "divider", type= "line" },
+		{ id = "hint_refresh_interval", type = "input", 	val = 2, min = 0, max = 1000, step = 1, def = cfg.hint_refresh_interval },
 		{ id = "near_scan_interval", 	type = "input", 	val = 2, min = 0, max = 10000, step = 1, def = cfg.near_scan_interval },
 		{ id = "early_scan_interval", 	type = "input", 	val = 2, min = 0, max = 30000, step = 1, def = cfg.early_scan_interval },
 		{ id = "near_scan_radius", 		type = "input", 	val = 2, min = 2, max = 25, step = 0.5, def = cfg.near_scan_radius },

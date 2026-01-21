@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.4.0"
-release_date    = 20250721.1
+script_version  = "1.5.0"
+release_date    = 20260121
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
@@ -16,13 +16,13 @@ release_date    = 20250721.1
     secondary interactions.
 -- =======================================================================
     This script is the primary center of logic and supporting functions 
-    for the entire addon. It requires and imports into its metatable the
-    following scripts:
+    for the entire addon. It requires the following scripts:
 
         utils_catspaw_common
         utils_catspaw_mapspots
         utils_catspaw_text
 
+    Of those, common and text are imported into this script's namespace.
     The script ui_hud_dotmarks then imports dotmarks_main into its own 
     public namespace the same way. If you see a function getting called 
     from ui_hud_dotmarks, and it's not in that script--check here. If it's 
@@ -36,10 +36,14 @@ release_date    = 20250721.1
         https://www.moddb.com/mods/stalker-anomaly/addons/anomaly-mod-configuration-menu
 
         * My utility scripts
-        These are already included with DotMarks--but you can always get
-        the latest version of them from the Source link above, in a
-        folder under Modding Tools. Try that if you get the below error
-        message about outdated scripts, or if you get a crash related to
+        https://github.com/CatspawMods/Anomaly-Addon-Archive/tree/main/Modding%20Tools/Catsy%20Utils
+        
+        The required utility scripts are already included with DotMarks--
+        but the above link will always have the latest versions.
+
+        Try downloading the most recent version of my Core Utility Scripts
+        (install option 00) and loading it last if you get the below error 
+        message about outdated scripts, or if you get a crash related to 
         any script that begins with "utils_catspaw_" in the name.
 -- =====================================================================]]
 assert(utils_catspaw_common and utils_catspaw_common.import_metatable, "\n\n"..
@@ -78,6 +82,7 @@ local nameid            = obj_name_and_id
 local get_argb          = utils_catspaw_mapspots.get_argb
 local paw               = tasks_placeable_waypoints
 local gts               = game.translate_string
+local ini_parts         = itms_manager.ini_parts
 local in_sleep_zone     = false
 cfg                     = nil
 
@@ -118,8 +123,12 @@ local base_config = {
                 )
             end
         ),
-        Bodies = ( 
-            function(obj) return obj and (is_living_thing(obj) and not obj:alive()) end
+        Bodies = (
+            function(obj)
+                return obj and (
+                    ((obj:clsid() == clsid.crow) or is_living_thing(obj)) and not obj:alive()
+                )
+            end
             -- Dead NPCs, whether stalker or monster
         ),
         Stashes = (
@@ -141,6 +150,7 @@ local base_config = {
         Attachments = (
             function(obj) return obj and (get_type_for_kind(get_obj_kind(obj)) == "Attachments") end
             -- Things that can be attached to a weapon or armor, some odd things get caught by this
+            -- Also includes bolts; they're equipped on the actor paperdoll
         ),
         Grenades = (
             function(obj) return obj and IsGrenade(nil, obj:clsid()) end
@@ -249,8 +259,7 @@ local base_config = {
                 local cls = obj and obj:clsid()
                 return cls and (
                     (cls == clsid.obj_attachable) or
-                    (cls == clsid.equ_backpack) or
-                    (cls == clsid.obj_bolt)
+                    (cls == clsid.equ_backpack)
                 ) and not (cfg.is_item and cfg.is_item.Quest(obj))
                 -- Should catch anything else that isn't a quest item
             end
@@ -304,6 +313,9 @@ local base_config = {
                     -- interaction prompt should watch for and erase from the QuickHelp static, 
                     -- and optionally specify a replacement localization string to use.
                 }
+                if (comm == "zombied") or (section == "mar_smart_terrain_doc_doctor") then
+                    args.always_mute = true
+                end
                 if cfg.enable_icon_services and not is_enemy then
                     if cfg.vendors[sec] then
                         local _ = debug_dump and vl("NPC section %s has service type %s", sec, cfg.vendors[sec])
@@ -349,7 +361,7 @@ local base_config = {
                     vl("Stalker talk icon %s enabled for active swap", texture)
                     args.active_swap = dup_table(cfg.swap_talk)
                 end
-
+                cfg.active_stalker_markers = (cfg.active_stalker_markers or 0) + 1
                 return args
             end
         ),
@@ -367,25 +379,36 @@ local base_config = {
                     comm            = get_object_community(obj) or nil,
                     pos_adjust      = pos_adjust_by_section(section, 0.05),
                     bone            = get_best_pos_bone(obj),
+                    -- By default, marker position is by obj:center(), which is the center of
+                    -- the physics shell.
+                    -- However, obj:center() doesn't update Lua often in the engine, while
+                    -- bone position is updated extremely frequently. So try to get a good
+                    -- bone pos if possible.
+                    -- Uses the obj:list_bones() method added in 20250315 modded exes.
+                    -- Will fall back to obj:center() if that method isn't available.
                     texture         = get_class_marker_texture("Bodies", obj) or cfg.marker_dotmark,
-                    hint_filters = {
+                }
+                
+                if IsStalker(nil, cls) then
+                    set_target_data(id, cfg.metadata_types.is_container, true)
+                    args.is_stalker = true
+                    args.is_container = true
+                    args.hint_filters = {
                         ["dead_character_use"]          = "dead_character_use",
                         ["dead_character_use_or_drag"]  = "dead_character_use_or_drag",
+                    }
+
+                elseif (cls == clsid.crow) or IsMonster(nil, cls) then
+                    set_target_data(id, cfg.metadata_types.is_mutant, true)
+                    args.active_swap = cfg.enable_icon_butcher and dup_table(cfg.swap_butcher)
+                    args.is_mutant = true
+                    args.refresh_text = true
+                    args.hint_filters = {
                         ["st_body_loot"]                = "st_body_loot",
                         ["st_body_knife_bad"]           = "st_body_knife_bad",
                         ["st_body_knife_needed"]        = "st_body_knife_needed",
                         ["st_body_knife_weak"]          = "st_body_knife_weak",
-                    },
-                }
-                
-                if IsStalker(nil, cls) then
-                    args.is_stalker = true
-                    args.is_container = true
-                    set_target_data(id, cfg.metadata_types.is_container, true)
-                elseif IsMonster(nil, cls) then
-                    args.active_swap = cfg.enable_icon_butcher and dup_table(cfg.swap_butcher)
-                    args.is_mutant = true
-                    set_target_data(id, cfg.metadata_types.is_mutant, true)
+                    }
                 end
 
                 args.logged_type    = "dead " .. (args.is_stalker and "stalker" or "mutant")
@@ -454,12 +477,6 @@ local base_config = {
                 return {
                     logged_type     = "ammo",
                     bone            = get_best_pos_bone(obj) or nil,
-                    -- By default, marker position is by obj:center(), which is the center of
-                    -- the physics shell.
-                    -- However, obj:center() doesn't update Lua often in the engine, while
-                    -- bone position is updated extremely frequently. So try to get a good
-                    -- bone pos if possible.
-                    -- Uses the obj:list_bones() method added in 20250315 modded exes.
                     is_pickup       = true,     -- object is a gettable inventory item
                     no_sec          = true,
                     pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
@@ -486,17 +503,20 @@ local base_config = {
                 end
                 local section       = obj:section()
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
-                local count = obj:get_ammo_in_magazine()
+                local is_melee      = IsMelee(obj)
                 return {
                     logged_type     = "a weapon",
-                    has_parts       = true,
                     is_pickup       = true,
                     is_weapon       = true,
+                    is_melee        = is_melee,
+                    has_parts       = (not is_melee) and has_parts(obj),
+                    usable_parts    = has_strippable_parts(obj),
                     texture         = get_class_marker_texture("Weapons") or cfg.marker_dotmark,
                     bone            = forced_bone_by_section(section) or "wpn_body",
                     pos_adjust      = pos_adjust_by_section(section, 0.05),
-                    ammo_count      = count,
+                    ammo_count      = (not is_melee) and obj:get_ammo_in_magazine() or 0,
                     -- if ammo_count > 0, unload-ammo secondary action will be shown
+                    -- otherwise, if there are parts the field strip option will be shown
                     hint_filters    = {["inventory_item_use"] = "inventory_item_use"},
                 }
             end
@@ -507,11 +527,14 @@ local base_config = {
                 local section = obj and obj:section()
                 if not section then return end
                 set_target_data(obj:id(), cfg.metadata_types.is_pickup, true)
+                local is_bolt = (section == "bolt") or (section == "bolt_bullet")
+                if is_bolt and not game_difficulties.get_eco_factor("limited_bolts") then return end
+
                 return {
                     logged_type     = "an attachable item",
                     is_pickup       = true,
                     is_attach       = true,
-                    skip_seobj_check= (section == "bolt") or (section == "bolt_bullet") or nil,
+                    skip_seobj_check= is_bolt or nil,
                     bone            = get_best_pos_bone(obj) or nil,
                     pos_adjust      = pos_adjust_by_section(obj:section(), 0.05),
                     texture         = get_class_marker_texture("Attachments") or cfg.marker_dotmark,
@@ -1082,7 +1105,8 @@ local base_config = {
                 SendScriptCallback("on_quickhelp_text_update", hf.last_raw_text, hf.last_active, hf.get_text(hf.last_active), flags)
                 if cfg.hide_van_interact_ui then
                     -- Hide vanilla UI
-                    set_quickhelp_text()
+                    --set_quickhelp_text()
+                    return
                 elseif flags.text and flags.text ~= text then
                     set_quickhelp_text(flags.text)
                     return flags.text
@@ -1100,6 +1124,31 @@ local base_config = {
     }
 }
 -- =======================================================================
+
+--- @param obj game_object
+function has_parts(obj)
+    if not obj then return end
+    local sec = SYS_GetParam(0, obj:section(), "parent_section") or obj:section()
+    local parts = ini_parts:r_string_ex("con_parts_list", sec)
+    return parts ~= nil
+end
+
+--- @param obj game_object
+function has_strippable_parts(obj)
+    if not zzzz_arti_jamming_repairs then return end
+    if not has_parts(obj) then return end
+    local parts = item_parts.get_parts_con(obj, nil, true)
+    if not parts then return end
+    for part_sec, part_con in pairs(parts) do
+        if  
+            ((part_con or -1) >= (cfg.parts_usable_cnd or 60))
+            and (not string.find(part_sec, "barrel"))
+            and zzzz_arti_jamming_repairs.is_part(part_sec)
+        then
+            return true    
+        end
+    end
+end
 
 --- @param obj game_object
 function best_localized_object_name(obj)
@@ -1149,9 +1198,9 @@ function init_new_inventory_box(id)
             found       = owned_stash,
             searched    = owned_stash
         }
-        --if not verbose then return end
+        if not verbose then return end
         
-        vl("New inventory box record initialized for %s | owned %s", mark and mark.name, owned_stash)
+        dl("New inventory box record initialized for %s | owned %s", mark and mark.name, owned_stash)
     end
 end
 
@@ -1183,11 +1232,6 @@ end
 --- @param section string
 function is_container_whitelisted(section)
     return not not (section and cfg.container_whitelist and cfg.container_whitelist[section])
-end
-
---- @param section string
-function is_object_physpickup(section)
-    return not not (section and cfg.physobj_pickups and cfg.physobj_pickups[section])
 end
 
 --- @param section string

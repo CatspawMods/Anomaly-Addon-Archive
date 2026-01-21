@@ -40,7 +40,7 @@
 		<texture>ui_catsy_messagebox_trans_frame</texture>
 	</messagebox_transbg>
 
-	<prog_longpress width="15" height="20" align="l" min="0" max="1" pos="0">
+	<prog_longpress width="15" height="20" stretch="1" align="l" min="0" max="1" pos="0">
 		<progress stretch="1">
 			<texture>ui_catsy_longpress_bigyellow</texture>
 		</progress>
