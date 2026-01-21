@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.17"
-release_date    = 20260116
+script_version 	= "1.18"
+release_date    = 20260120
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -29,6 +29,8 @@ local gts 				= game.translate_string
 local floor 			= math.floor
 local abs 				= math.abs
 local rand 				= math.random
+no_callbacks 			= false 
+-- disables any callback registration from this script
 MAX_ID 					= 65535 
 -- Future-proofing against the unlikely event that the engine ID limit 
 -- ever actually does get updated to 32-bit.
@@ -639,3 +641,14 @@ function import_metatable(dest, source, pass_func)
 end
 
 printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)
+
+function on_loading_screen_dismissed()
+	-- Just a simple way to keep track of this state
+	-- without having to duplicate it in every addon
+	this.past_loading_screen = true
+end
+
+function on_game_start()
+	if no_callbacks then return end
+	RegisterScriptCallback("on_loading_screen_dismissed", on_loading_screen_dismissed)
+end
