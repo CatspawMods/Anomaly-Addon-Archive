@@ -1,0 +1,147 @@
+-- =======================================================================
+--[[    Interaction Dot Marks ("DotMarks")
+-- ===================================================================--]]
+script_name     = "dotmarks_hint_filters"
+--[[======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
+-- =======================================================================
+    Hint Filters are a set of subordinate functions used by DotMarks to
+    track and manage the contents of the UIStaticQuickHelp container, 
+    which is the primary mechanism used by Anomaly to display interaction
+    text prompts on the bottom of the screen. This is how IDM knows when
+    to display its own versions of these prompts--and, frequently, how it
+    knows what text to show.
+
+    All these string operations have a performance cost, so they are 
+    throttled by the cfg.hint_refresh_interval setting.
+-- ===================================================================--]]
+
+assert(utils_catspaw_common and utils_catspaw_common.import_metatable, "\n\n"..
+    "! dotmarks_hint_filters requires script utils_catspaw_common, which does not exist or failed to load!\n\n"
+)
+utils_catspaw_common.import_metatable(this, dotmarks_main)
+
+last_active, last_raw_text = nil
+
+enabled = {}
+filters = {}
+trims   = {}
+
+
+function add(match_str, replace_str)
+    if not match_str then return end
+    --local _ = verbose and vl("Trying to add hint filter %s | %s", match_str, replace_str)
+    init(match_str, replace_str)
+    enabled[match_str] = filters[match_str].hint
+    inc_sub(match_str)
+    return true
+end
+
+function rem(m)
+    if not (m and hfil.filters[m]) then return end
+    --local _ = verbose and vl("Trying to remove hint filter %s", match_str)
+    dec_sub(m)
+    if filters[m].subs < 1 then
+        enabled[m] = nil
+    end
+    return true
+end
+
+function inc_sub(m)
+    filters[m].subs = (filters[m].subs or 0) + 1
+    return filters[m].subs
+end
+
+function dec_sub(m)
+    filters[m].subs = (filters[m].subs or 0) - 1
+    return filters[m].subs
+end
+
+function get_state(m)
+    return m and filters and filters[m] and filters[m].state
+end
+
+function set_state(m, state)
+    if not (m and filters and filters[m]) then return end
+    local last_state = filters[m].state
+    filters[m].state = state
+    if state then
+        if last_active and (last_active ~= m) then
+            filters[last_active].state = false
+        end
+        last_active = m
+    end
+    if (last_state == state) then return true end
+    --local _ = verbose and vl("State for hint filter %s is now %s", m, state)
+    return true
+end
+
+function init(m, r)
+    --local _ = verbose and vl("Initializing hint filter %s with replacement string %s", m, r)
+    if not m then return end
+    if r == "" then r = nil end
+    if not filters then
+        filters = {}
+    end
+    
+    if not trims then
+        trims = {}
+    end
+    if filters[m] then return end
+    filters[m]          = {}
+    filters[m].hint     = m
+    -- original loc string
+    filters[m].ts_hint  = game.translate_string(m)
+    -- translated original
+    filters[m].repl     = r
+    -- replacement loc string
+    filters[m].ts_repl  = r and game.translate_string(r) or nil
+    -- translated replacement
+    filters[m].trim_h   = trimmed_prompt(filters[m].ts_hint)
+    -- trimmed original
+    filters[m].trim_r   = r and trimmed_prompt(filters[m].ts_repl) or nil
+    -- trimmed replacement
+    filters[m].text     = filters[m].trim_r or filters[m].trim_h
+    -- final text to use
+    trims[filters[m].trim_h] = m
+    -- trimmed text to match
+    set_state(m, false)
+    return true
+end
+
+function update_text()
+    last_raw_text = get_quickhelp_text()
+    if last_raw_text then
+        --dump("QuickHelp raw text: %s", hf.last_raw_text)
+    else
+        -- No hint
+        if last_active then
+            set_state(last_active, false)
+        end
+        return
+    end
+    local text = trimmed_prompt(last_raw_text)
+    local match = text and trims[text]
+    if match then
+        --local _ = debug_dump and dump("QuickHelp match: %s = %s", last_raw_text, match)
+        -- QuickHelp text matches active filter
+        set_state(match, true)
+        last_active = match
+    end
+    local flags = match and { text = filters[match].ts_repl or nil } or {}
+    SendScriptCallback("on_quickhelp_text_update", last_raw_text, last_active, get_text(last_active), flags)
+    if cfg.hide_van_interact_ui then
+        -- Hide vanilla UI
+        return
+    elseif flags.text and flags.text ~= text then
+        set_quickhelp_text(flags.text)
+        return flags.text
+    else
+        return text
+    end
+end
+
+function get_text(m)
+    return filters[m] and filters[m].text
+end

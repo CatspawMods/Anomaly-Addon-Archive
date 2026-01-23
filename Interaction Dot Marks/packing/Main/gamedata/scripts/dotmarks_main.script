@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.5.0"
-release_date    = 20260121
+script_version  = "1.6.0"
+release_date    = 20260122
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
@@ -801,17 +801,20 @@ local base_config = {
         Doors = (
             function(obj)
                 if not obj then return end
+                --local id        = obj:id()
+                
                 local visual    = obj:get_visual_name()
-                local id        = obj:id()
-
-                local ang = obj:angle()
                 local vadjust   = visual and cfg.door_visuals and cfg.door_visuals[visual] or 0.25
-                local roll = math.floor(math.abs(math.deg(ang.z)))
-                if (roll > 1) and visual:find("door_metal_220x260_01") then
+                
+                if visual:find("door_metal_220x260_01") then
                     -- Catches this weird bullshit with SOME of the doors using this 
                     -- model being rotated 180 degrees vertically, so the lock bones 
                     -- are in an inverted position from other doors with that visual
-                    vadjust = -vadjust
+                    local ang   = obj:angle()
+                    local roll  = math.floor(math.abs(math.deg(ang.z)))
+                    if (roll > 1) then
+                        vadjust = -vadjust
+                    end
                 end
                 --vl("Door model roll %s | deg.z %s | rad.z %s\nvadjust %s | distance: %s", roll, math.deg(ang.z), ang.z, vadjust, db.actor:position():distance_to(obj:position()))
                 local bone
@@ -970,158 +973,11 @@ local base_config = {
         ),
     },
 --[[======================================================================    
-    [cfg.hint_filter]: a set of subordinate functions that centralize the
-    checking and clearing of the UIStaticQuickHelp prompt text
+    Hint filters are a set of subordinate functions that centralize the
+    checking and clearing of the UIStaticQuickHelp prompt text - they've
+    all been moved to dotmarks_hint_filters.script
 -- =====================================================================]]
-    hint_filter = {
-        add = (
-            -- Adds a new hint filter
-            -- Watches for match_str, replaces it with replace_str
-            function(match_str, replace_str)
-                local hf = cfg.hint_filter
-                if not match_str then return end
-                if not hf.enabled then hf.enabled = {} end
-                vl("Trying to add hint filter %s | %s", match_str, replace_str)
-                hf.init(match_str, replace_str)
-                hf.enabled[match_str] = hf.filters[match_str].hint
-                hf.inc_sub(match_str)
-                return true
-            end
-        ),
-        rem = (
-            -- Removes an existing hint filter
-            function(m)
-                local hf = cfg.hint_filter
-                if not (m and hfil.filters[m]) then return end
-                vl("Trying to remove hint filter %s", match_str)
-                hf.dec_sub(m)
-                if hf.filters[m].subs < 1 then
-                    hf.enabled[m] = nil
-                end
-                return true
-            end
-        ),  
-        inc_sub     = (
-            -- Increment the number of current subscriptions to a filter
-            function(m)
-                local hfil = cfg.hint_filter.filters
-                hfil[m].subs = (hfil[m].subs or 0) + 1
-                return hfil[m].subs
-            end
-        ),
-        dec_sub     = (
-            -- Decrement the number of current subscriptions to a filter
-            function(m)
-                local hfil = cfg.hint_filter.filters
-                hfil[m].subs = (hfil[m].subs or 0) - 1
-                return hfil[m].subs
-            end
-        ),
-        get_state   = (
-            -- Returns bool for hint filter's active state
-            function(m)
-                return m and cfg.hint_filter.filters and cfg.hint_filter.filters[m] and cfg.hint_filter.filters[m].state
-            end
-        ),
-        set_state = (
-            -- Sets the active state for hint filter with match text 'm'
-            function(m, state)
-                if not (m and cfg.hint_filter.filters and cfg.hint_filter.filters[m]) then return end
-                local last_state = cfg.hint_filter.filters[m].state
-                cfg.hint_filter.filters[m].state = state
-                if state then
-                    if cfg.hint_filter.last_active and (cfg.hint_filter.last_active ~= m) then
-                        cfg.hint_filter.filters[cfg.hint_filter.last_active].state = false
-                    end
-                    cfg.hint_filter.last_active = m
-                end
-                if (last_state == state) then return true end
-                vl("State for hint filter %s is now %s", m, state)
-                return true
-            end
-        ),
-        init = (
-            -- Initializes a new hint filter
-            -- called by cfg.hint_filter.add, don't call directly
-            -- otherwise it will skip subcriber count update and initial state detection
-            function(m, r)
-                vl("Initializing hint filter %s with replacement string %s", m, r)
-                local hf = cfg.hint_filter
-                if not m then return end
-                if r == "" then r = nil end
-                if not hf.filters then
-                    hf.filters = {}
-                end
-                local hfil = hf.filters
-                if not hf.trims then
-                    hf.trims = {}
-                end
-                if hf.filters[m] then return end
-                hfil[m]          = {}
-                hfil[m].hint     = m
-                -- original loc string
-                hfil[m].ts_hint  = game.translate_string(m)
-                -- translated original
-                hfil[m].repl     = r
-                -- replacement loc string
-                hfil[m].ts_repl  = r and game.translate_string(r) or nil
-                -- translated replacement
-                hfil[m].trim_h   = trimmed_prompt(hfil[m].ts_hint)
-                -- trimmed original
-                hfil[m].trim_r   = r and trimmed_prompt(hfil[m].ts_repl) or nil
-                -- trimmed replacement
-                hfil[m].text     = hfil[m].trim_r or hfil[m].trim_h
-                -- final text to use
-                hf.trims[hfil[m].trim_h] = m
-                -- trimmed text to match
-                hf.set_state(m, false)
-                return true
-            end
-        ),
-        update_text = (
-            -- Updates the current hint filter text
-            -- Runs on every actor update
-            function()
-                local hf = cfg.hint_filter
-                hf.last_raw_text = get_quickhelp_text()
-                if hf.last_raw_text then
-                    --dump("QuickHelp raw text: %s", hf.last_raw_text)
-                else
-                    -- No hint
-                    if hf.last_active then
-                        hf.set_state(hf.last_active, false)
-                    end
-                    return
-                end
-                local text = trimmed_prompt(hf.last_raw_text)
-                local match = text and hf.trims[text]
-                if match then
-                    --dump("QuickHelp match: %s = %s", hf.last_raw_text, match)
-                    -- QuickHelp text matches active filter
-                    hf.set_state(match, true)
-                    hf.last_active = match
-                end
-                local flags = match and { text = hf.filters[match].ts_repl or nil } or {}
-                SendScriptCallback("on_quickhelp_text_update", hf.last_raw_text, hf.last_active, hf.get_text(hf.last_active), flags)
-                if cfg.hide_van_interact_ui then
-                    -- Hide vanilla UI
-                    --set_quickhelp_text()
-                    return
-                elseif flags.text and flags.text ~= text then
-                    set_quickhelp_text(flags.text)
-                    return flags.text
-                else
-                    return text
-                end
-            end
-        ),
-        get_text = (
-            -- Returns the current hint filter text
-            function(m)
-                return cfg.hint_filter.filters[m] and cfg.hint_filter.filters[m].text
-            end
-        )
-    }
+    hint_filter = dotmarks_hint_filters,
 }
 -- =======================================================================
 

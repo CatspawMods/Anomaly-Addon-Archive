@@ -130,7 +130,20 @@ ignore_hud_state			= false
 ; the main HUD is currently enabled
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
-near_scan_interval          = 104
+suspend_scan_in_pda 		= true
+; When enabled, if the PDA window is open, all scanning and other actor_on_update
+; loop activity will be suspended
+near_scan_when_immobile		= false
+; When disable, the near scan does not trigger unless the actor is moving. This is an
+; optimization measure with the assumption that the actor has to be moving in order 
+; for the distance between the actor and an object to close quickly enough for the
+; near scan to catch it before the early scan does.
+early_scan_immobile_delay 	= 1000
+; When the actor has not moved since the last update, the early scan will be delayed
+; by this many milliseconds. This is an optimization measure with the assumption that
+; we don't have to scan as often to catch new objects entering range when the actor
+; isn't moving.
+near_scan_interval          = 154
 ; Interval in ms between nearby-object scans
 ; Unusual numbers are chosen for all intervals as a way of avoiding stacking updates
 early_scan_interval         = 2457
@@ -147,9 +160,11 @@ hint_refresh_interval 		= 100
 ; Commenting out this setting will completely disable hint filters, which will probably
 ; break interaction prompts - but result in a small perf gain if you don't use IDM's 
 ; GUI prompts at all, only the vanilla text prompts
-npc_health_check_interval 	= 1053
+npc_health_check_interval 	= 1153
 ; Interval in ms between checks for changes in NPC health
 ; This is handled on a per-marker basis to avoid stacking
+hidden_mark_interval 		= 200
+; Interval in ms between marker loop updates for markers that are not currently shown
 near_scan_radius            = 4
 ; Radius in meters of the near scan (affects many other things)
 early_scan_radius           = 3
@@ -543,6 +558,10 @@ skip_dependency_check 		= false ; Skip checking for dependencies and don't warn/
 ; but you think it's mistaken--for example, if you're using a modpack that gets mistakenly
 ; identified as incompatible.
 ; I cannot provide any support for the addon when this check is skipped.
+skip_id_reuse_check 		= true 	; Skips check for reused IDs during scan_nearby_object
+; This is an optmization that significantly speeds up this part of the main scan loop
+clean_save_data 			= false ; Remove all IDM data from the current save
+; If this is true at the time the game is saved, DotMarks will remove all of its data.
 enable_suspend 				= true 	; Allows IDM to be temp suspended, e.g. for Hideout Furniture
 ; =================================================================================
 
@@ -599,10 +618,11 @@ lost_los_delay  	= 500 	; LOS smoothing (LOS result cache) timeout in ms
 los_check_flags 	= 2 	; LOS only blocked by objects, not statics
 width               = 6		; texture width (in canvas units) - will be aspect-corrected
 height              = 6		; texture height (in canvas units)
-update_int          = 15	; throttled update interval in ms for the marker itself
+update_int          = 20	; throttled update interval in ms for the marker itself
 skip_online_checks 	= true 	; Optimization, we can assume dotmarks will always be online and on the same map
 skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
 skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
+offscreen_interval 	= 200 	; Optimization, increases delay between updates when mark is offscreen
 
 [metadata_types]
 is_pickup 		= 0
@@ -1077,6 +1097,7 @@ inv_trashcan = st_itm_placeable_trashcan_name
 ; existing user settings. If a user's last run version is older than one in this table,
 ; that table's settings will be reset to the current-version defaults.
 20260118
+20260122
 
 [reset_20260118]
 bind_text_pos_x 		= true
@@ -1084,6 +1105,9 @@ bind_text_pos_y 		= true
 ui_scale 				= true
 font_scale_w 			= true
 font_scale_h 			= true
+
+[reset_20260122]
+near_scan_interval 		= true
 
 ; =================================================================================
 [mcm_paths]
