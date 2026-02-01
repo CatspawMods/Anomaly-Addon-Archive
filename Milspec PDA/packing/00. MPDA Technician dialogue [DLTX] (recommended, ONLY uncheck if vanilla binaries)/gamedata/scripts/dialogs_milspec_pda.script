@@ -1,0 +1,92 @@
+-- ======================================================================
+--[[	Milspec PDA
+-- ======================================================================
+ 	Author: Catspaw (CatspawMods @ ModDB)
+ 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+-- ======================================================================
+		Enables dialogs on select mechanics that are shown when the 
+		actor has either the recipe drive, or sufficient rank and a 
+		PDA 3.1
+
+		The PDA branch of the tree is an anti-RNG-bullshit measure. 
+		Because RNG is going to RNG. If you have rank, the right PDA,
+		and have completed the mechanic's tool set, they're willing to
+		share the recipe with you.
+-- ==================================================================--]]
+
+local gts 	= game.translate_string
+min_rank = 10000
+recipe 	= "encyclopedia__notes_recipe_pda_milspec"
+mechanics 	= {
+	["agr_smart_terrain_1_6_army_mechanic_stalker"] = true,
+	["cit_killers_merc_mechanic_stalker"] = true,
+	["jup_b19_freedom_yar"] = true
+
+}
+
+function has_pda3()
+	return mlr_utils.have_item('device_pda_3', 1)
+end
+
+function not_has_pda3()
+	return not mlr_utils.have_item('device_pda_3', 1)
+end
+
+function has_flash_drive()
+	return mlr_utils.have_item('recipe_pda_milspec', 1)
+end
+
+function not_has_flash_drive()
+	return not mlr_utils.have_item('recipe_pda_milspec', 1)
+end
+
+function has_drive_or_pda()
+	return has_flash_drive() or has_pda3() 
+end
+
+function has_pda4()
+	return mlr_utils.have_item('device_pda_milspec', 1)
+end
+
+function not_has_pda4()
+	return not mlr_utils.have_item('device_pda_milspec', 1)
+end
+
+function actor_is_total_noob()
+	if not db.actor then return end
+	local rank = db.actor:character_rank()
+	return (rank and rank < min_rank)
+end
+
+function actor_is_not_noob()
+	return not actor_is_total_noob()
+end
+
+function actor_on_leave_dialog()
+end
+
+function give_milspec_pda_recipe_note()
+	xr_effects.give_letter(first_speaker, second_speaker, {"recipe_pda_milspec"})
+end
+
+
+function get_hello_text()
+	if has_pda3() and not db.actor:has_info("mpda_mechanic_waiting_tools") then
+		return gts("st_dialog_mpda_askrecipe_actor_hello_pda")
+	elseif has_flash_drive() and not db.actor:has_info("mpda_mechanic_waiting_tools") then
+		return gts("st_dialog_mpda_askrecipe_actor_hello_drive")
+	else
+		return gts("st_dialog_mpda_actor_hello_waitingtools")
+	end
+end
+
+function on_specific_character_dialog_list(char_id, dialog_list)
+	if char_id and mechanics and mechanics[char_id] then
+		printf("dialogs loading for character %s", char_id)
+        dialog_list:add("ask_milspec_pda_recipe", 5)
+    end
+end
+
+function on_game_start()
+	RegisterScriptCallback("on_specific_character_dialog_list", on_specific_character_dialog_list)
+end

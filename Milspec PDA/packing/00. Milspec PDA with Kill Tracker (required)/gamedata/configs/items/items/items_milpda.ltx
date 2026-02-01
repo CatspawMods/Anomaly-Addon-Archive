@@ -1,6 +1,7 @@
 ;	Milspec PDA
 ; 	Author: Catspaw (CatspawMods @ ModDB)
-; 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+; 	https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+; 	https://github.com/CatspawMods/Anomaly-Addon-Archive/tree/main/Milspec%20PDA
 
 [device_pda_milspec]:device_pda_1
 visual									= dynamics\devices\dev_pda\dev_pda_3.ogf
@@ -16,3 +17,14 @@ inv_name_short							= st_pda_mil_name
 tier									= 6
 power_consumption						= 0.02,0.002,0
 hud										= device_pda_3_hud
+
+[recipe_pda_milspec]:tch_letter
+inv_grid_x                               = 8
+inv_grid_y                               = 3
+inv_weight                               = 0.05
+cost                                     = 5000
+visual                                   = dynamics\devices\dev_flash_2\dev_flash_2.ogf
+description                              = st_recipe_pda_milspec_descr
+inv_name                                 = st_recipe_pda_milspec
+inv_name_short                           = st_recipe_pda_milspec
+recipe									 = true

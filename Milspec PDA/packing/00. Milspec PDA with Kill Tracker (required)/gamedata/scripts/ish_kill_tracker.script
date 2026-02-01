@@ -4,8 +4,8 @@
     Author: Catspaw
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
-script_version          = "1.17.0"
-release_date            = 20260114
+script_version          = "1.18.0"
+release_date            = 20260131
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:
@@ -143,9 +143,7 @@ local ini_mutant                = ini_file("items\\settings\\mutant_loot.ltx")
 local mutant_decay_time         = ini_mutant:r_float_ex("mutant_loot_mod","decay_time") or 7200
 tracked_bodies                  = {}
 
-
 local function started() return first_update and item_milpda.first_update end
-
 
 function safename(obj)
     -- A vastly simplified version of utils_catspaw_common.bestname that is solely

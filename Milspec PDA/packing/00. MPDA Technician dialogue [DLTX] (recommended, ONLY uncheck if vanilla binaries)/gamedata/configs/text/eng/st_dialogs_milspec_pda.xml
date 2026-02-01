@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="windows-1251" ?>
+<string_table>
+    <string id="st_dialog_mpda_askrecipe_actor_hello_pda">
+        <text>I've got a pretty good PDA--about the best that you can get in the Zone. Is there anything you can do to improve it?</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_hello_drive">
+        <text>I found this flash drive on a body, but I don't want to plug it into my PDA without knowing what's on it. Do you have anything that can safely read it?</text>
+    </string>
+
+    <string id="st_dialog_mpda_actor_hello_waitingtools">
+        <text>Hey, about that PDA modification...</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_hello_pda">
+        <text>Well, let me see what you've got there, and I'll tell you.\n
+
+        \nOh yeah, this is a really nice piece of kit. It's got full Kill Tracker support, and even a GSM networking module to let it talk to other nearby stalker PDAs that aren't on our private network.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_hello_drive">
+        <text>No label, all scuffed and bloodstained... yeah, that looks safe. Good thing you came to me--I've got a burner PDA that I keep off the network for things like this.\n
+
+        \nNow let's see. No malware that my scanners can find, but... whoa. Whatever I expected, it sure as hell wasn't this.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_ask_pda">
+        <text>Wait, it does what? Isn't it a huge risk to network with PDAs from other factions?</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_ask_drive">
+        <text>Well come on, don't keep me in suspense.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_ask_drive">
+        <text>It's schematics for an advanced milspec PDA, and a set of custom firmware to go with it. I've seen this modification before--and it sure wasn't made here in the Zone. It had to come from some kind of spec ops or merc outfit--one with connections and serious tech.\n
+
+        \nIt needs a stock PDA 3.1 and some pretty pricey components, but the mod is meant to be applied in the field--someone with the right tools could do it. With the right access codes it can even connect to another faction's private network.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_ask_pda">
+        <text>Well, sure, but we've got damn good security on ours. Bandits? Good Bandit infosec is when the password is something other than "blyat".\n
+
+        \nBut you're not wrong--a networked PDA is always a risk. On a real battlefield, even having a deactivated cellphone on you is a one-way ticket to getting an artillery strike or FPV drone in the face. Here in the Zone though, the advantages are usually worth it.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_askmore">
+        <text>Like what?</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_askmore">
+        <text>Well, if you're friendly enough with a faction, you might get one of your buddies there to give you access. Do that, and you'll see their guys on your map just like you would your own. Careful, though--their leaders probably won't like it any more than ours do.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_seefoe">
+        <text>Well, yeah. Can you imagine what would happen if an enemy got that access?</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_seefoe">
+        <text>It's happened before, and let me tell you, heads rolled. That's why I don't do mods like this anymore. But if you can get your hands on a few specific things, you might be able to give an enemy the same nasty surprise.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_asktools">
+        <text>Let me guess: you're about to send me on a field trip halfway across the Zone to get some piece of wacky Soviet mad-science bullshit that was probably left buried for a reason.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_notools">
+        <text>Nah, I just need the right tools--a full set, including a calibration kit. Get me that and I'll show you how to install the new firmware, plug in your user info, and tune it to your PDA's GSM frequency. But that's my price--I don't borrow that kind of hardware, and I don't teach for free.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_hastools">
+        <text>Hah! I bet you were expecting some kind of tedious errand like that. Nah, you've already done so much for me, and that includes getting me the calibration tools I need. Gimme a sec, it won't take me to load in your user info and PDA frequency.\n
+
+        \nThere. Now look, I'll share the schematics and show you how to do the firmware install and all that, but I've already gotten a warning about doing this modification myself--you're always welcome to use my tools, but you're going to have to source the parts and put it together on your own.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_drivetools">
+        <text>Hah! I bet you were expecting some kind of tedious errand like that. Nah, you've already got access to the calibration tools you need--and since you've got the schematics too, now you just need the parts.\n
+
+        \nNow look, I've already gotten a warning about doing this modification myself--you're going to have to source those parts and put it together on your own. Good luck.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_gottools">
+        <text>Yeah, thanks for getting me those tools. I've got a set of schematics here that I think you'll find interesting. They require some pricey components, but it's worth it.\n
+
+        \nNow look, I've already gotten a warning about doing this modification myself--you're free to use my tools, but you're going to have to source those parts and put it together on your own. Good luck.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_waitingtools">
+        <text>I told you, I need a full set of tools in order to help you with that.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_howto">
+        <text>This PDA modification looks like a lot. Once I've built one, how does it work?</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_howto">
+        <text>If you can get your hands on a PDA from another faction, plug it into the cryptographic module. It'll search the PDA's memory and storage for any unsecured data, plaintext passwords, or anything else that could let you break into their network. If that happens, it'll notify you.\n
+
+        \nJust be aware that they're bound to figure it out sooner or later--so make good use of it before they change their codes.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_npc_scramnoob">
+        <text>You've got to be kidding me. You're so green that a chimera would spit you out for being undercooked. Who'd you have to bribe or rob to get your hands on a piece of kit like this?\n
+
+        n\Never mind, just let me know if you've got real business to do.</text>
+    </string>
+
+    <string id="st_dialog_mpda_askrecipe_actor_bye">
+        <text>All right. Thanks for your time.</text>
+    </string>
+
+</string_table>

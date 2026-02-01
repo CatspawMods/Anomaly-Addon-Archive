@@ -25,5 +25,6 @@
 
 	<file name="ui\guide\encyclopedia_items_milpda">
 		<texture id="encyclopedia_items_milspec_pda_image" x="0" y="0" width="512" height="256" />
+		<texture id="encyclopedia__notes_recipe_pda_milspec_image" x="0" y="256" width="512" height="256" />
 	</file>
 </w>

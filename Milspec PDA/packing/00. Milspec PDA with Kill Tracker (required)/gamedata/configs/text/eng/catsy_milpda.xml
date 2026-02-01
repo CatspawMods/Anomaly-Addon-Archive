@@ -2,13 +2,11 @@
     Milspec PDA
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
-    Version: 1.10
-    Updated: 20240329
     Contents: Official English string definitions
 
     Permission granted to freely translate into any language.
 -->
-
+<?xml version="1.0" encoding="windows-1251" ?>
 <string_table>
     <string id="st_pda_mil_name">
         <text>Milspec PDA</text>
@@ -673,7 +671,7 @@
     </string>
 
     <string id="ui_mcm_milpda_milpdagen_allies_mode_desc">
-        <text>Choose which set of relations determine whether a faction is considered an "enemy" by this addon. This affects that faction's visibility to your PDA, as well as certain rules in Progressive Mode.\n
+        <text>Choose which set of relations determines whether a faction is considered an "enemy" by this addon. This affects that faction's visibility to your PDA, as well as certain rules in Progressive Mode.\n
 
         \nFaction: global faction relations determine this.\n
 
@@ -688,5 +686,29 @@
         <text>Personal relations</text>
     </string>
 
+<!-- Added in 1.18 -->
+
+    <string id="encyclopedia__notes_recipe_pda_milspec">
+        <text>Milspec PDA Schematics</text>
+    </string>
+
+    <string id="encyclopedia__notes_recipe_pda_milspec_text">
+        <text>This drive contains a collection of schematics drawn up by a technician of considerable skill. It includes a set of custom firmware, and instructions detailing how to convert a consumer-grade PDA into a robust milspec device with advanced network-penetration capabilities.\n
+
+        \nThe modification is irreversible, and increases the device's battery draw. Collecting PDAs from dead stalkers and searching them for sensitive data will eventually let you break into their private networks--allowing you to see enemy squads on the map.\n
+
+        \nImportant safety tip: always disconnect power and remove batteries before servicing any device.
+        </text>
+    </string>
+
+    <string id="st_recipe_pda_milspec">
+        <text>Dubious pendrive</text>
+    </string>
+
+    <string id="st_recipe_pda_milspec_descr">
+        <text>It's a scratched-up USB device of unknown design and purpose, and its only markings are the bloodstains on it. The logical thing to do with something like that, of course, is to jam it right into your personal device.\n
+
+        \nOr you could make sure it's been checked by someone who knows what they're doing. That might be an option.</text>
+    </string>
 
 </string_table>

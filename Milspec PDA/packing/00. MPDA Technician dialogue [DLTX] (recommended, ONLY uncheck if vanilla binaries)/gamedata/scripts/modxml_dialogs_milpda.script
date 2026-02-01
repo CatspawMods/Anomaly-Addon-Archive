@@ -1,0 +1,19 @@
+-- ======================================================================
+--[[    Dialog DXML update script
+
+        About as simple as it gets.
+-- ======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+-- ===================================================================--]]
+
+function on_xml_read()
+    RegisterScriptCallback("on_xml_read", function(xml_file_name, xml_obj)
+        if xml_file_name == [[gameplay\dialogs.xml]] then
+            local res = xml_obj:query("game_dialogs")
+            if res then
+                xml_obj:insertFromXMLFile([[gameplay\dialogs_milpda.xml]])
+            end
+        end
+    end)
+end

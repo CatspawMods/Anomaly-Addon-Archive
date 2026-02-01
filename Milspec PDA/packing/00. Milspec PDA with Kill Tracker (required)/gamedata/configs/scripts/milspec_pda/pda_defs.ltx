@@ -1,0 +1,72 @@
+;	Milspec PDA
+; 	Author: Catspaw (CatspawMods @ ModDB)
+; 	https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
+; 	https://github.com/CatspawMods/Anomaly-Addon-Archive/tree/main/Milspec%20PDA
+
+; This file stores the definitions for which PDAs (by section name) are supported, and
+; what features they support.
+
+[valid_pdas]
+device_pda_1
+device_pda_2
+device_pda_3
+device_pda_milspec
+device_pda_actor
+;device_pda_added_by_your_mod
+
+[device_pda_1]
+; PDA 1.0 - starter
+obeybl				= true		; Obeys faction blacklist
+show_e				= false 	; Show enemies?
+show_n 				= false 	; Show neutral?
+show_f 				= false 	; Show friendly?
+show_k 				= false 	; Show kills? (For KilTrak integration)
+progmult 			= 0.0 		; Progression gain multiplier
+
+; PDA 2.0
+[device_pda_2]
+obeybl				= true
+show_e				= false
+show_n 				= false
+show_f 				= true
+show_k 				= true
+progmult 			= 0.1
+
+; PDA 3.1
+[device_pda_3]
+obeybl				= true
+show_e				= false
+show_n 				= true
+show_f 				= true
+show_k 				= true
+progmult 			= 0.5
+
+; Milspec PDA
+[device_pda_milspec]
+obeybl				= true
+show_e				= true
+show_n 				= true
+show_f 				= true
+show_k 				= true
+progmult 			= 1
+
+; Old World addon?
+[device_pda_actor]
+obeybl				= true
+show_e				= true
+show_n 				= true
+show_f 				= true
+show_k 				= true
+progmult 			= 1
+
+; If you have an unsupported device, and you know its section name,
+; uncomment the settings below and set them as you see fit
+; Don't forget to add its section name to valid_pdas
+
+;[device_pda_added_by_your_mod]
+;		obeybl				= true
+;		show_e				= false
+;		show_n 				= false
+;		show_f 				= false
+;		show_k 				= false
+;		progmult 			= 1

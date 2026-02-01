@@ -1,0 +1,272 @@
+-- ======================================================================
+--[[	Circular Progress Indicator
+-- ======================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
+
+	Initializes a customizable circular-style progress indicator that 
+	works much like any other.
+
+    Feel free to crib code from this or include a copy of it in your own 
+    addon, but in the interest of avoiding any possibility of conflicts:
+
+            PLEASE DO NOT MAKE CHANGES TO THIS SCRIPT ITSELF.
+
+    Seriously. Just copy the code into yours if you want to mess with it.
+
+    Also requires the following files, unless you supply your own
+    replacements:
+    	configs\ui\ui_circular_progress.xml
+    	configs\ui\texd\ui_circular_progress_texd.xml
+    	textures\catsy\ui_circular_progress.dds
+
+-- ====================================================================]]
+script_name     = "ui_circular_progress"
+script_version  = "1.0-b2"
+release_date    = 20260127
+-- ======================================================================
+-- 		Utilities
+-- ======================================================================
+assert(utils_catspaw_common,
+"! ERROR: " .. script_name .. " requires utils_catspaw_common, which could not be found!")
+
+-- ======================================================================
+local default_filepath 	= "ui_circular_progress.xml"
+local black 			= GetARGB(255,0,0,0)
+local white 			= GetARGB(255,255,255,255)
+local prog_rad 			= math.pi * 2
+local wnds 				= {}
+local started 			= false
+local maingameui 		= nil
+
+function prog2rad(progress)
+	if not progress then return 0 end
+	return (1 - progress) * prog_rad
+end
+
+-- ======================================================================
+--[[ 		Parameterized circular progress indicator
+-- ======================================================================
+	Basic syntax:
+		local my_new_ind = init_new_indicator(flags, ind_id, anchor)
+
+		Or you can invoke the class directly if you know what you're 
+		doing.
+
+		All parameters are optional, depending on what you're trying
+		to do. By default the indicator is white, 32px in size, and
+		is anchored on the upper left corner of the screen.
+
+		You'll probably want to pass some arguments in the flags table 
+		to move it around or customize it in other ways. See below for
+		a list of them.
+
+		The ind_id is an optional unique identifier for this instance of
+		the indicator.
+
+		Passing any other static as the anchor will have it treat that
+		static as its parent, instead of being anchored on the main 
+		screen canvas.
+
+		Once instantiated, you can use the following class methods:
+			SetColor(ARGB_value)
+				Changes the indicator color from its default of white.
+				Must be a valid ARGB value.
+
+			SetProgressPos(progress)
+				Where progress is a number from 0 to 1. Omitting this
+				will set progress back to its default of zero.
+
+			SetSize(width, height)
+				Changes the size of the indicator. Omitting a parameter
+				will reset the indicator to its defined size.
+
+		Valid attributes for the flags table (all optional):
+
+			xml
+				A valid CScriptXMLInit object that has already parsed a
+				UI XML file, ready to use.
+
+			xmlfile
+				Alternatively, a filepath to parse for the indicator's
+				UI structure.
+
+				If neither of these are passed, the
+				indicator will use (and requires) its own UI file--by
+				default, ui_circular_progress.xml.
+
+			xmlnode (default "indicator")
+				The name of the XML node that should be used from the
+				parsed UI file.
+
+			width (default 32)
+				The width of the indicator. Its (ridiculous and probably 
+				unnecessary) maximum size is 128x128.
+
+			height (default 32)
+				The height of the indicator. It is probably not a good
+				idea to make this different than the width, it'll most
+				likely look like shit.
+
+			base_texture (default ui_catsy_circprog_black)
+				The texture name to use for the background of the 
+				indicator. By default this is a black ring--and a 
+				blacked-out version of the indicator should disappear
+				against it.
+
+			left_texture (ui_catsy_circprog_left)
+				Texture name to use for the left half of the progress 
+				indicator. This must be a square texture with the right
+				half of the indicator missing--not just cropped to the 
+				left half of one.
+
+			right_texture (ui_catsy_circprog_right)
+				Texture name to use for the right half, same rules--this
+				needs to be a square texture with the left half of the
+				indicator missing, not just cropped to the right half.
+
+				A blacked-out version of this is also used as a mask 
+				for the right half of the indicator when it's not
+				needed (when progress is < 0.5).
+
+				If it's not clear to you what this means and you still
+				want to customize the texture, go look at the default
+				textures in textures\catsy\ui_circular_progress.dds
+
+			progress_argb
+				The GetARGB for a color to apply to the indicator texture
+				using SetTextureColor. The default indicator is a simple
+				white ring.
+
+				If you plan on using this attribute with a custom 
+				indicator texture, it's best to use a white or 
+				monochromatic texture.
+
+			offset_x, offset_y
+				Optional screen offsets to use. These are relative to
+				whatever its anchor point/parent is.
+			
+			initial_value
+				Optionally specify a starting value for the indicator.
+				This can be changed at any time after init, using the 
+				SetProgressPos method.
+
+-- ====================================================================]]
+
+class "UICircularProgress" (CUIScriptWnd)
+
+function UICircularProgress:__init(flags, ind_id, anchor) super()
+	if not started then
+		printf("! ERROR: Someone tried calling UICircularProgress before main game UI exists | ind_id %s", ind_id)
+	end
+	self:SetAutoDelete(true)
+	self.init_time 	= time_global()
+	self.ind_id 	= ind_id or "UICircularProgress"..tostring(self.init_time)
+	self.anchor 	= anchor
+   	self.flags 		= flags or {}
+	self.xml 		= self.flags.xml or get_indicator_xml(self.flags.xmlfile)
+	self.ind_node 	= self.flags.xmlnode or "indicator"
+	self:InitIndicator()
+end
+
+function UICircularProgress:InitIndicator()
+	if not self.xml then
+		printf("! ERROR: UICircularProgress:InitIndicator could not find a valid XML object - exiting!")
+		return
+	end
+    self.prog_argb 	= self.flags.progress_argb
+	self.wnd 		= self.xml:InitStatic(self.ind_node, self.anchor or self)
+    self.wnd:Show(true)
+
+    self.ind_base	= self.xml:InitStatic(self.ind_node, self.wnd)
+    self.ind_base:InitTexture(self.flags.base_texture or "ui_catsy_circprog_black")
+   	self.ind_base:EnableHeading(true)
+    self.ind_base:Show(true)
+
+    self.ind_left 	= self.xml:InitStatic(self.ind_node, self.ind_base)
+    self.ind_left:InitTexture(self.flags.left_texture or "ui_catsy_circprog_left")
+    self.ind_left:EnableHeading(true)
+    self.ind_left:Show(false)
+
+    self.ind_right	= self.xml:InitStatic(self.ind_node, self.ind_base)
+    self.ind_right:InitTexture(self.flags.right_texture or "ui_catsy_circprog_right")
+
+    if self.prog_argb then
+    	self:SetColor(self.prog_argb)
+    end
+    self.ind_right:EnableHeading(true)
+    self.ind_right:Show(true)
+
+    self.ind_mask	= self.xml:InitStatic(self.ind_node, self.ind_right)
+    self.ind_mask:InitTexture(self.flags.right_texture or "ui_catsy_circprog_right")
+    self.ind_mask:SetTextureColor(black)
+    self.ind_mask:EnableHeading(true)
+    self.ind_mask:Show(true)
+
+    if self.flags.offset_x or self.flags.offset_y then
+		self.wnd:SetWndPos(vector2():set(tonumber(self.flags.offset_x) or 0, tonumber(self.flags.offset_y) or 0))
+    end
+	self.width 		= tonumber(self.flags.width) or 32
+	self.height 	= tonumber(self.flags.height) or self.width
+    self.wnd_size 	= vector2():set(self.width, self.height)
+    self:SetSize()
+    self:SetProgressPos(tonumber(self.flags.initial_value) or 0)
+    wnds[self.ind_id] = self
+end
+
+function UICircularProgress:SetSize(width, height)
+	self.wnd_size 	= vector2():set(width and tonumber(width) or self.width, height and tonumber(height) or self.height)
+    self.ind_base:SetWndSize(self.wnd_size)
+    self.ind_left:SetWndSize(self.wnd_size)
+    self.ind_right:SetWndSize(self.wnd_size)
+    self.ind_mask:SetWndSize(self.wnd_size)
+end
+
+function UICircularProgress:SetColor(ARGB_value)
+	self.prog_argb = ARGB_value or self.flags.progress_argb or white
+    self.ind_left:SetTextureColor(self.prog_argb)
+    self.ind_right:SetTextureColor(self.prog_argb)
+
+end
+
+function UICircularProgress:SetProgressPos(progress)
+	progress = progress or 0
+	if self.last_progress and (self.last_progress == progress) then return end
+	self.last_progress = progress
+	if (progress == 0) then
+		self.wnd:Show(false)
+		self.hidden = true
+	elseif self.hidden then
+		self.wnd:Show(true)
+		self.hidden = false
+	end
+	local under_half = (progress < 0.5)
+	self.ind_left:Show(not under_half)
+    self.ind_right:SetHeading(prog2rad(progress))
+	self.ind_mask:Show(under_half)
+end
+
+function UICircularProgress:Destroy()
+	self.wnd:Show(false)
+	get_hud():RemoveDialogToRender(self)
+end
+
+function init_new_indicator(flags, ind_id, anchor)
+	anchor = anchor or maingameui
+	return UICircularProgress(flags, ind_id, anchor)
+end
+
+function get_indicator_xml(filepath)
+	return utils_catspaw_common.get_xml_cache(filepath or default_filepath, script_name)
+end
+
+function actor_on_first_update()
+	maingameui = ActorMenu.get_maingame()
+	started = true
+end
+
+function on_game_start()
+	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+end
+
+printf("Loaded %s v%s (rel %s) at %s %s", script_name, script_version, release_date, time_global(), debuglogs and string.format("[%sdebug%s logging enabled]", verbose and "verbose " or "", debug_dump and "_dump" or "") or "")

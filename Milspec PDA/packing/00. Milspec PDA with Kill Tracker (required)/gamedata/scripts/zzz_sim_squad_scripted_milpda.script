@@ -173,7 +173,7 @@ function sim_squad_scripted.sim_squad_scripted.show(self)
 			local pda = db.actor:item_in_slot(8)
 			if pda and simulation_objects.is_on_the_same_level(se_actor,self) and (not is_squad_monster[self.player_id]) then
 				--printf("Checking visibility for %s | show_squadmate_mapspots: %s", self:name(), show_squadmate_mapspots)
-				if item_milpda.pda_type_can_see_mapspot(self.player_id) then
+				if item_milpda.actor_pda_can_see_mapspot(self.player_id) then
 					spot = sim_squad_warfare.squad_icons[self.player_id]
 				end
 			end

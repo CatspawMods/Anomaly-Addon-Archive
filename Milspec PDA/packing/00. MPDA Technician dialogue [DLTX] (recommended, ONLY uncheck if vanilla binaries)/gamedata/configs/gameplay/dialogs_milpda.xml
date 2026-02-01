@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="windows-1251" ?>
+
+	<dialog id="ask_milspec_pda_recipe">
+		<dont_has_info>mpda_mechanic_already_helped</dont_has_info>
+		<precondition>dialogs_milspec_pda.has_drive_or_pda</precondition>
+		<precondition>dialogs_milspec_pda.not_has_pda4</precondition>
+		<phrase_list>
+			<phrase id="0">
+				<script_text>dialogs_milspec_pda.get_hello_text</script_text>
+				<next>1</next> <!-- actor has rank and pda but not drive -->
+				<next>2</next> <!-- actor drive -->
+				<next>3</next> <!-- actor is too low rank -->
+				<next>4</next> <!-- actor got tools for mechanic after being asked -->
+				<next>900</next> <!-- mechanic is waiting for tools to teach recipe -->
+			</phrase>
+			<phrase id="1">
+				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
+				<precondition>dialogs_milspec_pda.has_flash_drive</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_hello_drive</text>
+				<next>10</next>
+			</phrase>
+			<phrase id="2">
+				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
+				<precondition>dialogs_milspec_pda.actor_is_not_noob</precondition>
+				<precondition>dialogs_milspec_pda.has_pda3</precondition>
+				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_hello_pda</text>
+				<next>20</next>
+				<next>999</next>
+			</phrase>
+			<phrase id="3">
+				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
+				<precondition>dialogs_milspec_pda.actor_is_total_noob</precondition>
+				<precondition>dialogs_milspec_pda.has_pda3</precondition>
+				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_scramnoob</text>
+			</phrase>
+			<phrase id="4">
+				<has_info>mpda_mechanic_waiting_tools</has_info>
+				<precondition>dialogs_mlr.toolkit_task_done_3</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_gottools</text>
+				<give_info>mpda_mechanic_already_helped</give_info>
+				<action>dialogs_milspec_pda.give_milspec_pda_recipe_note</action>
+				<next>60</next>
+				<next>999</next>
+			</phrase>
+
+			<phrase id="10">
+				<text>st_dialog_mpda_askrecipe_actor_ask_drive</text>
+				<next>11</next>
+			</phrase>
+			<phrase id="11">
+				<text>st_dialog_mpda_askrecipe_npc_ask_drive</text>
+				<next>20</next>
+				<next>999</next>
+			</phrase>
+
+			<phrase id="20">
+				<text>st_dialog_mpda_askrecipe_actor_ask_pda</text>
+				<next>21</next>
+			</phrase>
+			<phrase id="21">
+				<text>st_dialog_mpda_askrecipe_npc_ask_pda</text>
+				<next>30</next>
+				<next>999</next>
+			</phrase>
+
+			<phrase id="30">
+				<text>st_dialog_mpda_askrecipe_actor_askmore</text>
+				<next>31</next>
+			</phrase>
+			<phrase id="31">
+				<text>st_dialog_mpda_askrecipe_npc_askmore</text>
+				<next>40</next>
+				<next>999</next>
+			</phrase>
+
+			<phrase id="40">
+				<text>st_dialog_mpda_askrecipe_actor_seefoe</text>
+				<next>41</next>
+			</phrase>
+			<phrase id="41">
+				<text>st_dialog_mpda_askrecipe_npc_seefoe</text>
+				<next>50</next>
+				<next>999</next>
+			</phrase>
+
+			<phrase id="50">
+				<text>st_dialog_mpda_askrecipe_actor_asktools</text>
+				<next>51</next>
+				<next>52</next>
+				<next>53</next>
+			</phrase>
+			<phrase id="51">
+				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<precondition>dialogs_mlr.toolkit_task_done_3</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_hastools</text>
+				<action>dialogs_milspec_pda.give_milspec_pda_recipe_note</action>
+				<give_info>mpda_mechanic_already_helped</give_info>
+				<next>60</next>
+				<next>999</next>
+			</phrase>
+			<phrase id="52">
+				<precondition>dialogs_milspec_pda.has_flash_drive</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_drivetools</text>
+				<action>dialogs_milspec_pda.give_milspec_pda_recipe_note</action>
+				<give_info>mpda_mechanic_already_helped</give_info>
+				<next>60</next>
+				<next>999</next>
+			</phrase>
+			<phrase id="53">
+				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
+				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<precondition>dialogs_mlr.not_toolkit_task_done_3</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_notools</text>
+				<give_info>mpda_mechanic_waiting_tools</give_info>
+			</phrase>
+
+			<phrase id="60">
+				<text>st_dialog_mpda_askrecipe_actor_howto</text>
+				<next>61</next>
+			</phrase>
+			<phrase id="61">
+				<text>st_dialog_mpda_askrecipe_npc_howto</text>
+			</phrase>
+
+			<phrase id="900">
+				<has_info>mpda_mechanic_waiting_tools</has_info>
+				<precondition>dialogs_mlr.not_toolkit_task_done_3</precondition>
+				<text>st_dialog_mpda_askrecipe_npc_waitingtools</text>
+			</phrase>
+
+			<phrase id="999">
+				<text>st_dialog_mpda_askrecipe_actor_bye</text>
+			</phrase>
+		</phrase_list>
+    </dialog>
