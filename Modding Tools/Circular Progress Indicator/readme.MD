@@ -13,8 +13,8 @@ This is about the simplest possible implementation of a circular indicator. It h
 
 # REQUIREMENTS
 ## Modded Exes
-	* This requirement is not optional. If you're not using modded exes--or a modpack that is based upon them, like GAMMA--you should be. Get them here: 
-	[Modded Exes on Github](https://github.com/themrdemonized/xray-monolith)
+
+* This requirement is not optional. If you're not using modded exes--or a modpack that is based upon them, like GAMMA--you should be. Get them here: [Modded Exes on Github](https://github.com/themrdemonized/xray-monolith)
 
 ## The following files, unless you pass arguments that specify your own replacements for the textures and UI XML:
 
