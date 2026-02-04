@@ -36,7 +36,7 @@ The `ind_id` argument is an optional unique identifier for this instance of the 
 
 Passing any other static as the anchor will have it treat that static as its parent, instead of being anchored on the main screen canvas.
 
-Once instantiated, you can use the following class methods:
+## Class Methods
 
 ### `SetColor(ARGB_value)`
 Changes the indicator color from its default of white. Must be a valid ARGB value.
@@ -47,7 +47,7 @@ Where progress is a number from 0 to 1. Omitting this will set progress back to 
 ### `SetSize(width, height)`
 Changes the size of the indicator. Omitting a parameter will reset the indicator to its defined size.
 
-Valid attributes for the `flags` table (all optional):
+## Valid attributes for the `flags` table (all optional)
 
 ### `xml`
 A valid CScriptXMLInit object that has already parsed a UI XML file, ready to use.
