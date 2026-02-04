@@ -38,58 +38,58 @@ Passing any other static as the anchor will have it treat that static as its par
 
 Once instantiated, you can use the following class methods:
 
-	`SetColor(ARGB_value)`
-		Changes the indicator color from its default of white. Must be a valid ARGB value.
+### `SetColor(ARGB_value)`
+Changes the indicator color from its default of white. Must be a valid ARGB value.
 
-	`SetProgressPos(progress)`
-		Where progress is a number from 0 to 1. Omitting this will set progress back to its default of zero.
+### `SetProgressPos(progress)`
+Where progress is a number from 0 to 1. Omitting this will set progress back to its default of zero.
 
-	`SetSize(width, height)`
-		Changes the size of the indicator. Omitting a parameter will reset the indicator to its defined size.
+### `SetSize(width, height)`
+Changes the size of the indicator. Omitting a parameter will reset the indicator to its defined size.
 
 Valid attributes for the `flags` table (all optional):
 
-	`xml`
-		A valid CScriptXMLInit object that has already parsed a UI XML file, ready to use.
+### `xml`
+A valid CScriptXMLInit object that has already parsed a UI XML file, ready to use.
 
-	`xmlfile`
-		Alternatively, a filepath to parse for the indicator's UI structure.
+### `xmlfile`
+Alternatively, a filepath to parse for the indicator's UI structure.
 
-		If neither of these are passed, the indicator will use (and requires) its own UI file--which, if so, must be distributed unaltered along with the script.
+If neither of these are passed, the indicator will use (and requires) its own UI file--which, if so, must be distributed unaltered along with the script.
 
-	`xmlnode` (default "indicator")
-		The name of the XML node that should be used from the parsed UI file.
+### `xmlnode` (default "indicator")
+The name of the XML node that should be used from the parsed UI file.
 
-	`width` (default 32)
-		The width of the indicator. Its (ridiculous and probably unnecessary) maximum size is 128x128, the native size of the source texture. It is made this large in order to
-		ensure it does not look pixelated at high resolutions.
+### `width` (default 32)
+The width of the indicator. Its (ridiculous and probably unnecessary) maximum size is 128x128, the native size of the source texture. It is made this large in order to
+ensure it does not look pixelated at high resolutions.
 
-	`height` (default 32)
-		The height of the indicator. It not a good idea to make it different than the width--it'll most likely look like shit--but you can if you have a use case for it.
+### `height` (default 32)
+The height of the indicator. It not a good idea to make it different than the width--it'll most likely look like shit--but you can if you have a use case for it.
 
-	`base_texture` (default ui_catsy_circprog_black)
-		The texture name to use for the background of the indicator. By default this is a black ring--and a blacked-out version of the indicator should disappear when drawn on top of it.
+### `base_texture` (default ui_catsy_circprog_black)
+The texture name to use for the background of the indicator. By default this is a black ring--and a blacked-out version of the indicator should disappear when drawn on top of it.
 
-	`left_texture` (ui_catsy_circprog_left)
-		Texture name to use for the left half of the progress indicator. This must be a square texture with the right half of the indicator missing--not just cropped to the left half of one.
+### `left_texture` (ui_catsy_circprog_left)
+Texture name to use for the left half of the progress indicator. This must be a square texture with the right half of the indicator missing--not just cropped to the left half of one.
 
-	`right_texture` (ui_catsy_circprog_right)
-		Texture name to use for the right half, same rules--this needs to be a square texture with the left half of the indicator missing, not just cropped to the right half.
+### `right_texture` (ui_catsy_circprog_right)
+Texture name to use for the right half, same rules--this needs to be a square texture with the left half of the indicator missing, not just cropped to the right half.
 
-		A blacked-out version of this is also used as a mask for the right half of the indicator when it's not needed (when progress is < 0.5).
+A blacked-out version of this is also used as a mask for the right half of the indicator when it's not needed (when progress is < 0.5).
 
-		If it's not clear to you what this means and you still want to customize the texture, go look at the default textures in textures\catsy\ui_circular_progress.dds
+If it's not clear to you what this means and you still want to customize the texture, go look at the default textures in textures\catsy\ui_circular_progress.dds
 
-	`progress_argb`
-		The `GetARGB` for a color to apply to the indicator texture using `SetTextureColor`. The default indicator is a simple white ring.
+### `progress_argb`
+The `GetARGB` for a color to apply to the indicator texture using `SetTextureColor`. The default indicator is a simple white ring.
 
-		If you plan on using this attribute with a custom indicator texture, it's best to use a white or monochromatic texture.
+If you plan on using this attribute with a custom indicator texture, it's best to use a white or monochromatic texture.
 
-	`offset_x`, `offset_y`
-		Optional screen offsets to use. These are relative to whatever its anchor point/parent is.
-	
-	`initial_value`
-		Optionally specify a starting value for the indicator. This can be changed at any time after init, using the `SetProgressPos` method.
+### `offset_x`, `offset_y`
+Optional screen offsets to use. These are relative to whatever its anchor point/parent is.
+
+### `initial_value`
+Optionally specify a starting value for the indicator. This can be changed at any time after init, using the `SetProgressPos` method.
 
 # HOW IT WORKS
 If you want to replace the textures or mess around with the code, it'll help to know how it all gets used.
