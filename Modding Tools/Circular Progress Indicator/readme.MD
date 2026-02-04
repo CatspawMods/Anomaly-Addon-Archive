@@ -1,7 +1,7 @@
 # CIRCULAR PROGRESS INDICATOR PLUGIN
 A customizable circular-style progress indicator that works much like any other that you've seen in any other game. It does nothing whatsoever on its own--this is a tool for modders.
 
-[Circular Progress Indicator image](https://i.imgur.com/pyO1ese.png)
+![Circular Progress Indicator image](https://i.imgur.com/pyO1ese.png)
 
 The XRengine's default `InitProgressBar` method is strictly linear, though it can be oriented to increment in any of the four cardinal directions. What it cannot do is curve.
 
