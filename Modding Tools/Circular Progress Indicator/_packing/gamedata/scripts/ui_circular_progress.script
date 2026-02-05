@@ -29,8 +29,8 @@
 	See [USAGE] or [HOW IT WORKS] below.
 -- ====================================================================]]
 script_name     = "ui_circular_progress"
-script_version  = "1.0"
-release_date    = 20260203
+script_version  = "1.1"
+release_date    = 20260205
 -- ======================================================================
 -- 		Definitions
 -- ======================================================================
@@ -355,7 +355,7 @@ local function get_xml_cache(filepath)
 end
 
 ---@param filepath string
-local function get_indicator_xml(filepath)
+function get_indicator_xml(filepath)
 	return get_xml_cache(filepath or default_filepath)
 end
 
