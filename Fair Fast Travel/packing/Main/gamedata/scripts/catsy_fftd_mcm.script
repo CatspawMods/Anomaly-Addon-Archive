@@ -312,7 +312,7 @@ function mcm_init_header_text_block(anchor, handlers, opts, flags)
 	local is_text_section 	= (sec_pre == "gp") or (sec_pre == "ui") or (sec_pre == "db")
 	local lang 	= ui_options.curr_localization()
 	local eng 	= lang == "eng"
-	local h		= headers[opts.id]
+	local hedr 	= headers[opts.id]
 	local xml 	= CScriptXmlInit()
 	xml:ParseFile("fft_ui_elements.xml")
 	local head 	= xml:InitStatic("box",anchor)
@@ -338,7 +338,7 @@ function mcm_init_header_text_block(anchor, handlers, opts, flags)
 	if is_head_line or is_text_section then
 		anchor:SetWndPos(vector2():set(0, 15))
 		tbg1:InitTexture("ui_mcm_fft_messagebox_transbg_gen")
-		setup_text_box(h.t1, 512, 30, 400, 20, 5, 6)
+		setup_text_box(hedr.t1, 512, 30, 400, 20, 5, 6)
 		tbox1:SetFont(GetFontLetterica18Russian())
 		if opts.id == "gpheadertxt" then
 			tbox2:SetWndSize(vector2():set(480 * unsquish_ratio, 20))
@@ -350,11 +350,15 @@ function mcm_init_header_text_block(anchor, handlers, opts, flags)
 		anchor:SetWndPos(vector2():set(0, eng and 3 or 0))
 		tbg1:InitTexture("ui_mcm_fft_messagebox_transbg_head140")
 		tbox1:SetFont(GetFontLetterica18Russian())
-		setup_text_box(h.t1, 512, eng and 140 or 162, 480, 25, 10, 11, h.t2, 480, 110, 10, 35)
+		setup_text_box(hedr.t1, 512, eng and 138 or 162, 480, 25, 10, 11, hedr.t2, 480, 110, 10, 35)
+		tbox1:AdjustHeightToText()
+		tbox2:AdjustHeightToText()
+		local h = tbox1:GetHeight() + tbox2:GetHeight()
+		tbg1:SetWndSize(vector2():set(480 * unsquish_ratio, h + 35))
 	elseif is_head_block then
 		anchor:SetWndPos(vector2():set(0, eng and 12 or 5))
 		tbg1:InitTexture("ui_mcm_fft_messagebox_transbg_head90")
 		tbox1:SetFont(GetFontLetterica18Russian())
-		setup_text_box(h.t1, 512, eng and 90 or 102, 480, 25, 10, 11, h.t2, 480, 60, 10, 32)
+		setup_text_box(hedr.t1, 512, eng and 90 or 102, 480, 25, 10, 11, hedr.t2, 480, 60, 10, 32)
 	end
 end

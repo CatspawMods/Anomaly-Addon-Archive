@@ -3,6 +3,11 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-durati
 
 ## Change Log
 
+**2.19.0:**
+- Tutorial now uses my Timed Tutorial Prompt module to prompt the player before showing the tutorial, instead of interrupting gameplay
+- Minor adjustments to travel logic
+- Utility scripts updated to 20260122
+
 **2.18.3:**
 - Added another null-value sanity check
 - Fix for campfire travel checks not working in some circumstances

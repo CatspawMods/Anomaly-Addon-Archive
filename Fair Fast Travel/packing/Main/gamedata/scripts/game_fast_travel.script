@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.18.2"
-release_date 	= 20260108
+script_version 	= "2.19.0"
+release_date 	= 20260205
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
@@ -17,6 +17,7 @@ release_date 	= 20260108
 		TheMrDemonized (Limited and Paid Fast Travel, code help)
 		Grimscribe (Immersive Fast Travel Overhaul)
 		Arszi (Radiation Overhaul)
+		strangerism (New Player Experience)
 
 -- ======================================================================
 --		DEPENDENCIES AND SHORTCUTS
@@ -297,6 +298,7 @@ function monolith_science_toys_off()
 end
 
 function valid_travel_type(tt)
+
 	return not not (tt and td and td[tt])
 end
 
@@ -375,21 +377,17 @@ end
 
 
 function get_zone_mode(tt)
-	--tt = tt or "ft"
-	return get_travel_cfg(tt or "ft").zone_mode
-	--return td[tt] and td[tt]["cfg"] and td[tt]["cfg"].zone_mode
+	return get_travel_cfg(tt or "ft").zone_mode or 0
 end
 
 function get_camp_mode(tt)
-	--tt = tt or "ft"
-	return get_travel_cfg(tt or "ft").camp_mode
-	--return td[tt] and td[tt]["loc"] and td[tt]["loc"].camp_mode
+	local tdata = get_travel_type(tt or "ft", "loc")
+	return tdata and tdata.camp_mode or 0
 end
 
 
 function campfires_are_bases(tt)
-	return get_travel_cfg(tt or "ft").campfire_base
-	--return td[tt] and td[tt]["cfg"] and td[tt]["cfg"].campfire_base
+	return get_travel_cfg(tt or "ft").campfire_base and true or false
 end
 
 
@@ -416,7 +414,6 @@ end
 function actor_in_travel_zone(tt)
 	if not db.actor then return end
 	tt = tt or "ft"
-	--local mode = td[tt] and td[tt]["cfg"].zone_mode or 0
 	local mode = get_travel_cfg(tt).zone_mode or 0
 	if mode == 0 then
 		-- Feature not enabled, allow all travel origins
@@ -452,11 +449,11 @@ function actor_in_recent_combat()
 		if id and (id > 0) then
 			local npc = get_object_by_id(id)
 			if npc and npc:alive() then
-				local npos = npc and npc:position()
-				local dist = db.actor:position():distance_to(npos) or 0
+				local npos = npc:position()
+				local dist = npos and db.actor:position():distance_to(npos) or 0
 				if dist <= npc_combat_distance then
 				    local now = time_global()
-					if npc and npc:alive() and npc:see(db.actor) then
+					if npc:see(db.actor) then
 						actor_last_seen = now
 						--vl("NPC %s is in combat with actor, last saw actor at %s")
 						return true
@@ -644,23 +641,17 @@ end
 
 
 function pin_travel_allowed(tt)
-	--tt = tt or "ft"
-	--return td[tt] and td[tt]["cfg"].allow_pin_travel
-	return get_travel_cfg(tt or "ft").allow_pin_travel
+	return get_travel_cfg(tt or "ft").allow_pin_travel and true or false
 end
 
 
 function travel_cooldown_enabled(tt)
-	--tt = tt or "ft"
-	--local cden = (td and td[tt] and td[tt]["cfg"].travel_cooldown or 0) > 0
 	local cden = (get_travel_cfg(tt or "ft").travel_cooldown or 0) > 0
 	dl("travel_cooldown_enabled(%s) = %s",tt,cden)
 	return cden
 end
 
 function get_next_travel_for_type(tt)
-	--tt = tt or "ft"
-	--return td and td[tt] and td[tt].next_travel or 0
 	return get_travel_type(tt or "ft").next_travel or 0
 end
 
@@ -894,34 +885,37 @@ function map_spot_menu_add_property(property_ui, id, level_name)
 	local bp_enabled  	= basecfg["bp"].enabled
 	local gt_enabled  	= basecfg["gt"].enabled
 	local is_campfire 	= is_lit_campfire(se_obj)
+	local valid_fire 	= is_travel_allowed_to_campfire(tt, se_obj)
 	local is_backpack 	= target_name:find("^inv_backpack") or 
-						target_name:find("^inv_actor_backpack") and true or false
+			target_name:find("^inv_actor_backpack") and true or false
 	local is_smart 		= se_obj:clsid() == clsid.smart_terrain
 	local valid_smart 	= (DEV_DEBUG and allow_debug_travel) or
 			((ft_state > 0) and is_smart and tsmarts[target_name]) or
 			((ft_state > 1) and is_smart) or false
 	local paw 			= tasks_placeable_waypoints
 	local quick_pin 	= paw and paw.valid_travel_target(id) or false
+	local pins_allowed 	= pin_travel_allowed(tt)
 
 	for tt,tname in spairs(all_travel_types) do
 		local condition 	= false
 		if tt == "ft" then
-			condition 	= ft_enabled and (
-							(not is_backpack) and
-							valid_smart or
-							(quick_pin and pin_travel_allowed(tt)) or
-							(is_campfire and is_travel_allowed_to_campfire(tt, se_obj))
-						)
+			condition 	= ft_enabled and (not is_backpack) and
+							(
+								valid_smart or
+								(quick_pin and pins_allowed) or
+								(is_campfire and valid_fire)
+							)
 		elseif tt == "bp" then
 			condition 	= bp_enabled and is_backpack
 		elseif tt == "gt" then
-			condition 	= gt_enabled and (
-					is_smart or 
-					(quick_pin and pin_travel_allowed(tt)) or
-					(is_campfire and is_travel_allowed_to_campfire(tt, se_obj))
-				)
+			condition 	= gt_enabled and
+							(
+								is_smart or 
+								(quick_pin and pins_allowed) or
+								(is_campfire and valid_fire)
+							)
 		end
-		vl("Conditions for travel option check to %s:\n* ft_state %s | ft_enabled %s | bp_enabled %s | gt_enabled %s\n* is_smart %s | valid_smart %s | is_backpack %s | quick_pin %s | is_campfire %s",target_name,ft_state,ft_enabled,bp_enabled,gt_enabled,is_smart,valid_smart,is_backpack,quick_pin,is_campfire)
+		vl("Condition %s for travel option [%s] check to %s:\n* ft_state %s | ft_enabled %s | bp_enabled %s | gt_enabled %s\n* is_smart %s | valid_smart %s | is_backpack %s | quick_pin %s\nis_campfire %s | valid_fire %s",condition,tt,target_name,ft_state,ft_enabled,bp_enabled,gt_enabled,is_smart,valid_smart,is_backpack,quick_pin,is_campfire,valid_fire)
 
 		if condition then
 			vl("Travel type %s condition test: %s",tt,condition)

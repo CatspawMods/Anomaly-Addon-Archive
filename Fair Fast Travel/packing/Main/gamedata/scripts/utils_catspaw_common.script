@@ -2,8 +2,8 @@
 --[[	Catsy's commonly-used functions
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_common"
-script_version 	= "1.15"
-release_date    = 20250530
+script_version 	= "1.18"
+release_date    = 20260120
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -29,6 +29,8 @@ local gts 				= game.translate_string
 local floor 			= math.floor
 local abs 				= math.abs
 local rand 				= math.random
+no_callbacks 			= false 
+-- disables any callback registration from this script
 MAX_ID 					= 65535 
 -- Future-proofing against the unlikely event that the engine ID limit 
 -- ever actually does get updated to 32-bit.
@@ -108,7 +110,6 @@ engine_features = {
 	mwheel 		= { ver = 20230701, gamma = true, name = "Mouse wheel scripting"},
 	rclick 		= { ver = 20230922, gamma = true, name = "Right-click on PDA map"},
 	getstrtbl 	= { ver = 20240507, gamma = true, name = "Func get_string_table"},
-	-- GAMMA is based on recent binaries, but doesn't yet support get_string_table()
 	cmcolor 	= { ver = 20240523, gamma = true, name = "Context menu colors"},
 	-- Enabling color in context menus can have undesirable side effects across the entire game
 	dxml_cache 	= { ver = 20250228, gamma = false, name = "DXML on_xml_read cacheing"},
@@ -119,9 +120,9 @@ local exes_version 	= MODDED_EXES_VERSION or (get_modded_exes_version and get_mo
 using_gamma_modpack = game_version:find("G.A.M.M.A.") and true or false
 -- GAMMA is based on demonized binaries, but missing the MODDED_EXES_VERSION variable
 using_modded_exes 	= using_gamma_modpack or exes_version and true or false
+-- Query utils_catspaw_common.using_modded_exes or utils_catspaw_common.using_gamma_modpack
 
 local function setup_engine_features()
-
 	for k,v in pairs(engine_features) do
 		v.enabled 	= (v.gamma and using_gamma_modpack) or (exes_version and exes_version >= v.ver)
 		local func 	= "exe_" .. k .. "_support"
@@ -343,24 +344,21 @@ end
 -- 		OBJECTS AND ACTOR
 -- ======================================================================
 function safeid(obj, def_actor)
-	-- Returns object ID whether it is game or server object
+	-- Returns object ID whether it is game object, server object, or any
+	-- valid Lua table/object that has an "id" attribute
 	-- defaults to actor ID instead of nil if no valid obj passed and def_actor is true
 	if not obj then return def_actor and AC_ID or nil end
 	return (type(obj.id) == "function") and obj:id() or obj.id
 end
 
 function get_game_object(id)
-    -- Functionally identical to get_object_by_id in _G, except it doesn't spam the log when there isn't an object
-    return id and (
-        (id == AC_ID) and db.actor or
-        (   
-            db.storage[id] and db.storage[id].object or
-            level.object_by_id(id)
-        )
-    )
+	-- Replacement for get_object_by_id that doesn't spam the log for invalid IDs,
+	-- and doesn't try looking in db.storage (which can contain destroyed objects)
+	return id and level.object_by_id(id)
 end
 
 function actor_loaded()
+	-- For when you need to test existence of actor using a functor
 	return (db.actor ~= nil)
 end
 
@@ -369,7 +367,7 @@ function is_living_thing(obj, cls)
 end
 
 function who_npc(a, b)
-	-- like who_is_npc, but won't break if only a is passed
+	-- like who_is_npc, but won't break if only the first argument is passed
 	return a and b and dialogs.who_is_npc(a, b) or a
 end
 
@@ -454,6 +452,24 @@ function get_mcm_or_default_val(path, default)
 	local val 	= ui_mcm and ui_mcm.get(path)
 	if val ~= nil then return val end
 	return default
+end
+
+local xml_cache = {}
+
+function get_xml_cache(filepath, uid)
+	-- Caches repeat calls to open the same file in order to cut down on XML loads
+	-- the uid is optional and can be literally any value, it's just a way to 
+	-- identify the calling script or entity during logging, if desired
+    if not filepath then return end
+    xml_cache = xml_cache or {}
+    if xml_cache[filepath] then
+        vl("[get_xml_cache][%s] Using cached UI content from %s", uid or time_global(), filepath)
+    else
+        vl("[get_xml_cache][%s] Loading and cacheing UI content from %s", uid or time_global(), filepath)
+        xml_cache[filepath] = CScriptXmlInit()
+        xml_cache[filepath]:ParseFile(filepath)
+    end
+    return xml_cache[filepath]
 end
 
 function load_file_data(ini_name, cfg_table, args)
@@ -625,3 +641,14 @@ function import_metatable(dest, source, pass_func)
 end
 
 printf("Loaded %s v%s (rel %s)", script_name, script_version, release_date)
+
+function on_loading_screen_dismissed()
+	-- Just a simple way to keep track of this state
+	-- without having to duplicate it in every addon
+	this.past_loading_screen = true
+end
+
+function on_game_start()
+	if no_callbacks then return end
+	RegisterScriptCallback("on_loading_screen_dismissed", on_loading_screen_dismissed)
+end

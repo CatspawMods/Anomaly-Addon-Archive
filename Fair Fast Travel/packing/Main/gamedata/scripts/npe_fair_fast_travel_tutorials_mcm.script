@@ -348,6 +348,14 @@ end
 function on_option_change()
     update_unsquish_ratio()
     refresh_ft_state()
+    if z_npe_timed_prompt then
+        local args = {
+            add_tutorial_prefix = true,
+            header_image        = "ui_fft_menuslide_maincfg",
+            tutorial_loc_str    = "ui_mcm_npe_module_fft_tutorial_fft_tut_travel_unlocked"
+        }
+        z_npe_timed_prompt.enable_tutorial_ask_prompt("fft_tut_travel_unlocked", args)
+    end
 end
 
 function actor_on_first_update()
