@@ -2,8 +2,8 @@
 --[[	Timed Floating Prompt
 -- ==================================================================--]]
 script_name 	= "ui_timed_prompt"
-script_version 	= "1.0"
-release_date 	= 20260205
+script_version 	= "1.1"
+release_date 	= 20260206
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	
@@ -18,7 +18,7 @@ release_date 	= 20260205
 	features. The prompt won't crash without it, but it won't be able 
 	to generate keybind text or parse color substitutions.
 
-	See PROMPT USAGE below.
+	See PROMPT USAGE below, or FULL SETTINGS LIST at the bottom.
 
 	If you have an NPE tutorial that you want to prompt the user first,
 	see z_npe_timed_prompt.script for instructions and methods.
@@ -68,6 +68,9 @@ cfg = {
 	show_timer_indicator 	= true,
 	show_timeout_reminder 	= true,
 	load_from_file 			= true,
+	ease_in_duration 		= 200,
+	ease_out_duration 		= 400,
+	default_wait_time 		= 5000,
 	easing_in_type 			= "easeInOutBack",
 	easing_out_type 		= "easeInOutBack",
 	default_ui_file 		= "ui_timed_prompt.xml"
@@ -113,6 +116,7 @@ function show_tutorial_prompt(tutorial_id, title_text, exec_func, args)
 	-- A unique internal identifier for this prompt, can be any valid Lua string
 	args.tutorial_id 	= tutorial_id or args.tutorial_id or args.uid
 	-- NPE set ID
+	args.add_tutorial_prefix = get_val_or_default(args.add_tutorial_prefix, cfg.add_tutorial_prefix)
 	local prefix 		= args.add_tutorial_prefix and tutorial_prefix and (tutorial_prefix .. ": ") or ""
 	-- If add_tutorial_prefix is true, the tutorial title will be prefixed with 
 	-- the localized string "New Tutorial: "
@@ -194,7 +198,6 @@ function show_tutorial_prompt(tutorial_id, title_text, exec_func, args)
 				-- Text caption of the keybind to press
 				bind_argb	= argb.black,
 				-- ARGB color to use for the keybind text
-				-- Whether to add a drop shadow to the text
 				bind_shadow = false,
 				-- Don't show the text drop shadow, since we're using dark text on light bg
 				bind_icon 	= cfg.icons_for_keys and get_icon_for_dik(args.key) or nil,
@@ -326,7 +329,7 @@ function UITimedPrompt:BuildUI(anchor)
 	self.drop:InitTexture(self.args.drop_texture or "ui_catsy_tutorialprompt_full_cfbg")
 
 	self.drop:SetTextureColor(self.args.argb_drop)
-	self.drop:Show(not self.args.hide_drop)
+	self.drop:Show(true)
 
 	self.frame:InitTexture(self.args.frame_texture or (self.args.hide_header and "ui_catsy_tutorialprompt_noimg_frame" or "ui_catsy_tutorialprompt_full_frame"))
 	if self.args.argb_frame then
@@ -453,7 +456,7 @@ function UITimedPrompt:DisableOtherPrompts()
 end
 
 function UITimedPrompt:CloseWindow()
-	if self.args.no_animations then
+	if self.args.no_animations or not self.args.timeout_msg then
 		self:Destroy()
 	else
 		slide_window_out(self, true)
@@ -916,7 +919,7 @@ function slide_window_in(window)
 	local x = window.x or 10
 	local y = window.y or 180
 	local args = window.args or {}
-	local dur = tonumber(window.slide_in_duration or cfg.slide_in_duration) or 200
+	local dur = tonumber(args.ease_in_duration or cfg.ease_in_duration) or 200
 	local func = args.easing_in_type or cfg.easing_in_type
 	local curve = func and easing[func] or function(x) return x end
 	do_timed_anim(window.wnd, window.uid, dur, "slide", -w, y, x, y, curve)
@@ -929,7 +932,7 @@ function slide_window_out(window, delayed_destroy)
 	local x = window.x or 10
 	local y = window.y or 180
 	local args = window.args or {}
-	local dur = tonumber(window.slide_out_duration or cfg.slide_out_duration) or 400
+	local dur = tonumber(args.ease_out_duration or cfg.ease_out_duration) or 400
 	local func = args.easing_out_type or cfg.easing_out_type
 	local curve = func and easing[func] or function(x) return x end
 	do_timed_anim(window.wnd, window.uid, dur, "slide", x, y, (-w - 1), y, curve)
@@ -1172,8 +1175,9 @@ function on_game_start()
 			cfg.default_ui_file 		= get_val_or_default(defs.default_ui_file, cfg.default_ui_file)
 			cfg.easing_in_type 			= get_val_or_default(defs.easing_in_type, cfg.easing_in_type)
 			cfg.easing_out_type 		= get_val_or_default(defs.easing_out_type, cfg.easing_out_type)
-			cfg.slide_in_duration 		= get_val_or_default(tonumber(defs.slide_in_duration), cfg.slide_in_duration)
-			cfg.slide_out_duration 		= get_val_or_default(tonumber(defs.slide_out_duration), cfg.slide_out_duration)
+			cfg.default_wait_time 		= get_val_or_default(tonumber(defs.default_wait_time), cfg.default_wait_time)
+			cfg.ease_in_duration 		= get_val_or_default(tonumber(defs.ease_in_duration), cfg.ease_in_duration)
+			cfg.ease_out_duration 		= get_val_or_default(tonumber(defs.ease_out_duration), cfg.ease_out_duration)
 		end
         if not z_npe_timed_prompt then return end
         
@@ -1187,4 +1191,227 @@ function on_game_start()
 end
 
 
+--[[=====================================================================
+	FULL SETTINGS LIST
+-- ======================================================================
+	This should cover all of the "args" that can be used by the timed
+	prompt, along with their default values:
+-- ======================================================================
+	FEATURE FLAGS
+		add_tutorial_prefix - false
+			Prefixes tutorial name with "New Tutorial: "
 
+		complex - true
+			Enables Complex Mode in the title textbox, which allow the use of mid-string color codes.
+			Will also parse substitution codes from utils_catspaw_text.
+
+		no_aspect_correction - false
+			Disables correction of the width of UI elements based on screen aspect ratio. Not recommended.
+
+		no_sound - false
+			Disables all UI sound effects, regardless of other settings.
+
+		show_timer - true
+			Show a circular timer icon to display the time remaining until the window disappears.
+
+		timer_on_title - true
+			Timer positioning is relative to the end of the title text, however long that is.
+
+		timeout_msg - true
+			Show a brief reminder after missed tutorials that they will be shown again and where they can be found/
+
+
+	NUMERIC VALUES
+		cleanup_time - 20000
+			Time in ms before the prompt assumes something went wrong, and destroys itself.
+
+		drop_alpha - 0.75
+			Opacity of the drop texture, from 0 to 1.
+
+		drop_h
+		drop_w
+			Height and width of the drop texture. Based on window dimensions if omitted.
+
+		frame_h
+		frame_w
+			Height and width of the UI frame. Based on window dimensions if omitted.
+
+		key
+			The DIK code of the key to be watched for single and long presses. Defaults to the user's PDA keybind.
+
+		header_h - 25
+		header_w - 340
+			Height and width of the optional header image.
+
+		header_x - 6
+		header_y - 6
+			Screen position of the header image, relative to the window.
+
+		timer_size - 16
+			Size of the countdown timer element.
+
+		title_x - 10
+		title_y - 6 if header is hidden, 36 if not
+			Screen position of the title text, relative to the window.
+
+		title_h - 20
+			Height of the title text element. Width is determined by text and window.
+
+		wait_time - 5000
+			Time in ms to wait before the prompt is ignored and closed.
+
+		window_x - 10
+		window_y - 180
+			Screen position of the tutorial window itself, relative to the 1024x768 internal screen canvas.
+
+		window_h - 180
+		window_w - 360
+			Height and width of the window itself. Determines frame and drop sizes as well, if they are omitted.
+
+	STRINGS
+		bind
+			Default: generated by utils_catspaw_text based on args.key
+			The text of the keybind to be pressed, as shown to the user. Used to build a fake "key" icon image.
+
+		drop_texture
+			Name of the texture used for the drop "shadow". Defaults:
+				With header image: ui_catsy_tutorialprompt_full_cfbg
+				Without header: ui_catsy_tutorialprompt_noimg_cfbg
+
+		frame_texture
+			Name of the texture used for the UI frame. Defaults:
+				With header image: ui_catsy_tutorialprompt_full_frame
+				Without header: ui_catsy_tutorialprompt_noimg_frame
+
+		header_image
+			Default: ui_options_slider_news
+			Name of the texture used for the header image.
+		
+		title
+			Default: "New Tutorial"
+			Title text to display between the header image and the prompts.
+
+		tutorial_loc_str
+			Alternately, a localization string for the title text that will be used after being translated.
+
+		snd_on_init
+			Default: catspaw\\tutorial_beep
+			Sound path to play when window is first initialized.
+
+		snd_on_close
+			Default: catspaw\\paw_blip
+			Sound path to play when the window is closed for any reason.
+
+		uid
+			A unique internal identified for this specific prompt. Used internally in various ways. Auto-generated if omitted.
+
+		xml_file
+			Optional filename to use instead of ui_timed_prompt.xml. Use this or args.xml, not both.
+
+	EVENT FUNCTORS
+		func_timer
+			Optional replacement functor to perform all timer-related logic.
+			You should understand how the prompt works internally if you want to use this.
+
+		func_tutorial
+			Functor to execute when tutorial is viewed.
+
+		on_ignore
+			Optional functor to trigger if tutorial is missed/ignored.
+
+		on_init
+			Optional functor to trigger when all window setup is complete, just after snd_on_init.
+
+		on_destroy
+			Optional functor to trigger upon window shutdown.
+
+		xml
+			Optional pre-parsed XML object to replace the default UI structure. Use this or args.xml_file, not both.
+
+
+	OTHER
+		title_font
+			Default: GetFontGraffiti32Russian()
+			A font object to use for the title text.
+
+		prompts
+			An index table containing all of the prompt definitions, and their attributes that should be passed to UIKeyPrompt.
+			Each key should be a sequential number beginning with 1, with a value that is a subtable for each prompt.
+
+			UIKeyPrompt args:
+
+				argb_progress
+					Optional ARGB color of the long-press progress indicator.
+
+				bind
+					Default: args.bind,
+					Text caption of the keybind to press.
+
+				bind_argb
+					Default: black
+					ARGB color to use for the keybind text.
+
+				bind_icon
+					Texture to use instead of of the generated keybind icon
+
+				bind_shadow
+					Default: true
+					Don't show drop shadow for keybind label text. 
+					Defaults to true because the default prompt is already dark text on light background.
+
+				bind_x
+					Default: 8
+				bind_y
+					Default: -2
+					Position of the keybind display container
+
+				bind_h
+					Default: 20
+				bind_w
+					Default: 20
+					Size of the generated keybind icon for single-character binds.
+
+				func
+					Functor to execute if tutorial is viewed. Can be passed either in ags.func_tutorial, or by passing
+					to show_tutorial_prompt or UITimedPrompt in the exec_func argument.
+
+				key
+					Default: user's PDA keybind, pulled from args.key
+					DIK code of the key to watch.
+
+				hide_bind
+					Don't show the keybind display on this action prompt. Used on the long-press version so that the keybind isn't shown twice.
+
+				hide_hold_ind
+					Don't show the long-press progress indicator.
+
+				label_font
+					Default: GetFontLetterica16Russian()
+					Optional font object to use for the text label.
+
+				label_text
+					Default: Localized ui_st_catsy_view_tutorial
+					Text label for the option to view the tutorial, e.g. "Press to view".
+
+				label_x
+					Default: 30
+					Horizontal offset for the label text.
+				mode
+					Should be 0 for simple press, 2 for long press.
+
+				prog_x
+					Default: 2
+				prog_y
+					Default: -1
+					Position of the long press progress indicator, if relevant.
+
+				tex_frame
+					Optional UI frame texture for the action prompt.
+
+				window_x
+					Default: 0
+				window_y
+					Default: 58 with header, 27 without
+					Position of the action prompt container.
+
+-- ====================================================================]]

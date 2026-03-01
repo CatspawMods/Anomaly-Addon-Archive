@@ -190,4 +190,7 @@
         <text>$clr_gldУдачной охоты, сталкер!</text>
     </string>
 
+    <string id="ui_mcm_npe_module_fft_tutorial_fft_tut_travel_psyblocked">
+        <text>Быстрое перемещение блокируется пси-полем</text>
+    </string>
 </string_table>

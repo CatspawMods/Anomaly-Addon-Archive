@@ -2,8 +2,8 @@
 --[[	Fair Fast Travel System
 -- ==================================================================--]]
 script_name 	= "game_fast_travel"
-script_version 	= "2.19.0"
-release_date 	= 20260205
+script_version 	= "2.20.0"
+release_date 	= 20260301
 --[[=====================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
@@ -222,29 +222,29 @@ local default_trip_data = {
 		Modifying any of these values will propagate to the
 		travel logic that follows the callback.
 	--=================================================================]]
-	id 					= nil, 	-- destination object ID
-	started 			= false,-- set true once travel logic begins
-	tt 					= nil,	-- travel type: ft, bp, or gt
-	maploc 				= nil, 	-- "map" if changing maps, "loc" if not
-	cfg 				= {}, 	-- will contain full config table for travel type
-	apos 				= nil,	-- actor position
-	dpos 				= nil,	-- destination position
-	dest 				= nil,	-- destination server object
-	dist 				= 0,	-- final distance
-	durt 				= 0,	-- total trip duration in minutes
-	durh 				= 0,	-- trip duration in hours
-	durm 				= 0,	-- trip duration in minutes
-	cost 				= 0,	-- trip cost in rubles
-	erst 				= nil,	-- localization text string for error, if any
-	smart 				= nil,	-- target smart, if any
-	level 				= nil,  -- target level name
-	is_bp 				= nil, 	-- for mapspot text generation at runtime, don't set/change
-	npc 				= false,-- flag indicating that travel began from a guide NPC
-	text 				= nil, 	-- text of the menu option that was clicked
-	hide_pda 			= true, -- hide PDA after local travel
-	ret_value 			= true,	-- set false to abort all further action/cancel trip
-	paid 				= false,-- guide cost already paid or waived by another script
-	nosquad 			= nil,	-- if true, FFT will not teleport the actor's squad
+	id 					= nil, 	-- number 	destination object ID
+	started 			= false,-- boolean 	set true once travel logic begins
+	tt 					= nil,	-- string 	travel type: ft, bp, or gt
+	maploc 				= nil, 	-- string 	"map" if changing maps, "loc" if not
+	cfg 				= {}, 	-- table 	full config table for travel type
+	apos 				= nil,	-- vector3 	actor position
+	dpos 				= nil,	-- vector3 	destination position
+	dest 				= nil,	-- se_obj 	destination server object
+	dist 				= 0,	-- number 	final distance
+	durt 				= 0,	-- number 	total trip duration in minutes
+	durh 				= 0,	-- number 	trip duration in hours
+	durm 				= 0,	-- number 	trip duration in minutes
+	cost 				= 0,	-- number 	trip cost in rubles
+	erst 				= nil,	-- string 	localization text string for error, if any
+	smart 				= nil,	-- smart 	target smart terrain, if any
+	level 				= nil,  -- string 	target level name
+	is_bp 				= nil, 	-- boolean 	for mapspot text generation at runtime, don't set/change
+	npc 				= false,-- boolean 	flag indicating that travel began from a guide NPC
+	text 				= nil, 	-- string 	text of the menu option that was clicked
+	hide_pda 			= true, -- boolean 	hide PDA after local travel
+	ret_value 			= true,	-- boolean 	set false to abort all further action/cancel trip
+	paid 				= false,-- boolean 	guide cost already paid or waived by another script
+	nosquad 			= nil,	-- boolean 	if true, FFT will not teleport the actor's squad
 }
 
 trip = {}
@@ -734,6 +734,9 @@ function parse_trip_tokens(parse_string, tdata, color_support)
 	local estd 	= ""
 	local go_to = ""
 	local cmenu = false
+	if dest:find("^inv_backpack") or dest:find("^inv_actor_backpack") then
+		dest 	= get_stash_hint(tdata.id) or dest
+	end
 	if tdata.cfg then
 		local maploc 	= (lvl ~= level.name()) and "map" or "loc"
 		local cfg = tdata.cfg[maploc]
@@ -745,7 +748,6 @@ function parse_trip_tokens(parse_string, tdata, color_support)
 				go_to 	= gts("st_fftd_mapspot_guideto")
 			elseif tdata.is_bp then
 				go_to 	= gts("st_pda_backpack_travel_to")
-				dest 	= get_stash_hint(tdata.id) or dest
 			else
 				go_to 	= gts("st_pda_fast_travel_to")
 			end
@@ -876,6 +878,7 @@ function map_spot_menu_add_property(property_ui, id, level_name)
 		local psyblock 	= gts("st_fft_travel_psyblocked")
 		set_menu_option(psyblock, tt, false)
 		property_ui:AddItem(psyblock)
+		psyblocked = true
 		ui_pda_encyclopedia_tab.unlock_article("encyclopedia_addons_fair_fast_travel_psyblocked")
 		return
 	end
@@ -906,11 +909,11 @@ function map_spot_menu_add_property(property_ui, id, level_name)
 								(is_campfire and valid_fire)
 							)
 		elseif tt == "bp" then
-			condition 	= bp_enabled and is_backpack
+			condition 	= (bp_enabled and is_backpack)
 		elseif tt == "gt" then
 			condition 	= gt_enabled and
 							(
-								is_smart or 
+								is_smart or is_backpack or
 								(quick_pin and pins_allowed) or
 								(is_campfire and valid_fire)
 							)
@@ -1254,27 +1257,29 @@ function bring_companions_to_actor(forced)
 	vl("bring_companions_to_actor (setting: %s)", companions_travel_with_actor())
 	local lvid_pos = level.vertex_position(db.actor:level_vertex_id())
 	for id,squad in pairs(axr_companions.companion_squads) do 
-		if squad.online == false then
-			squad:force_change_position(lvid_pos)
-		end
+		if squad then
+			if (squad.online == false) then
+				squad:force_change_position(lvid_pos)
+			end
 
-		local npc
-		for k in squad:squad_members() do
-			if k.id then
-				npc = db.storage[k.id] and db.storage[k.id].object
-				local se_obj = alife_object(k.id)
-				local hostage = tp_ignores_hostages and se_obj and (se_load_var(se_obj.id, se_obj:name(), "companion_cannot_teleport"))
-				local following = tp_respects_waitfollow and npc and npc:dont_has_info("npcx_beh_wait") and true or false
-				if following and not hostage then 
-					if not (db.offline_objects[k.id]) then
-						db.offline_objects[k.id] = {}
-					end
-					db.offline_objects[k.id].level_vertex_id = level.vertex_id(lvid_pos)
-					if npc then
-						sim_squad_scripted.reset_animation(npc)
-						npc:set_npc_position(lvid_pos)
-					else
-						k.object.position = lvid_pos
+			local npc
+			for k in squad:squad_members() do
+				if k.id then
+					npc = db.storage[k.id] and db.storage[k.id].object
+					local se_obj = alife_object(k.id)
+					local hostage = tp_ignores_hostages and se_obj and (se_load_var(se_obj.id, se_obj:name(), "companion_cannot_teleport"))
+					local following = tp_respects_waitfollow and npc and npc:dont_has_info("npcx_beh_wait") and true or false
+					if following and not hostage then 
+						if not (db.offline_objects[k.id]) then
+							db.offline_objects[k.id] = {}
+						end
+						db.offline_objects[k.id].level_vertex_id = level.vertex_id(lvid_pos)
+						if npc then
+							sim_squad_scripted.reset_animation(npc)
+							npc:set_npc_position(lvid_pos)
+						else
+							k.object.position = lvid_pos
+						end
 					end
 				end
 			end

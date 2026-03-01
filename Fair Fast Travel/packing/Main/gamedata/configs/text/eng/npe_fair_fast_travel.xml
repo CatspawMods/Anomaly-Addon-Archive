@@ -189,4 +189,8 @@
         <text>$clr_gldGood hunting, stalker!</text>
     </string>
 
+    <string id="ui_mcm_npe_module_fft_tutorial_fft_tut_travel_psyblocked">
+        <text>Travel Blocked by Psy Field</text>
+    </string>
+
 </string_table>

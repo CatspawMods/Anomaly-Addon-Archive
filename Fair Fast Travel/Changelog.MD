@@ -3,6 +3,13 @@ Moddb: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-durati
 
 ## Change Log
 
+**2.20.0:**
+- Fixed: backpack travel unavailable for Guide Travel type
+- Fixed: object names instead of stash names shown in some circumstances
+- Fixed: rare but possible crash when Anomaly leaves a null squad in `axr_companions.companion_squads`
+- New context-sensitive NPE tutorial is offered when travel is blocked by a psy field
+- Overall improved timed-prompt tutorial
+
 **2.19.0:**
 - Tutorial now uses my Timed Tutorial Prompt module to prompt the player before showing the tutorial, instead of interrupting gameplay
 - Minor adjustments to travel logic

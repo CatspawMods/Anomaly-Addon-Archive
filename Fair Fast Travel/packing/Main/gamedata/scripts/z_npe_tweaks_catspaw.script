@@ -1,0 +1,137 @@
+-- ======================================================================
+--[[    NPE Customizations
+-- ==================================================================--]]
+script_name     = "z_npe_tweaks_catspaw"
+script_version  = "1.0"
+release_date    = 20260301
+--[[=====================================================================
+    Author: Catspaw (CatspawMods @ ModDB)
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/fair-fast-travel-duration-for-anomaly-151
+    https://www.youtube.com/@CatspawAdventures
+-- ======================================================================
+        Monkeypatch and supporting functions to add a few features to
+        NPE, namely:
+            option of using a functor instead of a static desc
+                use card.func_desc
+            option to correct the image width for aspect ratio
+                card.fix_aspect = true
+            set-level option to tell DOF to DIAF
+                set.disable_dof = true
+            full support for text tokens from utils_catspaw_text
+
+    Any sets/cards that do not use these properties will not be touched.
+
+    Will have no effect if NPE is not installed, and is safe to ignore.
+-- ====================================================================]]
+assert(utils_catspaw_common,
+    "\n! ERROR: NPE customization module requires utils_catspaw_common, which does not exist!\n"
+)
+assert(utils_catspaw_text,
+    "\n! ERROR: NPE customization module require utils_catspaw_text, which does not exist!\n"
+)
+-- ======================================================================
+local parse_colors  = utils_catspaw_text and utils_catspaw_text.parse_color_tokens
+unsquish_ratio      = 1
+
+local dl = function(logtext, ...) utils_catspaw_common.dlog(game_fast_travel, logtext, ...) end
+local vl = function(logtext, ...) utils_catspaw_common.vlog(game_fast_travel, logtext, ...) end
+
+-- ======================================================================
+
+function update_unsquish_ratio()
+    -- Scaling multiplier for all horizontal screen coordinates and sizes
+    -- Makes things not look squished/stretched at different aspects
+    -- Set card[index].fix_aspect = true to enable
+    unsquish_ratio  = (device().height / device().width) / (768 / 1024)
+    return unsquish_ratio
+end
+
+
+function unsquish_card_image(card, image)
+    if not image then return end
+    card.image_w    = card.image_w or 350
+    card.image_h    = card.image_h or 350
+    image:SetWndSize(vector2():set(card.image_w * (unsquish_ratio or 1), card.image_h))
+end
+
+function get_rid_of_dof()
+    -- DOF is eye cancer outside of cinematics and screenshots
+    if npe_dialog.Disable_dof then
+        npe_dialog.Disable_dof()
+    else
+        actor_menu.last_mode = 0
+    end
+end
+
+function get_tutorial_desc(set, index)
+    local card = set and index and set.cards and set.cards[index]
+    local desc = card and card.description and game.translate_string(card.description) or nil
+    if card then 
+        card.token_list = utils_catspaw_text.get_default_tokens()
+        desc = card.func_desc and card.func_desc() or desc
+    end
+    return desc or ""
+end
+
+function post_update_adjustments(self)
+    local card  = self and self.set and self.set.cards and self.cardIndex and self.set.cards[self.cardIndex]
+    if not card then return end
+    if self.set.disable_dof then
+        get_rid_of_dof()
+    end
+    if card.func_desc or card.rich_text then
+        self:CustomDescriptionText()
+    end
+    self:Unsquish()
+end
+
+-- ======================================================================
+--  Monkeypatch of npe_dialog_tutorial.UINewPlayerExperience
+-- ======================================================================
+local npe_dialog_init = npe_dialog_tutorial and npe_dialog_tutorial.UINewPlayerExperience.InitControls
+local npe_dialog_next = npe_dialog_tutorial and npe_dialog_tutorial.UINewPlayerExperience.OnButtonNext
+local npe_dialog_prev = npe_dialog_tutorial and npe_dialog_tutorial.UINewPlayerExperience.OnButtonPrev
+
+if npe_dialog_init then
+    function npe_dialog_tutorial.UINewPlayerExperience:InitControls(set)
+        npe_dialog_init(self, set)
+        post_update_adjustments(self)
+    end
+
+    function npe_dialog_tutorial.UINewPlayerExperience:OnButtonNext()
+        npe_dialog_next(self)
+        post_update_adjustments(self)
+    end
+
+    function npe_dialog_tutorial.UINewPlayerExperience:OnButtonPrev()
+        npe_dialog_prev(self)
+        post_update_adjustments(self)
+    end
+    
+    function npe_dialog_tutorial.UINewPlayerExperience:CustomDescriptionText(text)
+        if not self.card_description then return end
+        local card  = self.set.cards[self.cardIndex]
+        text        = text or get_tutorial_desc(self.set, self.cardIndex) or game.translate_string(card.description)
+        self.card_description:SetTextComplexMode(true)
+        text        = text and parse_colors(text, card.token_list, true)
+        self.card_description:SetText(text or "")
+    end
+
+    function npe_dialog_tutorial.UINewPlayerExperience:Unsquish(force)
+        -- Refresh/adjustment can be triggered by an external script with the force argument
+        local card = self.set.cards[self.cardIndex]
+        if not (force or (card and card.fix_aspect)) then return end
+        unsquish_card_image(card, self.card_image)
+    end
+end
+-- ======================================================================
+
+function on_option_change()
+    update_unsquish_ratio()
+end
+
+function on_game_start()
+    if killswitch or not (npe_director and utils_catspaw_common and utils_catspaw_text) then return end
+    RegisterScriptCallback("on_option_change", on_option_change)
+    on_option_change()
+end

@@ -756,10 +756,10 @@
 	</string>
 
 	<string id="encyclopedia_addons_fair_fast_travel_psyblocked_text">
-		<text>%c[ui_gray_1]If you're playing in %c[pda_yellow]Story Mode%c[ui_gray_1], and you haven't yet deactivated the %c[pda_yellow]Brain Scorcher%c[ui_gray_1], the %c[pda_yellow]Fair Fast Travel%c[ui_gray_1] addon includes an optional feature which prevents any fast travel trip that might require passing through the affected area of influence. Destinations which are unavailable for this reason will be indicated by the special icon you see above.\n
+		<text>%c[ui_gray_1]If you're playing in %c[pda_yellow]Story Mode%c[ui_gray_1], and you haven't yet deactivated the %c[pda_yellow]Brain Scorcher%c[ui_gray_1], the %c[pda_yellow]Fair Fast Travel%c[ui_gray_1] addon includes an optional feature which prevents any fast travel trip that might require passing through the affected area of influence. Destinations which are unavailable for this reason will be indicated by a special icon instead of the usual travel point.\n
 
 		\n%c[pda_white]To restore fast travel to these locations, either progress the main story or disable the feature in the Mod Configuration Menu:\n \n
-		%c[pda_yellow]MCM > Fair Fast Travel > General > Brain Scorcher blocks travel
+		%c[255,0,200,220]MCM > Fair Fast Travel > General > Brain Scorcher blocks travel
 		</text>
 	</string>
 

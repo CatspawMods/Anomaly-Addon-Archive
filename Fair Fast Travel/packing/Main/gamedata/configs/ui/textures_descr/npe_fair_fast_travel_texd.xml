@@ -2,5 +2,12 @@
     <file name="ui\fair_fast_travel\ui_fft_tutorials">
         <texture id="ui_fft_tutorial_ftunlock_1" x="0" y="0" width="1000" height="700"/>
         <texture id="ui_fft_tutorial_ftunlock_gamma_1" x="0" y="700" width="1000" height="700"/>
+
+        <texture id="ui_fft_tutorial_ftunlock_2" x="1000" y="0" width="1000" height="700"/>
+        <texture id="ui_fft_tutorial_ftunlock_gamma_2" x="1000" y="700" width="1000" height="700"/>
+
+        <texture id="ui_fft_tutorial_ftunlock_3" x="0" y="1400" width="1000" height="648"/>
+        <texture id="ui_fft_tutorial_psyblocked" x="1000" y="1400" width="1000" height="648"/>
+
     </file>
 </w>
