@@ -17,7 +17,7 @@
 		<texture id = "ui_catsy_tutorialprompt_noimg_cfbg" x="0" y="905" width="535" height="94" />
 
 		<texture id = "ui_catsy_keybind_bg_single_v4" x="540" y="0" width="128" height="128" />
-		<texture id = "ui_catsy_keybind_bg_left_v4" x="574" y="0" width="34" height="128" />
+		<texture id = "ui_catsy_keybind_bg_left_v4" x="540" y="0" width="34" height="128" />
 		<texture id = "ui_catsy_keybind_bg_center_v4" x="574" y="0" width="60" height="128" />
 		<texture id = "ui_catsy_keybind_bg_right_v4" x="634" y="0" width="34" height="128" />
 

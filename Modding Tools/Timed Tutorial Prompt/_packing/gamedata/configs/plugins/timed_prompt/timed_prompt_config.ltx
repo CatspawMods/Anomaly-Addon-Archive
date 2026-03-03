@@ -14,7 +14,7 @@ default_ui_file 		= ui_timed_prompt.xml
 disable_all_sounds 		= false
 ; Does exactly what it says
 icons_for_keys 			= true
-; If an special icon is available for a keybind (like the mouse buttons), use it
+; If a special icon is available for a keybind (like the mouse buttons), use it
 mark_missed_as_played 	= false
 ; If a tutorial times out without a response from the player, mark it as played in NPE
 ; Defaults to false because the player might not have even noticed a timed-out tutorial,
@@ -29,6 +29,9 @@ attach_timer_to_title 	= true
 show_timeout_reminder	= true
 ; If enabled, tutorials that are missed because they timed out will have a brief window
 ; shown after, reminding the player where they can mark or unmark tutorials in MCM.
+add_tutorial_prefix 	= true
+; If enabled, the name of the tutorial will be prefixed with the localized text
+; "New Tutorial: "
 easing_in_type 			= easeInOutBack
 easing_out_type			= easeInOutBack
 ; Easing functions used for the slide-in and slide-out animations - options are:
@@ -36,3 +39,12 @@ easing_out_type			= easeInOutBack
 ease_in_duration		= 200
 ease_out_duration 		= 400
 ; Duration in ms of the slide-in and slide-out animations
+exclusive_mode 			= true
+; If NPE tries to queue another tutorial while the timed prompt has a window open,
+; that tutorial will be suppressed and queued to try playing again once the
+; window has closed.
+; Non-NPE calls to show_tutorial_prompt will be handled the same way.
+tutorial_queue_delay 	= 2
+; Delay in seconds after a timed prompt window is closed before suppressed 
+; tutorials (those that are skipped because they tried to play while a window was 
+; open) are returned to the NPE play queue.

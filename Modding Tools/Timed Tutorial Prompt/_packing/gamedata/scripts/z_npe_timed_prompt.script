@@ -3,19 +3,23 @@
 -- ======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
 -- ======================================================================
-    This script is necessary in order for the Timed Tutorial Prompt to
-    be able to hook into New Player Experience and intercept tutorials
-    in order to show the prompt first, then launch the tutorial if the
-    player chose to view it.
+    This script is necessary so that the Timed Tutorial Prompt is able 
+    to hook into New Player Experience and intercept tutorials in order 
+    to show the prompt first, then launch the tutorial if the player 
+    chose to view it.
 
     If this file is deleted or omitted, the Prompt will still work, but
     it will be unable to integrate with NPE at all.
 
     Conversely, this file does nothing without ui_timed_prompt.
 
-    All NPE integration functionality is strictly opt-in--this script 
+    Nearly all NPE integration functionality is opt-in--this script 
     will not touch tutorials that haven't requested it, passing them
     straight through to NPE.
+
+    The only exception is if "exclusive mode" is enabled, in which case
+    NPE tutorials will be intercepted while a timed prompt is active, 
+    and passed back to the play queue once the prompt is gone.
 
     To opt in, pass your NPE set ID along with an optional table of 
     arguments to customize the prompt:
@@ -26,17 +30,20 @@
     you specify (if any) are the same ones used by the timed prompt,
     found in ui_timed_prompt.script.
 
-    You can also add set IDs to the enabled_prompts section in
+    This is probably best done in actor_on_first_update.
+
+    You can also add set IDs via DLTX to the enabled_prompts section in
     configs\plugins\timed_prompt_config.ltx, but you won't be able to
     specify custom args when done that way.
 -- ==================================================================--]]
 
 enabled_prompts = {}
+play_npe_set    = nil
 
 function enable_tutorial_ask_prompt(set_id, args)
     if not (ui_timed_prompt and set_id) then return end
     local passed_args = args and size_table(args) or nil
-    local _ = DEV_DEBUG and printf("[enable_tutorial_ask_prompt] prompt for NPE tutorial %s is now enabled%s", set_id, state, passed_args and (" ("..passed_args.." base args supplied") or "")
+    local _ = DEV_DEBUG and printf("[enable_tutorial_ask_prompt] prompt for NPE tutorial %s is now enabled%s", set_id, passed_args and " ("..passed_args.." base args supplied" or "")
     enabled_prompts[set_id] = args or {}
 end
 
@@ -50,41 +57,49 @@ function mark_npe_tutorial_as_played(set_id)
     npe_director.Update_set_played_state(set_id, true)
 end
 
-if ui_timed_prompt then
-    local play_set
+if ui_timed_prompt and npe_director then
+    local dl = ui_timed_prompt.dl
+    local play_npe_set = npe_director.play_set_dialog
+
     function check_for_tutorial_ask(set)
         if not (set and set.id) then return end
-        printf("checking whether to ask before showing tutorial %s", set.id)
+        dl("[%s] Checking whether to ask before showing tutorial %s", time_continual(), set.id)
+
         if set.never_prompt or not enabled_prompts[set.id] then
-            local _ = DEV_DEBUG and printf("%s (never_prompt: %s) has not opted in, passing directly to NPE", set.id, not not set.never_prompt)
-            play_set(set)
+            if ui_timed_prompt.wnd_open and ui_timed_prompt.exclusive_mode then
+                dl("[%s] ui_timed_prompt currently has a window open and exclusive mode is active - suppressing tutorial %s and queueing it for later", time_continual(), set.id)
+                ui_timed_prompt.queue_suppressed_tutorial(set.id, nil, nil, {uid = set.id, npe_set = set})
+            else
+                dl("[%s] %s (never_prompt: %s) has not opted in, passing directly to NPE", time_continual(), set.id, not not set.never_prompt)
+                play_npe_set(set)
+            end
             return
         end
+
         local functor = "run_tutorial_" .. set.id
         this[functor] = (
             function()
-                printf("Executing NPE tutorial after timed prompt")
-                play_set(set)
+                dl("[%s] Executing NPE tutorial %s after timed prompt", time_continual(), set.id)
+                play_npe_set(set)
             end
         )
-        local _ = DEV_DEBUG and printf("Intercepting play_set_dialog and starting timed tutorial prompt")
+
         local args = enabled_prompts[set.id] or {}
         args.npe_set = set
         args.tutorial_loc_str = args.tutorial_loc_str or set.title
+
+        if ui_timed_prompt.wnd_open and ui_timed_prompt.exclusive_mode then
+            dl("[%s] ui_timed_prompt currently has a window open and exclusive mode is active - suppressing tutorial %s and queueing it for later", time_continual(), set.id)
+            ui_timed_prompt.queue_suppressed_tutorial(set.id, nil, this[functor], {uid = set.id, npe_set = set})
+            return
+        end
+
+        dl("[%s] Intercepting play_set_dialog and starting timed tutorial prompt", time_continual())
+        
         ui_timed_prompt.show_tutorial_prompt(set.id, nil, this[functor], args)
     end
 
-    if npe_director then
-        -- New NPE
-        play_set = npe_director.play_set_dialog
-        function npe_director.play_set_dialog(set)
-            check_for_tutorial_ask(set)
-        end
-    elseif npe_dialog then
-        -- Old NPE
-        play_set = npe_dialog.Play
-        function npe_dialog.Play(set)
-            check_for_tutorial_ask(set)
-        end
+    function npe_director.play_set_dialog(set)
+        check_for_tutorial_ask(set)
     end
 end
