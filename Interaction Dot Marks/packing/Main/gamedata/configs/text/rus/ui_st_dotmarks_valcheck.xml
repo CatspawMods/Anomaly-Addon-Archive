@@ -1,0 +1,59 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Author: Catspaw
+    Every new update is translated using DeepL.
+    Further corrections or suggestions from native speakers are always welcome, and usually get added in subsequent patches.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+	<string id="st_depcheck_failpart_1">
+		<text>%c[default]Аддон %c[255,255,215,0]«</text>
+	</string>
+
+	<string id="st_depcheck_failpart_2">
+		<text>»%c[default] %c[255,255,215,0]не загрузился вообще%c[default]. Это может произойти по разным причинам. Это была первая ошибка:\n
+		%c[255,255,0,0] \n</text>
+	</string>
+
+	<string id="st_depcheck_failpart_3">
+		<text>\n%c[255,220,220,220]
+		\nЧто можно попробовать:\n</text>
+	</string>
+
+	<string id="st_depcheck_listitem">
+		<text>\n
+			%c[255,255,255,255]• %c[default]</text>
+	</string>
+
+	<string id="st_depcheck_dotmarks_tip_1">
+		<text>Обновите другие дополнения Catspaw (такие как Fair Fast Travel, Milspec PDA или PAW)</text>
+	</string>
+
+
+	<string id="st_depcheck_basic_tip_1">
+		<text>Переместите дополнение в конец списка в MO2</text>
+	</string>
+
+	<string id="st_depcheck_basic_tip_2">
+		<text>Загрузите дополнение заново с Moddb и переустановите его</text>
+	</string>
+
+	<string id="st_depcheck_basic_tip_3">
+		<text>Запустите Anomaly без других аддонов и посмотрите, будет ли это происходить</text>
+	</string>
+
+	<string id="st_depcheck_dotmarks_end">
+		<text>\n %c[default]
+		\nЕсли после этого DotMarks по-прежнему не работает, вероятно, в вашей установке Anomaly есть серьезная проблема. Перейти в меню %c[255,255,215,0]MCM %c[default]> %c[255,255,215,0]DotMarks %c[default]> %c[255,255,215,0]Расширенные настройки%c[default] и предоставьте журнал отладки в соответствии с инструкциями, приведенными там.</text>
+	</string>
+
+	<string id="st_dotmarks_dep_not_found">
+		<text>НЕ НАЙДЕНО!\n</text>
+	</string>
+
+	<string id="st_dotmarks_dep_outdated">
+		<text>УСТАРЕВШИЙ! (требуемая %s, найдена %s)\n</text>
+	</string>
+
+</string_table>

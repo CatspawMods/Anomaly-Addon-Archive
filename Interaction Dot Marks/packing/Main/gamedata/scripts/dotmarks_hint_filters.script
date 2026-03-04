@@ -28,10 +28,11 @@ enabled = {}
 filters = {}
 trims   = {}
 
+local debug_dump = false
 
 function add(match_str, replace_str)
     if not match_str then return end
-    --local _ = verbose and vl("Trying to add hint filter %s | %s", match_str, replace_str)
+    local _ = debug_dump and printf("[HintFilters] Trying to add hint filter %s | %s", match_str, replace_str)
     init(match_str, replace_str)
     enabled[match_str] = filters[match_str].hint
     inc_sub(match_str)
@@ -40,7 +41,7 @@ end
 
 function rem(m)
     if not (m and hfil.filters[m]) then return end
-    --local _ = verbose and vl("Trying to remove hint filter %s", match_str)
+    local _ = debug_dump and printf("[HintFilters] Trying to remove hint filter %s", match_str)
     dec_sub(m)
     if filters[m].subs < 1 then
         enabled[m] = nil
@@ -73,12 +74,12 @@ function set_state(m, state)
         last_active = m
     end
     if (last_state == state) then return true end
-    --local _ = verbose and vl("State for hint filter %s is now %s", m, state)
+    local _ = debug_dump and printf("[HintFilters] State for hint filter %s is now %s", m, state)
     return true
 end
 
 function init(m, r)
-    --local _ = verbose and vl("Initializing hint filter %s with replacement string %s", m, r)
+    local _ = debug_dump and printf("[HintFilters] Initializing hint filter %s with replacement string %s", m, r)
     if not m then return end
     if r == "" then r = nil end
     if not filters then
@@ -111,9 +112,12 @@ function init(m, r)
 end
 
 function update_text()
-    last_raw_text = get_quickhelp_text()
-    if last_raw_text then
-        --dump("QuickHelp raw text: %s", hf.last_raw_text)
+    local new_raw_text = get_quickhelp_text()
+    if new_raw_text then
+        if (new_raw_text == last_raw_text) then
+            -- no need to process if it's still the same text
+            return
+        end
     else
         -- No hint
         if last_active then
@@ -121,27 +125,30 @@ function update_text()
         end
         return
     end
+    last_raw_text = new_raw_text
     local text = trimmed_prompt(last_raw_text)
     local match = text and trims[text]
     if match then
-        --local _ = debug_dump and dump("QuickHelp match: %s = %s", last_raw_text, match)
+        local _ = debug_dump and printf("QuickHelp match: %s = %s", last_raw_text, match)
         -- QuickHelp text matches active filter
         set_state(match, true)
         last_active = match
     end
     local flags = match and { text = filters[match].ts_repl or nil } or {}
+    local _ = debug_dump and printf("sending on_quickhelp_text_update callback for %s", get_text(last_active))
     SendScriptCallback("on_quickhelp_text_update", last_raw_text, last_active, get_text(last_active), flags)
-    if cfg.hide_van_interact_ui then
-        -- Hide vanilla UI
-        return
-    elseif flags.text and flags.text ~= text then
+    if (not cfg.hide_van_interact_ui) and flags.text and flags.text ~= text then
         set_quickhelp_text(flags.text)
-        return flags.text
-    else
-        return text
+        text = flags.text
     end
+    last_text = text
+    return text
 end
 
 function get_text(m)
     return filters[m] and filters[m].text
+end
+
+function on_game_start()
+    debug_dump = ui_hud_dotmarks and ui_hud_dotmarks.debug_dump
 end

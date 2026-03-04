@@ -69,10 +69,10 @@ function unregister_hf_object(id)
 end
 
 function update_placement_mode_state()
-    if not (dotmarks_main.cfg.hf_suspend_on_placement) then return end
+    if not (ui_hud_dotmarks.cfg.hf_suspend_on_placement) then return end
     local pmode = placement_mode
     placement_mode = placeable_furniture.in_placing_state()
-    if delaying and not (dotmarks_main.cfg.hf_suspend_hint_filters) then
+    if delaying and not (ui_hud_dotmarks.cfg.hf_suspend_hint_filters) then
         ui_hud_dotmarks.update_hint_filters()
         -- Allows suppression of the vanilla interact UI to continue
         return
@@ -94,9 +94,9 @@ end
 
 
 function inject_placeholder_functors()
-    if not dotmarks_main.cfg then return end
-    log("dotmarks_hideout_furniture.script is injecting blank functors into dotmarks_main.cfg.scan")
-    dotmarks_main.cfg.is_item["Furniture"] = function() end
+    if not ui_hud_dotmarks.cfg then return end
+    log("dotmarks_hideout_furniture.script is injecting blank functors into ui_hud_dotmarks.cfg.scan")
+    ui_hud_dotmarks.cfg.is_item["Furniture"] = function() end
     dotmarks_main.cfg.args["Furniture"] = function() end
     -- These stubs need to exist
     -- Technically you could inject your own handling in these functors, but
@@ -128,7 +128,15 @@ if dotmarks_mcm then
     end
 end
 
+function check_dotmarks_startup()
+    if not (dotmarks_main and dotmarks_main.cfg and dotmarks_main.cfg.game_started) then
+        UnregisterScriptCallback("actor_on_update", update_placement_mode_state)
+        UnregisterScriptCallback("hf_on_before_furniture_release", unregister_hf_object)
+    end
+end
+
 if dotmarks_callbacks then
+    RegisterScriptCallback("actor_on_first_update", check_dotmarks_startup)
     RegisterScriptCallback("dotmarks_on_init_complete", inject_placeholder_functors)
     function on_game_start()
         if bind_hf_base and ui_hud_dotmarks then
@@ -148,7 +156,7 @@ if dotmarks_callbacks then
                     if args.texture or not args.ret_value then return end
                     -- Abort if another script has already taken action on this callback
                     log("[%s][dotmarks_on_new_object_scan] Hideout Furniture patch is checking %s", time_global(), nameid(obj))
-                    local cfg           = dotmarks_main.cfg
+                    local cfg           = ui_hud_dotmarks.cfg
                     local section       = args.section
                     if (section == "placeable_water_pump") then return end
                     -- The water pump from Fillable Canteens is handled in its own module
@@ -285,7 +293,7 @@ if dotmarks_callbacks then
                 function(args, mark)
                     if (not mark) or (not mark.hf_placeable) then return end
                     log("[%s][dotmarks_on_setup_pri_interact] Hideout Furniture patch is checking for a custom primary action on %s", time_global(), mark.name)
-                    local cfg = dotmarks_main.cfg
+                    local cfg = ui_hud_dotmarks.cfg
                     if (mark.hf_placeable == "radio") then
                         log("Setting up primary primary interaction as a placeable radio")
                         mark.func_interact1 = placeable_radio.start_radio_dialog
@@ -338,7 +346,7 @@ if dotmarks_callbacks then
                     mark.checked_for_sec = true
                     args.text = mark.verb_secondary and gts(mark.verb_secondary) or mark.hf_workshop and gts("st_hf_workshop_menu") or gts("st_hf_control_menu")
                     args.func = mark.func_interact2 or default_do_nothing
-                    args.never_show = (not dotmarks_main.cfg.hf_show_default_secmenu) or nil
+                    args.never_show = (not ui_hud_dotmarks.cfg.hf_show_default_secmenu) or nil
                 end
             )
 
@@ -351,7 +359,7 @@ if dotmarks_callbacks then
                 --- @param flags table
                 function(id, mark, flags)
                     if not (id and mark and flags and mark.hf_placeable) then return end
-                    local cfg = dotmarks_main.cfg
+                    local cfg = ui_hud_dotmarks.cfg
                     log("[%s][dotmarks_on_manual_interact_release] Hideout Furniture patch is checking whether to handle interaction with %s | primary take enabled: %s", time_global(), mark.name, cfg.hf_add_primary_pickup)
                     if (mark.hf_placeable == "stash") then 
                         log("No special handling for HF stashes")

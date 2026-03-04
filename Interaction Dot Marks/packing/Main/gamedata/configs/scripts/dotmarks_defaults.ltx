@@ -133,10 +133,12 @@ scan_start_delay            = 0.1
 suspend_scan_in_pda 		= true
 ; When enabled, if the PDA window is open, all scanning and other actor_on_update
 ; loop activity will be suspended
+suspend_markloop_in_pda 	= true
+; When enabled, the entire marker update loop will be suspended while in the PDA
 near_scan_when_immobile		= false
-; When disable, the near scan does not trigger unless the actor is moving. This is an
-; optimization measure with the assumption that the actor has to be moving in order 
-; for the distance between the actor and an object to close quickly enough for the
+; When disabled, the near scan does not trigger unless the actor is moving. This is 
+; an optimization measure with the assumption that the actor has to be moving in 
+; order for the distance between the actor and an object to close quickly enough for the
 ; near scan to catch it before the early scan does.
 early_scan_immobile_delay 	= 1000
 ; When the actor has not moved since the last update, the early scan will be delayed
@@ -163,6 +165,9 @@ hint_refresh_interval 		= 100
 npc_health_check_interval 	= 1153
 ; Interval in ms between checks for changes in NPC health
 ; This is handled on a per-marker basis to avoid stacking
+marker_validation_interval 	= 5011
+; Interval in ms between checks for marker validation
+; This is handled on a per-marker basis to avoid stacking
 hidden_mark_interval 		= 200
 ; Interval in ms between marker loop updates for markers that are not currently shown
 near_scan_radius            = 4
@@ -171,7 +176,6 @@ early_scan_radius           = 3
 ; Radius in meters beyond the near scan for the early scan
 use_skill_system            = true
 ; Enable Skill System integration, extending near_scan_radius based on scavenging skill
-
 use_get_target_obj 			= true
 ; If no valid target is found using modded exes features, tries to use vanilla method
 ; Has some value catching edge cases, otherwise I'd disable this
@@ -299,6 +303,7 @@ fddar_fix_scav_bug 			= false
 ; FDDAR 1.2.15 monkeypatches the Scavenger skill in Skill System, but it's bugged so that
 ; it only triggers it when body search is enabled. When this option is enabled, DotMarks
 ; will work around that by manually triggering the function.
+; Deprecated, this bug is no longer present in current-version FDDAR
 fddar_multipickup 			= false
 fddar_pickup_anim 			= false
 fdda_pickup_anim 			= false
@@ -331,6 +336,15 @@ prompt_busy_during_anim 	= true
 ; Whether visible prompts are disabled during FDDA animations
 hide_interaction_dots 		= false
 ; Disable showing dots (or other marker icons) at all
+hide_dropped_items 			= true
+; If enabled, a marker will not be shown for items dropped by the player
+blacklist_dropped_items 	= false
+; If enabled, dropped items will never again be scanned for marking
+; This could prevent IDM from suppressing their vanilla interaction prompts or 
+; otherwise handling them, but will drastically improve performance for players 
+; who tend to dump a lot of discarded items in a "trash pile" in their base.
+
+; Instead of enabling this, use a Zone Recycle Bin to destroy unwanted items.
 hide_connecting_line 		= true
 ; Disable the animated white line that appears
 hide_keybind_element		= false
@@ -364,6 +378,7 @@ timed_prompt_y 				= 384
 fixed_screen_pos 			= false
 ; If enabled, screen positions will instead be measured from the upper left of the screen
 ; These are canvas coordinates so 1024x768
+; This hasn't been tested in a long time and may not work well
 aspect_correction 			= 1
 ; Multiplier applied to all aspect-ratio-related width adjustments. For use with unusual
 ; display resolutions that don't get their unsquish_ratio detected correctly.
@@ -440,6 +455,7 @@ sp_flag_favejunk 			= true
 icon_sp_fave_texture 		= ui_catsy_icon_sortplus_fave
 icon_sp_junk_texture 		= ui_catsy_icon_sortplus_junk
 ; Textures for Sorting Plus integration
+; Copies of the ones in Sorting Plus, adjusted for use here
 hidden_show_prompts 		= true
 ; Controls whether prompts still appear if a marker is hidden because of sp_hide_junk_items or hide_interaction_dots
 hidden_marks_on_disabled 	= true
@@ -459,6 +475,8 @@ snd_path_blip 				= catspaw\paw_blip
 ; Subtle UI sound effect
 disable_all_sounds 			= false
 ; Disable sound effects
+never_mark_bolts 			= false
+; Effectively blacklists all bolt objects from even being marked
 bodies_use_mpda_rules 		= false
 ; If enabled, body markers will use the same visibility rules as bodies in Milspec PDA
 show_multi_uses 			= true
@@ -531,6 +549,11 @@ item_card_icon_y    		= 2
 sp_icon_pos_x 				= 10
 sp_icon_pos_y				= 1
 ; Adjust position of the Sorting Plus fave/junk icons
+;longpress_ind_size 			= 32
+; Size of the radial long press indicator
+;longpress_ind_x 			= -20
+;longpress_ind_y 			= 0
+
 argb_dot_normal
 argb_dot_focus
 argb_icon_door
@@ -619,10 +642,12 @@ los_check_flags 	= 2 	; LOS only blocked by objects, not statics
 width               = 6		; texture width (in canvas units) - will be aspect-corrected
 height              = 6		; texture height (in canvas units)
 update_int          = 20	; throttled update interval in ms for the marker itself
+validate_game_object= true 	; Check to make sure marker's game object still exists
 skip_online_checks 	= true 	; Optimization, we can assume dotmarks will always be online and on the same map
 skip_hint 			= true 	; Optimization, skips anything related to updating the name or its text
 skip_dist 			= true 	; Optimization, skips anything related to updating the distance text
 offscreen_interval 	= 200 	; Optimization, increases delay between updates when mark is offscreen
+skip_coord_pos_check= true 	; Optimization for marker position loop
 
 [metadata_types]
 is_pickup 		= 0
@@ -712,8 +737,10 @@ enable_icon_stash 			= Stashes
 [dik_icons]
 ; Lookup table for replacing the text names of certain buttons/keys with graphical icons
 ; dik code = name of texture to use as icon
+
 ; Right now this is just the first five mouse buttons, but it could potentially be used for
 ; a variety of things, like gamepad button support - anything that has a DIK code
+
 337 	= ui_catsy_keybind_mouse1
 338 	= ui_catsy_keybind_mouse2
 339 	= ui_catsy_keybind_mouse3
@@ -820,7 +847,7 @@ line_adj_h  = -12
 ; 	DON'T TOUCH BELOW THIS LINE
 ; ================================================================================
 ; These are critical settings that allow the addon to function properly. They are
-; not intended to be customized, and there is almost no reason to do so except to
+; not intended to be customized, and there is rarely any reason to do so except to
 ; add support for changes made by other addons, which is best done by the addon
 ; author through DLTX. I can't help with anything that happens if you change them.
 
@@ -846,13 +873,20 @@ zone_mincer
 nogravity_zone
 zone_radioactive
 zone_rusty_hair
-;obj_bolt 
 
 [blacklisted_names]
 red_forest_box_4_5
 ; Duplicate inventory_box object by Forester's camp, just in front of the
 ; stash model and in addition to the inventory_box that's in the correct place
 ; on that model (the correct one is named red_smart_terrain_4_2_box).
+
+[blacklisted_sections]
+; Section names that should never become markers under any circumstances
+; IDM reads and uses this, but it is not currently needed or populated
+;bolt
+;bolt_bullet
+; If you uncomment the above two lines, it will blacklist all bolts
+
 
 [grenade_ammo_clsids]
 ; Defines which clsids are classified as GL ammo for the purposes of scan detection
@@ -1129,163 +1163,172 @@ near_scan_interval 		= true
 ; =================================================================================
 ; Main menu
 ; =================================================================================
-show_item_card  		= dotmarks/dmarkmain/
-show_item_charge 		= dotmarks/dmarkmain/
-show_multi_uses 		= dotmarks/dmarkmain/
-sp_flag_favejunk		= dotmarks/dmarkmain/
-show_gun_condition 		= dotmarks/dmarkmain/
-show_item_condition 	= dotmarks/dmarkmain/
-show_condition_color 	= dotmarks/dmarkmain/
-show_stash_weight 		= dotmarks/dmarkmain/
-wheel_cycles_pickups 	= dotmarks/dmarkmain/
-interact_drop_alpha 	= dotmarks/dmarkmain/
+show_item_card  			= dotmarks/dmarkmain/
+show_item_charge 			= dotmarks/dmarkmain/
+show_multi_uses 			= dotmarks/dmarkmain/
+sp_flag_favejunk			= dotmarks/dmarkmain/
+show_gun_condition 			= dotmarks/dmarkmain/
+show_item_condition 		= dotmarks/dmarkmain/
+show_condition_color 		= dotmarks/dmarkmain/
+show_stash_weight 			= dotmarks/dmarkmain/
+wheel_cycles_pickups 		= dotmarks/dmarkmain/
+interact_drop_alpha 		= dotmarks/dmarkmain/
 ; These last three are hidden settings, only used internally
-welcome_message_shown 	= dotmarks/dmarkmain/
-last_version	 		= dotmarks/dmarkmain/
-last_release 			= dotmarks/dmarkmain/
+welcome_message_shown 		= dotmarks/dmarkmain/
+last_version	 			= dotmarks/dmarkmain/
+last_release 				= dotmarks/dmarkmain/
+; =================================================================================
 
 ; =================================================================================
 ; Interactions menu
 ; =================================================================================
-bind_sec_interact 		= dotmarks/dmarksec/
-modk_sec_interact 		= dotmarks/dmarksec/
-imod_sec_interact 		= dotmarks/dmarksec/
-long_press_delay 		= dotmarks/dmarksec/
-sec_enable_use_act 		= dotmarks/dmarksec/
-sec_enable_unload_act 	= dotmarks/dmarksec/
-sec_enable_takeall_act 	= dotmarks/dmarksec/
-sec_enable_heal_act 	= dotmarks/dmarksec/
-sec_mode_setupthebomb 	= dotmarks/dmarksec/
-simple_press_ignore_shift = dotmarks/dmarksec/
-simple_press_ignore_ctrl = dotmarks/dmarksec/
-simple_press_ignore_alt = dotmarks/dmarksec/
+bind_sec_interact 			= dotmarks/dmarksec/
+modk_sec_interact 			= dotmarks/dmarksec/
+imod_sec_interact 			= dotmarks/dmarksec/
+long_press_delay 			= dotmarks/dmarksec/
+sec_enable_use_act 			= dotmarks/dmarksec/
+sec_enable_unload_act 		= dotmarks/dmarksec/
+sec_enable_takeall_act 		= dotmarks/dmarksec/
+sec_enable_heal_act 		= dotmarks/dmarksec/
+sec_mode_setupthebomb 		= dotmarks/dmarksec/
+simple_press_ignore_shift 	= dotmarks/dmarksec/
+simple_press_ignore_ctrl 	= dotmarks/dmarksec/
+simple_press_ignore_alt 	= dotmarks/dmarksec/
+; =================================================================================
 
 ; =================================================================================
 ; Other addons menu
 ; =================================================================================
-use_skill_system 		= dotmarks/dmarkmods/
-bodies_use_paw_patches	= dotmarks/dmarkmods/
-bodies_use_mpda_rules 	= dotmarks/dmarkmods/
-show_prompt_during_anim = dotmarks/dmarkmods/
-prompt_busy_during_anim = dotmarks/dmarkmods/
-item_use_delay	 		= dotmarks/dmarkmods/
-sec_enable_heal_anim 	= dotmarks/dmarkmods/
-sec_enable_arty_anim 	= dotmarks/dmarkmods/
-sp_hide_junk_items		= dotmarks/dmarkmods/
-sp_icon_pos_x 			= dotmarks/dmarkmods/
-sp_icon_pos_y 			= dotmarks/dmarkmods/
-sec_enable_strip_act	= dotmarks/dmarkmods/
-parts_usable_cnd 		= dotmarks/dmarkmods/
-show_parts_weapons 		= dotmarks/dmarkmods/
-show_parts_armor 		= dotmarks/dmarkmods/
-parts_dot_orientation 	= dotmarks/dmarkmods/
-parts_dot_pos_x 		= dotmarks/dmarkmods/
-parts_dot_pos_y 		= dotmarks/dmarkmods/
-parts_dot_scale			= dotmarks/dmarkmods/
-parts_dot_shadow_alpha 	= dotmarks/dmarkmods/
-haru_skill_coef 		= dotmarks/dmarkmods/
-haru_skill_name 		= dotmarks/dmarkmods/
-takeall_does_autoloot 	= dotmarks/dmarkmods/
-hijack_autoloot_keybind = dotmarks/dmarkmods/
+use_skill_system 			= dotmarks/dmarkmods/
+bodies_use_paw_patches		= dotmarks/dmarkmods/
+bodies_use_mpda_rules 		= dotmarks/dmarkmods/
+show_prompt_during_anim 	= dotmarks/dmarkmods/
+prompt_busy_during_anim 	= dotmarks/dmarkmods/
+item_use_delay	 			= dotmarks/dmarkmods/
+sec_enable_heal_anim 		= dotmarks/dmarkmods/
+sec_enable_arty_anim 		= dotmarks/dmarkmods/
+sp_hide_junk_items			= dotmarks/dmarkmods/
+sp_icon_pos_x 				= dotmarks/dmarkmods/
+sp_icon_pos_y 				= dotmarks/dmarkmods/
+sec_enable_strip_act		= dotmarks/dmarkmods/
+parts_usable_cnd 			= dotmarks/dmarkmods/
+show_parts_weapons 			= dotmarks/dmarkmods/
+show_parts_armor 			= dotmarks/dmarkmods/
+parts_dot_orientation 		= dotmarks/dmarkmods/
+parts_dot_pos_x 			= dotmarks/dmarkmods/
+parts_dot_pos_y 			= dotmarks/dmarkmods/
+parts_dot_scale				= dotmarks/dmarkmods/
+parts_dot_shadow_alpha 		= dotmarks/dmarkmods/
+haru_skill_coef 			= dotmarks/dmarkmods/
+haru_skill_name 			= dotmarks/dmarkmods/
+takeall_does_autoloot 		= dotmarks/dmarkmods/
+hijack_autoloot_keybind 	= dotmarks/dmarkmods/
+; =================================================================================
 
 ; =================================================================================
 ; Icons menu
 ; =================================================================================
-dot_marker_size 		= dotmarks/dmarkicons/
-argb_dot_normal 		= dotmarks/dmarkicons/
-argb_dot_focus 			= dotmarks/dmarkicons/
-enable_icon_tasks 		= dotmarks/dmarkicons/
-enable_icon_boom		= dotmarks/dmarkicons/
-enable_icon_box			= dotmarks/dmarkicons/
-enable_icon_butcher		= dotmarks/dmarkicons/
-enable_icon_door		= dotmarks/dmarkicons/
-enable_icon_talk		= dotmarks/dmarkicons/
-enable_icon_services	= dotmarks/dmarkicons/
-enable_icon_stash		= dotmarks/dmarkicons/
-argb_icon_door			= dotmarks/dmarkicons/
-argb_icon_talk			= dotmarks/dmarkicons/
-argb_icon_box			= dotmarks/dmarkicons/
-argb_icon_boom			= dotmarks/dmarkicons/
-argb_icon_butcher		= dotmarks/dmarkicons/
-argb_icon_stash			= dotmarks/dmarkicons/
-argb_icon_vehicles 		= dotmarks/dmarkicons/
-argb_service_trade		= dotmarks/dmarkicons/
-argb_service_mech		= dotmarks/dmarkicons/
-argb_service_medic		= dotmarks/dmarkicons/
-argb_service_guide		= dotmarks/dmarkicons/
-argb_service_leader		= dotmarks/dmarkicons/
-must_discover_stashes 	= dotmarks/dmarkicons/
+dot_marker_size 			= dotmarks/dmarkicons/
+argb_dot_normal 			= dotmarks/dmarkicons/
+argb_dot_focus 				= dotmarks/dmarkicons/
+enable_icon_tasks 			= dotmarks/dmarkicons/
+enable_icon_boom			= dotmarks/dmarkicons/
+enable_icon_box				= dotmarks/dmarkicons/
+enable_icon_butcher			= dotmarks/dmarkicons/
+enable_icon_door			= dotmarks/dmarkicons/
+enable_icon_talk			= dotmarks/dmarkicons/
+enable_icon_services		= dotmarks/dmarkicons/
+enable_icon_stash			= dotmarks/dmarkicons/
+argb_icon_door				= dotmarks/dmarkicons/
+argb_icon_talk				= dotmarks/dmarkicons/
+argb_icon_box				= dotmarks/dmarkicons/
+argb_icon_boom				= dotmarks/dmarkicons/
+argb_icon_butcher			= dotmarks/dmarkicons/
+argb_icon_stash				= dotmarks/dmarkicons/
+argb_icon_vehicles 			= dotmarks/dmarkicons/
+argb_service_trade			= dotmarks/dmarkicons/
+argb_service_mech			= dotmarks/dmarkicons/
+argb_service_medic			= dotmarks/dmarkicons/
+argb_service_guide			= dotmarks/dmarkicons/
+argb_service_leader			= dotmarks/dmarkicons/
+must_discover_stashes 		= dotmarks/dmarkicons/
+; =================================================================================
+
 ; =================================================================================
 ; Objects menu is populated procedurally
 ; =================================================================================
 ; 	All settings in the Objects menu are generated by iterating through the Scan
 ;	table and creating a checkbox for each one. It has no one-off settings.
+; =================================================================================
 
 ; =================================================================================
 ; Advanced menu
 ; =================================================================================
-write_to_save 			= dotmarks/dmarkadv/
-;disable_addon 			= dotmarks/dmarkadv/
-hide_interaction_dots 	= dotmarks/dmarkadv/
-ignore_hud_state 		= dotmarks/dmarkadv/
-bind_toggle_marks		= dotmarks/dmarkadv/
-toggle_revert_delay 	= dotmarks/dmarkadv/
-hide_mute_stalkers 		= dotmarks/dmarkadv/
-hide_connecting_line 	= dotmarks/dmarkadv/
-hide_keybind_element	= dotmarks/dmarkadv/
-hide_pri_interact_ui 	= dotmarks/dmarkadv/
-hide_sec_interact_ui 	= dotmarks/dmarkadv/
-hide_van_interact_ui 	= dotmarks/dmarkadv/
-hide_pickup_item_names 	= dotmarks/dmarkadv/
-disable_all_sounds 		= dotmarks/dmarkadv/
-replace_keybinds_icons 	= dotmarks/dmarkadv/
-pri_use_x_offset 		= dotmarks/dmarkadv/
-pri_use_y_offset 		= dotmarks/dmarkadv/
-sec_use_x_offset 		= dotmarks/dmarkadv/
-sec_use_y_offset 		= dotmarks/dmarkadv/
-fixed_screen_pos 		= dotmarks/dmarkadv/
-near_scan_interval 		= dotmarks/dmarkadv/
-early_scan_interval 	= dotmarks/dmarkadv/
-near_scan_radius 		= dotmarks/dmarkadv/
-early_scan_radius 		= dotmarks/dmarkadv/
-keybind_bg_style 		= dotmarks/dmarkadv/
-hidden_show_prompts		= dotmarks/dmarkadv/
-prompt_fade_in_time		= dotmarks/dmarkadv/
-prompt_fade_out_time	= dotmarks/dmarkadv/
-aspect_correction		= dotmarks/dmarkadv/
-ui_scale 				= dotmarks/dmarkadv/
-font_scale_h			= dotmarks/dmarkadv/
-font_scale_w			= dotmarks/dmarkadv/
-font_main_prompt 		= dotmarks/dmarkadv/
-font_item_card 			= dotmarks/dmarkadv/
-item_card_icon_sz 		= dotmarks/dmarkadv/
-item_card_pos_x 		= dotmarks/dmarkadv/
-item_card_pos_y 		= dotmarks/dmarkadv/
-item_card_text_y 		= dotmarks/dmarkadv/
-item_card_elem_x 		= dotmarks/dmarkadv/
-item_card_elem_y 		= dotmarks/dmarkadv/
-item_card_elem_h 		= dotmarks/dmarkadv/
-item_card_icon_x 		= dotmarks/dmarkadv/
-item_card_icon_y 		= dotmarks/dmarkadv/
-popin_anim_dur 			= dotmarks/dmarkadv/
-bind_text_pos_x 		= dotmarks/dmarkadv/
-bind_text_pos_y			= dotmarks/dmarkadv/
-action_text_pos_x		= dotmarks/dmarkadv/
-action_text_pos_y		= dotmarks/dmarkadv/
-hint_refresh_interval 	= dotmarks/dmarkadv/
+write_to_save 				= dotmarks/dmarkadv/
+;disable_addon 				= dotmarks/dmarkadv/
+hide_interaction_dots 		= dotmarks/dmarkadv/
+ignore_hud_state 			= dotmarks/dmarkadv/
+bind_toggle_marks			= dotmarks/dmarkadv/
+toggle_revert_delay 		= dotmarks/dmarkadv/
+hide_mute_stalkers 			= dotmarks/dmarkadv/
+hide_dropped_items 			= dotmarks/dmarkadv/
+never_mark_bolts 			= dotmarks/dmarkadv/
+hide_connecting_line 		= dotmarks/dmarkadv/
+hide_keybind_element		= dotmarks/dmarkadv/
+hide_pri_interact_ui 		= dotmarks/dmarkadv/
+hide_sec_interact_ui 		= dotmarks/dmarkadv/
+hide_van_interact_ui 		= dotmarks/dmarkadv/
+hide_pickup_item_names 		= dotmarks/dmarkadv/
+disable_all_sounds 			= dotmarks/dmarkadv/
+replace_keybinds_icons 		= dotmarks/dmarkadv/
+pri_use_x_offset 			= dotmarks/dmarkadv/
+pri_use_y_offset 			= dotmarks/dmarkadv/
+sec_use_x_offset 			= dotmarks/dmarkadv/
+sec_use_y_offset 			= dotmarks/dmarkadv/
+fixed_screen_pos 			= dotmarks/dmarkadv/
+near_scan_interval 			= dotmarks/dmarkadv/
+early_scan_interval 		= dotmarks/dmarkadv/
+near_scan_radius 			= dotmarks/dmarkadv/
+early_scan_radius 			= dotmarks/dmarkadv/
+keybind_bg_style 			= dotmarks/dmarkadv/
+hidden_show_prompts			= dotmarks/dmarkadv/
+prompt_fade_in_time			= dotmarks/dmarkadv/
+prompt_fade_out_time		= dotmarks/dmarkadv/
+aspect_correction			= dotmarks/dmarkadv/
+ui_scale 					= dotmarks/dmarkadv/
+font_scale_h				= dotmarks/dmarkadv/
+font_scale_w				= dotmarks/dmarkadv/
+font_main_prompt 			= dotmarks/dmarkadv/
+font_item_card 				= dotmarks/dmarkadv/
+item_card_icon_sz 			= dotmarks/dmarkadv/
+item_card_pos_x 			= dotmarks/dmarkadv/
+item_card_pos_y 			= dotmarks/dmarkadv/
+item_card_text_y 			= dotmarks/dmarkadv/
+item_card_elem_x 			= dotmarks/dmarkadv/
+item_card_elem_y 			= dotmarks/dmarkadv/
+item_card_elem_h 			= dotmarks/dmarkadv/
+item_card_icon_x 			= dotmarks/dmarkadv/
+item_card_icon_y 			= dotmarks/dmarkadv/
+popin_anim_dur 				= dotmarks/dmarkadv/
+bind_text_pos_x 			= dotmarks/dmarkadv/
+bind_text_pos_y				= dotmarks/dmarkadv/
+action_text_pos_x			= dotmarks/dmarkadv/
+action_text_pos_y			= dotmarks/dmarkadv/
+hint_refresh_interval 		= dotmarks/dmarkadv/
+; =================================================================================
 
 ; =================================================================================
 ; Settings loaded from other addons
 ; =================================================================================
-fddar_multipickup 		= fddar/pickup/multipickup
-fddar_pickup_anim 		= fddar/pickup/enable
-fddar_pickup_speed 		= fddar/pickup/speed
-fddar_body_search 		= fddar/body_search/enable
-fddar_container_search 	= fddar/body_search/enable_anm_for_containers
-fddar_disable_walk 		= fddar/body_search/disable_walk
-fdda_anims_enabled 		= EA_settings/enable_animations
-fdda_pickup_anim 		= EA_settings/take_item_anim
-parts_wpo_mode 			= item_icon_info/part_dots/wpo_mode
-parts_wpo_grn 			= item_icon_info/part_dots/wpo_green
-parts_wpo_yel 			= item_icon_info/part_dots/wpo_yellow
-parts_wpo_orn 			= item_icon_info/part_dots/wpo_orange
+fddar_multipickup 			= fddar/pickup/multipickup
+fddar_pickup_anim 			= fddar/pickup/enable
+fddar_pickup_speed 			= fddar/pickup/speed
+fddar_body_search 			= fddar/body_search/enable
+fddar_container_search 		= fddar/body_search/enable_anm_for_containers
+fddar_disable_walk 			= fddar/body_search/disable_walk
+fdda_anims_enabled 			= EA_settings/enable_animations
+fdda_pickup_anim 			= EA_settings/take_item_anim
+parts_wpo_mode 				= item_icon_info/part_dots/wpo_mode
+parts_wpo_grn 				= item_icon_info/part_dots/wpo_green
+parts_wpo_yel 				= item_icon_info/part_dots/wpo_yellow
+parts_wpo_orn 				= item_icon_info/part_dots/wpo_orange

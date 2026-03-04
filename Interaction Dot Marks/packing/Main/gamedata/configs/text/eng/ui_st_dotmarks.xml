@@ -1,7 +1,6 @@
 <!-- ====================================================================
 	Interaction Dot Marks
     Author: Catspaw
-    Updated: 20260118
     Permission granted to freely translate this file into any language.
 ===================================================================== -->
 <?xml version="1.0" encoding="windows-1251"?>
@@ -1517,6 +1516,34 @@
 		\nThis involves string comparisons, so setting this too low can have a performance impact--a value of zero is equivalent to IDM 1.4, which did not throttle this check.\n
 
 		\nSetting it too high can result in a delay before some interaction prompts appear or update.</text>
+	</string>
+
+<!-- Added in 1.7.0 -->
+
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_dropped_items">
+		<text>Hide items dropped by player</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_dropped_items_desc">
+		<text>When enabled, a marker will not be shown for any items that were dropped by the player--on the theory that if you dropped it, you probably don't care about it any longer.\n
+
+		\nThis will improve performance if you tend to drop unwanted gear in a big "trash" pile in your base. However, a better solution would be to use my "Zone Recycle Bin" addon to permanently delete unwanted items and stop them from bloating your save.\n
+
+		\nhttps://www.moddb.com/mods/stalker-anomaly/addons/zone-recycle-bin-10-for-anomaly-151-and-152\n
+
+		\nYou may want to disable this setting if you play using rules that allow damage or monster attacks to force the player to drop their weapon.</text>
+	</string>
+
+	<string id="ui_mcm_dotmarks_dmarkadv_never_mark_bolts">
+		<text>Never mark bolts</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_never_mark_bolts_desc">
+		<text>When enabled, all types of bolts (both regular and bullet-style) will be effectively blacklisted. They will not have a marker or an interaction prompt, and are effectively treated as non-interactable objects.\n
+
+		\nThis is already the case if you are playing with Unlimited Bolts. Enable this option if you are playing with Limited Bolts but still never want to see markers for them. You will still be able to pick them up, you just won't see a prompt.</text>
+	</string>
+
+	<string id="st_addon_name_dotmarks">
+		<text>Interaction Dot Marks</text>
 	</string>
 
 </string_table>

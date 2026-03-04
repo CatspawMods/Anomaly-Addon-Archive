@@ -3,9 +3,8 @@
 ; =================================================================================
 
 ![template_tables]
-; First you need to add a section name (make it unique) to the template_tables
-; section in dotmarks_defaults
 swap_vehicle
+vehicle_bones
 
 ![default_settings]
 vehicle_enter_hint		= st_enter_vehicle
@@ -14,27 +13,6 @@ vehicle_exit_hint		= st_exit_vehicle
 ; Interaction text shown while in a vehicle
 vehicle_marker_bone 	= stearing_wheel
 ; Don't look at me, I didn't name it
-;
-; Valid vehicle bones:
-;
-;	bone 0 = root
-;	bone 1 = back_axle
-;	bone 2 = back_left_wheel
-;	bone 3 = back_right_wheel
-;	bone 4 = back_door
-;	bone 5 = exhausts
-;	bone 6 = front_axle
-;	bone 7 = front_left_wheel
-;	bone 8 = front_right_wheel
-;	bone 9 = front_bamper
-;	bone 10 = left_light
-;	bone 11 = front_light
-;	bone 12 = right_light
-;	bone 13 = kabina
-;	bone 14 = left_door
-;	bone 15 = right_door
-;	bone 16 = seat_left
-;	bone 17 = seat_right
 
 hide_marker_in_vehicle 	= true
 ; Hides vehicle marker and prompt while inside the vehicle, default value
@@ -44,6 +22,27 @@ texture     = ui_catsy_marker_vehicle
 width       = 16
 height      = 16
 
+@[vehicle_bones]
+0 = root
+1 = back_axle
+2 = back_left_wheel
+3 = back_right_wheel
+4 = back_door
+5 = exhausts
+6 = front_axle
+7 = front_left_wheel
+8 = front_right_wheel
+9 = front_bamper
+10 = left_light
+11 = front_light
+12 = right_light
+13 = kabina
+14 = left_door
+15 = right_door
+16 = seat_left
+17 = seat_right
+18 = stearing wheel
+
 ![tex]
 Vehicles = ui_catsy_marker_vehicle
 ; Adds the vehicle marker to the list of item class textures shown in MCM
@@ -51,6 +50,12 @@ Vehicles = ui_catsy_marker_vehicle
 ![scan]
 ; Adds "Vehicles" as a scannable category that can be toggled in MCM
 Vehicles = true
+
+![blacklisted_names]
+; These are not really vehicles, but they get detected as such with vehicle support
+; I'm not aware of any reason that these should be markable, let me know if there is
+bar_zastava_minigun
+bar_zastava2_minigun
 
 ![setting_icons]
 enable_icon_vehicles = Vehicles

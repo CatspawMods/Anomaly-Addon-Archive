@@ -1,0 +1,59 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Author: Catspaw
+    Permission granted to freely translate this file into any language.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+	<string id="st_depcheck_failpart_1">
+		<text>%c[default]The %c[255,255,215,0]</text>
+	</string>
+
+	<string id="st_depcheck_failpart_2">
+		<text>%c[default] addon has %c[255,255,215,0]COMPLETELY failed to load%c[default]. There are different reasons this could happen. This was the first failure:\n
+		%c[255,255,0,0] \n</text>
+	</string>
+
+	<string id="st_depcheck_failpart_3">
+		<text>\n%c[255,220,220,220]
+		\nThings you can try:\n</text>
+	</string>
+
+	<string id="st_depcheck_listitem">
+		<text>\n
+			%c[255,255,255,255]• %c[default]</text>
+	</string>
+
+	<string id="st_depcheck_dotmarks_tip_1">
+		<text>Update other Catspaw addons (like Fair Fast Travel, Milspec PDA, or PAW)</text>
+	</string>
+
+
+	<string id="st_depcheck_basic_tip_1">
+		<text>Move this addon to the bottom of your load order in MO2</text>
+	</string>
+
+	<string id="st_depcheck_basic_tip_2">
+		<text>Re-download the addon from Moddb and reinstall it</text>
+	</string>
+
+	<string id="st_depcheck_basic_tip_3">
+		<text>Launch Anomaly with no other mods, and see if it still happens</text>
+	</string>
+
+	<string id="st_depcheck_dotmarks_end">
+		<text>\n %c[default]
+		\nIf DotMarks is still failing after that, something is probably %c[255,220,220,220]seriously wrong%c[default] with your Anomaly installation.
+		\nGo to %c[255,255,215,0]MCM %c[default]> %c[255,255,215,0]DotMarks %c[default]> %c[255,255,215,0]Advanced Settings%c[default] and provide a debug log per the instructions there.</text>
+	</string>
+
+	<string id="st_depcheck_fail_not_found">
+		<text>NOT FOUND!\n</text>
+	</string>
+
+	<string id="st_depcheck_fail_outdated">
+		<text>OUTDATED! (req %s, found %s)\n</text>
+	</string>
+
+</string_table>

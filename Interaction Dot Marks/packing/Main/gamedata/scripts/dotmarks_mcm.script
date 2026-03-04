@@ -6,11 +6,18 @@
  	https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
  	https://github.com/CatspawMods/Anomaly-Addon-Archive/
 -- ====================================================================]]
-assert(utils_catspaw_common, "\n\n"..
-    "! dotmarks_mcm requires utils_catspaw_common, which does not exist or failed to load!\n\n"
+assert(utils_catspaw_common and utils_catspaw_common.get_xml_cache, "\n\n"..
+	"! dotmarks_mcm requires script utils_catspaw_common, which is missing or outdated!\n" ..
+	"Version found: " .. (utils_catspaw_common and utils_catspaw_common.script_version or "missing!") .. " | Required: 1.18+\n" ..
+	"If the version is outdated, try moving this addon to the bottom of your load order."	
 )
-assert(utils_catspaw_text, "\n\n"..
-    "! dotmarks_mcm requires utils_catspaw_text, which does not exist or failed to load!\n\n"
+assert(utils_catspaw_text and utils_catspaw_text.bindtext, "\n\n"..
+	"! dotmarks_mcm requires script utils_catspaw_text, which is missing or outdated!\n" ..
+	"Version found: " .. (utils_catspaw_text and utils_catspaw_text.script_version or "missing!") .. " | Required: 1.4+\n" ..
+	"If the version is outdated, try moving this addon to the bottom of your load order."
+)
+assert(utils_catspaw_hudmarks, "\n\n"..
+    "! dotmarks_mcm requires utils_catspaw_hudmarks, which does not exist or failed to load!\n\n"
 )
 assert(dotmarks_main, "\n\n"..
     "! dotmarks_mcm requires dotmarks_main, which does not exist or failed to load!\n\n"
@@ -676,6 +683,8 @@ function get_adv_menu()
 		{ id = "bind_toggle_marks", 	type = "key_bind", 	val = 2, def = cfg.bind_toggle_marks },
 		{ id = "toggle_revert_delay", 	type = "input", 	val = 2, min = 0, max = 10000, def = cfg.toggle_revert_delay },
 		{ id = "hide_mute_stalkers", 	type = "check",		val = 1, def = cfg.hide_mute_stalkers },
+		{ id = "hide_dropped_items", 	type = "check",		val = 1, def = cfg.hide_dropped_items },
+		{ id = "never_mark_bolts", 		type = "check",		val = 1, def = cfg.never_mark_bolts },
 		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },
 		{ id = "hide_connecting_line", 	type = "check", 	val = 1, def = cfg.hide_connecting_line },
 		{ id = "hide_keybind_element", 	type = "check", 	val = 1, def = cfg.hide_keybind_element },
@@ -784,8 +793,8 @@ end
 function on_mcm_load()
 	if not cfg then return end
 	cache = {}
-	cfg.unsquish_ratio = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
-	color_tokens = utils_catspaw_text.get_color_tokens() or color_tokens
+	cfg.unsquish_ratio = utils_catspaw_hudmarks and utils_catspaw_hudmarks.update_unsquish_ratio and utils_catspaw_hudmarks.update_unsquish_ratio() or 1
+	color_tokens = utils_catspaw_text and utils_catspaw_text.get_color_tokens and utils_catspaw_text.get_color_tokens() or color_tokens
 	lang = ui_options.curr_localization()
 	xml:ParseFile("ui_dotmarks.xml")
 	valid_mcm = valid_mcm_version()

@@ -96,10 +96,12 @@ function on_game_start()
                     args.bone 			= cfg.vehicle_marker_bone
                     	-- Forces the marker to be anchored on a particular bone
                     	-- Don't blame me, I didn't name this one
-                    args.los_check_int     = -1
+                    args.los_check_int  = -1
                     	-- Disable marker LOS checks, so vehicle doesn't block itself
+					args.interact_dist 	= 3.9
                     args.hint_filters   = { ["tip_door_open"] = "tip_door_open" }
 						-- Vanilla interact text to trap and filter out
+					args.bones 			= dotmarks_main.get_bone_list(obj)
                 end
             end
         )

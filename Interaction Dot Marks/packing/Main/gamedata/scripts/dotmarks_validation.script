@@ -1,0 +1,150 @@
+-- =======================================================================
+--[[    Interaction Dot Marks ("DotMarks")
+-- =======================================================================
+		DEPENDENCY CHECK AND SUCCESFUL LOAD VALIDATION
+-- =======================================================================
+    Author: Catspaw
+    Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
+-- =======================================================================    
+	Checks the existence of various core parts of DotMarks, and notifies
+	the player of what failed and what to do about it, if possible.
+-- =====================================================================]]
+
+local gts 			= game.translate_string
+local addon_name 	= "st_addon_name_dotmarks"
+local ending_text 	= "st_depcheck_dotmarks_end"
+local tipicon 		= "ui_inGame2_V_zone_nedavno_proshel_vibros"
+local tipdur 		= 12000
+local delay 		= 2500
+local tipsnd 		= "pda_tips"
+
+ts_tips = {
+	[1] = "st_depcheck_dotmarks_tip_1",
+	[2] = "st_depcheck_basic_tip_1",
+	[3] = "st_depcheck_basic_tip_2",
+	[4] = "st_depcheck_basic_tip_3"
+}
+
+dependency_checks = {
+	[1] = {
+		script 		= "utils_catspaw_common",
+		exists 		= "get_xml_cache",
+		func_msg 	= (
+			function()
+				if utils_catspaw_common and utils_catspaw_common.script_version then
+					if not utils_catspaw_common.get_xml_cache then
+						return "\nscript utils_catspaw_common " .. string.format(outdated, "1.18+", utils_catspaw_common.script_version)
+					end
+				end
+			end
+		)
+	},
+	[2] = {
+		script 		= "utils_catspaw_text",
+		exists 		= "bindtext",
+		func_msg 	= (
+			function()
+				if utils_catspaw_text and utils_catspaw_text.script_version then
+					if not utils_catspaw_text.bindtext then
+						return "\nscript utils_catspaw_text " .. string.format(outdated, "1.4+", utils_catspaw_text.script_version)
+					end
+				end
+			end
+		)
+	},
+	[3] = { script = "utils_catspaw_mapspots", 	exists = "script_version" },
+	[4] = { script = "utils_catspaw_hudmarks", 	exists = "script_version" },
+	[5] = { script = "dotmarks_main", 			exists = "script_version" },
+	[6] = { script = "ui_hud_dotmarks.script", 	exists = "script_version" },
+	[7] = { script = "ui_hud_dotmarks.script", 	exists = "cfg",
+		func_msg 	= (
+			function()
+				if ui_hud_dotmarks then
+					if not ui_hud_dotmarks.cfg then
+						return "\nMain config table (ui_hud_dotmarks.cfg) " .. notfound
+					end
+				end
+			end
+		)
+	}
+}
+
+function var_from_str_path(str)
+	-- Retrieves a variable value where script.varname path is stored in a string
+	local res = nil
+    if str then
+		str = str_explode(str,"%.")
+		if str[1] and str[2] and _G[ str[1] ] and _G[ str[1] ][ str[2] ] then
+			res = _G[ str[1] ][ str[2] ]
+		else
+			local _ = DEV_DEBUG and printf("! ERROR: No content found for %s", str)
+		end
+	end
+	return res
+end
+
+function dotmarks_on_init_complete()
+	-- Callback fires if DotMarks successfully loads
+	-- therefore, no need to trigger the check logic
+	UnregisterScriptCallback("on_loading_screen_dismissed", on_loading_screen_dismissed)
+end
+
+function on_loading_screen_dismissed()
+	local start = time_global()
+	CreateTimeEvent(addon_name .. "_dependency_warning_check", 0, 0, (
+		function()
+			-- wait for IDM to have a chance to set up and notify on its own first
+			if (time_global() - start) < delay then return end
+			-- Don't notify if the main script was already able to do so
+			if ui_hud_dotmarks and ui_hud_dotmarks.fail_notification_sent then return true end
+
+			local modname 		= gts(addon_name)
+			local failmsg1 		= gts("st_depcheck_failpart_1")
+			local failmsg2 		= gts("st_depcheck_failpart_2")
+			local failmsg3 		= gts("st_depcheck_failpart_3")
+			local notfound 		= gts("st_depcheck_fail_not_found")
+			local outdated 		= gts("st_depcheck_fail_outdated")
+			local listitem 		= gts("st_depcheck_listitem")
+			local endtext 		= gts(ending_text)
+			local failed = false
+			local txt 	= ""
+			local failure 	= ""
+			local res
+
+			printf("[%s] Key dependency missing, identifying issue and triggering message to player", modname)
+			for i = 1, #dependency_checks do
+				local dep = dependency_checks[i]
+				if dep then
+					local path = tostring(dep.script) and tostring(dep.exists) and (dep.script .. "." .. dep.exists)
+					local found = path and var_from_str_path(path)
+					if not found then
+						local functxt = dep.func_msg and dep.func_msg()
+						txt = functxt or ("\nscript " .. dep.script .. " " .. notfound)
+						failure = failure .. "\n" .. txt
+						failed = true
+						break
+					end
+				end
+			end
+			if not failed then
+				failure = "??? unknown failure"
+			end
+			local failmessage = failmsg1 .. modname .. failmsg2 .. "\n" .. 
+								failure .. failmsg3
+			for i = 1,#ts_tips do
+				if ts_tips[i] then
+					local tip = gts(ts_tips[i])
+					failmessage = failmessage .. "\n" .. listitem .. tip
+				end
+			end
+    		db.actor:give_game_news(modname, failmessage .. endtext, tipicon, 0, tipdur)
+			xr_sound.set_sound_play(AC_ID, tipsnd)
+			return true
+		end
+	))
+end
+
+function on_game_start()
+	RegisterScriptCallback("dotmarks_on_init_complete", dotmarks_on_init_complete)
+	RegisterScriptCallback("on_loading_screen_dismissed", on_loading_screen_dismissed)
+end

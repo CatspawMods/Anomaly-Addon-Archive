@@ -1,0 +1,59 @@
+<!-- ====================================================================
+	Interaction Dot Marks
+    Author: Catspaw
+    Every new update is translated using DeepL.
+    Further corrections or suggestions from native speakers are always welcome, and usually get added in subsequent patches.
+===================================================================== -->
+<?xml version="1.0" encoding="windows-1251"?>
+<string_table>
+
+	<string id="st_depcheck_failpart_1">
+		<text>%c[default]Аддон %c[255,255,215,0]«</text>
+	</string>
+
+	<string id="st_depcheck_failpart_2">
+		<text>%c[default]» %c[255,255,215,0]не завантажився взагалі%c[default]. Це може статися з різних причин. Це була перша помилка:\n
+		%c[255,255,0,0] \n</text>
+	</string>
+
+	<string id="st_depcheck_failpart_3">
+		<text>\n%c[255,220,220,220]
+		\nЩо можна спробуватиc:\n</text>
+	</string>
+
+	<string id="st_depcheck_listitem">
+		<text>\n
+			%c[255,255,255,255]• %c[default]</text>
+	</string>
+
+	<string id="st_depcheck_dotmarks_tip_1">
+		<text>Оновіть інші доповнення Catspaw (такі як Fair Fast Travel, Milspec PDA або PAW)</text>
+	</string>
+
+
+	<string id="st_depcheck_basic_tip_1">
+		<text>Перемістіть додаток в кінець списку в MO2</text>
+	</string>
+
+	<string id="st_depcheck_basic_tip_2">
+		<text>Завантажте доповнення заново з Moddb і переінсталюйте його</text>
+	</string>
+
+	<string id="st_depcheck_basic_tip_3">
+		<text>Запустіть Anomaly без інших аддонів і подивіться, чи буде це відбуватися</text>
+	</string>
+
+	<string id="st_depcheck_dotmarks_end">
+		<text>\n %c[default]
+		\nЯкщо після цього DotMarks все ще не працює, ймовірно, у вашій установці Anomaly є серйозна проблема. Перейти до меню %c[255,255,215,0]MCM %c[default]> %c[255,255,215,0]DotMarks %c[default]> %c[255,255,215,0]Розширені налаштування %c[default] і надайте журнал налагодження відповідно до інструкцій, наведених там.</text>
+	</string>
+
+	<string id="st_dotmarks_dep_not_found">
+		<text>НЕ ЗНАЙДЕНО!\n</text>
+	</string>
+
+	<string id="st_dotmarks_dep_outdated">
+		<text>ЗАСТАРІЛИЙ! (необхідна %s, знайдена %s)\n</text>
+	</string>
+
+</string_table>
