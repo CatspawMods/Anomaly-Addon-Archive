@@ -1,6 +1,8 @@
 ; Patch for Bizarre Interference addon
-; Increases the number of emission sounds from 8 to 19
+; Increases the number of emission sounds from 8 to 25
 [config_sfx_emission]
 sfx_filename 	= noise_emission_
 sfx_path 		= detectors\RF\emission
-sfx_max 		= 19
+sfx_max 		= 25
+; The following line must point at a valid functor
+sfx_functor = item_radio.sfx_emission

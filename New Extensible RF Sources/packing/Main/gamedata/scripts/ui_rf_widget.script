@@ -147,7 +147,3 @@ function UIRFWidget:Update()
     if not db.actor then return end
     CUIScriptWnd.Update(self)
 end
-
-
-
-local pos = vector():set(3,0,0)
