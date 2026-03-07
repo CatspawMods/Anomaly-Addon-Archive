@@ -228,6 +228,9 @@ function main_marker_update_loop(mark, args)
 		mark:HideAll("offscreen, aborting markloop")
 		return
 	end
+
+	local dd 			= (debug_dump)
+	local _ 			= dd and dump("[%s] Beginning marker update loop for %s", time_global(), mark.name)
 	local now           = time_global()
 	local id            = mark.id
 	local obj           = id and get_game_object(id)
@@ -265,8 +268,7 @@ function main_marker_update_loop(mark, args)
 
 	mark.may_hide 		= mark.hidden
 	mark.hide_reason 	= mark.may_hide and "mark itself is hidden" or "none"
-	local dd 			= (debug_dump)
-	local _             = (not mark.may_hide) and dd and dump("[%s][%s] Visibility and UI checks for %s | dist %s", mark.id, now, mark.name or mark.tutorial or mark.text, mark.last_dist)
+	_             		= (not mark.may_hide) and dd and dump("[%s][%s] Visibility and UI checks for %s | dist %s", mark.id, now, mark.name or mark.tutorial or mark.text, mark.last_dist)
 
 	if mark.is_arty and (not mark.arty_container) and (not can_actor_see_artefact(obj)) then
 		hide_mark(mark, "artefact not visible")
@@ -288,10 +290,17 @@ function main_marker_update_loop(mark, args)
 
 	-- ================================================================================
 	-- Check whether any logic has shut off interaction prompts entirely
-	local targeted      = is_current_target(id)
+	local targeted 		= false
 	local show_sec      = false
-	local can_display 	= (targeted and mark.in_range)
-	mark.show_pri       = mark.show_pri and can_display
+	
+	if mark.is_vehicle then
+		targeted 		= mark.can_display
+	else
+		targeted    	= is_current_target(id)	
+		mark.can_display= (targeted and mark.in_range)
+	end
+	
+	mark.show_pri       = mark.show_pri and mark.can_display
 
 	if mark.item_class and not is_object_scannable(mark.item_class) then
 		--dump("item class %s is not scannable", mark.item_class)
@@ -300,7 +309,7 @@ function main_marker_update_loop(mark, args)
 	end
 	--dump("prompt check: hide %s | hidden_show: %s | anim block: %s", mark.may_hide, cfg.hidden_show_prompts, prompt_blocked_by_anim())
 	local prompts_shown = false
-	local sec_forced 	= (can_display and mark.always_show_sec)
+	local sec_forced 	= (mark.can_display and mark.always_show_sec)
 	if (mark.may_hide and not cfg.hidden_show_prompts) or prompt_blocked_by_anim() then
 		--dump("Hiding all prompts")
 		hide_mark_prompts(mark)
@@ -316,13 +325,14 @@ function main_marker_update_loop(mark, args)
 			end
 			if mark.in_range then
 				if mark.is_container and not mark.is_display then
-					marker_loop_container_updates(mark, obj, can_display)
+					marker_loop_container_updates(mark, obj)
 				end
-				-- Passed NPC and container checks
+
 				if mark.is_campfire then
 					--dump("mark.is_campfire %s", mark.is_campfire)
 					mark.show_pri = cfg.active_campfire and (cfg.active_campfire == mark.id)
 				elseif mark.is_pickup then
+					--dump("mark.is_pickup %s", mark.is_pickup)
 					if mark.physics_obj and can_interact_physpickup(id, mark.last_dist, mark, obj) then
 						if (not cfg.available_pickup) then
 							cfg.available_pickup = id
@@ -396,6 +406,25 @@ end
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 --- @param args table
 function marker_loop_range_checks(mark, args)
+	local _ = debug_dump and dump("[%s][marker_loop_range_checks] %s", time_global(), mark and mark.name)
+	if mark.is_vehicle then
+		--if cfg.vehicle_bone_update_int then
+			--local now = time_global()
+			--if now - (cfg.next_vehicle_check or 0) > cfg.vehicle_bone_update_int then
+				--cfg.next_vehicle_check = now + cfg.vehicle_bone_update_int
+				local bone_id 		= get_target_bone()
+				local target_bone 	= bone_id and cfg.vehicle_target_bones[bone_id]
+				mark.can_display 	= not not target_bone
+				if mark.can_display then
+					--mark.in_range 	= true
+					--mark.args.bone 	= cfg.vehicle_target_bones[bone_id]
+ 					mark.last_dist 	= raycast_to_crosshair(5, nil, true)
+ 				else
+ 					mark.last_dist 	= 999
+				end
+			--end
+		--end
+	end
 	mark.in_range      	= is_in_range(id, mark.last_dist, mark)
 	if (not mark.in_range) then
 		if mark.active_swapped then
@@ -403,11 +432,16 @@ function marker_loop_range_checks(mark, args)
 		end
 		if cfg.hidden_mark_interval and (mark.last_dist >= mark.far_hide_dist) then
 			mark.delay_next = get_next_tg_interval(cfg.hidden_mark_interval)
-			if (mark.use_pri and not mark.use_pri.disabled) then
-				hide_marker_and_prompts(nil, nil, mark)
-			end
-			return true
+			--if (mark.use_pri and not mark.use_pri.disabled) then
+				--hide_marker_and_prompts(nil, nil, mark)
+			--end
+			--return true
 		end
+		if (mark.use_pri and not mark.use_pri.disabled) then
+			hide_marker_and_prompts(nil, nil, mark)
+		end
+		
+		return true
 	end
 end
 
@@ -432,7 +466,7 @@ function marker_loop_texture_updates(mark, prompts_shown)
 		end
 	end
 	if no_marker then
-		_=dd and dump("Mark is hidden (%s) clearing texture")
+		_ = debug_dump and dump("Mark is hidden (%s) clearing texture")
 		if not cfg.hide_interaction_dots then
 			mark.delay_next = get_next_tg_interval(cfg.hidden_mark_interval)
 		end
@@ -472,8 +506,7 @@ end
 
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 --- @param obj game_object
---- @param can_display boolean
-function marker_loop_container_updates(mark, obj, can_display)
+function marker_loop_container_updates(mark, obj)
 	-- Update contents of inventory containers
 	local id = mark.id
 	mark.body_claimed 	= is_body_claimed(mark)
@@ -484,7 +517,7 @@ function marker_loop_container_updates(mark, obj, can_display)
 	if (not cfg.invboxes[id]) then
 		init_new_inventory_box(id)
 	end
-	if can_display and not is_invbox_found(id) then
+	if mark.can_display and not is_invbox_found(id) then
 		cfg.invboxes[id].found = true
 		mark.is_concealed = false
 	end
@@ -4471,14 +4504,14 @@ function dot_eye(position)
 end
 
 --- @param method number
---- @param last_id number
+--- @param last_targeted_id number
 local function log_target_acquisition(method, last_id)
 	if not (debug_dump and method) then return end
-	local target = targeted_id and get_game_object(targeted_id)
-	if not target then return end
+	if last_id == targeted_id then return end
+	local target
 	local method_txt = ""
 	if method < -1 then
-		method = "manual"
+		method = "hover"
 	elseif method < 0 then
 		target = last_id and get_game_object(last_id)
 		if target then
@@ -4492,6 +4525,9 @@ local function log_target_acquisition(method, last_id)
 	else
 		method_txt = "target_obj"
 	end
+	target = target or get_game_object(targeted_id)
+	if not target then return end
+
 	local _ = debug_dump and dump("[%s] update_targeted_object: targeted_id is now %s (%s) | method %s", time_global(), targeted_id, target and target:name(), method_txt)
 end
 
@@ -4528,7 +4564,7 @@ function update_targeted_object()
 	else
 		targeted_id = id
 	end
-
+	local last = last_id
 	if targeted_id then
 		if target and (method < 1) and cfg.fallback_distance_check and (targeted_id ~= last_id) then
 			local apos = db.actor:position()
@@ -4545,7 +4581,6 @@ function update_targeted_object()
 			method = -2
 		elseif last_id then
 			method = -1
-			return
 		end
 	end
 	log_target_acquisition(method, last_id)
@@ -5291,7 +5326,7 @@ function pick_up_marked_item(mark)
 		take_glowstick(mark.id)
 	elseif mark.physics_obj then
 		if mark.func_pickup then
-			dump("Executing func_pickup for marker %s", mark.name)
+			local _ = debug_dump and dump("Executing func_pickup for marker %s", mark.name)
 			mark.func_pickup(id)
 		end
 	else
@@ -6072,7 +6107,7 @@ function parse_file_data()
 	}
 	cfg.color_icon_itemcard     = clr_tbl(cfg.color_icon_itemcard)
 	convert_numeric_keys_to_index(cfg.dik_icons)
-	convert_numeric_keys_to_index(cfg.vehicle_bones)
+	convert_numeric_keys_to_index(cfg.vehicle_target_bones)
 	--[[
 	local raw_dik 				= cfg.dik_icons and dup_table(cfg.dik_icons)
 	cfg.dik_icons 				= {}

@@ -27,6 +27,7 @@ mcm_menu_additions = {
         ui_hook_functor = { dotmarks_mcm.init_header_element },
     },
     { id = "hide_marker_in_vehicle", type = "check", val = 1, def = true },
+    { id = "vehicle_only_driver_door", type = "check", val = 1, def = true },
     { id = "divider", type= "line" },
 }
 
@@ -55,8 +56,9 @@ function set_vehicle_marker_state(obj, state)
 	end
 	if (not state) and (not cfg.hide_marker_in_vehicle) then return end
 	log("Actor %sed vehicle %s, trying to %sable marker", state and "exit" or "enter", mark.name, state and "en" or "dis")
-	mark.suspended = not state
-	if mark.suspended then
+	if state then
+		mark.suspended = false
+	else
 		ui_hud_dotmarks.suspend_marker(mark)
 	end
 end
@@ -98,7 +100,7 @@ function on_game_start()
                     	-- Don't blame me, I didn't name this one
                     args.los_check_int  = -1
                     	-- Disable marker LOS checks, so vehicle doesn't block itself
-					args.interact_dist 	= 3.9
+					args.interact_dist 	= 2.9
                     args.hint_filters   = { ["tip_door_open"] = "tip_door_open" }
 						-- Vanilla interact text to trap and filter out
 					args.bones 			= dotmarks_main.get_bone_list(obj)

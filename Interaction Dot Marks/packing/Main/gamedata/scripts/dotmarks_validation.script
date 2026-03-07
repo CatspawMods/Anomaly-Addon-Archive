@@ -33,7 +33,7 @@ dependency_checks = {
 			function()
 				if utils_catspaw_common and utils_catspaw_common.script_version then
 					if not utils_catspaw_common.get_xml_cache then
-						return "\nscript utils_catspaw_common " .. string.format(outdated, "1.18+", utils_catspaw_common.script_version)
+						return "\nscript utils_catspaw_common " .. string.format(outdated, "1.18+", utils_catspaw_common.script_version or "none")
 					end
 				end
 			end
@@ -46,7 +46,7 @@ dependency_checks = {
 			function()
 				if utils_catspaw_text and utils_catspaw_text.script_version then
 					if not utils_catspaw_text.bindtext then
-						return "\nscript utils_catspaw_text " .. string.format(outdated, "1.4+", utils_catspaw_text.script_version)
+						return "\nscript utils_catspaw_text " .. string.format(outdated, "1.4+", utils_catspaw_text.script_version or "none")
 					end
 				end
 			end
@@ -106,9 +106,9 @@ function on_loading_screen_dismissed()
 			local outdated 		= gts("st_depcheck_fail_outdated")
 			local listitem 		= gts("st_depcheck_listitem")
 			local endtext 		= gts(ending_text)
-			local failed = false
-			local txt 	= ""
-			local failure 	= ""
+			local failed 		= false
+			local txt 			= ""
+			local failure 		= ""
 			local res
 
 			printf("[%s] Key dependency missing, identifying issue and triggering message to player", modname)
