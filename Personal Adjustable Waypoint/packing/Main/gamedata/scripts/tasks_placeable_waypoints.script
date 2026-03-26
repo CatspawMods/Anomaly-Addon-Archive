@@ -9,8 +9,8 @@
     I post gameplay video on my Youtube channel, Catspaw Adventures: 
     https://www.youtube.com/@CatspawAdventures
 -- ===================================================================--]]
-script_version          = "2.4.0"
-release_date            = 20250717
+script_version          = "2.4.2"
+release_date            = 20260326
 --[[======================================================================
     You may alter any part of this mod and do whatever you like with it, 
     just give credit where due.
@@ -72,6 +72,9 @@ local round2            = utils_catspaw_common.dec2
 local exec              = utils_catspaw_common.exec
 local lerp              = utils_catspaw_common.lerp
 local valid_id          = utils_catspaw_common.valid_id
+local bindtext          = utils_catspaw_text.bindtext
+local valid_bind        = utils_catspaw_text.valid_bind
+local safename          = utils_catspaw_text.safename
 -- ======================================================================
 -- FEATURE TROUBLESHOOTING KILLSWITCHES
 -- ======================================================================
@@ -92,7 +95,6 @@ disable_mcm_updates     = false
 -- This flag will disable the immediate MCM updates that happen 
 -- when changing icons or sets in-game.
 -- ======================================================================
-local script_load_time  = time_global()
 local icoset_changed    = nil   -- runtime flag
 started                 = false -- runtime flag
 waypoint_active         = false -- runtime flag
@@ -100,6 +102,8 @@ waypoint_canceling      = false -- runtime flag
 first_mcm_load          = true  -- runtime flag
 disable_load_warning    = false
 local load_failed       = false -- runtime flag
+local right_clicked     = false -- runtime flag
+local last_temp_zone    = nil   -- runtime flag
 welcome_msg_shown       = false -- if you don't have MCM, setting this true will disable the welcome message
 remove_all_mapspots     = level.map_remove_all_object_spots
 get_mapspot_static      = level.map_get_object_spot_static
@@ -112,41 +116,33 @@ local task_info         = tm.task_info
 local floor, ceil       = math.floor, math.ceil
 local pow, sqrt         = math.pow, math.sqrt
 -- ======================================================================
-mousewheel_override     = false
---[[    If set to true, mousewheel_override will skip the autodetection of 
-        mousewheel support and force it to be on. This may have bad results
-        if your binaries don't actually support it.
-
-        Mousewheel support can also be forced on by setting the following
-        MCM config value (not exposed in the menu):
-        
-        pawsys/pawbinds/mwheel_override = true
---]]
-right_click_override    = false
+--mousewheel_override     = false
+--right_click_override    = false
 -- Similarly with right_click_override, but for the on_map_right_click callback
 mwheel_enabled          = false -- managed at runtime
 mwheel_notify           = true  -- news tip on state change
 mwheel_poll_interval    = 50    -- interval between checks for mouse wheel input
-mwheel_next_poll        = script_load_time
+mwheel_next_poll        = 0
 local using_modded_exes = utils_catspaw_common.using_modded_exes
-mwheel_avail            = mousewheel_override or utils_catspaw_common.exe_mwheel_support()
-right_click_avail       = right_click_override or utils_catspaw_common.exe_rclick_support()
+mwheel_avail            = true --mousewheel_override or utils_catspaw_common.exe_mwheel_support()
+right_click_avail       = true --right_click_override or utils_catspaw_common.exe_rclick_support()
+-- prep for dropping vanilla support
 last_clicked_id         = nil
 -- ======================================================================
 unsquish_ratio              = 1
 local DIK_name              = ui_mcm and ui_mcm.display_key or ui_mcm.dispaly_key or (function() return "" end)-- typo is in the mcm script
 local default_id            = 15797 -- WP defaults to Rookie Village if missing for any reason to avoid crash
 local mcm_update_throttle   = 3019 -- minimum time between MCM updates of icon/set data
-local next_mcm_update       = script_load_time
+local next_mcm_update       = 0
 local wp_proxcheck_interval = 837 -- Time between checks for waypoint proximity
-local next_wp_proxcheck     = script_load_time
+local next_wp_proxcheck     = 0
 local garbcollect_interval  = 4984 -- Time between pin/sz garbage collection checks
-local next_gc_check         = script_load_time
+local next_gc_check         = 0
 local wp_clear_dist         = 5
 local widget_hide_delay     = 5000
-local next_pin              = script_load_time
+local next_pin              = 0
 local pin_delay             = 1000 -- timeout to prevent dupe actions from registering
-local ping_lifetime         = 10000
+local ping_lifetime         = 60 -- 10 game seconds
 local ping_grid_size        = 10
 local ping_grid_radius      = 10
 --local max_dynamic_faves     = 5 -- not yet implemented
@@ -185,7 +181,7 @@ widget_active               = true
 hide_widget                 = true
 widget_use_custom_pos       = false
 widget_custom_pos           = {x=491,y=670}
-widget_last_used            = script_load_time
+widget_last_used            = 0
 wp_hud_icon_enabled         = true
 pin_hud_icon_default        = true
 notify_pin_target           = false
@@ -195,7 +191,7 @@ reticle_mustzoom            = true
 reticle_mode                = 2
 autotag_mode                = 0
 autotag_persistence         = false -- if enabled, autotags are cleared on map change or the below timeout value
-autotag_lifetime            = 120 * 6 -- time in ms before autotags are cleared (def 2 minutes)
+autotag_lifetime            = 120   -- time in seconds before autotags are cleared (def 2 minutes)
 autotags_time_out           = autotag_lifetime > 0
 clear_pin_on_death          = true  -- when set on a living thing, pin will be cleared if it dies
 pin_near_fade_dist          = 5     -- min distance within which pins will begin to fade out, set to 0 to disable
@@ -661,7 +657,7 @@ function paw_enabled_check()
     end
     return paw_enabled
 end
-
+--[[
 function valid_bind(kb)
     return (kb ~= nil) and (kb ~= "") and (kb ~= "<!!!>") and (kb ~= -1)
 end
@@ -755,12 +751,10 @@ function safename(id)
         if not section then
             return text
         end
-        --[[
-            Hack adapted from ui_enemy_health.script
-            This logic acts as a translation layer for
-            any monster kind/species that doesn't line
-            up with the name of its encyclopedia entry
-        --]]
+            --Hack adapted from ui_enemy_health.script
+            --This logic acts as a translation layer for
+            --any monster kind/species that doesn't line
+            --up with the name of its encyclopedia entry
         local special_cases = {
             dog             = "blind_dog",
             bird            = "crow",
@@ -796,7 +790,7 @@ function safename(id)
     dl("safename returns %s for %s",text,name)
     return text
 end
-
+--]]
 
 function valid_pda(feature)
     feature = feature or "show_w"
@@ -1176,10 +1170,10 @@ function dump_script_zones()
         local wp = is_current_waypoint(k) and "$ Current Waypoint\n" or ""
         local per = v.cleanup and " (Temporary)" or " (Persistent)"
         local ping = pings[k] and "* Pingspot\n" or ""
-        local clean = v.cleanup and "Subject to cleanup in " or "Not subject to cleanup"
+        local clean = v.cleanup and "Subject to cleanup" or "Not subject to cleanup"
         local pre = v.cleanup and "!" or "-"
-        local tr = v.cleanup and (v.cleanup - time_global()) or 0
-        local t = (tr > 0) and (tostring(tr) .. "ms\n") or "\n"
+        local tr = v.cleanup and (v.cleanup - get_time_elapsed()) or 0
+        local t = (tr > 0) and " in "..(tostring(tr / 6) .. "s\n") or "NOW\n"
         printf("%s%s Script Zone %s%s\n%s %s%s%s%s", logdiv, pre, k, per, pre, clean, t, wp, ping)
     end
 end
@@ -1188,12 +1182,12 @@ function register_script_zone(...)
     local se_obj = alife_create("script_zone",...)
     if not se_obj then return end
     local id = se_obj.id
-    local now = time_global()
+    local now = get_time_elapsed()
     script_zones[id] = {
         id      = se_obj.id,
         pos     = se_obj.position,
         created = now,
-        cleanup = now + ping_lifetime,
+        cleanup = now + (ping_lifetime * 6),
     }
     script_zone_changed = true
     vl("Script zone %s spawned for mapspot",id)
@@ -1250,14 +1244,21 @@ function despawn_pingspot(id)
 end
 
 
-function script_zone_cleanup()
+function script_zone_cleanup(wipe_all)
     if GUI_PinOpts and GUI_PinOpts:IsShown() then
         -- don't do cleanup while player is editing pin
         return
     end
     local now       = get_time_elapsed()
+    vl("[%s] Cleaning up unused script_zones | game_time %s", time_global(), now)
     for k,v in pairs(script_zones) do
-        if v.cleanup and (v.cleanup < now) then
+        local expired = v.cleanup and (v.cleanup < now)
+        vl("Checking script_zone %s: cleanup %s | expired %s", k, v.cleanup, expired)
+        if expired or wipe_all then
+            if last_temp_zone and last_temp_zone == k then
+                last_temp_zone = nil
+                right_clicked = false
+            end
             deregister_script_zone(k)
         end
     end
@@ -1292,7 +1293,7 @@ function set_pin_persistence(id,onoff,lifetime)
         dl("Pin %s given persistence, it will not be subject to cleanup",id)
     else
         local now = get_time_elapsed()
-        pins[id].cleanup = now + (lifetime or autotag_lifetime or 0)
+        pins[id].cleanup = now + ((lifetime or autotag_lifetime or 0) * 6)
         dl("Pin %s flagged as temporary, it will be subject to cleanup at %s",id,pins[id].cleanup)
         script_zone_changed = true
     end
@@ -1306,7 +1307,7 @@ function set_pingspot_persistence(id,onoff)
         script_zones[id].cleanup = nil
         dl("Temporary pingspot %s given persistence, it will not be subject to cleanup",id)
     else
-        script_zones[id].cleanup = get_time_elapsed()
+        script_zones[id].cleanup = 0
         dl("Persistent pingspot %s flagged as unused, it will be subject to cleanup",id)
         script_zone_changed = true
     end
@@ -1315,7 +1316,7 @@ end
 
 function ping_cleanup(pid)
     dl("Cleaning up after ping %s",pid)
-    local now = time_global()
+    local now = get_time_elapsed()
     for k,v in pairs(pings) do
         vl("pid %s id %s cleanup is %s",pid,k,v.cleanup or "disabled")
         if v.cleanup and
@@ -1333,7 +1334,7 @@ function ping_area_around(obj_or_t)
     if type(obj_or_t) == "table" then
         obj     = obj_or_t.se_obj or (obj_or_t.id and alife_object(obj_or_t.id))
     end
-    local now       = time_global()
+    local now       = get_time_elapsed()
     local pid       = tostring(now)
     local span      = ping_grid_radius or 10 -- radius of grid in squares
     local grid      = ping_grid_size or 10 -- dimension of grid squares in game units
@@ -1558,6 +1559,7 @@ function func_wp_del()
 end
 -- ======================================================================
 function func_pn_add(args)
+    -- PAW Action: Add Pin
     local id = args and args.id
     if not id then return end
     local name = args.name or safename(id)
@@ -1586,6 +1588,9 @@ function func_pn_del(args)
         end
         vl("Pin %s (%s) deleted",pins[id].name,id)
         pins[id] = nil
+        if script_zones and script_zones[id] then
+            deregister_script_zone(id)
+        end
         if icon then remove_mapspot(id,icon) end
     end
 end    
@@ -2521,6 +2526,7 @@ function mcm_reload_keybind_settings()
     raytrace_wp_targets     = load_mcm("pawbinds/raytrace_wp_targets", raytrace_wp_targets)
     local tmp
 
+--[[
     tmp                     = ui_mcm.get("pawsys/pawbinds/mwheel_override")
     if tmp ~= nil then
         dl("MCM override found for mwheel_avail (old = %s | new = %s)",mwheel_avail,tmp)
@@ -2529,13 +2535,13 @@ function mcm_reload_keybind_settings()
             mwheel_avail = true
         end
     end
-
+--]]
     tmp                     = ui_mcm.get("pawsys/pawbinds/mwheel_enabled")
     if tmp and type(tmp) == "number" then
         tmp                 = (tmp ~= 0)
     end
     mwheel_enabled          = tmp and mwheel_avail
-
+--[[
     tmp                     = ui_mcm.get("pawsys/pawbinds/right_click_override")
     -- if set to true, will force on_map_right_click support on
     if tmp ~= nil then
@@ -2546,7 +2552,7 @@ function mcm_reload_keybind_settings()
             RegisterScriptCallback("on_map_right_click",on_map_right_click)
         end
     end        
-    
+--]]
     tmp                     = ui_mcm.get("pawsys/pawgen/disable_mcmups")
     if tmp ~= nil then
         dl("MCM override found for disable_mcm_updates (old = %s | new = %s)",disable_mcm_updates,tmp)
@@ -2648,7 +2654,7 @@ function mcm_reload_reticle_settings()
     if ui_mcm then
         mark_on_positive_id     = load_mcm("pawret/enable_autotag",mark_on_positive_id)
         autotag_persistence     = load_mcm("pawret/autotag_persistence",autotag_persistence)
-        autotag_lifetime        = load_mcm("pawret/autotag_lifetime",(autotag_lifetime / 6)) * 6
+        autotag_lifetime        = load_mcm("pawret/autotag_lifetime",autotag_lifetime)
         autotags_time_out       = (autotag_lifetime or 0) > 0
         pin_hud_icon_default    = load_mcm("pawret/pin_auto_visible",pin_hud_icon_default)
         manual_smart_pins       = load_mcm("pawret/manual_smart_pins",manual_smart_pins)
@@ -2795,7 +2801,7 @@ function tick()
     if (next_gc_check <= now) then
         next_gc_check = get_next_check(garbcollect_interval)
         --now + garbcollect_interval
-        if script_zone_changed then
+        if script_zone_changed or right_clicked then
             script_zone_cleanup()
         end
         temp_pin_cleanup()
@@ -5031,6 +5037,8 @@ function on_map_right_click(property_ui, map_table)
         dl("[PAW] Right-click capture failed - unable to find or create valid se_obj")
         return
     else
+        right_clicked = true
+        last_temp_zone = se_obj.id
         if mod_key_pressed(1) then
             -- LSHIFT : unused
         elseif mod_key_pressed(2) then
@@ -5284,7 +5292,7 @@ end
 function save_state(data)
     update_mcm_icoset_data()
     dl("save_state: Cleaning up script zones and temp markers")
-    script_zone_cleanup()
+    script_zone_cleanup(true)
     data.paw_waypoint_info = nil
     if uninstall_paw then
         dl("save_state: uninstall flag is set, wiping all PAW data from mdata before save")
@@ -5322,30 +5330,6 @@ function actor_on_first_update()
     temp_pin_cleanup(true)
     active_set(icon_sets[current_active_set].i)
     show_all_pins(true)
-    if waypoint_active then
-        local id = placed_waypoint.id
-        local se_obj = alife_object(id)
-        if not se_obj then return end
-        local savelast = last_waypoint
-        do_paw_action("wp_mov",se_obj)
-        last_waypoint = savelast
-    end
-    reset_indicator()
-    if wp_hud_icon_enabled then 
-        show_hud_waypoint()
-    else
-        hide_hud_waypoint()
-    end
-    if (reticle_mode > 0) or (autotag_mode > 0) then
-        enable_vo_crosshair()
-    else
-        disable_vo_crosshair()
-    end
-
-    init_hud_pins()
-    if not welcome_msg_shown then
-        CreateTimeEvent("paw_welcome_message",0,5,paw_welcome_message)
-    end
 
     if debug_dump and not is_empty(pins) then
         printf("~ ========================================================================")
@@ -5366,8 +5350,39 @@ function actor_on_first_update()
 end
 
 
+function on_loading_screen_dismissed()
+    if not paw_enabled then return end
+
+    if waypoint_active then
+        local id = placed_waypoint.id
+        local se_obj = alife_object(id)
+        if not se_obj then return end
+        local savelast = last_waypoint
+        do_paw_action("wp_mov",se_obj)
+        last_waypoint = savelast
+    end
+
+    reset_indicator()
+    if wp_hud_icon_enabled then 
+        show_hud_waypoint()
+    else
+        hide_hud_waypoint()
+    end
+    if (reticle_mode > 0) or (autotag_mode > 0) then
+        enable_vo_crosshair()
+    else
+        disable_vo_crosshair()
+    end
+
+    init_hud_pins()
+    if not welcome_msg_shown then
+        CreateTimeEvent("paw_welcome_message",0,5,paw_welcome_message)
+    end
+end
+
+
 function actor_on_net_destroy()
-    script_zone_cleanup()
+    script_zone_cleanup(true)
     shutdown_hud_waypoint()
     empty_table(hud_pin_objs)
 end
@@ -5458,6 +5473,7 @@ function unregister_all_callbacks()
     UnregisterScriptCallback("actor_on_stash_remove",actor_on_stash_remove)    
     UnregisterScriptCallback("actor_on_net_destroy",actor_on_net_destroy)
     UnregisterScriptCallback("actor_on_first_update",actor_on_first_update)
+    UnregisterScriptCallback("on_loading_screen_dismissed",on_loading_screen_dismissed)
     UnregisterScriptCallback("load_state",load_state)
     UnregisterScriptCallback("save_state",save_state)
     UnregisterScriptCallback("map_spot_menu_add_property",map_spot_menu_add_property)
@@ -5482,6 +5498,7 @@ function register_all_callbacks()
     RegisterScriptCallback("actor_on_stash_remove",actor_on_stash_remove)    
     RegisterScriptCallback("actor_on_net_destroy",actor_on_net_destroy)    
     RegisterScriptCallback("actor_on_first_update",actor_on_first_update)
+    RegisterScriptCallback("on_loading_screen_dismissed",on_loading_screen_dismissed)
     RegisterScriptCallback("load_state",load_state)
     RegisterScriptCallback("save_state",save_state)
     RegisterScriptCallback("map_spot_menu_add_property",map_spot_menu_add_property)
@@ -5521,7 +5538,7 @@ if not load_file_data() then
 
     if not disable_load_warning then
         local tiperr = parse_colors(game.translate_string("st_paw_texture_load_error_tip"))
-        RegisterScriptCallback("actor_on_first_update", 
+        RegisterScriptCallback("on_loading_screen_dismissed", 
             function()
                 CreateTimeEvent("pawerror",0,5,(
                     function()

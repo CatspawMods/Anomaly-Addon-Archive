@@ -2,8 +2,8 @@
 --[[	Catsy's utilities: text and names
 -- ===================================================================--]]
 script_name 	= "utils_catspaw_text"
-script_version 	= "1.11"
-release_date    = 20250717
+script_version 	= "1.12"
+release_date    = 20260113
 --[[======================================================================
 	Author: Catspaw (CatspawMods @ ModDB)
 	Source: https://github.com/CatspawMods/Anomaly-Addon-Archive
@@ -147,7 +147,7 @@ function refresh_tokens(args)
 	local tokens 		= {}
 
 	if db.actor then
-		vl("Refreshing actor tokens")
+		local _ = verbose and dl("Refreshing actor tokens")
 		local actor_name 	= db.actor:character_name()
 		local afirst, alast	= get_firstname_lastname()
 		local actor_comm 	= gameplay_disguise.get_default_comm()
@@ -379,7 +379,7 @@ function parse_color_tokens(s, t, c)
 	-- c: true/false whether to parse or strip color tokens
 	if not s then return end
 	local docolor = (c == nil) and parse_colors or c
-	vl("parse_color_tokens | text: %s | docolor: %s%s", s, docolor, (c == nil) and " (default)" or "")
+	local _ = verbose and dl("parse_color_tokens | text: %s | docolor: %s%s", s, docolor, (c == nil) and " (default)" or "")
 	if t and not is_empty(t) then
 		s = psk(s, t or {})
 	end
@@ -571,7 +571,7 @@ end
 
 function load_female_name_strings()
 	if not getstrtbl_support() then
-		dl("load_female_name_strings: function get_string_table is unsupported by GAMMA or vanilla, aborting")
+		dl("load_female_name_strings: function get_string_table is unsupported by vanilla, aborting")
 	return end
 	-- Compile list of female names starting with "name_woman_"
 	-- Mainly for Dux's character kit
@@ -602,7 +602,7 @@ function find_best_localization(obj, name, section)
     local locst = section and ini_sys:r_string_ex(section, "inv_name")
     local text  = locst and gts(locst)
     if text and locst and (text ~= locst) then
-        vl("Found localization for string %s: %s", locst, text)
+        local _ = verbose and dl("Found localization for string %s: %s", locst, text)
     end
 
     if name and not text then
@@ -613,7 +613,7 @@ function find_best_localization(obj, name, section)
         	}) do
             text = gts(locst)
             if text ~= locst then
-                vl("Found localization for string %s: %s", locst, text)
+                local _ = verbose and dl("Found localization for string %s: %s", locst, text)
                 break
             else
                 text = nil
@@ -628,7 +628,7 @@ function find_best_localization(obj, name, section)
         	}) do
             text = gts(locst)
             if text ~= locst then
-                vl("Found localization for string %s: %s", locst, text)
+                local _ = verbose and dl("Found localization for string %s: %s", locst, text)
                 break
             else
                 text = nil
@@ -649,14 +649,16 @@ function bestname(id)
     if not se_obj then return text end
     local name      = se_obj:name() or text
     local cls       = se_obj:clsid()
+    local vb 		= verbose
+    local _
 
     if paw and paw.pins[id] then
         -- If there's a pin for this ID, use its text above all else
         text = paw.pins[id].name
-        vl("%s is a pin: %s", nameid(name, id), text)
+        _=vb and dl("%s is a pin: %s", nameid(name, id), text)
     elseif paw and (cls == clsid.script_zone) then
         text = gts("st_paw_pin_default_name")
-        vl("%s is a script zone: %s", nameid(name, id), text)
+        _=vb and dl("%s is a script zone: %s", nameid(name, id), text)
     elseif (cls == clsid.script_restr) then
         local _,_,hint = txr_routes.get_route_info(name)
         if hint then
@@ -664,10 +666,10 @@ function bestname(id)
         else
             text = gts(name)
         end
-        vl("%s is a level transition: %s", nameid(name, id), text)
+        _=vb and dl("%s is a level transition: %s", nameid(name, id), text)
     elseif (cls == clsid.smart_terrain) then
         text = gts("st_"..name.."_name"):gsub("%."," -")
-        vl("%s is a smart terrain: %s", nameid(name, id), text)
+        _=vb and dl("%s is a smart terrain: %s", nameid(name, id), text)
     elseif (cls == clsid.online_offline_group_s) then
         local comm = se_obj.player_id
         local sq = paw and gts("st_paw_squad") or "squad"
@@ -676,9 +678,9 @@ function bestname(id)
         if debuglogs then
             text = text..": "..name
         end
-        vl("%s is NPC squad with faction %s: %s", nameid(name, id), comm, text)
+        _=vb and dl("%s is NPC squad with faction %s: %s", nameid(name, id), comm, text)
     elseif IsInvbox(nil,cls) then
-    	vl("%s is an inventory box, checking for localization", nameid(name, id))
+    	_=vb and dl("%s is an inventory box, checking for localization", nameid(name, id))
         text 		= get_stash_hint(id)
         --printf("stash hint is %s", text)
         local obj 	= get_game_object(id)
@@ -715,10 +717,10 @@ function bestname(id)
             dl("No localization found for stash %s, defaulting to \"%s\"", name, text)
             --text = paw and (gts("st_paw_unknown").." "..gts("st_paw_stash")) or "Unknown stash"
         end
-        vl("%s is an inventory_box stash: %s", nameid(name,id),text)
+        _=vb and dl("%s is an inventory_box stash: %s", nameid(name,id),text)
     elseif IsStalker(nil,cls) or (cls == clsid.script_trader) then
         text = se_obj:character_name()
-        vl("%s is a stalker: %s", nameid(name, id), text)
+        _=vb and dl("%s is a stalker: %s", nameid(name, id), text)
     else
         local obj = get_game_object(id)
         local section = obj and obj:section()
@@ -752,7 +754,7 @@ function bestname(id)
                 text = special_cases[what] or what
             end
             text = text and gts("encyclopedia_mutants_"..text)
-            vl("%s is a creature: %s", nameid(name, id), text)
+            _=vb and dl("%s is a creature: %s", nameid(name, id), text)
         else
             text = find_best_localization(obj, name, section)
             if not text then
@@ -762,7 +764,7 @@ function bestname(id)
         end
     end
 
-    dl("safename returns %s for %s", text, name)
+    _=debuglogs and dl("safename returns %s for %s", text, name)
     return text
 end
 safename = bestname -- alias for backwards compatibility

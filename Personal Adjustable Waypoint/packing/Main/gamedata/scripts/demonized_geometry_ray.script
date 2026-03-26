@@ -384,3 +384,11 @@ function get_surface_normal(pos, dir, ray_props, visualize_props, initial_ray)
     end
     return cross
 end
+
+-- function actor_on_update()
+--     get_surface_normal(device().cam_pos, device().cam_dir, nil, {})
+-- end
+
+-- function on_game_start()
+--     RegisterScriptCallback("actor_on_update", actor_on_update)
+-- end
