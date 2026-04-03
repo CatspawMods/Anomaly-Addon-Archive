@@ -69,7 +69,7 @@
     </string>
 
     <string id="st_dialog_mpda_askrecipe_npc_hastools">
-        <text>Hah! I bet you were expecting some kind of tedious errand like that. Nah, you've already done so much for me, and that includes getting me the calibration tools I need. Gimme a sec, it won't take me to load in your user info and PDA frequency.\n
+        <text>Hah! I bet you were expecting some kind of tedious errand like that. Nah, you've already done so much for me, and that includes getting me the calibration tools I need. Gimme a sec, it won't take long to load in your user info and PDA frequency.\n
 
         \nThere. Now look, I'll share the schematics and show you how to do the firmware install and all that, but I've already gotten a warning about doing this modification myself--you're always welcome to use my tools, but you're going to have to source the parts and put it together on your own.</text>
     </string>
@@ -103,7 +103,7 @@
     <string id="st_dialog_mpda_askrecipe_npc_scramnoob">
         <text>You've got to be kidding me. You're so green that a chimera would spit you out for being undercooked. Who'd you have to bribe or rob to get your hands on a piece of kit like this?\n
 
-        n\Never mind, just let me know if you've got real business to do.</text>
+        \nNever mind, just let me know if you've got real business to do.</text>
     </string>
 
     <string id="st_dialog_mpda_askrecipe_actor_bye">

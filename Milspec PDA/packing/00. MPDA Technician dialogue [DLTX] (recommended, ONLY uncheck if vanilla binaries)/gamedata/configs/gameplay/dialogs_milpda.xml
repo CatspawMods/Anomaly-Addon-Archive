@@ -3,7 +3,7 @@
 	<dialog id="ask_milspec_pda_recipe">
 		<dont_has_info>mpda_mechanic_already_helped</dont_has_info>
 		<precondition>dialogs_milspec_pda.has_drive_or_pda</precondition>
-		<precondition>dialogs_milspec_pda.not_has_pda4</precondition>
+		<precondition>dialogs_milspec_pda.not_has_milspec_pda</precondition>
 		<phrase_list>
 			<phrase id="0">
 				<script_text>dialogs_milspec_pda.get_hello_text</script_text>
@@ -15,15 +15,15 @@
 			</phrase>
 			<phrase id="1">
 				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
-				<precondition>dialogs_milspec_pda.has_flash_drive</precondition>
+				<precondition>dialogs_milspec_pda.has_usb_item</precondition>
 				<text>st_dialog_mpda_askrecipe_npc_hello_drive</text>
 				<next>10</next>
 			</phrase>
 			<phrase id="2">
 				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
 				<precondition>dialogs_milspec_pda.actor_is_not_noob</precondition>
-				<precondition>dialogs_milspec_pda.has_pda3</precondition>
-				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<precondition>dialogs_milspec_pda.has_upgradeable_pda</precondition>
+				<precondition>dialogs_milspec_pda.not_has_usb_item</precondition>
 				<text>st_dialog_mpda_askrecipe_npc_hello_pda</text>
 				<next>20</next>
 				<next>999</next>
@@ -31,8 +31,8 @@
 			<phrase id="3">
 				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
 				<precondition>dialogs_milspec_pda.actor_is_total_noob</precondition>
-				<precondition>dialogs_milspec_pda.has_pda3</precondition>
-				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<precondition>dialogs_milspec_pda.has_upgradeable_pda</precondition>
+				<precondition>dialogs_milspec_pda.not_has_usb_item</precondition>
 				<text>st_dialog_mpda_askrecipe_npc_scramnoob</text>
 			</phrase>
 			<phrase id="4">
@@ -92,7 +92,7 @@
 				<next>53</next>
 			</phrase>
 			<phrase id="51">
-				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<precondition>dialogs_milspec_pda.not_has_usb_item</precondition>
 				<precondition>dialogs_mlr.toolkit_task_done_3</precondition>
 				<text>st_dialog_mpda_askrecipe_npc_hastools</text>
 				<action>dialogs_milspec_pda.give_milspec_pda_recipe_note</action>
@@ -101,7 +101,7 @@
 				<next>999</next>
 			</phrase>
 			<phrase id="52">
-				<precondition>dialogs_milspec_pda.has_flash_drive</precondition>
+				<precondition>dialogs_milspec_pda.has_usb_item</precondition>
 				<text>st_dialog_mpda_askrecipe_npc_drivetools</text>
 				<action>dialogs_milspec_pda.give_milspec_pda_recipe_note</action>
 				<give_info>mpda_mechanic_already_helped</give_info>
@@ -110,7 +110,7 @@
 			</phrase>
 			<phrase id="53">
 				<dont_has_info>mpda_mechanic_waiting_tools</dont_has_info>
-				<precondition>dialogs_milspec_pda.not_has_flash_drive</precondition>
+				<precondition>dialogs_milspec_pda.not_has_usb_item</precondition>
 				<precondition>dialogs_mlr.not_toolkit_task_done_3</precondition>
 				<text>st_dialog_mpda_askrecipe_npc_notools</text>
 				<give_info>mpda_mechanic_waiting_tools</give_info>

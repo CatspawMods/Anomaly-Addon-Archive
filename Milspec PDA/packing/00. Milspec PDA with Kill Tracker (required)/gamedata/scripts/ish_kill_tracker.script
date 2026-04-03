@@ -4,8 +4,8 @@
     Author: Catspaw
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
 -- ==================================================================--]]
-script_version          = "1.18.0"
-release_date            = 20260131
+script_version          = "1.18.1"
+release_date            = 20260403
 --[[=====================================================================
     Credits:
     Kill Tracker by Ishmaeel. Go download the excellent original mod here:
@@ -398,8 +398,12 @@ end
 
 function new_kill(victim, killer)
     if not (db.actor and victim and killer) then return end
-    local se_obj    = alife_object(victim:id())
-    local kse_obj   = alife_object(killer:id())
+    local id        = victim:id()
+    local killer_id = killer:id()
+    local se_obj    = id and alife_object(id)
+    local kse_obj   = killer_id and alife_object(killer_id)
+    if not (se_obj and kse_obj) then return end
+
     local comm      = get_object_community(se_obj)
     local typ       = 0
     local ktyp      = 0
@@ -422,11 +426,11 @@ function new_kill(victim, killer)
         k_comm      = "monster"
         --kname       = killer:character_name() or killer:name()
     end
-    local id        = victim:id()
+    
     local name      = safename(victim)
     local tg        = time_global()
     local sm        = killer:has_info("npcx_is_companion")
-    local killer_id = killer:id()
+    
     tracked_bodies[id] = {
         kill_id     = generate_kill_id(victim),
         tod         = get_time_elapsed(),
@@ -568,7 +572,7 @@ function map_spot_menu_add_property(property_ui,id,st1,st2)
 end
 
 
-local function map_spot_menu_property_clicked(property_ui,id,level_name,prop)
+function map_spot_menu_property_clicked(property_ui,id,level_name,prop)
     local se_obj = valid_id(id) and alife_object(id)
     if not se_obj then return end
     local name = se_obj:name()
@@ -620,7 +624,7 @@ function clean_slate()
     end
     tracked_bodies = {}
 end
-
+ 
 
 function on_option_change()
     set_visibility(false)

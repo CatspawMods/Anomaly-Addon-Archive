@@ -1,5 +1,5 @@
 -- ======================================================================
---[[	Milspec PDA
+--[[	Milspec PDA Technician Dialog Supporting Functions
 -- ======================================================================
  	Author: Catspaw (CatspawMods @ ModDB)
  	Source: https://www.moddb.com/mods/stalker-anomaly/addons/milspec-pda-for-anomaly-151-152-and-gamma
@@ -12,44 +12,47 @@
 		Because RNG is going to RNG. If you have rank, the right PDA,
 		and have completed the mechanic's tool set, they're willing to
 		share the recipe with you.
+
+		Certain settings (like the list of allowed mechanics) get 
+		loaded from configs\scripts\milspec_pda\pda_defs.ltx at runtime.
 -- ==================================================================--]]
 
 local gts 	= game.translate_string
-min_rank = 10000
-recipe 	= "encyclopedia__notes_recipe_pda_milspec"
+min_rank 	= 10000
+usb_item 	= "recipe_pda_milspec"
+mpda_item 	= item_milpda and item_milpda.pda_inv_item
 mechanics 	= {
 	["agr_smart_terrain_1_6_army_mechanic_stalker"] = true,
 	["cit_killers_merc_mechanic_stalker"] = true,
 	["jup_b19_freedom_yar"] = true
-
 }
 
-function has_pda3()
-	return mlr_utils.have_item('device_pda_3', 1)
+function has_upgradeable_pda()
+	return item_milpda and item_milpda.get_pda_feature_setting and item_milpda.get_pda_feature_setting("tech_can_upgrade")
 end
 
-function not_has_pda3()
-	return not mlr_utils.have_item('device_pda_3', 1)
+function not_has_upgradeable_pda()
+	return not has_upgradeable_pda()
 end
 
-function has_flash_drive()
-	return mlr_utils.have_item('recipe_pda_milspec', 1)
+function has_usb_item()
+	return mlr_utils.have_item(usb_item, 1)
 end
 
-function not_has_flash_drive()
-	return not mlr_utils.have_item('recipe_pda_milspec', 1)
+function not_has_usb_item()
+	return not has_usb_item()
 end
 
 function has_drive_or_pda()
-	return has_flash_drive() or has_pda3() 
+	return has_usb_item() or has_upgradeable_pda() 
 end
 
-function has_pda4()
-	return mlr_utils.have_item('device_pda_milspec', 1)
+function has_milspec_pda()
+	return mlr_utils.have_item(mpda_item, 1)
 end
 
-function not_has_pda4()
-	return not mlr_utils.have_item('device_pda_milspec', 1)
+function not_has_milspec_pda()
+	return not has_milspec_pda()
 end
 
 function actor_is_total_noob()
@@ -62,18 +65,16 @@ function actor_is_not_noob()
 	return not actor_is_total_noob()
 end
 
-function actor_on_leave_dialog()
-end
-
-function give_milspec_pda_recipe_note()
-	xr_effects.give_letter(first_speaker, second_speaker, {"recipe_pda_milspec"})
+function give_milspec_pda_recipe_note(first_speaker, second_speaker)
+	printf("giving milspec pda recipe note [%s]", usb_item)
+	xr_effects.give_letter(first_speaker, second_speaker, {usb_item})
 end
 
 
 function get_hello_text()
-	if has_pda3() and not db.actor:has_info("mpda_mechanic_waiting_tools") then
+	if has_upgradeable_pda() and not db.actor:has_info("mpda_mechanic_waiting_tools") then
 		return gts("st_dialog_mpda_askrecipe_actor_hello_pda")
-	elseif has_flash_drive() and not db.actor:has_info("mpda_mechanic_waiting_tools") then
+	elseif has_usb_item() and not db.actor:has_info("mpda_mechanic_waiting_tools") then
 		return gts("st_dialog_mpda_askrecipe_actor_hello_drive")
 	else
 		return gts("st_dialog_mpda_actor_hello_waitingtools")
@@ -88,5 +89,7 @@ function on_specific_character_dialog_list(char_id, dialog_list)
 end
 
 function on_game_start()
-	RegisterScriptCallback("on_specific_character_dialog_list", on_specific_character_dialog_list)
+	if item_milpda then
+		RegisterScriptCallback("on_specific_character_dialog_list", on_specific_character_dialog_list)
+	end
 end

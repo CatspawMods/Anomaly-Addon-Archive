@@ -591,13 +591,13 @@
             %c[ui_gray_1]
             The %c[pda_yellow]Milspec PDA%c[ui_gray_1] has higher power requirements than PDA 3.1, but comes with the unique ability to %c[pda_yellow]see the locations of enemy squads%c[ui_gray_1] on the map.\n \n
 
-            This is obviously very powerful, so it is recommended that you balance this power with this addon's %c[pda_yellow]Progressive Mode%c[ui_gray_1], which is described in more detail below.\n \n
+            This is obviously very powerful, so it is recommended that you balance this power with this addon's %c[pda_yellow]Progressive Mode%c[ui_gray_1], which is described in more detail below.\n
 
-            The new PDA cannot be bought anywhere, and no stalker will ever drop it. By default, you must craft it using %c[pda_yellow]Expert Tools%c[ui_gray_1].
+            \nThe new PDA cannot be bought anywhere, and no stalker will ever drop it. By default, you must craft it using %c[pda_yellow]Expert Tools%c[ui_gray_1] and certain %c[pda_yellow]rare components%c[ui_gray_1]. This %c[pda_yellow]requires the crafting recipe%c[ui_gray_1], which can only be gained in one of two ways: \n
+            %c[ui_gray_1] • %c[pda_white]As a rare drop from high-ranking stalkers\n 
+            %c[ui_gray_1] • %c[pda_white]By speaking to certain technicians once you have PDA 3.1\n
 
-            This requires that you have found and read the correct volume of the %c[pda_yellow]Engineering manual%c[ui_gray_1], and also requires certain %c[pda_yellow]rare components%c[ui_gray_1].\n \n
-
-            You can change these requirements in the script or config files if you're adept at that. If you're not, and you can't be bothered to earn the Milspec PDA the hard way, there's always the debug console. I don't judge.\n 
+            \nYou can change these requirements in the script or config files if you're adept at that. If you're not, and you can't be bothered to earn the Milspec PDA the hard way, there's always the debug console. I don't judge.\n 
 
             \n%c[pda_green]PROGRESSIVE MODE\n
             %c[ui_gray_1]When you enable Milspec PDA's %c[pda_yellow]Progressive Mode%c[ui_gray_1], simply buying or crafting a more advanced PDA does not automatically let you see all of the factions it normally would. Instead, you must earn that access--whether temporarily or permanently--by looting PDAs from dead stalkers.\n \n

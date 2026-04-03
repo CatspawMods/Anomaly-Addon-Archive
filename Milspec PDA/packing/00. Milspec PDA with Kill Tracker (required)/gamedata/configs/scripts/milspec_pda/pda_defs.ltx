@@ -7,12 +7,35 @@
 ; what features they support.
 
 [valid_pdas]
-device_pda_1
-device_pda_2
-device_pda_3
-device_pda_milspec
-device_pda_actor
+device_pda_0 		; Fatal Error addon
+device_pda_1 		; vanilla PDA 1.0
+device_pda_2 		; vanilla PDA 2.0
+device_pda_3 		; vanilla PDA 3.1
+device_pda_4 		; Fatal Error addon
+device_pda_milspec 	; Milspec PDA
+device_pda_actor 	; Old World addon
+device_pda_getac 	; Fatal Error addon
 ;device_pda_added_by_your_mod
+
+[pda_settings]
+; General settings that aren't tied to a specific PDA
+tech_upgrade_rank 	= 10000
+usb_drive_item 		= recipe_pda_milspec
+
+[upgrade_mechanics]
+; Section names of mechanics who know how to handle the Milspec PDA recipe
+agr_smart_terrain_1_6_army_mechanic_stalker = true
+; Kirilov, Agroprom mechanic - Army
+cit_killers_merc_mechanic_stalker			= true
+; Hog, Dead City mechanic - Merc
+mechanic_army_yan_mlr 						= true
+; Peregrine, Yantar mechanic - Ecologist
+zat_a2_stalker_mechanic 					= true
+; Cardan, Yanov mechanic - Loner
+mar_base_stalker_tech 						= true
+; Novikov, Marsh mechanic - Clear Sky
+bar_visitors_stalker_mechanic 				= true
+; Mangun, Bar mechanic - Duty
 
 [device_pda_1]
 ; PDA 1.0 - starter
@@ -22,6 +45,7 @@ show_n 				= false 	; Show neutral?
 show_f 				= false 	; Show friendly?
 show_k 				= false 	; Show kills? (For KilTrak integration)
 progmult 			= 0.0 		; Progression gain multiplier
+tech_can_upgrade 	= false 	; PDA recognized by technician as "PDA 3.1" for upgrade quest
 
 ; PDA 2.0
 [device_pda_2]
@@ -31,6 +55,7 @@ show_n 				= false
 show_f 				= true
 show_k 				= true
 progmult 			= 0.1
+tech_can_upgrade	= false
 
 ; PDA 3.1
 [device_pda_3]
@@ -40,6 +65,9 @@ show_n 				= true
 show_f 				= true
 show_k 				= true
 progmult 			= 0.5
+tech_can_upgrade	= true 		; Note that this isn't a "this PDA or better" flag
+; Its only purpose is to flag which PDA technicians should recognize as PDA 3.1 for 
+; the purpose of initiating dialogue to upgrade it to the Milpsec PDA
 
 ; Milspec PDA
 [device_pda_milspec]
@@ -49,8 +77,9 @@ show_n 				= true
 show_f 				= true
 show_k 				= true
 progmult 			= 1
+tech_can_upgrade	= false
 
-; Old World addon?
+; Old World addon
 [device_pda_actor]
 obeybl				= true
 show_e				= true
@@ -58,6 +87,35 @@ show_n 				= true
 show_f 				= true
 show_k 				= true
 progmult 			= 1
+tech_can_upgrade	= false
+
+; Fatal Error addon
+[device_pda_0]
+obeybl				= true
+show_e				= false
+show_n 				= false
+show_f 				= false
+show_k 				= false
+progmult 			= 0
+tech_can_upgrade 	= false
+
+[device_pda_4]
+obeybl				= true
+show_e				= false
+show_n 				= true
+show_f 				= true
+show_k 				= true
+progmult 			= 1
+tech_can_upgrade	= false
+
+[device_pda_getac]
+obeybl				= true
+show_e				= true
+show_n 				= true
+show_f 				= true
+show_k 				= true
+progmult 			= 1
+tech_can_upgrade	= false
 
 ; If you have an unsupported device, and you know its section name,
 ; uncomment the settings below and set them as you see fit
@@ -70,3 +128,4 @@ progmult 			= 1
 ;		show_f 				= false
 ;		show_k 				= false
 ;		progmult 			= 1
+; 		tech_can_upgrade	= false

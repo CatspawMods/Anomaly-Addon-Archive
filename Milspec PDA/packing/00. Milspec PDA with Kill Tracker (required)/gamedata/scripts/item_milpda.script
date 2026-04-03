@@ -17,8 +17,8 @@
 		* SaloEater (GAMMA Discord) for the allies_mode feature
 -- ==================================================================--]]
 script_name 			= "item_milpda"
-script_version        	= "1.18.0"
-release_date            = 20260131
+script_version        	= "1.18.1"
+release_date            = 20260403
 -- ======================================================================
 --[[	To uninstall without MCM, first:
 		1. Pick up any Milspec PDAs and save your game
@@ -41,6 +41,7 @@ local dl 				= function(logtext, ...) utils_catspaw_common.dlog(item_milpda, log
 local vl 				= function(logtext, ...) utils_catspaw_common.vlog(item_milpda, logtext, ...) end
 local dotip 			= function(tiptext, dur, src, beep, icon, snd) utils_catspaw_common.dotip(tiptext, dur, src or "", beep, icon, snd or "pda_tips") end
 local safeid 			= utils_catspaw_common.safeid
+local strbool 			= utils_catspaw_common.strbool
 local round100 			= utils_catspaw_common.round100
 local get_time_elapsed	= utils_catspaw_common.get_time_elapsed
 local using_modded_exes	= utils_catspaw_common.using_modded_exes
@@ -879,9 +880,17 @@ function save_state(data)
     if ish_kill_tracker then ish_kill_tracker.save_state(data) end
 end
 
+function update_dialog_settings(args)
+	if dialogs_milspec_pda and args then
+		local dmpda 	= dialogs_milspec_pda
+		dmpda.min_rank 	= tonumber(args.min_rank) or dmpda.min_rank
+		dmpda.usb_item 	= args.usb_item or dmpda.usb_item
+	end
+end
+
 function load_settings()
-	local ini_pda = ini_file("scripts\\milspec_pda\\pda_defs.ltx")
-	local valid_pdas = utils_data.collect_section(ini_pda, "valid_pdas", true)
+	local ini_pda 		= ini_file("scripts\\milspec_pda\\pda_defs.ltx")
+	local valid_pdas 	= utils_data.collect_section(ini_pda, "valid_pdas", true)
 	if valid_pdas then
 		pda_defs = {}
 		for pda_sec, _ in pairs(valid_pdas) do
@@ -898,6 +907,23 @@ function load_settings()
 					end
 				end
 				vl("\n* %s = %s", k, pdata[k])
+			end
+		end
+	end
+
+	if dialogs_milspec_pda then
+		local dmpda 	= dialogs_milspec_pda
+		local pda_cfgs 	= utils_data.collect_section(ini_pda, "pda_settings", true)
+		update_dialog_settings({
+			min_rank 	= tonumber(pda_cfgs.tech_upgrade_rank) or dmpda.min_rank,
+			usb_item 	= pda_cfgs.usb_drive_item or dmpda.usb_item,
+
+		})
+		local mechs 	= utils_data.collect_section(ini_pda, "upgrade_mechanics", true)
+		if mechs then
+			dmpda.mechanics = dmpda.mechanics or {}
+			for k,v in pairs(mechs) do
+				dmpda.mechanics[k] = strbool(v)
 			end
 		end
 	end
