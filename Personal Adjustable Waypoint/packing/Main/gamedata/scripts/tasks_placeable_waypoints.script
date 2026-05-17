@@ -9,8 +9,8 @@
     I post gameplay video on my Youtube channel, Catspaw Adventures: 
     https://www.youtube.com/@CatspawAdventures
 -- ===================================================================--]]
-script_version          = "2.4.2"
-release_date            = 20260326
+script_version          = "2.4.3"
+release_date            = 20260517
 --[[======================================================================
     You may alter any part of this mod and do whatever you like with it, 
     just give credit where due.
@@ -1190,7 +1190,7 @@ function register_script_zone(...)
         cleanup = now + (ping_lifetime * 6),
     }
     script_zone_changed = true
-    vl("Script zone %s spawned for mapspot",id)
+    vl("[%s] Script zone %s spawned for mapspot | created at %s | cleanup at %s", time_global(), id, script_zones[id].created, script_zones[id].cleanup)
     return se_obj
 end
 
@@ -1259,7 +1259,9 @@ function script_zone_cleanup(wipe_all)
                 last_temp_zone = nil
                 right_clicked = false
             end
-            deregister_script_zone(k)
+            if v.cleanup then
+                deregister_script_zone(k)
+            end
         end
     end
     script_zone_changed = false
@@ -4416,8 +4418,8 @@ end
 
 function get_screen_coords(id)
     local pos       = nil
-    local is_npc,is_place
-    local obj       = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+    local is_npc, is_place
+    local obj       = id and level.object_by_id(id)
     local se_obj    = alife_object(id)
     --printf("[PAW] get_screen_coords: id %s -> obj %s (%s) | se_obj %s",id,obj and obj:name(),obj and obj:id(),se_obj and se_obj:name())
     local is_wp     = is_current_waypoint(id)
@@ -4433,7 +4435,7 @@ function get_screen_coords(id)
         pos         = obj and utils_obj.safe_bone_pos(obj,"bip01_head")
         is_npc      = true
         --printf("[PAW] Pinned object %s is an npc",id)
-    elseif (se_obj:clsid() == clsid.smart_terrain) or (se_obj:clsid() == clsid.script_zone) then
+    elseif se_obj and ((se_obj:clsid() == clsid.smart_terrain) or (se_obj:clsid() == clsid.script_zone)) then
         pos         = se_obj.position        
         is_place    = true
         --printf("[PAW] Pinned object %s is a place",id)        
@@ -4445,7 +4447,7 @@ function get_screen_coords(id)
     if (pos == nil) then
         if not (se_obj and se_obj.online) then
             return nil
-        elseif (se_obj:clsid() == clsid.online_offline_group_s) then
+        elseif se_obj and (se_obj:clsid() == clsid.online_offline_group_s) then
             local i     = se_obj:commander_id()
             local npc   = i and db.storage[i] and db.storage[i].object or level.object_by_id(i)
             pos         = npc and utils_obj.safe_bone_pos(npc,"bip01_head")
