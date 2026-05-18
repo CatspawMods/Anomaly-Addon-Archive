@@ -54,13 +54,13 @@ if z_auto_looter and ui_hud_dotmarks then
         -- Standard looting
         local last_mode = actor_menu.get_last_mode()
         local object_being_looted = ui_inventory.GUI and ui_inventory.GUI.npc_id and level.object_by_id(ui_inventory.GUI.npc_id)
-        if object_being_looted and (not object_being_looted:alive()) and z_auto_looter.valid_modes[last_mode] then
+        if object_being_looted and (not (object_being_looted.alive and object_being_looted:alive())) and z_auto_looter.valid_modes[last_mode] then
             return object_being_looted
         end
 
         -- Remote looting
         local target = level.get_target_obj()
-        if target and (IsStalker(target) and not target:alive() or IsInvbox(target)) then
+        if target and (IsInvbox(target) or (IsStalker(target) and not target:alive())) then
             if z_auto_looter.config.remote_looting_distance == 0 then
                 news_manager.send_tip(db.actor, game.translate_string("st_auto_looter_remote_looting_disabled"))
             elseif target:position():distance_to(db.actor:position()) > z_auto_looter.config.remote_looting_distance then

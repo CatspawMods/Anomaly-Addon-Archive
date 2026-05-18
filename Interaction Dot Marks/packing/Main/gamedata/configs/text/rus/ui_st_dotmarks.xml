@@ -15,15 +15,15 @@
 	</string>
 
 	<string id="st_unknown_contents">
-		<text>содержание неизвестно</text>
+		<text>содержимое неизвестно</text>
 	</string>
 
 	<string id="st_alti_unload_weapon">
-		<text>Выгрузите:</text>
+		<text>Разрядить:</text>
 	</string>
 
 	<string id="st_alti_eject_mag">
-		<text>Забрать магазин с:</text>
+		<text>Забрать магазин:</text>
 	</string>
 
 	<string id="st_alti_take">
@@ -35,11 +35,11 @@
 	</string>
 
 	<string id="st_alti_smokeout">
-		<text>Курите:</text>
+		<text>Курить:</text>
 	</string>
 
 	<string id="st_alti_takeuse">
-		<text>Поднять и используйте:</text>
+		<text>Поднять и использовать:</text>
 	</string>
 
 	<string id="st_alti_disarm">
@@ -47,15 +47,15 @@
 	</string>
 
 	<string id="st_alti_cannot">
-		<text>Не может</text>
+		<text>Нельзя</text>
 	</string>
 
 	<string id="st_alti_read">
-		<text>Поднять и прочитайте:</text>
+		<text>Поднять и прочитать:</text>
 	</string>
 
 	<string id="st_alti_inspect">
-		<text>Поднять и осмотрите:</text>
+		<text>Поднять и осмотреть:</text>
 	</string>
 		
 	<string id="st_alti_search">
@@ -63,35 +63,35 @@
 	</string>
 
 	<string id="st_alti_consume_food">
-		<text>Употребляйте:</text>
+		<text>Употребить:</text>
 	</string>
 
 	<string id="st_alti_speak">
-		<text>Поговорите с:</text>
+		<text>Поговорить:</text>
 	</string>
 
 	<string id="st_alti_pickup_bp">
-		<text>Возьмите свой тайник и все, что в нем находится</text>
+		<text>Взять тайник и все, что в нем находится</text>
 	</string>
 
 	<string id="st_alti_pickup_zrb">
-		<text>Поднимите мусорное ведро и все, что в нем находится</text>
+		<text>Взять мусорное ведро и все, что в нем находится</text>
 	</string>
 	
 	<string id="st_alti_deploy_bp">
-		<text>Разместите тайник, используя</text>
+		<text>Разместить тайник</text>
 	</string>
 
 	<string id="st_alti_takeall">
-		<text>Возьмите все из</text>
+		<text>Взять все</text>
 	</string>
 
 	<string id="st_alti_autoloot">
-		<text>Автолут из</text>
+		<text>Автолут</text>
 	</string>
 
 	<string id="st_alti_heal">
-		<text>Используйте %s, чтобы вылечить %s</text>
+		<text>Использовать %s, чтобы вылечить %s</text>
 	</string>
 
 	<string id="st_alti_ied">
@@ -107,7 +107,7 @@
 	</string>
 
 	<string id="ui_mcm_lst_dmarks_iedmode_0">
-		<text>как бесконтактный мина</text>
+		<text>как мина при приближении</text>
 	</string>
 
 	<string id="ui_mcm_lst_dmarks_iedmode_1">
@@ -115,23 +115,23 @@
 	</string>
 
 	<string id="ui_mcm_lst_dmarks_iedmode_2">
-		<text>с помощью дистанционного детонатора</text>
+		<text>с дистанционным детонатором</text>
 	</string>
 
 	<string id="st_use_workshop">
-		<text>Используйте верстак</text>
+		<text>Использовать верстак</text>
 	</string>
 
 	<string id="st_alti_empty">
-		<text>(пуст)</text>
+		<text>(пусто)</text>
 	</string>
 
 	<string id="st_dotmarks_note_read_yes">
-		<text>(прочитана)</text>
+		<text>(прочитано)</text>
 	</string>
 
 	<string id="st_dotmarks_note_read_no">
-		<text>(не прочитана)</text>
+		<text>(не прочитано)</text>
 	</string>
 
 	<string id="st_alti_from">
@@ -143,15 +143,15 @@
 	</string>
 
 	<string id="st_alti_uses">
-		<text>части</text>
+		<text>шт.</text>
 	</string>
 
 	<string id="st_alti_owned">
-		<text>принадлежат</text>
+		<text>чужой</text>
 	</string>
 	
 	<string id="st_alti_nopower">
-		<text>без питания</text>
+		<text>без заряда</text>
 	</string>
 
 	<string id="st_alti_hold">
@@ -179,7 +179,7 @@
 	</string>
 
 	<string id="st_body_is_claimed">
-		<text>заявлен</text>
+		<text>чужая добыча</text>
 	</string>
 
 	<string id="ui_catsy_hide_intro_header">
@@ -190,16 +190,16 @@
 		<text>Отметить трупы</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_ammo">
-		<text>Отметьте патроны</text>
+		<text>Отметить патроны</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_stashes">
-		<text>Отметьте тайники</text>
+		<text>Отметить тайники</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_weapons">
 		<text>Отметить оружие</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_attachments">
-		<text>Отметьте вложения</text>
+		<text>Отметить вложения</text>
 	</string>	
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_grenades">
 		<text>Отметить гранаты</text>
@@ -208,10 +208,10 @@
 		<text>Отметить взрывчатку</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_outfits">
-		<text>Отметьте экипировка</text>
+		<text>Отметить экипировку</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_headgear">
-		<text>Отметьте шлемы</text>
+		<text>Отметить шлемы</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_artefacts">
 		<text>Отметить артефакты</text>
@@ -223,22 +223,22 @@
 		<text>Отметить инструменты</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_devices">
-		<text>Отметьте устройства</text>
+		<text>Отметить устройства</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_quest">
 		<text>Отметить квестовые предметы</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_campfires">
-		<text>Отмечайте костры</text>
+		<text>Отметить костры</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_misc">
 		<text>Отметить общие объекты</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_boxes">
-		<text>Отметьте бьющиеся коробки</text>
+		<text>Отметить бьющиеся коробки</text>
 	</string>	
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_doors">
-		<text>Отметьте двери</text>
+		<text>Отметить двери</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkobjs_scan_stalkers">
 		<text>Отметить NPC</text>
@@ -343,21 +343,21 @@
 	</string>
 	
 	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs">
-		<text>Включить ведение журнала отладки</text>
+		<text>Включить ведение лога отладки</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_debuglogs_desc">
-		<text>Если этот флаг включен, DotMarks будет записывать в журнал самые важные события. Если проблема возникла только один раз, и этот флаг не был включен первым, в журнале будет очень мало того, что связано с DotMarks - и он может оказаться бесполезным.\n
+		<text>Если этот флаг включен, DotMarks будет записывать в лог самые важные события. Если проблема возникла только один раз, и этот флаг не был включен первым, в логе будет очень мало того, что связано с DotMarks - и он может оказаться бесполезным.\n
 
 		\nОбычно можно оставить этот флаг включенным, пока вы играете, если вы подозреваете проблему и хотите ее поймать.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_verbose">
-		<text>Ведение отладочных журналов в режиме verbose (подробно)</text>
+		<text>Ведение отладочных логов в режиме verbose (подробно)</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_verbose_desc">
-		<text>При попытке воспроизвести проблему также включите эту функцию. Он записывает большую часть внутренних действий DotMarks и гарантирует, что журнал будет содержать наиболее подробную информацию об устранении неполадок.\n
+		<text>При попытке воспроизвести проблему также включите эту функцию. Он записывает большую часть внутренних действий DotMarks и гарантирует, что лог будет содержать наиболее подробную информацию об устранении неполадок.\n
 
-		\nЭта настройка очень шумная, и ее не следует оставлять включенной во время нормального игрового процесса.</text>
+		\nЭта настройка очень подробно записывает действия, и ее не следует оставлять включенной во время нормального игрового процесса.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_interaction_dots">
@@ -369,26 +369,26 @@
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_pri_interact_ui">
-		<text>Скрыть пользовательский пользовательский интерфейс основного взаимодействия</text>
+		<text>Скрыть интерфейс основного взаимодействия</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_pri_interact_ui_desc">
-		<text>Если эта опция включена, пользовательский пользовательский интерфейс основного взаимодействия, добавленный DotMarks, не будет отображаться. Первичная ванильная функция «использовать» и подсказки по-прежнему будут работать нормально.</text>
+		<text>Если эта опция включена, интерфейс основного взаимодействия, добавленный DotMarks, не будет отображаться. Стандартная функция «использовать» и подсказки по-прежнему будут работать нормально.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_sec_interact_ui">
-		<text>Скрыть пользовательский пользовательский интерфейс основного взаимодействия</text>
+		<text>Скрыть интерфейс альтернативного взаимодействия</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_sec_interact_ui_desc">
-		<text>Если эта опция включена, пользовательский пользовательский интерфейс альтернативных взаимодействий, добавленный DotMarks, не будет отображаться, и альтернативные взаимодействия будут недоступны.</text>
+		<text>Если эта опция включена, интерфейс альтернативных взаимодействий, добавленный DotMarks, не будет отображаться, и альтернативные взаимодействия будут недоступны.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_van_interact_ui">
-		<text>Скрыть ванильный пользовательский интерфейс взаимодействия</text>
+		<text>Скрыть стандартный интерфейс взаимодействия</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_van_interact_ui_desc">
-		<text>Если эта опция включена, все ванильные интерактивные подсказки (текст в нижней части экрана) будут скрыты, если они были заменены на пользовательскую версию.
+		<text>Если эта опция включена, все стандартные интерактивные подсказки (текст в нижней части экрана) будут скрыты, если они были заменены на добавленную версию.
 			\n 
-			\nЭта настройка не имеет эффекта, если пользовательский основной пользовательский интерфейс взаимодействия также скрыт.</text>
+			\nЭта настройка не имеет эффекта, если основной пользовательский интерфейс взаимодействия также скрыт.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_pickup_item_names">
@@ -1405,7 +1405,6 @@
 		<text>Если эта настройка включена, она скрывает значок и/или текст, указывающий, какую клавишу следует нажать.</text>
 	</string>
 
-
 <!-- Added in 1.2.1 -->
 
 	<string id="ui_mcm_dotmarks_dmarkmods_show_parts_weapons">
@@ -1548,5 +1547,15 @@
 
 		\nЭто уже так, если вы играете с неограниченным количеством болтов. Включите эту опцию, если вы играете с ограниченным количеством болтов, но все равно не хотите видеть их маркеры. Вы по-прежнему сможете их подбирать, просто не будете видеть подсказки.</text>
 	</string>
+
+<!-- Added in 1.7.2 -->
+
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_action_text">
+		<text>Скрыть элемент отображения текста действия</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_action_text_desc">
+		<text>Если этот параметр включен, текст с описанием выполняемого действия будет скрыт.</text>
+	</string>
+
 
 </string_table>

@@ -8,11 +8,6 @@
 
 	Known issue: you can't enter a vehicle while holding Shift. This is a
 	vanilla limitation.
-
-	Also, the marker focus and prompt appearance doesn't match up directly
-	with the vanilla prompts. This is more or less due to the car's size,
-	and I'm investigating what a good solution would be. It doesn't affect
-	the ability to interact, just the cosmetic display of the prompt.
 -- =====================================================================]]
 local logprefix = ui_hud_dotmarks and ui_hud_dotmarks.logprefix
 local function log(logtext, ...)

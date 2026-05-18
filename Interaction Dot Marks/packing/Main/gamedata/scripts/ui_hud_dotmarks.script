@@ -29,11 +29,6 @@ script_name     = "ui_hud_dotmarks"
 		current workaround via scan_unmarked_classes config setting
 		it's not perfect and I'm not spending a lot of time on it
 		please upgrade
-	- Vehicle prompts appear when vehicle isn't interactable
-		This is a vanilla bug. The interact hitboxes for vehicles are
-		incredibly fucky and operate according to no discernible logic.
-		IDM displays the prompt when vanilla does. Naught else is under
-		my control.
 -- ===================================================================--]]
 --      DEPENDENCIES
 -- =======================================================================
@@ -1943,9 +1938,11 @@ function InteractPrompt:ParseArgs(args)
 		args.style 		= args.style or cfg.keybind_bg_style or 0
 		args.bind_icon_w= nil
 	end
-	if args.is_stalker then
-		self.mark = hmm:GetMarker(args.mark_id)
-	end
+	self.id 		= args.id
+	self.mark 		= args.mark or (self.id and cfg.markers[self.id]) or (args.mark_id and hmm:GetMarker(args.mark_id))
+	--if args.is_stalker then
+		--self.mark = args.mark or hmm:GetMarker(args.mark_id) or ()
+	--end
 	self.args   = args
 end
 
@@ -1987,14 +1984,18 @@ function InteractPrompt:SetupHintFilters(filters)
 end
 
 function InteractPrompt:GetMark()
+	if not self.mark then
+		if self.args.mark_id then
+			self.mark = hmm:GetMarker(self.args.mark_id)
+		else
+			local id = self.id or self.args.id
+			self.mark = id and cfg.markers[id]
+		end
+	end
 	if self.mark then
 		return self.mark
 	end
-	if self.args.mark_id then
-		return hmm:GetMarker(self.args.mark_id)
-	elseif (self.id or self.args.id) and cfg.markers[(self.id or self.args.id)] then
-		return cfg.markers[(self.id or self.args.id)]
-	end
+	dump("WARNING: InteractPrompt.GetMark returned no valid mark for %s %s (%s)", self.event, self.text, self.id or self.args.id)
 end
 
 --- @param weight number
@@ -2084,7 +2085,7 @@ end
 --- @param y number
 function InteractPrompt:GetMainWndPos(mark, x, y)
 	mark 			= mark or self.linked_mark or self.mark or self:GetMark() or {}
-	local arg_tbl 	= mark.is_active and mark.task_swap or mark.active_swap or mark.args or {}
+	local arg_tbl 	= mark and (mark.is_active and mark.task_swap or mark.active_swap or mark.args) or {}
 	local adj_w 	= ((mark and mark.width or 6) - (arg_tbl.width or 6)) * 0.5
 	local adj_h 	= ((mark and mark.height or 6) - (arg_tbl.height or 6)) * 0.5
 	local new_x 	= (x or 0) + self.args.xoffset + adj_w
@@ -2185,15 +2186,17 @@ function InteractPrompt:BuildUI()
 	if args.long then
 		-- Set up long press progress indicator
 		local mark = self:GetMark()
-		self.longpress = ui_circular_progress.init_new_indicator({
-				progress_argb = getargb(self.progress_color),
-				width = cfg.longpress_ind_size or 20,
-				offset_x = uiscale(cfg.longpress_ind_x or -20),
-				offset_y = cfg.longpress_ind_y or nil
-			},
-			ind_id,
-			self.prompt
-		)
+		if mark then
+			self.longpress = ui_circular_progress.init_new_indicator({
+					progress_argb = getargb(self.progress_color),
+					width = cfg.longpress_ind_size or 20,
+					offset_x = uiscale(cfg.longpress_ind_x or -20),
+					offset_y = cfg.longpress_ind_y or nil
+				},
+				ind_id,
+				self.prompt
+			)
+		end
 	end
 
 	-- Set up text drop shadows and keybind text indicator
@@ -2248,7 +2251,7 @@ function InteractPrompt:BuildUI()
 	self:eleSetBaseColorScheme(self.label, self.text_color_light)
 	setwndpos(self.label, font_x + fontscale_w(cfg.action_text_pos_x), fontscale_h(cfg.action_text_pos_y))
 	self.label:TextControl():SetFont(font_obj)
-
+	self.label:Show(not cfg.hide_action_text)
 	self:eleSetBaseColorScheme(self.bind_sh, self.text_color_dark)
 	if self.dark_text then
 		self.bind_sh:Show(false)
@@ -2817,9 +2820,8 @@ function InteractPrompt:on_option_change()
 	end
 
 	self:BuildUI()
-
 	self.bind_sh:Show((not self.dark_text) and (not cfg.hide_drop_shadow))
-	self.label_sh:Show(not cfg.hide_drop_shadow)
+	self.label_sh:Show(not (cfg.hide_action_text or cfg.hide_drop_shadow))
 end
 
 --- @param tf boolean
@@ -3235,7 +3237,7 @@ end
 function InteractPrompt:UpdateLongPress()
 	if self.longpress and not self.args.pri then
 		local mark = self:GetMark()
-		if not mark.active_swapped then return end
+		if mark and not mark.active_swapped then return end
 		local _ = debug_dump and dump("[%s] InteractPrompt:UpdateLongPress", time_global())
 		if mark and mark.is_active and (not self.busystate) and (cfg.held_key == self.args.key) and (cfg.held_mod == self.args.mod) then
 			if self.held_time then
@@ -3909,6 +3911,7 @@ function setup_pri_interact_prompt(mark, args)
 		mark.use_pri = nil
 	end
 	args            = args or {}
+	args.mark 		= mark
 	local key       = bind_to_dik(key_bindings.kUSE)
 	local bind_text = bindtext(key, 0)
 	local int_text  = trimmed_prompt(get_quickhelp_text())
@@ -3968,6 +3971,7 @@ function setup_sec_interact_prompt(mark)
 	local verb 		= mark.verb_secondary
 	local args = {
 		id      	= id,
+		mark 		= mark,
 		text    	= mark.verb_secondary and gts(mark.verb_secondary) or "",
 		act     	= (mode == 2) and gts("st_alti_hold").." " or (mode == 1) and gts("st_alti_doubletap").." " or "",
 		bind    	= bindtext(cfg.bind_sec_interact, cfg.modk_sec_interact),
@@ -4243,7 +4247,7 @@ end
 --- @param dist number
 function can_interact_physpickup(id, dist, mark, obj)
 	mark = mark or get_mark(id)
-	if not mark then return end
+	if not (mark and (mark.is_pickup or mark.hf_pickup)) then return end
 	dist = dist or mark.last_dist
 	if (not dist) or (dist > (mark.interact_dist or get_interact_distance(nil, mark))) then return false end
 	local obj 	= obj or (id and get_game_object(id))
@@ -4252,11 +4256,14 @@ function can_interact_physpickup(id, dist, mark, obj)
 	return dot >= (cfg.target_lenience)
 end
 
+--[[
+-- deprecated
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 function can_interact_physmark(mark)
 	if not mark then return end
 	return can_interact_physpickup(mark.id, mark.last_dist, mark)
 end
+--]]
 
 function get_best_hover()
 	return hmm.best_hover_id, hmm.best_hover_dp
@@ -4363,7 +4370,7 @@ function setup_marker_for_object(id, args)
 		mark.dropped_item = true
 		if cfg.hide_dropped_items then
 			mark.no_update_loop = true
-			mark.is_shown = true
+			mark.is_shown = true -- necessary in order for hide_mark to work
 			hide_mark(mark, "hiding dropped item")
 			return
 		end
@@ -4586,10 +4593,13 @@ function update_targeted_object()
 	log_target_acquisition(method, last_id)
 end
 
+--[[[
+-- deprecated
 function can_play_pickup_anim()
 
 
 end
+--]]
 
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 --- @param func_on_take function

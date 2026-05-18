@@ -41,7 +41,7 @@ function on_game_start()
                         Always refresh the text on every update
                         Combined with a hint filter, this option causes the prompt to
                         update its displayed text with a cleaned-up version of the 
-                        currently-filtered text whenever the game is tring to display
+                        currently-filtered text whenever the game is trying to display
                         that localization string.        --]]
                     args.hint_filters   = { --[[
                         -- Hint filters tell DotMarks which localization strings should be

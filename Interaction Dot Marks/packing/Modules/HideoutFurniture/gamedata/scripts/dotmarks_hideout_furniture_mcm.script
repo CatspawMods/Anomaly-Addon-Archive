@@ -188,7 +188,7 @@ if dotmarks_callbacks then
                     local hfws_stash    = (section == "workshop_stash")
                     args.no_sec         = hfws_stash or nil
                     local hf_wrapper    = bind_hf_base.get_wrapper(id)
-                    args.hf_pickup      = hf_wrapper and hf_is_pickupable(id)
+                    args.hf_pickup      = (not args.hf_workshop) and hf_wrapper and hf_is_pickupable(id)
                     args.physics_obj    = (args.clsid == clsid.obj_physic)
                     -- Props are physics objects, and require special handling for picking up
                     args.hf_secondary   = true

@@ -17,6 +17,8 @@ local tipicon 		= "ui_inGame2_V_zone_nedavno_proshel_vibros"
 local tipdur 		= 12000
 local delay 		= 2500
 local tipsnd 		= "pda_tips"
+local outdated 		= gts("st_depcheck_fail_outdated")
+local notfound 		= gts("st_depcheck_fail_not_found")
 
 ts_tips = {
 	[1] = "st_depcheck_dotmarks_tip_1",
@@ -102,8 +104,6 @@ function on_loading_screen_dismissed()
 			local failmsg1 		= gts("st_depcheck_failpart_1")
 			local failmsg2 		= gts("st_depcheck_failpart_2")
 			local failmsg3 		= gts("st_depcheck_failpart_3")
-			local notfound 		= gts("st_depcheck_fail_not_found")
-			local outdated 		= gts("st_depcheck_fail_outdated")
 			local listitem 		= gts("st_depcheck_listitem")
 			local endtext 		= gts(ending_text)
 			local failed 		= false

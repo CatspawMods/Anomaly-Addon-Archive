@@ -349,6 +349,8 @@ hide_connecting_line 		= true
 ; Disable the animated white line that appears
 hide_keybind_element		= false
 ; Completely disable the prompt element that shows the keybind icon and text
+hide_action_text 			= false
+; Completely disable the prompt element that describes the action to be taken
 hide_pri_interact_ui 		= false
 ; Disable the replacement primary interact UI
 ; Note that if you enable this option and hide the vanilla UI, you may not have interact 
@@ -740,7 +742,6 @@ enable_icon_stash 			= Stashes
 
 ; Right now this is just the first five mouse buttons, but it could potentially be used for
 ; a variety of things, like gamepad button support - anything that has a DIK code
-
 337 	= ui_catsy_keybind_mouse1
 338 	= ui_catsy_keybind_mouse2
 339 	= ui_catsy_keybind_mouse3
@@ -1132,6 +1133,7 @@ inv_trashcan = st_itm_placeable_trashcan_name
 ; that table's settings will be reset to the current-version defaults.
 20260118
 20260122
+20260402
 
 [reset_20260118]
 bind_text_pos_x 		= true
@@ -1142,6 +1144,9 @@ font_scale_h 			= true
 
 [reset_20260122]
 near_scan_interval 		= true
+
+[reset_20260402]
+hf_add_primary_pickup
 
 ; =================================================================================
 [mcm_paths]
@@ -1275,6 +1280,7 @@ hide_dropped_items 			= dotmarks/dmarkadv/
 never_mark_bolts 			= dotmarks/dmarkadv/
 hide_connecting_line 		= dotmarks/dmarkadv/
 hide_keybind_element		= dotmarks/dmarkadv/
+hide_action_text 			= dotmarks/dmarkadv/
 hide_pri_interact_ui 		= dotmarks/dmarkadv/
 hide_sec_interact_ui 		= dotmarks/dmarkadv/
 hide_van_interact_ui 		= dotmarks/dmarkadv/

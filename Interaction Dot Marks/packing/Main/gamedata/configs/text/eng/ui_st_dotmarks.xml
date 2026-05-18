@@ -1546,4 +1546,13 @@
 		<text>Interaction Dot Marks</text>
 	</string>
 
+<!-- Added in 1.7.2 -->
+
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_action_text">
+		<text>Hide action text element</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_hide_action_text_desc">
+		<text>If enabled, this setting will hide the text on the prompt that normally describes the action to be taken.</text>
+	</string>
+
 </string_table>
