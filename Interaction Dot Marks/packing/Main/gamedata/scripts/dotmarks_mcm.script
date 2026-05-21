@@ -683,6 +683,7 @@ function get_adv_menu()
 		{ id = "bind_toggle_marks", 	type = "key_bind", 	val = 2, def = cfg.bind_toggle_marks },
 		{ id = "toggle_revert_delay", 	type = "input", 	val = 2, min = 0, max = 10000, def = cfg.toggle_revert_delay },
 		{ id = "hide_mute_stalkers", 	type = "check",		val = 1, def = cfg.hide_mute_stalkers },
+		{ id = "only_mark_service_npcs",type = "check",		val = 1, def = cfg.only_mark_service_npcs },
 		{ id = "hide_dropped_items", 	type = "check",		val = 1, def = cfg.hide_dropped_items },
 		{ id = "never_mark_bolts", 		type = "check",		val = 1, def = cfg.never_mark_bolts },
 		{ id = "hidden_show_prompts", 	type = "check", 	val = 1, def = cfg.hidden_show_prompts },

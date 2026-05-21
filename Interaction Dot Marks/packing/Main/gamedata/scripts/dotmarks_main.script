@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.7.2"
-release_date    = 20260517
+script_version  = "1.7.3"
+release_date    = 20260520
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
@@ -342,6 +342,9 @@ local base_config = {
                                 args.service_type = "trader"
                             end
                         end
+                    end
+                    if cfg.only_mark_service_npcs and not args.service_type then
+                        args.hidden = true
                     end
                 end
                 if args.service_type then

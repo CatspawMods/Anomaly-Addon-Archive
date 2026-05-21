@@ -20,6 +20,8 @@ script_name     = "ui_hud_dotmarks"
 		multiple issues, and it adds unnecessary complexity
 	(*) Review all the various flags and special cases in input handling
 		to ensure they're all still necessary
+	(*) Avoid any new features that touch the marker update loop or 
+		visibility logic
 
 	Low priority:
 	- NPE module(s) - not hard, but time-consuming and nice-to-have
@@ -128,7 +130,7 @@ nearby_pickups          = {}
 active_anims            = {}
 -- ======================================================================
 local st_kg             = gts("st_kg")
-local fdda_installed    = false
+local fdda_installed    = false -- remove for oldfdda deprecation
 local fddar_installed   = false
 local anims_enabled     = false
 local anim_playing      = false
@@ -231,7 +233,7 @@ function main_marker_update_loop(mark, args)
 	local obj           = id and get_game_object(id)
 	if not obj then return end
 
-	if cfg.dropped_items[id] and cfg.hide_dropped_items then
+	if cfg.hide_dropped_items and cfg.dropped_items[id] then
 		mark.dropped_item = true
 		mark.no_update_loop = true
 		mark.is_shown = true
@@ -251,6 +253,7 @@ function main_marker_update_loop(mark, args)
 	if mark.is_stalker then
 		if cfg.npc_health_check_interval then
 			if (mark.next_health_check or 0) < time_global() then
+				--printf("Stalker update loop %s for %s", time_global(), mark.name)
 				mark.next_health_check = get_next_tg_interval(cfg.npc_health_check_interval)
 				if update_mark_stalker_health(mark, obj) then return end
 			end
@@ -258,6 +261,10 @@ function main_marker_update_loop(mark, args)
 			-- disabling the throttle for this check is not recommended
 			-- which is to say, it will probably fuck your FPS for no benefit
 			return
+		end
+		if cfg.only_mark_service_npcs and not mark.service_type then
+			--printf("%s doesn't have a service type, hiding", mark.name)
+			mark.hidden = true
 		end
 	end
 
@@ -325,7 +332,7 @@ function main_marker_update_loop(mark, args)
 
 				if mark.is_campfire then
 					--dump("mark.is_campfire %s", mark.is_campfire)
-					mark.show_pri = cfg.active_campfire and (cfg.active_campfire == mark.id)
+					mark.show_pri = (mark.id == cfg.active_campfire)
 				elseif mark.is_pickup then
 					--dump("mark.is_pickup %s", mark.is_pickup)
 					if mark.physics_obj and can_interact_physpickup(id, mark.last_dist, mark, obj) then
@@ -349,7 +356,7 @@ function main_marker_update_loop(mark, args)
 					mark.show_pri = (
 						(locked_id and targeted) or
 						(available_pickup and not locked_id) or
-						((not mark.is_pickup) and (targeted)) and
+						(targeted and not mark.is_pickup) and
 						(mark.last_dist < 5) and (not mark.is_mute) and
 						not_hidden_by_anim
 					)
@@ -651,6 +658,7 @@ function update_mark_stalker_health(mark, obj)
 		mark.is_enemy   = mark.comm and game_relations.is_factions_enemies(cfg.actor_comm, mark.comm)
 		mark.is_mute    = not obj:is_talk_enabled()
 		mark.hidden     = (mark.hidden and mark.is_mute) or (mark.is_enemy and not mark.is_wounded)
+		--printf("mark.hidden is %s for %s", mark.hidden, mark.name)
 		--dump("%s is %s NPC | enemy %s | wounded %s was %s | mute %s", mark.name, mark.comm, mark.is_enemy, mark.is_wounded, mark.was_wounded, mark.is_mute)
 		if mark.is_wounded then
 			if not (mark.was_wounded or cfg.heal_cooldown_active) then
@@ -935,7 +943,7 @@ end
 
 --- @param npc game_object
 function is_meet_mgr_talker(npc)
-		return (xr_corpse_detection.is_under_corpse_detection(npc) or xr_help_wounded.is_under_help_wounded(npc))
+	return (xr_corpse_detection.is_under_corpse_detection(npc) or xr_help_wounded.is_under_help_wounded(npc))
 end
 
 --- @param id number
@@ -1150,6 +1158,7 @@ function do_marker_anim_cycle(
 		w_start, h_start, w_end, h_end, duration,
 		anim_func, on_finish_func, abort_func
 	)
+	-- deprecated, consider moving to WIP scrap code
 	-- This was only used in a now-abandoned feature, but has potential for reuse
 	if not mark_id then return end
 	local anim_state 	= 0
@@ -1398,18 +1407,21 @@ end
 
 function fdda_handles_pickups()
 	return get_fdda_callback() and (cfg.fddar_pickup_anim or cfg.fdda_pickup_anim)
+	-- for oldfdda deprecation, disable above line and replace with the below
+	--return get_fdda_callback() and cfg.fddar_pickup_anim
 end
 
 --- @param obj game_object
 --- @param flags table
 function item_pickup_intercept(obj, flags)
-	local _ = debug_dump and dump("item_pickup_intercept fired | ret: %s | force: %s", flags and flags.ret_value, flags and flags.force)
-	if killswitch("pickup") then
-		if fdda_handles_pickups() then get_fdda_callback(obj, flags) end
-		return
-	end
 	-- Called directly by actor_on_item_before_pickup if neither FDDA nor FDDAR are installed
 	-- Called by my monkeypatch of FDDA/FDDAR's pickup if they are
+	local _ = debug_dump and dump("item_pickup_intercept fired | ret: %s | force: %s", flags and flags.ret_value, flags and flags.force)
+
+	if killswitch("pickup") then
+		if fdda_handles_pickups() then get_fdda_callback(obj, flags) end -- ??? does this actually work as intended? seems like it shouldn't
+		return
+	end
 	local now = time_global()
 	if flags.force then
 		-- Skip all other input checks
@@ -1628,9 +1640,12 @@ function is_door_open(obj, id)
 	local is_open = door:is_open()
 end
 
+--[[
+-- deprecated, these two settings are no longer mutually exclusive
 function is_vanilla_ui_hidden()
 	return (cfg.hide_van_interact_ui and not cfg.hide_pri_interact_ui)
 end
+--]]
 
 --- @param txt string
 function trimmed_prompt(txt)
@@ -4248,6 +4263,7 @@ end
 function can_interact_physpickup(id, dist, mark, obj)
 	mark = mark or get_mark(id)
 	if not (mark and (mark.is_pickup or mark.hf_pickup)) then return end
+	if mark.hf_pickup and not cfg.hf_add_primary_pickup then return end
 	dist = dist or mark.last_dist
 	if (not dist) or (dist > (mark.interact_dist or get_interact_distance(nil, mark))) then return false end
 	local obj 	= obj or (id and get_game_object(id))
@@ -4255,15 +4271,6 @@ function can_interact_physpickup(id, dist, mark, obj)
 	local dot   = mark.last_hover or (pos and utils_catspaw_hudmarks and utils_catspaw_hudmarks.dotproduct_for_pos(pos)) or 0
 	return dot >= (cfg.target_lenience)
 end
-
---[[
--- deprecated
---- @param mark utils_catspaw_hudmarks.UIHUDMarker
-function can_interact_physmark(mark)
-	if not mark then return end
-	return can_interact_physpickup(mark.id, mark.last_dist, mark)
-end
---]]
 
 function get_best_hover()
 	return hmm.best_hover_id, hmm.best_hover_dp
@@ -4592,14 +4599,6 @@ function update_targeted_object()
 	end
 	log_target_acquisition(method, last_id)
 end
-
---[[[
--- deprecated
-function can_play_pickup_anim()
-
-
-end
---]]
 
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 --- @param func_on_take function
@@ -5093,6 +5092,8 @@ function trigger_autoloot(id, mark, skip_anim_check)
 	return true
 end
 
+--- @param id number
+--- @param mark utils_catspaw_hudmarks.UIHUDMarker
 function field_strip_weapon(id, mark)
 	if zzzz_arti_jamming_repairs and mark.usable_parts then
 		local wpn = get_game_object(id)
@@ -5112,7 +5113,6 @@ function field_strip_weapon(id, mark)
 	mark.use_pri:SetupUtjanPartDots(mark.use_pri.itemcard)
 	return true
 end
-
 
 --- @param id number
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
@@ -5589,8 +5589,8 @@ function update_hint_filters()
 	local _ = debug_dump and dump("[%s] Trying to update hint filters", time_global())
 	hintfilters = dotmarks_hint_filters
 	if (not (hintfilters and hintfilters.enabled)) then return end
-	local hint = hintfilters.last_raw_text
 	if is_empty(hintfilters.enabled) then return end
+	--local hint = hintfilters.last_raw_text
 	local text = hintfilters.update_text()
 	if not text then return end
 	_ = debug_dump and dump("[%s] Hint filter update%s", time_global(), text and (" - text is: "..text) or ", no text")
@@ -6118,15 +6118,6 @@ function parse_file_data()
 	cfg.color_icon_itemcard     = clr_tbl(cfg.color_icon_itemcard)
 	convert_numeric_keys_to_index(cfg.dik_icons)
 	convert_numeric_keys_to_index(cfg.vehicle_target_bones)
-	--[[
-	local raw_dik 				= cfg.dik_icons and dup_table(cfg.dik_icons)
-	cfg.dik_icons 				= {}
-	if raw_dik then
-		for k,v in pairs(raw_dik) do
-			cfg.dik_icons[tonumber(k)] = v
-		end
-	end
-	--]]
 	local unsquish 		        = utils_catspaw_hudmarks.update_unsquish_ratio() or 1
 	cfg.unsquish_ratio 			= unsquish * cfg.aspect_correction
 	cfg.unsquish                = (function(w) return ((not w) and cfg.unsquish_ratio) or (w * cfg.unsquish_ratio) end)
@@ -6159,7 +6150,6 @@ function parse_file_data()
 			vl("|| %s = %s", k,v)
 		end
 	end
-	--hintfilters = cfg.hint_filter
 	hintfilters = dotmarks_hint_filters
 	cfg.grok_claim = not not grok_loot_claim
 	local save_flag = axr_main.config:r_value("mcm", "dotmarks/dmarkadv/write_to_save", {val=1})
@@ -6175,6 +6165,7 @@ function set_item_pickup_callbacks(kill)
 		UnregisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
 	elseif not fdda_handles_pickups() then
 		RegisterScriptCallback("actor_on_item_before_pickup", item_pickup_intercept)
+		-- update text for oldfdda deprecation
 		dl("No form of FDDA installed, registering internal pickup callback")
 		cfg.pickup_callback_set = true
 	end
@@ -6200,7 +6191,8 @@ function set_item_anim_callbacks(kill)
 				UnregisterScriptCallback("actor_on_update", fddar_update_current_anim_state)
 			end
 		end
-	elseif ea_callbacks and fdda_installed then
+	elseif ea_callbacks and fdda_installed then 
+		-- remove this entire section for oldfdda deprecation
 		if anims_enabled and not (kill or killswitch()) then
 			dl("Registering FDDA item animation callbacks")
 			ea_callbacks.EA_RegisterScriptCallback("ea_on_item_use", on_item_use_anim_start)
@@ -6210,6 +6202,7 @@ function set_item_anim_callbacks(kill)
 			ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_use", on_item_use_anim_start)
 			ea_callbacks.EA_UnregisterScriptCallback("ea_on_item_anim_stop", on_item_use_anim_stop)
 		end
+		-- end oldfdda logic
 	end
 end
 
@@ -6246,16 +6239,13 @@ local function log_other_addon_settings()
 	vl("Loaded settings from other addons:\n"..
 		"fddar/pickup/multipickup -> fddar_multipickup %s\n" ..
 		"fddar/pickup/enable -> fddar_pickup_anim %s\n" ..
-		"EA_settings/enable_animations -> fdda_anims_enabled: %s\n" ..
-		"EA_settings/take_item_anim -> fdda_pickup_anim: %s\n" ..
-		--"item_icon_info/part_dots/show_on_wpn -> show_parts_weapons: %s\n" ..
-		--"item_icon_info/part_dots/show_on_armor -> show_parts_armor: %s\n" ..
+		"EA_settings/enable_animations -> fdda_anims_enabled: %s\n" .. -- remove for oldfdda dep
+		"EA_settings/take_item_anim -> fdda_pickup_anim: %s\n" .. -- remove for oldfdda dep
 		"item_icon_info/part_dots/wpo_green -> parts_wpo_grn: %s\n" ..
 		"item_icon_info/part_dots/wpo_yellow -> parts_wpo_yel: %s\n" ..
 		"item_icon_info/part_dots/wpo_orange -> parts_wpo_orn: %s",
 		cfg.fddar_multipickup, cfg.fddar_pickup_anim,
-		cfg.fdda_anims_enabled, cfg.fdda_pickup_anim,
-		--cfg.show_parts_weapons, cfg.show_parts_armor,
+		cfg.fdda_anims_enabled, cfg.fdda_pickup_anim,-- remove for oldfdda dep
 		cfg.parts_wpo_grn, cfg.parts_wpo_yel, cfg.parts_wpo_orn
 	)
 end
@@ -6364,8 +6354,10 @@ function on_option_change()
 
 	if z_fdda_pickup_intercept_dotmarks then
 		fddar_installed = (not not z_fdda_pickup_intercept_dotmarks.fddar_oibp)
-		fdda_installed  = (not not z_fdda_pickup_intercept_dotmarks.fdda_oibp)
+		fdda_installed  = (not not z_fdda_pickup_intercept_dotmarks.fdda_oibp) -- remove for oldfdda dep
 		anims_enabled   = (fddar_installed and cfg.fddar_pickup_anim) or (fdda_installed and cfg.fdda_pickup_anim and cfg.fdda_anims_enabled)
+		-- for oldfdda deprecation, replace with this line:
+		--anims_enabled   = (fddar_installed and cfg.fddar_pickup_anim)
 		cfg.fddar_fix_scav_bug = fddar_installed and cfg.fddar_fix_scav_bug
 	end
 

@@ -1547,4 +1547,13 @@
 		<text>якщо цей параметр ув≥мкнено, текст з описом д≥њ, що виконуЇтьс€, буде приховано.</text>
 	</string>
 
+<!-- Added in 1.7.3 -->
+
+	<string id="ui_mcm_dotmarks_dmarkadv_only_mark_service_npcs">
+		<text>ѕриховати ≥ндикатор дл€ NPC, €к≥ не надають послуг</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_only_mark_service_npcs_desc">
+		<text>якщо ц€ опц≥€ ув≥мкнена, дл€ сталкер≥в, €к≥ не Ї торговц€ми, механ≥ками чи ≥ншими Ќѕ÷ ≥з п≥ктограмою послуги, маркер не в≥дображатиметьс€ взагал≥.</text>
+	</string>
+
 </string_table>

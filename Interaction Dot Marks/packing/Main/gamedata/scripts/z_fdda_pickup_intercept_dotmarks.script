@@ -8,10 +8,14 @@
 
     Moved into this separate script so that loading dotmarks_main during
     MCM menus doesn't also try to load FDDA.
+
+    Old FDDA is obsolete and risky to use at this point, and supporting it
+    it adds unnecessary complexity to DotMarks, so that support will be
+    deprecated in a future major-version upgrade.
 -- =====================================================================]]
 
 fddar_oibp  = liz_fdda_redone_item_pickup and liz_fdda_redone_item_pickup.actor_on_item_before_pickup
-fdda_oibp   = take_item_anim and take_item_anim.actor_on_item_before_pickup
+fdda_oibp   = take_item_anim and take_item_anim.actor_on_item_before_pickup -- remove for oldfdda deprecation
 patched     = false
 
 if fddar_oibp then
@@ -26,6 +30,7 @@ if fddar_oibp then
             end
         end
     )
+-- remove this entire section for oldfdda deprecation
 elseif fdda_oibp then
     patched = true
     local _ = (DEV_DEBUG or (ui_hud_dotmarks and ui_hud_dotmarks.debuglogs)) and printf("[DotMarks] FDDA detected, patching take_item_anim.actor_on_item_before_pickup")
@@ -38,8 +43,11 @@ elseif fdda_oibp then
             end
         end
     )
+-- end oldfdda block
 end
 
 function get_fdda_oibp_callback()
     return patched and (liz_fdda_redone_item_pickup and liz_fdda_redone_item_pickup.actor_on_item_before_pickup or take_item_anim and take_item_anim.actor_on_item_before_pickup) or nil
+    -- to deprecate oldfdda support, replace above with the next line:
+    --return patched and (liz_fdda_redone_item_pickup and liz_fdda_redone_item_pickup.actor_on_item_before_pickup) or nil
 end

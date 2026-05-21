@@ -177,19 +177,21 @@ if dotmarks_callbacks then
                     args.text_interact2 = ini_sys:r_string_ex(obj:section(), "ui_on_interaction")
                     args.func_interact2 = bind_hf_base.get_function_from_field(obj, "ui_on_interaction") or nil
                     -- Function called when secondary interact is used, if different from default radial
-                    if args.is_piano then
+                    args.is_bed         = (args.text_interact1 == "ui_sleep_dialog.sleep_bag") or nil
+                    args.is_stove       = (args.text_interact1 == "ui_stove_furniture.start_dialog") or nil
+                    args.no_new_primary = (args.is_piano or args.is_bed or args.is_stove or args.hf_workshop)
+                    if args.no_new_primary then
                         args.func_interact2 = ( function() end )
                     elseif (args.text_interact2 == "bind_table_fan.toggle_fan") then
                         args.func_interact2 = ( function() end )
                         args.func_exec_pri = bind_table_fan.toggle_fan
                     end
-
-                    local is_zrb        = (sec == "inv_trashcan")
-                    local hfws_stash    = (section == "workshop_stash")
+                    local is_zrb        = (section == "inv_trashcan") or nil
+                    local hfws_stash    = (section == "workshop_stash") or nil
                     args.no_sec         = hfws_stash or nil
                     local hf_wrapper    = bind_hf_base.get_wrapper(id)
-                    args.hf_pickup      = (not args.hf_workshop) and hf_wrapper and hf_is_pickupable(id)
-                    args.physics_obj    = (args.clsid == clsid.obj_physic)
+                    args.hf_pickup      = (not args.no_new_primary) and hf_wrapper and hf_is_pickupable(id) or nil
+                    args.physics_obj    = (args.clsid == clsid.obj_physic) or nil
                     -- Props are physics objects, and require special handling for picking up
                     args.hf_secondary   = true
                    -- All HF objects at least have their default radial menu, if nothing else
@@ -203,7 +205,7 @@ if dotmarks_callbacks then
                     args.hint_filters       = {
                     -- Vanilla interact text to trap
                             ["inventory_item_use"]  = (not args.hf_workshop) and "inventory_item_use" or nil,
-                            ["st_interact"]         = args.hf_workshop and "st_use_workshop" or nil,
+                            ["st_interact"]         = (args.hf_workshop and "st_use_workshop") or nil,
                     }
                     args.pos_adjust     = dotmarks_main.pos_adjust_by_section(section, 0.05)
                     -- Adjusts position of marker relative to object/bone
@@ -214,6 +216,7 @@ if dotmarks_callbacks then
                         -- placeable workshop tends to block LOS to itself
                         args.refresh_text   = true
                         -- Forces the prompt text to check for changes on every update
+                        -- This causes it to reflect changing vanilla text for the focused ent
                         args.interact_dist  = 1.5
                         -- Workshop has extended non-default interact distance
                         if not ui_hud_dotmarks.is_object_scannable("Workshops") then

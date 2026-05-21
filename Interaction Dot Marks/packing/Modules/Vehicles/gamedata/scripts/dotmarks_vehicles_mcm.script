@@ -22,7 +22,7 @@ mcm_menu_additions = {
         ui_hook_functor = { dotmarks_mcm.init_header_element },
     },
     { id = "hide_marker_in_vehicle", type = "check", val = 1, def = true },
-    { id = "vehicle_only_driver_door", type = "check", val = 1, def = true },
+    --{ id = "vehicle_only_driver_door", type = "check", val = 1, def = true },
     { id = "divider", type= "line" },
 }
 

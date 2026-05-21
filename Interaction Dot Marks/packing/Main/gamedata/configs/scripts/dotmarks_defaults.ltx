@@ -1,4 +1,4 @@
-; Interaction Dot Markers (DotMarks)
+; Interaction Dot Marks (DotMarks)
 ; Main configuration settings
 ; Loaded on startup by: dotmarks_main.load_file_data()
 ; Further massaging done by ui_hud_dotmarks.parse_file_data()
@@ -306,8 +306,8 @@ fddar_fix_scav_bug 			= false
 ; Deprecated, this bug is no longer present in current-version FDDAR
 fddar_multipickup 			= false
 fddar_pickup_anim 			= false
-fdda_pickup_anim 			= false
-fdda_anims_enabled 			= false
+fdda_pickup_anim 			= false ; remove for oldfdda deprecation
+fdda_anims_enabled 			= false ; remove for oldfdda deprecation
 fddar_body_search 			= false
 fddar_container_search 		= false
 fddar_disable_walk 			= false
@@ -450,6 +450,8 @@ enable_icon_vehicles 		= true
 enable_icon_zrb 			= true
 ; Enables the special icon used for the Zone Recycle Bin
 ; There is currently no entry for this in MCM
+only_mark_service_npcs 		= false
+; If marking NPCs is enabled, markers won't be shown for NPCs who don't have a service icon
 sp_hide_junk_items 			= true
 ; If Sorting Plus is installed, dot markers will not be shown for items marked as junk
 sp_flag_favejunk 			= true
@@ -847,7 +849,7 @@ line_adj_h  = -12
 ; ================================================================================
 ; 	DON'T TOUCH BELOW THIS LINE
 ; ================================================================================
-; These are critical settings that allow the addon to function properly. They are
+; These are critical settings that allow the addon to function properly. Most are
 ; not intended to be customized, and there is rarely any reason to do so except to
 ; add support for changes made by other addons, which is best done by the addon
 ; author through DLTX. I can't help with anything that happens if you change them.
@@ -887,7 +889,6 @@ red_forest_box_4_5
 ;bolt
 ;bolt_bullet
 ; If you uncomment the above two lines, it will blacklist all bolts
-
 
 [grenade_ammo_clsids]
 ; Defines which clsids are classified as GL ammo for the purposes of scan detection
@@ -1146,7 +1147,8 @@ font_scale_h 			= true
 near_scan_interval 		= true
 
 [reset_20260402]
-hf_add_primary_pickup
+hf_add_primary_pickup 	= true
+; this should now be off by default
 
 ; =================================================================================
 [mcm_paths]
@@ -1275,6 +1277,7 @@ hide_interaction_dots 		= dotmarks/dmarkadv/
 ignore_hud_state 			= dotmarks/dmarkadv/
 bind_toggle_marks			= dotmarks/dmarkadv/
 toggle_revert_delay 		= dotmarks/dmarkadv/
+only_mark_service_npcs  	= dotmarks/dmarkadv/
 hide_mute_stalkers 			= dotmarks/dmarkadv/
 hide_dropped_items 			= dotmarks/dmarkadv/
 never_mark_bolts 			= dotmarks/dmarkadv/
@@ -1332,8 +1335,8 @@ fddar_pickup_speed 			= fddar/pickup/speed
 fddar_body_search 			= fddar/body_search/enable
 fddar_container_search 		= fddar/body_search/enable_anm_for_containers
 fddar_disable_walk 			= fddar/body_search/disable_walk
-fdda_anims_enabled 			= EA_settings/enable_animations
-fdda_pickup_anim 			= EA_settings/take_item_anim
+fdda_anims_enabled 			= EA_settings/enable_animations 	; remove for oldfdda deprecation
+fdda_pickup_anim 			= EA_settings/take_item_anim 		; remove for oldfdda deprecation
 parts_wpo_mode 				= item_icon_info/part_dots/wpo_mode
 parts_wpo_grn 				= item_icon_info/part_dots/wpo_green
 parts_wpo_yel 				= item_icon_info/part_dots/wpo_yellow

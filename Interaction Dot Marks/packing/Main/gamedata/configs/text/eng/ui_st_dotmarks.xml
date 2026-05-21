@@ -1555,4 +1555,13 @@
 		<text>If enabled, this setting will hide the text on the prompt that normally describes the action to be taken.</text>
 	</string>
 
+<!-- Added in 1.7.3 -->
+
+	<string id="ui_mcm_dotmarks_dmarkadv_only_mark_service_npcs">
+		<text>Hide marker for non-service NPCs</text>
+	</string>
+	<string id="ui_mcm_dotmarks_dmarkadv_only_mark_service_npcs_desc">
+		<text>If enabled, no marker will be shown at all for stalkers who aren't traders, mechanics, or other NPCs with a service icon.</text>
+	</string>
+
 </string_table>
