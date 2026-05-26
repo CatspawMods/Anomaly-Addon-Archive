@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.7.3"
-release_date    = 20260520
+script_version  = "1.7.4"
+release_date    = 20260525
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
@@ -450,7 +450,7 @@ local base_config = {
                 local is_zrb        = (sec == "inv_trashcan")
                 local is_bp         = is_zrb or (sec == "inv_backpack")
                 set_target_data(id, cfg.metadata_types.is_container, true)
-                init_new_inventory_box(id)
+                init_inventory_box(id)
                 local args = {
                     logged_type     = "a stash",
                     is_container    = true,
@@ -1056,8 +1056,9 @@ function is_container_unsearched_stash(id)
 end
 
 --- @param id number
-function init_new_inventory_box(id)
-    if id and not cfg.invboxes[id] then
+function init_inventory_box(id)
+    if not id then return end
+    if not cfg.invboxes[id] then
         local owned_stash = not not get_player_stash_by_id(id)
         local mark = id and cfg.markers[id]
         local obj = id and get_game_object(id)
@@ -1068,10 +1069,11 @@ function init_new_inventory_box(id)
             found       = owned_stash,
             searched    = owned_stash
         }
-        if not verbose then return end
-        
-        dl("New inventory box record initialized for %s | owned %s", mark and mark.name, owned_stash)
+        if verbose then
+            dl("New inventory box record initialized for %s | owned %s", mark and mark.name, owned_stash)
+        end
     end
+    return cfg.invboxes[id]
 end
 
 --- @param id number

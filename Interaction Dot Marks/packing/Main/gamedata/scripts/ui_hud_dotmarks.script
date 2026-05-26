@@ -25,8 +25,10 @@ script_name     = "ui_hud_dotmarks"
 
 	Low priority:
 	- NPE module(s) - not hard, but time-consuming and nice-to-have
+		Maybe for 2.0
 	- PAW-style live preview for prompt elements - lots of work
 		Look into possibly using new imgui hooks in modded exes
+		It would require a major refactoring of how prompt elements are set up and redrawn
 	- Blank textures are white squares in DX8/DX9
 		current workaround via scan_unmarked_classes config setting
 		it's not perfect and I'm not spending a lot of time on it
@@ -215,22 +217,25 @@ function main_marker_update_loop(mark, args)
 --  Updates condition/ammo and other metadata that are visible on prompts
 -- ================================================================================
 	if not mark then return end -- literally impossible
-	if (mark.no_update_loop or mark.suspended) then return end
 
-	if killswitch("markloop") then
+	if (mark.no_update_loop or mark.suspended) then
+		return
+	elseif killswitch("markloop") then
 		mark:HideAll("mark loop killswitched")
 		return
-	end
-	if mark.is_offscreen then
+	elseif mark.is_offscreen then
 		mark:HideAll("offscreen, aborting markloop")
+		return
+	elseif cfg.suspend_markloop_in_inv and actor_menu.inventory_opened() then
+		mark:HideAll("inventory open, aborting markloop")
 		return
 	end
 
 	local dd 			= (debug_dump)
-	local _ 			= dd and dump("[%s] Beginning marker update loop for %s", time_global(), mark.name)
 	local now           = time_global()
+	local _ 			= dd and dump("[%s] Beginning marker update loop for %s", now, mark.name)
 	local id            = mark.id
-	local obj           = id and get_game_object(id)
+	local obj           = get_game_object(id)
 	if not obj then return end
 
 	if cfg.hide_dropped_items and cfg.dropped_items[id] then
@@ -253,7 +258,7 @@ function main_marker_update_loop(mark, args)
 	if mark.is_stalker then
 		if cfg.npc_health_check_interval then
 			if (mark.next_health_check or 0) < time_global() then
-				--printf("Stalker update loop %s for %s", time_global(), mark.name)
+				--dump("Stalker update loop %s for %s", time_global(), mark.name)
 				mark.next_health_check = get_next_tg_interval(cfg.npc_health_check_interval)
 				if update_mark_stalker_health(mark, obj) then return end
 			end
@@ -263,7 +268,7 @@ function main_marker_update_loop(mark, args)
 			return
 		end
 		if cfg.only_mark_service_npcs and not mark.service_type then
-			--printf("%s doesn't have a service type, hiding", mark.name)
+			--dump("%s doesn't have a service type, hiding", mark.name)
 			mark.hidden = true
 		end
 	end
@@ -279,7 +284,7 @@ function main_marker_update_loop(mark, args)
 		if not mark.use_pri.physbtn_active() then
 			hide_mark(mark, "inactive button")
 			return
-		end
+		end 
 	end
 
 	-- ================================================================================
@@ -328,9 +333,7 @@ function main_marker_update_loop(mark, args)
 			if mark.in_range then
 				if mark.is_container and not mark.is_display then
 					marker_loop_container_updates(mark, obj)
-				end
-
-				if mark.is_campfire then
+				elseif mark.is_campfire then
 					--dump("mark.is_campfire %s", mark.is_campfire)
 					mark.show_pri = (mark.id == cfg.active_campfire)
 				elseif mark.is_pickup then
@@ -509,25 +512,30 @@ end
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 --- @param obj game_object
 function marker_loop_container_updates(mark, obj)
+	--dump("[%s] marker_loop_container_updates", time_global())
 	-- Update contents of inventory containers
 	local id = mark.id
 	mark.body_claimed 	= is_body_claimed(mark)
 	mark.managed_stash 	= not not (mark.body_claimed or is_container_unsearched_stash(id))
-	--dump("managed stash: %s | item tbl %s | searched %s", mark.managed_stash, cfg.invboxes[id] and cfg.invboxes[id].items and true or false, cfg.invboxes[id] and cfg.invboxes[id].searched)
-	local text = ""
-	mark.num_items = 0
-	if (not cfg.invboxes[id]) then
-		init_new_inventory_box(id)
-	end
+	
+	local invbox = init_inventory_box(id)
+	if not invbox then return end
+
+	--dump("managed stash: %s | item tbl %s | searched %s", mark.managed_stash, invbox and invbox.items and true or false, invbox and invbox.searched)
+	
 	if mark.can_display and not is_invbox_found(id) then
-		cfg.invboxes[id].found = true
+		invbox.found = true
 		mark.is_concealed = false
 	end
-	--dump("invbox %s | owned %s | found %s", id, cfg.invboxes[id].owned, cfg.invboxes[id].found)
+	--dump("invbox %s | owned %s | found %s | item tbl %s", id, invbox.owned, invbox.found, invbox.items)
 	if not mark.body_claimed then
-		if (not cfg.invboxes[id].items) then
+		if cfg.invboxes[id].items then
+			mark.num_items = size_table(cfg.invboxes[id].items)
+			mark.has_items = mark.num_items > 0
+			--dump("invbox has %s items", mark.num_items)
+		else
 			cfg.invboxes[id].items, mark.num_items = get_inventory_table(obj, id)
-			_ = debug_dump and vl("[%s] No inventory table for container %s, iterated and found %s items", time_global(), mark.name, mark.num_items)
+			local _ = debug_dump and vl("[%s] No inventory table for container %s, iterated and found %s items", time_global(), mark.name, mark.num_items)
 			if mark.managed_stash and (mark.num_items == 0) then
 				-- make treasure manager stashes return as empty until searched
 				cfg.invboxes[id].items = nil
@@ -536,34 +544,44 @@ function marker_loop_container_updates(mark, obj)
 			end
 		end
 	end
-	local has_inv = not not cfg.invboxes[id].items
 
-	if cfg.show_stash_weight and (mark.refresh_contents_now or cfg.refresh_inv_every_update or not mark.use_pri.last_prompt_text) then
-		if has_inv then
-			if mark.has_items then
-				mark.weight = axr_companions.get_inventory_weight(cfg.invboxes[id].items)
-				if mark.last_weight and (mark.last_weight ~= mark.weight) then
-					mark.last_weight = mark.weight
-					local wc = mark.weight and get_actor_weight_class(mark.weight)
-					local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
-					mark.use_pri.parse_text_colors = true
-					mark.last_weight_string = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
-				end
-				text = mark.last_weight_string
-			else
-				if not mark.locstr_empty then
-					mark.locstr_empty = " " .. gts("st_alti_empty")
-				end
-				text = mark.locstr_empty
-				mark.last_weight = 0
+	if (mark.refresh_container_now or cfg.refresh_inv_every_update or not mark.weight_string_set) then
+		local _ = debug_dump and vl("[%s] triggering prompt weight refresh from markloop", time_global())
+		update_prompt_weight_string(mark)
+		mark.refresh_container_now = false
+	end
+end
+
+function update_prompt_weight_string(mark)
+	if not (mark and mark.use_pri and mark.is_container and cfg.show_stash_weight) then return end
+	
+	if cfg.weight_update_interval then
+		if (mark.next_weight_update or 0) < time_global() then
+			mark.next_weight_update = get_next_tg_interval(cfg.weight_update_interval)
+			mark.update_weight_now = true
+		end
+	end
+
+	local id = mark.id
+	local invbox = init_inventory_box(id)
+	if not invbox then return end
+
+	local _ = debug_dump and dump("[%s] refreshing inventory weight string for %s", time_global(), mark.name)
+	local text = ""
+
+	if invbox.items then
+		if mark.has_items then
+			mark.weight = axr_companions.get_inventory_weight(invbox.items)
+			_ = debug_dump and dump("got weight %s back from axr_companions, last_weight is %s", mark.weight, mark.last_weight)
+			--if mark.last_weight and (mark.last_weight ~= mark.weight) then
+			if mark.update_weight_now or (mark.last_weight ~= mark.weight) or not mark.last_weight then
+				mark.last_weight = mark.weight or 0
+				local wc = mark.weight and get_actor_weight_class(mark.weight)
+				local code  = wc and cfg.weight_colors[wc] or cfg.weight_colors[0]
+				mark.use_pri.parse_text_colors = true
+				mark.last_weight_string = string.format(" ($%s%.2f %s$clr_def)", code, mark.weight, st_kg)
 			end
-		elseif (mark.managed_stash and not has_inv) then
-			if not mark.locstr_unknown_contents then
-				mark.locstr_unknown_contents = " (" .. gts("st_unknown_contents") .. ")"
-			end
-			text = mark.locstr_unknown_contents
-			mark.refresh_contents_now = true
-			mark.last_weight = 0
+			text = mark.last_weight_string
 		else
 			if not mark.locstr_empty then
 				mark.locstr_empty = " " .. gts("st_alti_empty")
@@ -571,10 +589,27 @@ function marker_loop_container_updates(mark, obj)
 			text = mark.locstr_empty
 			mark.last_weight = 0
 		end
-		if text ~= mark.use_pri.last_prompt_text then
-			mark.use_pri.last_prompt_text = text
-			mark.use_pri:SetPrompt(nil, nil, text)
+		mark.weight_string_set = true
+		mark.update_weight_now = nil
+	elseif mark.managed_stash then
+		if not mark.locstr_unknown_contents then
+			mark.locstr_unknown_contents = " (" .. gts("st_unknown_contents") .. ")"
 		end
+		text = mark.locstr_unknown_contents
+		mark.last_weight = 0
+	else
+		if not mark.locstr_empty then
+			mark.locstr_empty = " " .. gts("st_alti_empty")
+		end
+		text = mark.locstr_empty
+		mark.last_weight = 0
+		mark.update_weight_now = nil
+		mark.weight_string_set = true
+	end
+	if text ~= mark.use_pri.last_prompt_text then
+		_ = debug_dump and dump("new weight text, setting: %s", text)
+		mark.use_pri.last_prompt_text = text
+		mark.use_pri:SetPrompt(nil, nil, text)
 	end
 end
 
@@ -658,7 +693,6 @@ function update_mark_stalker_health(mark, obj)
 		mark.is_enemy   = mark.comm and game_relations.is_factions_enemies(cfg.actor_comm, mark.comm)
 		mark.is_mute    = not obj:is_talk_enabled()
 		mark.hidden     = (mark.hidden and mark.is_mute) or (mark.is_enemy and not mark.is_wounded)
-		--printf("mark.hidden is %s for %s", mark.hidden, mark.name)
 		--dump("%s is %s NPC | enemy %s | wounded %s was %s | mute %s", mark.name, mark.comm, mark.is_enemy, mark.is_wounded, mark.was_wounded, mark.is_mute)
 		if mark.is_wounded then
 			if not (mark.was_wounded or cfg.heal_cooldown_active) then
@@ -3242,6 +3276,7 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
 	self.lref:AdjustWidthToText()
 	local pos = self:UpdatePromptLength()
 	setwndsize(self.drop, pos + fontscale_w(cfg.interact_drop_w or 55), fontscale_h(cfg.interact_drop_h or 25))
+	--self.last_prompt_text = new_text
 end
 
 function InteractPrompt:SetHoldProgress(progress)
@@ -3771,6 +3806,7 @@ end
 function actor_on_first_update()
 	hmm = utils_catspaw_hudmarks and utils_catspaw_hudmarks.get_hud_mark_manager()
 	maingameui = ActorMenu.get_maingame()
+	validate_object_tables()
 end
 
 function on_loading_screen_dismissed()
@@ -4444,7 +4480,7 @@ function scan_nearby_object(obj, id)
 	id  = id or (obj and obj:id())
 	if cfg.skip_id_reuse_check and id and scanned[id] then return end
 	if not valid_id(id) then return end
-	obj = obj or (id and get_game_object(id))
+	obj = obj or get_game_object(id)
 	if not obj then return end
 	local name = obj:name()
 	local _
@@ -4597,7 +4633,7 @@ function update_targeted_object()
 			method = -1
 		end
 	end
-	log_target_acquisition(method, last_id)
+	local _ = debug_dump and log_target_acquisition(method, last_id)
 end
 
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
@@ -5134,7 +5170,7 @@ function take_all_from_box(id, mark, skip_anim_check)
 	mark = mark or get_mark(id)
 	if mark then
 		mark.has_items = false
-		mark.refresh_contents_now = true
+		mark.refresh_container_now = true
 	end
 	utils_obj.play_sound("interface\\items\\inv_items_take_all")
 	return true
@@ -5624,6 +5660,7 @@ function actor_on_update()
 	end
 	if not scanning then return end
 	if cfg.suspend_scan_in_pda and item_device.is_pda_active() then return end
+	if cfg.suspend_scan_in_inv and actor_menu.inventory_opened() then return end
 
 	do_garbage_collection()
 	if cfg.hint_refresh_interval then
@@ -5945,6 +5982,24 @@ function actor_on_update_pickup(obj)
 	end
 end
 
+function update_all_container_markers()
+	if cfg.container_update_interval then
+		if (cfg.next_container_update or 0) < time_global() then
+			cfg.next_container_update = get_next_tg_interval(cfg.container_update_interval)
+		else
+			return
+		end
+	end
+	vl("Actor took or dropped something, updating all weight prompts")
+
+	for k,v in pairs(cfg.markers) do
+		if v.is_container and not v.is_display then
+			v.refresh_container_now = true
+			v.update_weight_now = true
+		end
+	end
+end
+
 --- @param obj game_object
 function actor_on_item_take(obj)
 	local id = obj and obj:id()
@@ -5952,6 +6007,7 @@ function actor_on_item_take(obj)
 		local _ = debug_dump and dump("Actor just took %s, unregistering scanned object", nameid(obj, id))
 		unregister_scanned_entity(id)
 	end
+	update_all_container_markers()
 end
 
 function actor_on_item_drop(obj)
@@ -5962,6 +6018,7 @@ function actor_on_item_drop(obj)
 	if cfg.hide_dropped_items and cfg.blacklist_dropped_items then
 		scanned[id] = cfg.dropped_items[id]
 	end
+	update_all_container_markers()
 end
 
 
@@ -5970,21 +6027,21 @@ end
 function remove_obj_from_box_table(box, item)
 	if not (box and item) then return end
 	local b_id = box:id()
-	if not b_id then return end
-	if not cfg.invboxes[b_id] then return end
-	if not cfg.invboxes[b_id].items then
-		cfg.invboxes[b_id].items = {}
+	local invbox = init_inventory_box(b_id)
+	if not invbox then return end
+	if not invbox.items then
+		invbox.items = {}
 	end
 	local i_id = item:id()
-	if not i_id then return end
-	cfg.invboxes[b_id].items[i_id] = nil
-	cfg.invboxes[b_id].searched = true
-
+	if (i_id and invbox.items[i_id]) then
+		invbox.items[i_id] = nil
+	end
 	local mark      = cfg.markers[b_id] or {}
-	mark.num_items = size_table(cfg.invboxes[b_id].items)
+	mark.num_items 	= size_table(invbox.items) or 0
 	mark.has_items  = mark.num_items > 0
-	mark.refresh_contents_now = true
-	vl("remove_obj_from_box_table completed for %s <- %s", item:name(), box:name())
+	mark.refresh_container_now = true
+	mark.update_weight_now = true
+	vl("remove_obj_from_box_table completed for %s <- %s | now contains %s items", item:name(), box:name(), mark.num_items)
 end
 
 --- @param box game_object
@@ -5993,22 +6050,21 @@ function add_obj_to_box_table(box, item)
 	if not (box and item) then return end
 	local b_id = box:id()
 	if not b_id then return end
-	if not cfg.invboxes[b_id] then
-		init_new_inventory_box(b_id)
-	end
-	if not cfg.invboxes[b_id].items then
-		cfg.invboxes[b_id].items = {}
+	local invbox = init_inventory_box(b_id)
+	if not (invbox and invbox.items) then
+		invbox.items = {}
 	end
 	local i_id      = item:id()
 	local sec       = item:section()
 	if not i_id then return end
-	cfg.invboxes[b_id].items[i_id] = sec
-
+	invbox.items[i_id] = sec
+	invbox.owned 	= true
 	local mark      = cfg.markers[b_id] or {}
-	mark.has_items  = true
-	mark.refresh_contents_now = true
-	cfg.invboxes[b_id].owned = true
-	vl("add_obj_to_box_table completed for %s -> %s", item:name(), box:name())
+	mark.num_items 	= size_table(invbox.items) or 0
+	mark.has_items  = mark.num_items > 0
+	mark.refresh_container_now = true
+	mark.update_weight_now = true
+	vl("add_obj_to_box_table completed for %s -> %s | now contains %s items", item:name(), box:name(), mark.num_items)
 end
 
 --- @param box game_object
@@ -6027,15 +6083,25 @@ function ActorMenu_on_item_after_move(box_id, item, mode, bag_from)
 	end
 end
 
+function physic_object_on_use_callback(box, who)
+	if not (box and IsInvbox(box)) then return end
+	local id = box:id()
+	local invbox = init_inventory_box(id)
+	local mark = get_mark(id)
+	if not (mark and invbox) then return end
+	mark.refresh_container_now = true
+	invbox.searched = true
+end
+
+
 --- @param victim game_object
 --- @param killer game_object
 --- @param source game_object
 function handle_npc_death(victim, killer, source)
 	local id = victim and victim:id()
 	if not id then return end
-	local unk = "unknown"
 	if source then
- 		source = string.format("(%s | killed by: %s)", source, killer and killer:name() or unk)
+ 		source = string.format("(%s | killed by: %s)", source, killer and killer:name() or "unknown")
 	end
 	vl("[%s] %s has died%s, unregistering them and re-registering as corpse object", time_global(), victim:name(), source or unk)
 	unregister_scanned_entity(id)
@@ -6399,20 +6465,48 @@ function on_option_change()
 	end
 end
 
+function validate_object_tables()
+	local rct = cfg.invboxes and size_table(cfg.invboxes) or 0
+	if rct > 0 then
+		dl("Validating %s inventory box records", rct)
+		for k,v in pairs(cfg.invboxes) do
+			local obj = get_game_object(k)
+			local name = obj and obj:name()
+			local tname = v and v.name
+			local num = v.items and size_table(v.items) or 0
+			if (name and name == tname) then
+				vl("Loaded invbox %s containing %s item%s", nameid(name, k), v.items and size_table(v.items), (num ~= 1) and "s" or "")
+			else
+				dl("WARNING: ID %s has been reused (was %s, now %s), removing record from table", id, tname, name)
+				cfg.invboxes[k] = nil
+			end
+		end
+	end
+
+	rct = cfg.dropped_items and size_table(cfg.dropped_items) or 0
+	if rct > 0 then
+		dl("Validating %s dropped item records", rct)
+		for k,v in pairs(cfg.dropped_items) do
+			local obj = get_game_object(k)
+			local name = obj and obj:name()
+			if (name and name == v) then
+				if cfg.blacklist_dropped_items then
+					scanned[id] = tbl[id]
+				end
+			else
+				dl("WARNING: ID %s has been reused (was %s, now %s), removing record from table", k, v, name)
+				cfg.dropped_items[k] = nil
+			end
+		end
+	end
+end
+
 function load_state(data)
 	if not cfg.write_to_save then return end
 	if not (data and data.dotmarks) then return end
 	cfg.invboxes = data.dotmarks.invboxes or cfg.invboxes or {}
-	cfg.dropped_items = data.dotmarks.dropped_items or {}
-	for k,v in pairs(cfg.dropped_items) do
-		local obj = k and get_game_object(k)
-		local name = obj and obj:name()
-		if not (name and name == v) then
-			cfg.dropped_items[k] = nil
-		elseif cfg.blacklist_dropped_items then
-			scanned[id] = cfg.dropped_items[k]
-		end
-	end
+	cfg.dropped_items = data.dotmarks.dropped_items or cfg.dropped_items or {}
+	-- validation needs to occur later, after objects exist
 end
 
 function save_state(data)
@@ -6427,10 +6521,13 @@ function save_state(data)
     if cfg.invboxes then
     	data.dotmarks.invboxes = {}
     	for k,v in pairs(cfg.invboxes) do
-    		if v.found then
-    			--dump("Storing found stash data for %s", nameid(v.name, id))
-    			data.dotmarks.invboxes[k] = v
-    		end
+    		vl("Storing invbox record for %s (%s)", v.name, k)
+    		if debug_dump then
+	    		for i,j in pairs(v.items) do
+	    			dump("invbox has item %s (%s)", j, i)
+	    		end
+	    	end
+    		data.dotmarks.invboxes[k] = v
     	end
     end
     if cfg.dropped_items then
@@ -6459,8 +6556,7 @@ function on_game_start()
 		RegisterScriptCallback("on_key_release", on_key_release)
 		RegisterScriptCallback("on_before_key_press", on_before_key_press)
 		RegisterScriptCallback("on_loading_screen_dismissed", on_loading_screen_dismissed)
-
-		
+		RegisterScriptCallback("physic_object_on_use_callback")		
 		RegisterScriptCallback("on_key_hold", on_key_hold)
 		RegisterScriptCallback("on_option_change", on_option_change)
 		RegisterScriptCallback("on_mouse_wheel", on_mouse_wheel)

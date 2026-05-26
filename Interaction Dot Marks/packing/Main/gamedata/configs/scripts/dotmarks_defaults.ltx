@@ -131,10 +131,13 @@ ignore_hud_state			= false
 scan_start_delay            = 0.1
 ; Delay in seconds after actor_on_first_update before scanning
 suspend_scan_in_pda 		= true
-; When enabled, if the PDA window is open, all scanning and other actor_on_update
+; When enabled, while the PDA window is open, all scanning and other actor_on_update
 ; loop activity will be suspended
-suspend_markloop_in_pda 	= true
-; When enabled, the entire marker update loop will be suspended while in the PDA
+suspend_scan_in_inv 		= true
+; When enabled, while the inventory is open, all scanning and other actor_on_update
+; loop activity will be suspended
+suspend_markloop_in_inv 	= true
+; When enabled, the entire marker update loop will be suspended while inventory is open
 near_scan_when_immobile		= false
 ; When disabled, the near scan does not trigger unless the actor is moving. This is 
 ; an optimization measure with the assumption that the actor has to be moving in 
@@ -165,6 +168,10 @@ hint_refresh_interval 		= 100
 npc_health_check_interval 	= 1153
 ; Interval in ms between checks for changes in NPC health
 ; This is handled on a per-marker basis to avoid stacking
+container_update_interval 	= 502
+; Interval in ms between forced refreshes to all containers
+weight_update_interval 		= 1391
+; Interval in ms between forced updates to container weight display
 marker_validation_interval 	= 5011
 ; Interval in ms between checks for marker validation
 ; This is handled on a per-marker basis to avoid stacking
