@@ -305,7 +305,6 @@ if dotmarks_callbacks then
                     elseif (mark.hf_placeable == "light") then
                         log("Setting primary interaction text for placeable light")
                         args.text = string.format("%s %s", gts("st_alti_use_booster"), mark.name)
-                        --args.func = mark.func_interact1
                     elseif (mark.text_interact1 == "bind_table_fan.toggle_fan") then
                         log("Setting up primary interaction as a placeable fan")
                         args.text = string.format("%s %s", gts("st_alti_use_booster"), mark.name)
@@ -326,7 +325,6 @@ if dotmarks_callbacks then
                             log("Primary pickup prompt is disabled for HF props")
                             args.ret_value = false
                             return
-                            --args.never_show = (not cfg.hf_add_primary_pickup) or nil
                         end
                         log("Setting up default interaction text for a static prop")
                         args.text = string.format("%s %s", gts("st_alti_take"), mark.name)

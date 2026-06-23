@@ -203,7 +203,7 @@ function init_header_element(anchor, handlers, opts, flags)
 	bg:SetWndSize(vector2():set(bg:GetWidth(), text:GetHeight() + 25))
 end
 
-
+--[[
 function indent_nested_element(anchor, handlers, opts, flags)
 	-- WIP, unused
 	printf("indent_nested_element | %s", opts and opts.id)
@@ -225,7 +225,7 @@ function indent_nested_element(anchor, handlers, opts, flags)
 	branch:SetWndPos(vector2():set(-40, 0))
 	printf("finished nested element setup for %s", nested_element_name)
 end
-
+--]]
 
 function sync_widget_color(ctrl, colors)
 	if not (ctrl and colors) then return end
@@ -332,7 +332,7 @@ function get_main_menu()
 	return {
 		{ id = "menuslide_main", type = "slide", link = "ui_mcm_dotmarks_banner_main", size = {512,50}, spacing = 0,
 			ui_hook_functor = { dotmarks_mcm.init_preview },
-			-- a proper PAW-style live preview is going to take a lot more work
+			-- Static image, a proper PAW-style live preview would take a lot more work
 		},
 		{ id = "header_main", 		type = "desc", text = "ui_mcm_dotmarks_header_fail_nocolor",
 			ui_hook_functor = { dotmarks_mcm.init_header_element },
@@ -675,8 +675,6 @@ function get_adv_menu()
 		{ id = "write_to_save", 		type = "check", 	val = 1, def = ui_hud_dotmarks.write_to_save },
 
 		{ id = "divider", type= "line" },
-
-		--{ id = "disable_addon", 		type = "check", 	val = 1, def = cfg.disable_addon },
 
 		{ id = "hide_interaction_dots", type = "check", 	val = 1, def = cfg.hide_interaction_dots },
 		{ id = "ignore_hud_state", 		type = "check", 	val = 1, def = cfg.ignore_hud_state },

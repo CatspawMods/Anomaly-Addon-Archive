@@ -4,10 +4,20 @@
 		CONTAINER INTERACTION CONTROL - LOOT WINDOW MONKEYPATCH
 
     Intercepts attempts to open a loot window for a container, and checks
-    for conditions that would block access to an inventory container.
+    for conditions that ought to block access to an inventory container.
+    This is usually while waiting for the player to lift their finger off 
+    the interact key, so that Anomaly won't mistakenly try to process a
+    long press (e.g. while triggering the take-all secondary action) as an
+    attempt to open a container's inventory window.
 
-    Unless that one specific runtime flag is on, all other calls will be
-    passed through untouched.
+    This is managed primarily based on the cfg.block_loot_window flag,
+    which at runtime gets regularly updated with the time_global() stamp
+    at which the block was last initiated. It is supposed to get cleared
+    automatically after 3 seconds no matter what, as well as when saving 
+    or loading the game.
+
+    Unless that one specific runtime flag has a value, all other calls 
+    will be passed through untouched. 
 -- =====================================================================]]
 local base_ui_inventory_start = ui_inventory.start
 function ui_inventory.start(mode, obj)
@@ -24,7 +34,7 @@ function ui_inventory.start(mode, obj)
          and (not dm.is_container_whitelisted(sec))-- Container isn't whitelisted by section
          and (not (IsStalker(obj) and obj:alive()))-- Inventory owner isn't a living stalker 
    then
-      _ = log and printf("[%s][z_ui_inventory_dotmarks] cfg.block_loot_window is true, blocking access to container %s (%s)", time_global(), obj and obj:name(), obj and obj:id())
+      _ = log and printf("[DotMarks] [%s] %s is blocking access to container %s (%s) | block began at: %s", time_global(), idm.cfg.loot_flag_reason or "IDM", obj and obj:name(), obj and obj:id(), idm.cfg.block_loot_window)
       -- Block the loot window
       return
    end

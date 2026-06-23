@@ -142,15 +142,13 @@ If enbabled, the condition of outfits and headgear will be appended to the name 
 * Default: `true`
 
 If enabled, the color of the condition/battery text will change based on the value, using the same colors as the base game.
-> [!NOTE]
-> This feature may have a very minor performance cost on the most potato of low-end machines. You can try disabling it for a tiny gain, if any, when there are many nearby pickup items that use condition or battery.
 ## Show total weight in containers
 * Config setting: `show_stash_weight`
 * Default: `false`
 
 Totals up the weight of all items within marked containers, appending this information to the prompt. If a searched container is empty, it will say that instead.
-> [!WARNING]
-> This feature is disabled by default because it is known to have a performance cost on some machines. If you experience stutter or FPS loss when there are many stashes, dead stalkers, or other containers nearby, try disabling this setting.
+> [!NOTE]
+> This feature may have a very minor performance cost on low-end machines when there are many containers or dead bodies nearby. Consider disabling it if you have a very large number of Hideout Furniture containers in your base.
 ## Show item quick info card
 * Config setting: `show_item_card`
 * Default: `true`
@@ -187,10 +185,10 @@ Set to zero if you want to disable the main drop shadows entirely.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
-# MCM > DotMarks > Secondary Interact
+# MCM > DotMarks > Interactions
 ![Secondary Interact banner](https://i.imgur.com/GgEwrVR.png)
 
-The Secondary Interact provides context-sensitive actions on a second prompt that is located (by default) just below the Primary. If you have FDDA or FDDA Redone installed, and there are animations associated with those actions, they will play out just as if you'd taken the item and then immediately used it.
+The Secondary Interact provides context-sensitive actions on a second prompt that is located (by default) just below the Primary. If you have FDDA Redone installed, and there are animations associated with those actions, they will play out just as if you'd taken the item and then immediately used it.
 
 Available actions include:
 * Eat, drink, smoke, or otherwise use any consumable without having to pick it up as a separate action
@@ -264,6 +262,25 @@ Sets the default placement mode for IEDs deployed using a secondary action, or d
 
 > [!TIP]
 > When targeting an undeployed IED pickup item, you can use the **Fire Mode** keybinds to cycle placement mode, and the mouse wheel to set the duration of the timer (if applicable).
+## Simple press settings
+
+These settings control the behavior of the Shift, Control, and Alt "modifier" keys during key combos.
+
+When each setting is enabled, DotMarks will register a simple (unmodified) press of a keybind even if the player was holding down the modifier key at the time. This allows you to rebind them to something else (e.g. bind Shift to Sprint) and use it on its own wihtout affecting other key combos.
+
+When disabled, the relevant key is treated as a modifier, and a simple press of the modified key will not be registered while holding it. For example, if you press "T" while holding the Alt key, DotMarks assumes you're trying to input Alt-T, and won't trigger any action bound only to a simple press of T.
+
+## Simple presses ignore Shift modifier
+* Config setting: `simple_press_ignore_shift`
+* Default: `true`
+
+## Simple presses ignore Ctrl modifier
+* Config setting: `simple_press_ignore_ctrl`
+* Default: `true`
+
+## Simple presses ignore Alt modifier
+* Config setting: `simple_press_ignore_alt`
+* Default: `true`
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -275,6 +292,9 @@ The default "dot marker" is a small white dot with a thin black outline. When a 
 ![Active Focus dot marker ](https://i.imgur.com/ZBVBqfN.png)
 
 However, many different types of objects have their own contextual focus icons to indicate their purpose or the nature of the interaction. In this menu you can individually enable or disable those icons to suit your preferences, or customize their size and color for visibility, accessibility, or personal taste.
+
+> [!NOTE]
+> With the exception of the settings for the "normal" and "focus" dot marker below, most references to "dot markers" in this documentation refer generally to all HUD markers regardless of what icon they're using.
 
 The default color for all icons is ARGB 255,255,255,255--where the "A" stands for Alpha, or transparency, while the "RGB" values are the Red, Green, and Blue color channels, in that order.
 > [!TIP]
@@ -366,6 +386,12 @@ The following special icons are available here:
 * Default: `false`
 > [!NOTE]
 > Breakable boxes and explosive objects do not have interaction prompts, and so do not receive focus--their special icon replaces the dot marker at all times. These two icons are disabled by default, but you can enable them here if you wish to see them.
+
+## Hide markers for undiscovered stashes
+* Config setting: `must_discover_stashes`
+* Default: `true`
+
+If enabled, markers for stashes that weren't created by the player will not be shown until the player has "discovered" that stash by causing its interaction prompt to appear. Recommended for more immersive or challenging play.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -497,13 +523,6 @@ If my *Personal Adjustable Waypoint* addon is installed, enabling this option wi
 If my *Milspec PDA* addon is installed, enabling this option will cause bodies to be marked--or not--depending on whether the actor's PDA has the ability to see them on the map.
 > [!TIP]
 > If corpse markers are disappearing, or not appearing when you expect them to, check whether this setting is on--as well as Milspec PDA's own MCM settings, which are setting the terms for visibility. Also keep in mind that when MPDA clears its own marker (such as when you loot a body) that also hides it from DotMarks.
-## Treat all squad members as talkative
-* Config setting: `all_squad_members_talk`
-* Default: false
-
-In vanilla Anomaly, only the leader of a given squad can engage in conversation. Enable this setting if you have installed any addon which removes this leader-only restriction, such as the `Talk to Everyone` install option in _Modular Miscellaneous Tweaks_.
-> [!NOTE]
-> This setting is enabled by default in GAMMA, which includes that feature as part of its standard modlist.
 ## Show interaction prompt during FDDA animations
 * Config setting: `show_prompt_during_anim`
 * Default: `false`
@@ -559,6 +578,26 @@ If the *Sorting Plus* addon is installed, and an item has been marked as "junk",
 * Default: `10, 1`
 
 Fine-tunes the position of the Sorting Plus icon on the Item Card.
+## Enable WPO "field strip" action
+* Config setting: `sec_enable_strip_act`
+* Default: `true`
+
+Enables the secondary action that allows you to field strip the parts from an unloaded weapon on the ground.
+## Minimum part condition to field-strip
+* Config setting: `parts_usable_cnd`
+* Default: `60%`
+
+A weapon part must have at least this much condition in order to be field-stripped by a secondary action.
+## Show part condition dots for weapons
+* Config setting: `show_parts_weapons`
+* Default: `true`
+
+If enabled, the part condition dots from Utjan's Item UI Improvements addon will be shown on the prompt for weapons.
+## Show part condition dots for armor
+* Config setting: `show_parts_armor`
+* Default: `true`
+
+If enabled, the part condition dots from Utjan's Item UI Improvements addon will be shown on the prompt for armor and headgear.
 ## Part dots orientation
 * Config setting: `parts_dot_orientation`
 * Default: `2` (radial)
@@ -606,6 +645,15 @@ The internal name of the skill from *Skill System* that is used as the basis for
 > [!WARNING]
 > Bad things may happen if you typo this, and most of you will never have any need to tinker with it.
 
+## Treat all squad members as talkative
+* Config setting: `all_squad_members_talk`
+* Default: false
+
+In vanilla Anomaly, only the leader of a given squad can engage in conversation. Enable this setting if you have installed any addon which removes this leader-only restriction, such as the `Talk to Everyone` install option in _Modular Miscellaneous Tweaks_.
+> [!NOTE]
+> This setting is enabled by default in GAMMA, which includes that feature as part of its standard modlist.
+
+
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 # MCM > DotMarks > Advanced Settings
@@ -633,6 +681,14 @@ Enables or disables basic debug logging from the addon.
 If `debuglogs` is also enabled, this setting will enable additional logging that is more detailed, but also noisy. You should enable this for short periods if you know how to reproduce a problem, and are about to create a debug log for troubleshooting.
 > [!WARNING]
 > Don't enable this unless you're trying to troubleshoot a problem, and avoid leaving it enabled for a long time during normal play. It will quickly fill up your game log.
+
+## Store interaction data in savegame
+* Config setting: `write_to_save`
+* Default: `true`
+
+If enabled, DotMarks will add a small amount of data to the savegame in order to track details such as which stashes the actor has already discovered.
+
+Regardless of this setting, it is _always_ safe to add or remove DotMarks at any time during your playthrough.
 ## Hide interaction dot markers
 * Config setting: `hide_interaction_dots`
 * Default: `false`
@@ -640,13 +696,57 @@ If `debuglogs` is also enabled, this setting will enable additional logging that
 If enabled, the interaction dots themselves will be hidden, but the interaction UI will still be available.
 > [!TIP]
 > This is for all of you out there who are allergic to having stuff on your HUD, but still want to get the nice new prompts and secondary actions.
+
+## Ignore Anomaly's HUD state (`hud_draw`)
+* Config setting: `ignore_hud_state`
+* Default: `false`
+
+By default, DotMarks will respect the `hud_draw` console variable, and hide all of its UI elements whenever that is off (set to `0`).
+
+Enabling this option will cause DotMarks to completely ignore that setting, which would allow you to--for example--play with the Anomaly HUD entirely off but still see IDM's HUD markers and interaction prompts.
+
+## Hold key to show/hide markers
+* Config setting: `bind_toggle_marks`
+* Default: `unbound`
+
+While this key is held down, the "Hide interaction dots" setting (in the Advanced menu) will be toggled to the opposite of its normal value.
+
+In other words, if that setting is enabled (thus hiding all markers) then holding down this key will temporarily show them, or vice-versa.
+## Delay before setting reverts to normal
+* Config setting: `toggle_revert_delay`
+* Default: `0`
+
+By default this delay is zero--meaning that `hide_interaction_dots` immediately reverts to normal when you release the show/hide key for `bind_toggle_marks`.
+
+You can optionally set a delay of up to 10000ms (ten seconds) before the setting returns to its previous value after releasing the key. This would allow you to tap the hold key once to briefly toggle the setting without needing to hold it down.
 ## Hide marker for untalkative stalkers
 * Config setting: `hide_mute_stalkers`
 * Default: `true`
 
-If enabled, no marker will be shown at all for stalkers who can't be engaged in conversation.
 > [!TIP]
 > There is little point to disabling this setting, as untalkative stalkers have no other interactions aside from shooting them in the face. If you're using an addon that enables conversation with all stalkers, set [all_squad_members_talk](#treat-all-squad-members-as-talkative) to true instead of changing this.
+
+## Hide marker for non-service NPCs
+* Config setting: `only_mark_service_npcs`
+* Default: `false`
+
+If enabled, no marker will be shown at all for stalkers who aren't traders, mechanics, or other NPCs with a service icon.
+## Hide items dropped by player
+* Config setting: `hide_dropped_items`
+* Default: `true`
+
+When enabled, a marker will not be shown for any items that were dropped by the player--on the theory that if you dropped it, you probably don't care about it any longer.
+
+This will improve performance if you tend to drop unwanted gear in a big "trash" pile in your base. However, a better solution would be to use my [Zone Recycle Bin addon](https://www.moddb.com/mods/stalker-anomaly/addons/zone-recycle-bin-10-for-anomaly-151-and-152) to permanently delete unwanted items and stop them from bloating your save.
+
+You may want to disable this setting if you play using rules that allow damage or monster attacks to force the player to drop their weapon.
+## Never mark bolts
+* Config setting: `never_mark_bolts`
+* Default: `false`
+
+When enabled, all types of bolts (both regular and bullet-style) will be effectively blacklisted. They will not have a marker or an interaction prompt, and are effectively treated as non-interactable objects.
+
+This is already the case if you are playing with Unlimited Bolts. Enable this option if you are playing with Limited Bolts but still never want to see markers for them. You will still be able to pick them up, you just won't see a prompt.
 ## Hidden items still show interaction prompts
 * Config setting: `hidden_show_prompts`
 * Default: `true`
@@ -654,6 +754,7 @@ If enabled, no marker will be shown at all for stalkers who can't be engaged in 
 If a marker is hidden for any reason, its interaction prompts will still be shown.
 > [!IMPORTANT]
 > If this option is not enabled, hidden markers will not have any visible interaction prompts at all. This will not prevent you from picking them up if you want to, it just won't show the prompt.
+
 ## Hide the connecting white line
 * Config setting: `hide_connecting_line`
 * Default: `true`
@@ -661,6 +762,17 @@ If a marker is hidden for any reason, its interaction prompts will still be show
 If enabled, will hide the white line connecting the dot to the interact prompt.
 > [!NOTE]
 > This element used to be enabled by default, and looks very nice when it is positioned right--but its size and position has to be manually adjusted any time the prompt or their elements are moved around, and only looks correct in very specific positions. It will likely be replaced at some point by a better implementation.
+
+## Hide keybind display element
+* Config setting: `hide_keybind_element`
+* Default: `false`
+
+If enabled, this setting will hide the icon and/or text that indicates which keybind to press.
+## Hide action text element
+* Config setting: `hide_action_text`
+* Default: `false`
+
+If enabled, this setting will hide the text on the prompt that normally describes the action to be taken.
 ## Hide the custom primary interact UI
 * Config setting: `hide_pri_interact_ui`
 * Default: `false`
@@ -690,6 +802,11 @@ If enabled, the floating pickup item names--which normally appear in vanilla whe
 * Default: `false`
 
 Disables the subtle UI "blip" sound effect that plays when cycling the mouse wheel or during other similar events.
+## Replace keybind text with icons, if available
+* Config setting: `replace_keybinds_icons`
+* Default: `false`
+
+Some buttons and special keys--such as the five typical mouse buttons--have their own icons that are used instead of the default keybind text. Disabling this option will disable all such icons, and cause all keybinds to use the default keybind text.
 ## Scale GUI elements
 * Config setting: `ui_scale`
 * Default: `1.0`
@@ -707,6 +824,15 @@ This setting allows you to adjust the amount of horizontal space that DotMarks a
 This setting allows you to adjust the amount of vertical space that DotMarks assumes is required by the current fonts.
 > [!NOTE]
 > Fonts are just textures in Anomaly, and some fonts are taller or wider than others. You may need to adjust one or both of these settings if you are at a resolution other than 1920x1080, install a custom font addon, or change to a different font than the default.
+
+## Aspect correction multiplier
+* Config setting: aspect_correction
+* Default: `1.0`
+
+By default, DotMarks detects your display resolution and automatically tries to apply proper width correction for your aspect ratio. Most of you don't even need to know this setting exists.
+
+If you have a very unusual ultrawide display resolution of some sort, or simply don't like IDM's default aspect correction, you can adjust it here. This number effectively lets you fine-tune the width of all graphical elements.
+
 ## Keybind icon style
 * Config setting: `keybind_bg_style`
 * Default: `4`
@@ -860,6 +986,20 @@ Adjust the secondary prompt's position vertically. Allowed values are -384 to 76
 If this option is enabled, the custom interaction prompts will have a fixed screen position based on the offsets above, and the offsets are measured relative to the upper-left corner of the screen, instead of from the position of the attached marker.
 > [!IMPORTANT]
 > You **must** restart/saveload your game for this setting to take effect.
+
+## Hint filter refresh interval
+* Config setting: `hint_refresh_interval`
+* Default: `100`
+
+Sets the interval in ms between refreshes of the **Hint Filter** system.
+
+Hint filters are used to detect when Anomaly has tried to display a text prompt, which directly controls the GUI prompts in DotMarks. Put simply: IDM watches this text box for changes, and matches the text there with its own prompts to decide which replacements should be shown, and when.
+
+> [!WARNING]
+> This involves string comparisons, so setting this too low can have a performance impact--a value of zero is equivalent to IDM 1.4, which did not throttle this check.
+> 
+> Setting it too high can result in a delay before some interaction prompts appear or update.
+
 ## Near scan interval
 * Config setting: `near_scan_interval`
 * Default: `104`

@@ -364,7 +364,7 @@
 		<text>Hide interaction dot markers</text>
 	</string>
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_interaction_dots_desc">
-		<text>If enabled, the interaction dots themselves will be hidden, but the interaction UI will still be available.</text>
+		<text>If enabled, the interaction markers themselves will be hidden, but the interaction UI will still be available.</text>
 	</string>
 
 	<string id="ui_mcm_dotmarks_dmarkadv_hide_pri_interact_ui">

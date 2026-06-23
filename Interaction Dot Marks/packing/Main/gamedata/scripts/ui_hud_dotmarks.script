@@ -15,13 +15,19 @@ script_name     = "ui_hud_dotmarks"
 -- =======================================================================
 	KNOWN ISSUES / TO-DO
 -- =======================================================================
+	(***) Feature freeze - No new features that touch the marker 
+		update loop or visibility logic
+	(**) Task focus icons don't update on task state change
+		Investigate ASAP, prob an issue with the task monitor
+	(*) Performance regression test against recent versions using the
+		profiler in DevTools
+	(*) Test plan for verifying proper interact release handling against 
+		all object types and classes
+	(*) Review all the various flags and special cases in input handling
+		to ensure they're all still necessary
 	(*) Deprecate support for old FDDA and increment major version
 		There is no good reason to use it over Redone, its IDM support has 
 		multiple issues, and it adds unnecessary complexity
-	(*) Review all the various flags and special cases in input handling
-		to ensure they're all still necessary
-	(*) Avoid any new features that touch the marker update loop or 
-		visibility logic
 
 	Low priority:
 	- NPE module(s) - not hard, but time-consuming and nice-to-have
@@ -101,9 +107,13 @@ function set_debug_logging(debug_en, verbose_en, dump_en)
 	if (verbose_en ~= nil) then verbose = verbose_en end
 	if (dump_en ~= nil) then debug_dump = dump_en end
 end
-
+-- =======================================================================
 --set_debug_logging(true, true, true) --uncomment this line to enable all logging for troubleshooting
--- First two values will be overridden by MCM once the game fully loads
+-- =======================================================================
+-- The first two values will be overridden by MCM once the game fully loads
+-- 		debuglogs: 	basic logging that should always be there, little or no perf impact
+-- 		verbose: 	detailed information e.g. IDs and args/runtime flags, minor perf impact
+-- 		debug_dump:	step-by-step info from every marker on every update, moderate perf impact
 -- debug_dump is EXTREMELY noisy and should only ever be manually enabled for a specific, targeted reason
 
 printf("Interaction Dot Marks %s (rel %s) began initialization at %s %s", script_version or "(version not found)", release_date or "missing", time_global(), debuglogs and string.format("[%sdebug%s logging enabled]", verbose and "verbose " or "", debug_dump and "_dump" or "") or "")
@@ -220,14 +230,14 @@ function main_marker_update_loop(mark, args)
 
 	if (mark.no_update_loop or mark.suspended) then
 		return
-	elseif killswitch("markloop") then
-		mark:HideAll("mark loop killswitched")
-		return
 	elseif mark.is_offscreen then
 		mark:HideAll("offscreen, aborting markloop")
 		return
 	elseif cfg.suspend_markloop_in_inv and actor_menu.inventory_opened() then
 		mark:HideAll("inventory open, aborting markloop")
+		return
+	elseif killswitch("markloop") then
+		mark:HideAll("mark loop killswitched")
 		return
 	end
 
@@ -249,8 +259,19 @@ function main_marker_update_loop(mark, args)
 	mark.show_pri      	= true
 	mark.last_dist      = mark.last_dist or 999
 
-	if marker_loop_range_checks(mark, args) then return end
+	if mark.item_class and not is_object_scannable(mark.item_class) then
+		_=dd and dump("item class %s is not scannable", mark.item_class)
+		mark.hide_reason = string.format("marking of %s disabled", mark.item_class)
+		mark.hidden = true
+		mark.may_hide = true
+	end
 
+	if marker_loop_range_checks(mark, args) then
+		mark.may_hide = true
+		marker_loop_texture_updates(mark)
+		return
+	end
+	
 	if mark.is_pickup then
 		cfg.in_pickup_range[id] = mark.in_range and mark.last_dist or nil
 	end
@@ -272,9 +293,9 @@ function main_marker_update_loop(mark, args)
 			mark.hidden = true
 		end
 	end
-
+	
 	mark.may_hide 		= mark.hidden
-	mark.hide_reason 	= mark.may_hide and "mark itself is hidden" or "none"
+	mark.hide_reason 	= mark.may_hide and (mark.hide_reason or "mark itself is hidden") or nil
 	_             		= (not mark.may_hide) and dd and dump("[%s][%s] Visibility and UI checks for %s | dist %s", mark.id, now, mark.name or mark.tutorial or mark.text, mark.last_dist)
 
 	if mark.is_arty and (not mark.arty_container) and (not can_actor_see_artefact(obj)) then
@@ -309,11 +330,6 @@ function main_marker_update_loop(mark, args)
 	
 	mark.show_pri       = mark.show_pri and mark.can_display
 
-	if mark.item_class and not is_object_scannable(mark.item_class) then
-		--dump("item class %s is not scannable", mark.item_class)
-		mark.hide_reason = string.format("marking of %s disabled", mark.item_class)
-		mark.may_hide = true
-	end
 	--dump("prompt check: hide %s | hidden_show: %s | anim block: %s", mark.may_hide, cfg.hidden_show_prompts, prompt_blocked_by_anim())
 	local prompts_shown = false
 	local sec_forced 	= (mark.can_display and mark.always_show_sec)
@@ -348,10 +364,6 @@ function main_marker_update_loop(mark, args)
 							nearby_pickups[i] = id
 						end
 					end
-					-- Mark is an item pickup
-					--if cfg.show_item_card then
-						--mark.use_pri:UpdateWeightColor()
-					--end
 				elseif (not mark.show_pri) then
 					local available_pickup = mark.is_pickup and cfg.available_pickup and (mark.id == cfg.available_pickup)
 					local not_hidden_by_anim = (cfg.show_prompt_during_anim or not anim_playing)
@@ -413,22 +425,14 @@ end
 function marker_loop_range_checks(mark, args)
 	local _ = debug_dump and dump("[%s][marker_loop_range_checks] %s", time_global(), mark and mark.name)
 	if mark.is_vehicle then
-		--if cfg.vehicle_bone_update_int then
-			--local now = time_global()
-			--if now - (cfg.next_vehicle_check or 0) > cfg.vehicle_bone_update_int then
-				--cfg.next_vehicle_check = now + cfg.vehicle_bone_update_int
-				local bone_id 		= get_target_bone()
-				local target_bone 	= bone_id and cfg.vehicle_target_bones[bone_id]
-				mark.can_display 	= not not target_bone
-				if mark.can_display then
-					--mark.in_range 	= true
-					--mark.args.bone 	= cfg.vehicle_target_bones[bone_id]
- 					mark.last_dist 	= raycast_to_crosshair(5, nil, true)
- 				else
- 					mark.last_dist 	= 999
-				end
-			--end
-		--end
+		local bone_id 		= get_target_bone()
+		local target_bone 	= bone_id and cfg.vehicle_target_bones[bone_id]
+		mark.can_display 	= not not target_bone
+		if mark.can_display then
+				mark.last_dist 	= raycast_to_crosshair(5, nil, true)
+			else
+				mark.last_dist 	= 999
+		end
 	end
 	mark.in_range      	= is_in_range(id, mark.last_dist, mark)
 	if (not mark.in_range) then
@@ -437,10 +441,6 @@ function marker_loop_range_checks(mark, args)
 		end
 		if cfg.hidden_mark_interval and (mark.last_dist >= mark.far_hide_dist) then
 			mark.delay_next = get_next_tg_interval(cfg.hidden_mark_interval)
-			--if (mark.use_pri and not mark.use_pri.disabled) then
-				--hide_marker_and_prompts(nil, nil, mark)
-			--end
-			--return true
 		end
 		if (mark.use_pri and not mark.use_pri.disabled) then
 			hide_marker_and_prompts(nil, nil, mark)
@@ -471,11 +471,12 @@ function marker_loop_texture_updates(mark, prompts_shown)
 		end
 	end
 	if no_marker then
-		_ = debug_dump and dump("Mark is hidden (%s) clearing texture")
+		local _ = debug_dump and dump("Mark is hidden (%s) clearing texture", mark.hide_reason)
 		if not cfg.hide_interaction_dots then
 			mark.delay_next = get_next_tg_interval(cfg.hidden_mark_interval)
 		end
 		texture = ""
+		mark.hide_reason = nil
 	else
 		mark.marker_scale = cfg.dot_marker_size
 		mark:ScaleMarkerByDistance()
@@ -573,7 +574,6 @@ function update_prompt_weight_string(mark)
 		if mark.has_items then
 			mark.weight = axr_companions.get_inventory_weight(invbox.items)
 			_ = debug_dump and dump("got weight %s back from axr_companions, last_weight is %s", mark.weight, mark.last_weight)
-			--if mark.last_weight and (mark.last_weight ~= mark.weight) then
 			if mark.update_weight_now or (mark.last_weight ~= mark.weight) or not mark.last_weight then
 				mark.last_weight = mark.weight or 0
 				local wc = mark.weight and get_actor_weight_class(mark.weight)
@@ -652,7 +652,7 @@ function update_mark_condition(mark, prompt_shown, obj)
 		if not mark.world_obj_cond then
 			if mark.is_world_item then
 				-- Loose loot spawned in the world doesn't actually have condition or other metadata
-				-- until the actor picks them up for the first time
+				-- these values are only set when the actor picks them up for the first time
 				-- So we need to instantiate it the first time the prompt is displayed
 				local name 	= id and game_setup.world_itm_on and game_setup.world_itm_on[id]
 				cond 		= name and game_setup.world_itm_num and game_setup.world_itm_num[name]
@@ -727,7 +727,6 @@ function update_marker_active_state(mark, state)
 		local _ = verbose and dl("[%s][%s] Mark active status changed to %s (was %s)", time_global(), mark.name, state, mark.is_active)
 		mark.last_active_state = mark.is_active
 		mark.is_active = state
-		--mark.next_update = 0
 	end
 end
 
@@ -741,7 +740,7 @@ function utils_catspaw_hudmarks.UIHUDMarker:ActiveSwap(state)
 	local _ = debug_dump and dump("[%s][UIHUDMarker:ActiveSwap] for %s: %s", time_global(), self.name or self.tutorial, state)
 	if self.destroyed then return end
 	if not (self.active_swap or self.task_swap) then return end
-	local is_task_target= match_squad_or_leader(self.args.id, cfg.active_task_target_id) and cfg.enable_icon_tasks
+	local is_task_target= cfg.enable_icon_tasks and match_squad_or_leader(self.args.id, cfg.active_task_target_id)
 	local is_storyline  = to_bool(utils_catspaw_taskmonitor and utils_catspaw_taskmonitor.is_task_storyline())
 	local last_swap     = self.task_swap or self.active_swap
 	self.task_swap      = is_task_target and dup_table(is_storyline and cfg.swap_task_pri or cfg.swap_task_sec) or nil
@@ -894,13 +893,11 @@ end
 
 --- @param i number
 function fontscale_w(i)
-	--return i * get_font_scale_w(num)
 	return i * font_w
 end
 
 --- @param i number
 function fontscale_h(i)
-	--return i * get_font_scale_h(num)
 	return i * font_h
 end
 
@@ -1141,6 +1138,7 @@ function validate_wounded_prompt(mark, args)
 	end
 end
 
+--[[
 --- @param state boolean
 --- @param mark utils_catspaw_hudmarks.UIHUDMarker
 function ied_anim_cycle_func(state, mark)
@@ -1257,6 +1255,7 @@ function do_marker_anim_cycle(
 		end
 	)
 end
+--]]
 
 function get_ied_text()
 	if cfg.mine_mode < 0 then return end
@@ -1331,8 +1330,6 @@ function hide_mark(mark, reason)
 	clear_marker_texture(mark)
 	mark:HideAll(reason or "hide_mark called")
 end
-
--- is there still a need for both of these?
 
 --- @param mark_id string
 --- @param reason string
@@ -1674,13 +1671,6 @@ function is_door_open(obj, id)
 	local is_open = door:is_open()
 end
 
---[[
--- deprecated, these two settings are no longer mutually exclusive
-function is_vanilla_ui_hidden()
-	return (cfg.hide_van_interact_ui and not cfg.hide_pri_interact_ui)
-end
---]]
-
 --- @param txt string
 function trimmed_prompt(txt)
 	local pos = txt and txt:find("%(")
@@ -1724,14 +1714,8 @@ end
 
 --- @param id number
 function is_already_target(id)
-	--local is_pickup = hmm and hmm.current_pickup and (id == hmm.current_pickup)
-	--if is_pickup then return true end
 	if (id == hmm.current_pickup) then return true end
-	--local is_target = hmm and hmm.current_target and (id == hmm.current_target)
-	--if is_target then return true end
 	if (id == hmm.current_target) then return true end
-	--local is_xhair  = hmm and hmm.current_pickup and (id == hmm.current_crosshair)
-	--if is_xhair then return true end
 	return (id == hmm.current_crosshair)
 end
 
@@ -1780,7 +1764,6 @@ end
 function set_quickhelp_text(text)
 	if not (maingameui and maingameui.UIStaticQuickHelp) then return end
 	maingameui.UIStaticQuickHelp:SetText(text or "")
-	--maingameui.UIStaticQuickHelp:Show(false)
 end
 
 function is_mouse_button(dik)
@@ -1989,9 +1972,6 @@ function InteractPrompt:ParseArgs(args)
 	end
 	self.id 		= args.id
 	self.mark 		= args.mark or (self.id and cfg.markers[self.id]) or (args.mark_id and hmm:GetMarker(args.mark_id))
-	--if args.is_stalker then
-		--self.mark = args.mark or hmm:GetMarker(args.mark_id) or ()
-	--end
 	self.args   = args
 end
 
@@ -2277,7 +2257,7 @@ function InteractPrompt:BuildUI()
 	self.bind_sh:AdjustWidthToText()
 	self.bind:AdjustHeightToText()
 	self.bind_sh:AdjustHeightToText()
-	local boxlen        = (self.args.bind_icon and 0) or self.bind:GetWidth() + fontscale_w(1)--fontscale_w(self.bind:GetWidth())
+	local boxlen        = (self.args.bind_icon and 0) or self.bind:GetWidth() + fontscale_w(1)
 	local boxpos        = -(boxlen - 4)
 	setwndsize(self.prompt_c, boxlen, fontscale_h(20))
 	setwndpos(self.prompt_r, fontscale_w(4.78) + boxlen, 0)
@@ -2339,7 +2319,6 @@ function InteractPrompt:SetupSuffix(obj)
 		self.active_suffix = " "..gts("st_dotmarks_note_read_"..(self.unread and "no" or "yes"))
 		return
 	elseif not (cfg.show_item_condition or cfg.show_item_charge) then
-		--self.active_suffix = ""
 		return
 	end
 
@@ -2846,9 +2825,6 @@ function InteractPrompt:on_key_press(key, flags)
 end
 
 function InteractPrompt:actor_on_net_destroy() 
-	--self.disabled = true
-	--self.destroyed = true
-	--get_hud():RemoveDialogToRender(self)
 	self:Destroy()
 end
 
@@ -3276,7 +3252,6 @@ function InteractPrompt:SetPrompt(new_prefix, new_prompt, new_suffix)
 	self.lref:AdjustWidthToText()
 	local pos = self:UpdatePromptLength()
 	setwndsize(self.drop, pos + fontscale_w(cfg.interact_drop_w or 55), fontscale_h(cfg.interact_drop_h or 25))
-	--self.last_prompt_text = new_text
 end
 
 function InteractPrompt:SetHoldProgress(progress)
@@ -3423,7 +3398,6 @@ function InteractPrompt:actor_on_update()
 		return
 	end
 	local mark = self.mark or self:GetMark()
-	--if mark and mark.is_offscreen then return end
 
 	if self.args.func_destroy and self.args.func_destroy(self) then
 		self:Destroy("func_destroy returned true")
@@ -3447,7 +3421,6 @@ function InteractPrompt:actor_on_update()
 	if (self.args.tutorial or (mark and mark.is_stalker)) then
 		self:CheckForStuckTutorial()
 		self:CheckCampfireStates()
-		--self:UpdateMark()
 		_ = (not self.args.pri) and mark and mark.is_wounded and self:CheckWoundedStalkers()
 		self:UpdateLongPress()
 		return
@@ -3479,7 +3452,6 @@ function InteractPrompt:Destroy(reason)
 		update_marker_active_state(self.linked_mark, false)
 		self.linked_mark:ActiveSwap(false)
 		self.linked_mark.use_pri:ShowPrompt(false)
-		--self.linked_mark:Destroy("linked mark destroyed")
 	end
 	if self.longpress then
 		self.longpress:Destroy()
@@ -3603,9 +3575,6 @@ end
 --- @param id number
 function is_current_target(id)
 	return id == (locked_id or targeted_id or nil)
-	--local curr_target = locked_id or targeted_id or nil
-	--dump("id %s is %sthe current target", id, curr_target and (id == curr_target) and "" or "not ")
-	--return id and curr_target and (id == curr_target)
 end
 
 function get_current_target_obj()
@@ -3806,11 +3775,20 @@ end
 function actor_on_first_update()
 	hmm = utils_catspaw_hudmarks and utils_catspaw_hudmarks.get_hud_mark_manager()
 	maingameui = ActorMenu.get_maingame()
+	cfg.main_ui_drawn = not not maingameui
+	if not cfg.main_ui_drawn then
+		RegisterScriptCallback("actor_on_update", check_for_main_ui)
+	end
 	validate_object_tables()
 end
 
 function on_loading_screen_dismissed()
-	vl("[%s] on_loading_screen_dismissed | set cfg.game_started | waiting %s seconds before beginning scan loop", time_global(), cfg.scan_start_delay)
+	vl("[%s] on_loading_screen_dismissed - executing final startup tasks\n* Registering container interaction callbacks\n* Setting cfg.game_started flag\n* Waiting %s seconds before beginning scan loop", time_global(), cfg.scan_start_delay)
+	RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
+	RegisterScriptCallback("actor_on_item_drop", actor_on_item_drop)
+	RegisterScriptCallback("ActorMenu_on_item_after_move", ActorMenu_on_item_after_move)
+	RegisterScriptCallback("actor_on_item_take_from_box", remove_obj_from_box_table)
+	RegisterScriptCallback("actor_on_item_put_in_box", add_obj_to_box_table)
 	cfg.game_started = true
 	CreateTimeEvent("dotmark_scan_delay", 0, cfg.scan_start_delay, start_scanning)
 end
@@ -3830,7 +3808,7 @@ function show_welcome_message()
 end
 
 function start_scanning()
-	vl("[%s] start_scanning", time_global())
+	vl("[%s] start_scanning - scan loop startup", time_global())
 	if check_for_dependencies(false) then return true end
 	show_welcome_message()
 	update_skill_bonus_range()
@@ -4276,6 +4254,7 @@ end
 function set_loot_window_flag(val, reason)
 	local last = cfg.block_loot_window
 	cfg.block_loot_window = val
+	cfg.loot_flag_reason = reason
 	local text = val and "Setting to: " or "Clearing"
 	if (last == val) then return end
 	vl("[%s] Flag cfg.block_loot_window: %s%s%s", time_global(), text, val or "", reason and (" ("..reason..")") or "")
@@ -4391,7 +4370,7 @@ function setup_marker_for_object(id, args)
 			vl("%s = %s", k, v)
 		end
 	end
-
+	maingameui = ActorMenu.get_maingame()
 	if not cfg.markers then cfg.markers = {} end
 	cfg.markers[id] = hmm:AddMarker(args)
 	local mark = cfg.markers[id]
@@ -4476,7 +4455,7 @@ end
 --- @param obj game_object
 --- @param id number
 function scan_nearby_object(obj, id)
-	--scanned_objs = scanned_objs + 1
+	scanned_objs = debug_dump and (scanned_objs + 1) or 0
 	id  = id or (obj and obj:id())
 	if cfg.skip_id_reuse_check and id and scanned[id] then return end
 	if not valid_id(id) then return end
@@ -4496,9 +4475,6 @@ function scan_nearby_object(obj, id)
 	end
 
 	local m_id  = "dotmark_" .. tostring(id)
-	--hmm = hmm or utils_catspaw_hudmarks.get_hud_mark_manager()
-	--if not hmm then return end
-
 	local cls = obj:clsid()
 	local sec = obj:section()
 
@@ -4655,12 +4631,12 @@ function fake_take_anim(mark, func_on_take)
 	end
 	vl("Faking take animation for %s", mark.name)
 	-- This is largely a stripped-down copy of the item-take animation function in FDDAR
-	--if something other than pickup is playing right now, don't do anything
 	if lam2.is_running() and not lam2.get_action_with_tag("item_pickup") then
+		-- If something other than pickup is playing right now, don't do anything
 		local _ = debug_dump and dump("FDDAR found No action with item_pickup tag")
 		return
 	end
-	--if have body search in queue don't pickup items. Body search have priority
+	-- Body search has priority, don't pickup items if its anim is in queue
 	if lam2.get_action_with_tag("body_search") then
 		local _ = debug_dump and dump("FDDAR has an active body search animation, aborting take")
 		return
@@ -5543,15 +5519,6 @@ function setup_tutorial_prompt(tutorial)
 	cfg.markers[tutorial]   = setup_pri_interact_prompt(maingameui, args)
 end
 
---[[
--- deprecated, debugging
-function dump_monitor_states()
-	for k,v in pairs(cfg.monitors) do
-		dump("State monitor for %s: %s", k, state_monitor(k))
-	end
-end
---]]
-
 function check_tutorial_states()
 	if cfg.tutorial_hints and is_not_empty(cfg.tutorial_hints) then
 		if game.has_active_tutorial() then
@@ -5626,7 +5593,6 @@ function update_hint_filters()
 	hintfilters = dotmarks_hint_filters
 	if (not (hintfilters and hintfilters.enabled)) then return end
 	if is_empty(hintfilters.enabled) then return end
-	--local hint = hintfilters.last_raw_text
 	local text = hintfilters.update_text()
 	if not text then return end
 	_ = debug_dump and dump("[%s] Hint filter update%s", time_global(), text and (" - text is: "..text) or ", no text")
@@ -5652,10 +5618,12 @@ end
 --      MAIN SCAN LOOP
 -- =======================================================================
 function actor_on_update()
-	--scanned_objs = 0
-	--loop_num = loop_num + 1
+	if debug_dump then
+		scanned_objs = 0
+		loop_num = loop_num + 1
+	end
 	--perform_debugging_checks() -- only uncommented when needed
-	if cfg.hide_van_interact_ui then
+	if cfg.main_ui_drawn and cfg.hide_van_interact_ui then
 		maingameui.UIStaticQuickHelp:Show(false)
 	end
 	if not scanning then return end
@@ -5726,7 +5694,9 @@ function actor_on_update()
 			update_mark_vis_ignores()
 		end
 	end
-	--dump("End of loop %s: scanned %s objects", loop_num, scanned_objs)
+	if debug_dump then
+		dump("End of loop %s: scanned %s objects", loop_num, scanned_objs)
+	end
 end
 
 -- =======================================================================
@@ -5737,10 +5707,9 @@ function targeted_deployable_bomb()
 	return mark and mark.placeable_mine and id or nil
 end
 
-
-function is_obj_crosshair_target(id) return (id == hmm.current_crosshair) end --return hmm and hmm.current_crosshair and (id == hmm.current_crosshair) end
-function is_obj_pickup_target(id) return (id == hmm.current_pickup) end --return hmm and hmm.current_pickup and (id == hmm.current_pickup) end
-function is_obj_current_target(id) return (id == hmm.current_target) end --return hmm and hmm.current_target and (id == hmm.current_target) end
+function is_obj_crosshair_target(id) return (id == hmm.current_crosshair) end
+function is_obj_pickup_target(id) return (id == hmm.current_pickup) end
+function is_obj_current_target(id) return (id == hmm.current_target) end
 
 function pressing_any_mod_key()
 	return (ui_mcm.MOD_SHIFT and not cfg.ignored_modkeys[1])
@@ -5751,9 +5720,7 @@ end
 --- @param key number
 function recent_long_press(key)
 	key = key or use_dik
-	--local key_match = cfg.last_hold and (cfg.last_hold.key == key)
-	--local timeout = key_match and not timeout
-	--dump("key %s | tg %s | cfg.last_hold %s | delay %s | timed out %s | res %s", use_dik, time_global(), cfg.last_hold, cfg.long_press_delay, timeout)
+	--dump("key %s | tg %s | cfg.last_hold %s | delay %s", use_dik, time_global(), cfg.last_hold, cfg.long_press_delay)
 	return cfg.last_hold and (cfg.last_hold.key == key) and not timed_out(cfg.last_hold.time, cfg.long_press_delay or 50)
 end
 
@@ -6257,8 +6224,8 @@ function set_item_anim_callbacks(kill)
 				UnregisterScriptCallback("actor_on_update", fddar_update_current_anim_state)
 			end
 		end
-	elseif ea_callbacks and fdda_installed then 
 		-- remove this entire section for oldfdda deprecation
+	elseif ea_callbacks and fdda_installed then 
 		if anims_enabled and not (kill or killswitch()) then
 			dl("Registering FDDA item animation callbacks")
 			ea_callbacks.EA_RegisterScriptCallback("ea_on_item_use", on_item_use_anim_start)
@@ -6322,6 +6289,16 @@ function update_wpo_color_thresholds()
 		thresholds["grn"] = tonumber(cfg.parts_wpo_grn) or thresholds["grn"] or 85
 		thresholds["yel"] = tonumber(cfg.parts_wpo_yel) or thresholds["yel"] or 60
 		thresholds["orn"] = tonumber(cfg.parts_wpo_orn) or thresholds["orn"] or 20
+	end
+end
+
+function check_for_main_ui()
+	if not maingameui then
+		maingameui = ActorMenu.get_maingame()
+	end
+	cfg.main_ui_drawn = not not (maingameui and maingameui.UIStaticQuickHelp and maingameui.UIStaticQuickHelp.Show)
+	if cfg.main_ui_drawn then
+		UnregisterScriptCallback("actor_on_update", check_for_main_ui)
 	end
 end
 
@@ -6433,6 +6410,7 @@ function on_option_change()
 	if cfg.bind_sec_interact == nil then
 		cfg.bind_sec_interact = use_dik
 	end
+	clear_loot_window_flag("option change")
 	cfg.watch_use   = (use_dik == cfg.bind_sec_interact) and not cfg.hide_sec_interact_ui
 	--dump("watch_use %s | use_dik %s | bind_sec_interact %s | hide_sec_interact_ui %s", cfg.watch_use, use_dik, cfg.bind_sec_interact, cfg.hide_sec_interact_ui)
 	if cfg.markers and not is_empty(cfg.markers) then
@@ -6463,6 +6441,8 @@ function on_option_change()
 	elseif cfg.game_started then
 		resume()
 	end
+	cfg.main_ui_drawn = false
+	RegisterScriptCallback("actor_on_update", check_for_main_ui)
 end
 
 function validate_object_tables()
@@ -6502,6 +6482,7 @@ function validate_object_tables()
 end
 
 function load_state(data)
+	clear_loot_window_flag("loading state")
 	if not cfg.write_to_save then return end
 	if not (data and data.dotmarks) then return end
 	cfg.invboxes = data.dotmarks.invboxes or cfg.invboxes or {}
@@ -6510,6 +6491,7 @@ function load_state(data)
 end
 
 function save_state(data)
+	clear_loot_window_flag("saving state")
 	if cfg.clean_save_data and data and data.dotmarks then
 		empty_table(data.dotmarks)
 		data.dotmarks = nil
@@ -6547,11 +6529,6 @@ function on_game_start()
 		mags_installed = (magazines and magazine_binder)
 		parse_file_data()
 		RegisterScriptCallback("actor_on_update_pickup", actor_on_update_pickup)
-		RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
-		RegisterScriptCallback("actor_on_item_drop", actor_on_item_drop)
-		RegisterScriptCallback("ActorMenu_on_item_after_move", ActorMenu_on_item_after_move)
-		RegisterScriptCallback("actor_on_item_take_from_box", remove_obj_from_box_table)
-		RegisterScriptCallback("actor_on_item_put_in_box", add_obj_to_box_table)
 		RegisterScriptCallback("actor_on_net_destroy", actor_on_net_destroy)
 		RegisterScriptCallback("on_key_release", on_key_release)
 		RegisterScriptCallback("on_before_key_press", on_before_key_press)

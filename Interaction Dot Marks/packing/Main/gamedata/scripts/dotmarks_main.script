@@ -2,8 +2,8 @@
 --[[    Interaction Dot Marks ("DotMarks")
 -- ===================================================================--]]
 script_name     = "dotmarks_main"
-script_version  = "1.7.4"
-release_date    = 20260525
+script_version  = "1.7.5"
+release_date    = 20260622
 --[[======================================================================
     Author: Catspaw (CatspawMods @ ModDB)
     Source: https://www.moddb.com/mods/stalker-anomaly/addons/interaction-dot-marks/
@@ -804,8 +804,7 @@ local base_config = {
                     pos_adjust      = pos_adjust_by_section(obj:section(), 0),
                     manual_state    = true,
                     no_pri          = true, -- Do not display a primary interaction prompt
-                    -- This is because campfire interactions are shown via the
-                    -- tutorial system
+                    -- Campfire interactions are shown via the tutorial system
                 }
             end
         ),
@@ -944,7 +943,6 @@ local base_config = {
                 local section = obj:section()
                 local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
                 set_target_data(id, cfg.metadata_types.is_pickup, true)
-                is_recipe_known(sec)
                 local readable   = kind and (kind == "i_letter") or nil
                 return {
                     is_pickup       = true,
@@ -956,7 +954,6 @@ local base_config = {
                     verb_secondary  = readable and "st_alti_read" or nil,
                     pos_adjust      = pos_adjust_by_section(section, 0),
                     -- Book or letter that can be picked up and read as a secondary action
-                    --is_unread       = readable and not is_recipe_known(section),
                     is_backpack     = (obj:clsid() == clsid.equ_backpack) or nil,
                     name            = best_localized_object_name(obj),
                     logged_type     = "miscellaneous loot",
@@ -1286,7 +1283,7 @@ function get_best_pos_bone(obj)
     if forced_bone then
         return forced_bone
     end
-    local bones = get_bone_list(obj)
+    local bones = section and get_bone_list(obj)
     if not bones then return end
     for k,v in pairs(bones) do
         if cfg.bones[v] then
