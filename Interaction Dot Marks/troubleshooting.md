@@ -70,7 +70,8 @@ I've tried to set up safety checks that display a message to the player a few mo
 [DotMarks] [V] no_hud_mark_manager: false
 ```
 At least, it *should* look like that. If any of those true/false values are different, something is wrong and you need to properly reinstall/update the offending component.
-## Can't pick up anything that isn't centered in the crosshair, or `actor_on_update_pickup` error seen in log
+
+## Can't interact with anything that isn't centered in the crosshair, or `actor_on_update_pickup` error seen in log
 
 If your version of the modded exes is earlier than `20250306`, you will see this error in your log:
 ```
@@ -97,8 +98,14 @@ I'm sorry to be so blunt and shouty, but I've been testing it with users for a l
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
-## Empty icons where key binding names should be; MCM menus are absent, broken or missing content
+## No crashes or errors, and MCM menu looks correct, but nothing works -- no markers, no interactions, and can't pick up anything.
+If you don't get a prompt from Anomaly to "press any key" when loading a game, but it instead goes from the loading screen straight into gameplay, open the console and enter `keypress_on_start on`. 
 
+Having this prompt disabled may cause Anomaly to fail to send the callback that signals DotMarks to begin many parts of its startup. Any other addons that watch for the `on_loading_screen_dismissed` callback may be similarly affected.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
+## Empty icons where key binding names should be; MCM menus are absent, broken or missing content
 You **MUST** update your MCM version to 1.7.0 or higher.
 
 Some modpacks have embedded older versions of MCM, and some have even edited their copy of MCM to bypass Anomaly version checks. Don't do that, please. The version should be [somewhere around here](https://github.com/RAX-Anomaly/Anomaly-Mod-Configuration-Menu/blob/b02d0ff127181e698fa2c03fd434badb278211c9/gamedata/scripts/ui_mcm.script#L92) in your copy of `ui_mcm.script`, and it must be `1.7.0` or higher.
@@ -128,14 +135,22 @@ If you see a vanilla text interaction prompt, but DotMarks does not correctly di
 
 If you disable that setting and still do not see a vanilla interact prompt, then you wouldn't see one whether or not DotMarks was installed.
 > [!NOTE]
-> Drivable vehicles have huge hitboxes that are difficult to handle with a single marker, and the prompt appearance will not always be consistent with the vanilla prompt. It's a known issue, no need to further report it. It won't stop you from doing the actual interaction.
+> Drivable vehicles have huge hitboxes that are difficult to handle with a single marker, and the vanilla prompts themselves are janky. It won't stop you from doing the actual interaction.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
 ## Poor performance / FPS loss / stutter
-The setting that shows the total weight within stashes and other containers can cause an FPS loss in bases with many containers, or when there are many lootable bodies nearby. You can turn this off (or customize many other things) in the DotMarks MCM menu.
+The setting that shows the total weight within stashes and other containers used to cause an FPS loss with many nearby containers (stashes or lootable bodies). That is no longer the case in current versions, but you can still turn this off (or customize many other things) in the DotMarks MCM menu.
 
 Beyond that, while I am continually working to optimize it, understand that this addon is *completely replacing most of Anomaly's interaction UI*. It needs to keep track of all nearby objects at all times so that it can know when to show interaction prompts. There is going to be a certain minimum amount of overhead involved in doing that much work, meaning that I can only do so much to optimize it.
+> [!NOTE]
+> For reference, my personal system specs:
+> * Intel Core i9 11900k
+> * ASUS Nvidia GeForce RTX 4070 Super
+> * 64GB Corsair Vengeance DDR4 RAM
+> * WD Black 2TB NVMe SSD
+> 
+> On this machine, without IDM enabled, I get about 75 average FPS in the Rostok Bar at 2k with high settings. With it enabled, that drops to about 72. I consider that entirely acceptable, but results on your rig may differ.
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
@@ -166,9 +181,28 @@ Some conflicts are easy to fix. A new item from an addon not being detected corr
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
 
+## Try these things first!
+If you didn't find a solution in the above list of frequent issues, here are the first things you should *always* do when an addon doesn't work correctly:
+
+1. **Update your addons.** Ensure [all of my addons](https://www.moddb.com/members/catspawmods/addons)--including and especially DotMarks--are updated to the latest version available on Moddb.
+2. **Reinstall fresh.** If DotMarks was already up to date, try removing and reinstalling it using a fresh download from Moddb. Don't worry, you won't lose any of your settings.
+3. **Try it in a new save.** That means a brand new game, from a rookie start. Does the issue still happen?
+4. **If possible, in vanilla Anomaly.** In other words, launch Anomaly with only DotMarks enabled--turning off all other addons. Then test in a new save. Does the issue still happen?
+
+> [!TIP]
+> Many of my addons share utility scripts, so it's expected and normal for them to overwrite each other's files. The important thing is to always make sure the file that wins the conflict is the most recent.
+
+> [!IMPORTANT]
+> If the same steps always make the issue happen in an existing save, but you can't reproduce the issue in a fresh game, it's likely that the first save is in an unrecoverable bad state. If the problem does still happen, but not when DotMarks is by itself, another addon is probably conflicting in some way.
+
+![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
+
 ## Still having problems?
+If you've got an issue to report, I need a few things from you first. 
+> [!CAUTION]
+> If you skip this part, you probably won't get helped. I'm not kidding. Fair's fair--you're asking for my time to troubleshoot, and all I ask in return is that you follow a few steps that make it easier for me to help you.
+
 ### 1. GENERATE A CLEAN DEBUG LOG
-If you need to report a problem, first do this:
 
 1. Go to **MCM > DotMarks > Advanced**
 2. Enable both [Debug](#enable-debug-logging) and [Verbose](#debug-logging-is-verbose) logging
@@ -178,13 +212,23 @@ If you need to report a problem, first do this:
  
 > [!IMPORTANT]
 > If you're reporting an issue with a specific object, make your savegame while standing right in front of the object and targeting it. You only need to load the game for a few moments before exiting.
+
 ### 2. CHECK DEPENDENCIES
-Follow the instructions in the [Missing dependencies](#missing-dependencies) section.
+If you haven't already, now's the time to follow the instructions in the [Missing dependencies](#missing-dependencies) section.
 ### 3. REPORT THE ISSUE
 If all of those are correct and something's still busted, please take the short DEBUG LOG from the instructions above--the whole thing--and post it somewhere I can see it, along with as much information as possible about the issue--including your modlist, if you're not using the [stock default GAMMA modlist](https://discord.com/channels/912320241713958912/977190498420801536). If the issue is visual, or concerns a specific object, include a screenshot of what looks wrong, taken in the spot where you made your debug savegame.
+
 > [!TIP]
 > You will find the game log in `<Anomaly Install Folder>\appdata\logs`. If you're a GAMMA user, this will be in the location where you installed the base game.
 >
 > This log gets *deleted and overwritten* every time the game launches, so don't delay after creating the log--zip it up or make a copy of it right away, before launching the game again.
+
+> [!IMPORTANT]
+> The information generated by the `Debug` and `Verbose` settings is *absolutely critical*. DotMarks logs nearly everything it does, step by step--but only when they are first enabled. If you do this, I can often identify an issue within moments just by looking at the log. Please make this easy for both of us.
+
+----
+I don't get notified about Moddb comments, and don't have the time to keep up with them. The best place to go for help or post logs is [IDM's support channel on the GAMMA Discord](https://discord.com/channels/912320241713958912/1351707279036121230). Make sure to read the pinned messages and search the channel for your issue--chances are, it's come up before and there's an answer to be had.
+
+(Don't DM me, please. I get so much actual spam that I just silently ignore unsolicited DMs and friend requests from people I don't know.)
 
 ![rad_symbol_divider](https://i.imgur.com/Y5bQDtj.png)
