@@ -83,7 +83,7 @@ If any object's ID is present in the `scanned` table, no further action will occ
 > This is exactly what DotMarks itself does when a stalker dies, in order to convert them into a body marker.
 
 ----
-### 2. Check whether its name has changed
+### 2. Check whether its name has changed (only if cfg.skip_id_reuse_check is false)
 If it has, DotMarks assumes the ID has been recycled, nulls out `scanned[id]`, then proceeds on to the next check.
 
 ----
@@ -328,27 +328,6 @@ Take action during setup of a marker's primary interact prompt, allowing you to 
 RegisterScriptCallback("dotmarks_on_setup_sec_interact")
 ```
 Take action during setup of a marker's secondary interact prompt, allowing you to alter its attributes or cancel its creation.
-
-----
-## `dotmarks_on_before_prompt_visibility_change`
-```lua
---- @param mark utils_catspaw_hudmarks.UIHUDMarker
---- @param prompt ui_hud_dotmarks.InteractPrompt
---- @param state boolean
---- @param flags table
-RegisterScriptCallback("dotmarks_on_before_prompt_visibility_change")
-```
-Take action just before any interaction prompt changes its visibility state, and optionally cancel that change.
-
-----
-## `dotmarks_on_prompt_visibility_change`
-```lua
---- @param mark utils_catspaw_hudmarks.UIHUDMarker
---- @param prompt ui_hud_dotmarks.InteractPrompt
---- @param state boolean
-RegisterScriptCallback("dotmarks_on_prompt_visibility_change")
-```
-Take action just after any interaction prompt changes its visibility state, but after the prompt has finished updating itself.
 
 ----
 ## `dotmarks_on_before_secondary_action`
